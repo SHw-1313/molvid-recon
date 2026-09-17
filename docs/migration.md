@@ -1,0 +1,46 @@
+# Migration record
+
+## P0 — 2026-09-18
+
+Status: source audit and historical reference identified; fresh numerical oracle `not_run`. No production code was changed or retired. P1 cutover is on hold until the required environment runs its targeted checks.
+
+### Checkout and boundaries
+
+- The supplied `molvid_recon` directory initially contained only the two design artifacts and no Git repository. The local `refactor/flat-layout` checkout was created from the clean `exp/dit-architecture-sequential-v1` HEAD `d8f674aad692c8426cf9240d07b3384f7a043888`; the source worktree remains untouched. Both design artifacts are currently untracked in this checkout. The design commit happened to equal this selected HEAD; it was not used as a rollback instruction.
+- Selection was based on the inventory's real source paths: this branch contains `dit_geometry_supervision.py`, `dit_history_corruption.py`, Round 4 rollout and `motion_metrics.py`; the neighboring `exp/dit-capacity-data-v1` HEAD `77e7e72498b29cdb7460a23e400ef2fe8ce52ea4` omits those paths. Source selection awaits any user correction.
+- The old root `AGENTS.md` describes earlier experiment lanes. The current requested P0–P5 migration supersedes those lane-specific stops; the train/validation-only and sealed-test data boundary remains in force. No test clip payload was opened.
+
+### Current runnable paths and actual source map
+
+The active codec CLI is `train_codec.py` with `config/codec.yaml`; `scripts/run_state_detail_codec_v2_t1.py` owns the approved R2/R4 T1 control and `eval_codec.py` evaluates it. DiT construction, training and generated validation run through `scripts/run_state_detail_dit_pilot.py`, `trainer/dit_trainer.py`, `scripts/run_dit_architecture_sequential_v1.py` and the Round 2/4 runners. `scripts/run_dit_architecture_round4.py` owns observed-prefix rollout. They call `module/latent_rectified_flow.py` and `evaluation/dit_evaluation.py`; the current RMSF reader is `evaluation/motion_metrics.py`. `scripts/preprocess_trajectory_clips.py` is the ordered-clip preprocessing entry. `config/dit_architecture_sequential_v1.yaml` selects R4, conditional `repeat_last_coordinate_encode`, factorized backend, H4/H8, 16 frames and frozen codec/statistics. `config/codec.yaml` defaults to legacy mode, so it is not by itself a working R4 control; mode is dispatched in `trainer/codec_trainer.py` and validated against the checkpoint contract.
+
+The following definitions were checked in the selected HEAD. Python path renames and state-dict key migration are separate operations.
+
+| Old definition | Destination |
+|---|---|
+| `trainer/codec_trainer.py::PVBCodecModel` | `molvid/codec/model.py::TrajectoryCodec` |
+| `module/multiframe_codec.py::PVBFrameEncoder`, `FrameEncoderOutput` | `molvid/spatial/encoder.py::FrameEncoder`, `FrameEncoderOutput` |
+| `module/multiframe_codec.py::FrameGraphBatch` (`PVBFrameGraph` is an alias), `FrameNodeBatch` | `molvid/geometry/types.py`; remove alias after callers migrate |
+| `module/torchmd_et.py::TorchMD_VQ_ET` | `molvid/spatial/torchmd.py::TorchMDEncoder` |
+| `module/state_detail_codec_v2.py::StateDetailCodecV2`, `MatchedPoolingCodecV2` | `molvid/codec/state_detail.py::StateDetailCodec`, `MatchedPoolingCodec` |
+| `module/state_detail_codec_v2.py::StateDetailLatent` (`StateDetailLatentV2` is an alias), `MatchedPoolingLatent`, `StateDetailDecoderOutput` | `molvid/codec/types.py::StateDetailLatent`, `MatchedPoolingLatent`, `CodecOutput`; remove alias after callers migrate |
+| `module/state_detail_codec_v2.py::HaarLift` and `haar_lift`/`haar_inverse` | `molvid/codec/haar.py::HaarCoefficients` and functions |
+| `module/state_detail_codec_v2.py::CenteredCoordinateVectorStem`, `_EquivariantCoordinateHead` | `molvid/codec/heads.py::CoordinateVectorStem`, `EquivariantCoordinateHead` |
+| `module/state_detail_latent_adapter.py::LatentFieldSet`, `DiTLatentBatch` | `molvid/latent/types.py::LatentFields`, `LatentBatch` |
+| `scripts/run_state_detail_dit_pilot.py::FrozenCodec`, `PilotData`, `ValidationPlan` | `molvid/checkpoints.py::CodecArtifact`; `molvid/data/manifest.py::DatasetSplits`, `ValidationPlan` |
+| `scripts/run_dit_architecture_round4.py::PreparedRound4Batch` | `molvid/training/batches.py::PreparedDiTBatch` |
+| `data/mmap_dataset.py::MMAPDataset` | storage reader in `molvid/data/store.py::BlockStore`; static record conversion remains in data boundary |
+
+Other retained ownership resolved from definitions and callers: `data/clip_dataset.py` supplies `batch.py` and clip store classes in `store.py`; `data/clip_batching.py` plus `scripts/run_state_detail_codec_v2_t1.py::TrajectoryCappedBatchSampler` supply `sampling.py`; `data/trajectory_clips.py` and its preprocess CLI supply `io.py`, `preprocess.py` and split-manifest behavior; `module/multiframe_codec.py` supplies frame packing, geometry types and encoder; `module/neighbor_graph.py`, `topology_cache.py` and `bond_sources.py` supply geometry neighbors/topology; `module/state_detail_latent_adapter.py` supplies adapter, statistics and observation condition; `module/molecular_dit.py` plus `dit_backend_v2.py` supply model, blocks and reference/optimized backend; `module/latent_flow_source.py` and `latent_rectified_flow.py` supply source/objective/sampling; `module/dit_history_corruption.py` supplies corruption views; `module/dit_geometry_supervision.py` supplies future-bond auxiliary; `trainer/codec_losses.py` supplies reconstruction losses; `trainer/codec_trainer.py` and `trainer/dit_trainer.py` supply separate trainers; `evaluation/{codec_evaluation,dit_evaluation,dit_diagnostics,motion_metrics}.py` and the current runners supply evaluation/generation. YAML, runner stage dispatch and checkpoint contracts are active dependencies even where there is no static import. These paths must be rechecked immediately before P5 retirement.
+
+### Available historical numerical reference
+
+- Approved R4 codec: `PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt`, SHA256 `ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df`. Its existing `result.json` reports seed `20260903`, 45,844 steps, full future aligned RMSD `0.07189485111558085` Å and bond RMSE `0.013008868230377535` Å; its detail-zero control reports `0.9256625400942147` Å and `0.12391022327708508` Å. The recorded resume check loaded step 45,844 and continued to 45,845. These are historical run results, not a new migration comparison.
+- Frozen R4 statistics: `molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500/ratio4_state_detail/shared/statistics.pt`, SHA256 `4d07bf53f317a6f2937a027695d2d70993674903d0fcefc1fa49e0482a529583`. The frozen manifest directory exists at `PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000`; only its metadata was inspected. Protocol records 48 train, 8 validation, 8 sealed test systems.
+- Existing DiT baseline checkpoint in the source worktree: `outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/baseline/checkpoint_final.pt`, SHA256 `808eb51e5c597629ebbd7270697af91affbc82a812cadd165eae984cba900240`. Its summary reports `PASS`, 4,500 successful updates, model hash `af0c71a3a0d2c460b899b615da86b054bc56eed3b5a7160e9b4b9005d33df643`, adapter hash `fc81cb9aba877c58571c74189fd0a6054e717671f9b2158216616d597f706bea`, and statistics hash `863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d`. Its recorded quick generated validation (system-equal aggregation) gives H4/H8 aligned RMSD `3.721147636503091`/`3.750142274852074` Å and bond RMSE `3.541726608890788`/`3.530757985007465` Å. These scalar outputs are useful regression context but cannot establish same-input tensor or gradient parity.
+
+### Checks and gate
+
+- Passed read-only: selected HEAD/status, direct source definitions, config/runner call paths, artifact existence and SHA256 for codec, statistics and DiT baseline checkpoint. GPU devices are visible to `nvidia-smi` (A100); no GPU work was launched.
+- `not_run`: old-path fixed tiny clip frame features, codec latent/reconstruction/loss/gradient, DiT velocity/flow loss/gradient, optimizer one-step state and resumed next step, observation-future independence, and targeted Python tests. `enter-container` requires interactive `sudo`; this session cannot read the Docker socket and `sudo -n` asks for a password. Direct host Python was not substituted for the required environment.
+- Before P1 acceptance, obtain approved access to `enter-container`/`torch-ito`, capture a deterministic old-path tiny reference on real CUDA in the old checkout, and verify the new checkout is mounted or otherwise available there. Keep original checkpoint/data bytes unchanged. P2/P3/P4 switching and P5 retirement remain dependent on their respective numerical checks; no tolerance change, deletion or fallback is authorized by this record.
