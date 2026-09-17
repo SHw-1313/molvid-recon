@@ -1,0 +1,43 @@
+  0%|          | 0/262260 [00:00<?, ?it/s] 10%|▉         | 25370/262260 [00:00<00:01, 125675.85it/s] 40%|███▉      | 104672/262260 [00:00<00:00, 402220.54it/s] 72%|███████▏  | 190002/262260 [00:00<00:00, 569945.63it/s]100%|██████████| 262260/262260 [00:00<00:00, 541867.28it/s]
+  0%|          | 0/71100 [00:00<?, ?it/s] 24%|██▎       | 16848/71100 [00:00<00:00, 95220.92it/s]100%|██████████| 71100/71100 [00:00<00:00, 300221.70it/s]
+/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/evaluate_original_streaming.py:92: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model = torch.load(args.checkpoint, map_location="cpu")
+{
+  "batches_per_source": 500,
+  "checkpoint": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/checkpoints_pilot500/version_0/checkpoint/epoch0_step992.ckpt",
+  "device": "cuda:0",
+  "max_batches_total": 1000,
+  "overall_loss_mean": 1.815241908967495,
+  "pair_bound": 5000,
+  "pair_policy": "all_adjacent_pairs_streamed_from_each_T16_clip",
+  "per_source": {
+    "atlas_dt_100ps": {
+      "atoms": 1955202,
+      "batches": 500,
+      "kl_loss_mean": 0.007281401073560119,
+      "loss_mean": 1.2502820516824722,
+      "pair_records": 1179,
+      "rec_drf_loss_mean": 0.6602722724080086,
+      "rec_vel_loss_mean": 0.5841846555173397,
+      "unique_clips": 1132
+    },
+    "misato_dt_80ps": {
+      "atoms": 1838671,
+      "batches": 500,
+      "kl_loss_mean": 0.023544711844995618,
+      "loss_mean": 2.380201766252518,
+      "pair_records": 685,
+      "rec_drf_loss_mean": 1.2949661129117012,
+      "rec_vel_loss_mean": 1.066399881720543,
+      "unique_clips": 628
+    }
+  },
+  "ref_repo": "/workspace/PVB_origin",
+  "schema_version": "pvb.origin.baseline_d.eval.v1",
+  "seed": 20260810,
+  "valid_roots": {
+    "atlas_dt_100ps": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "misato_dt_80ps": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid"
+  },
+  "wall_time_s": 340.16869163513184
+}

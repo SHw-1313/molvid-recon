@@ -1,0 +1,151 @@
+# Multi-frame codec v1 task ledger
+
+Status notation: `[ ]` pending, `[-]` in progress, `[x]` complete, `[!]` blocked. A task is complete only when its evidence is written below the task.
+
+## T00 — Baseline and environment capture
+
+- [x] Confirm writable branch/worktree and record upstream commit plus dirty files.
+- [x] Determine the valid `enter-container` invocation and activate `torch-ito` inside it.
+- [x] Record Python, PyTorch, CUDA, GPU, and key dependency versions in `HANDOFF.md`.
+- [x] Run the narrowest available upstream import/smoke check without changing data or installing packages.
+- [x] Identify an optional PVB encoder checkpoint and a tiny local static/trajectory fixture; absence is not a blocker for synthetic tests.
+
+Acceptance: baseline commands and outputs are summarized in `HANDOFF.md`; no user-owned changes were overwritten.
+
+## T01 — Freeze the clip schema and tests
+
+- [x] Add a typed/dataclass-like `ClipBatch` contract and validation helpers.
+- [x] Add synthetic fixtures for variable atom counts, `T=1`, `T=16`, bonds, masks, 100 ps timestamps, 1 ns timestamps, and an irregular positive time grid.
+- [x] Implement packed collation to `[T, N_total, 3]` with `atom_ptr` and `abid`.
+- [x] Carry `time_ps`, `delta_time_ps`, and `time_bucket_id`; derive/check intervals in exactly one canonical helper.
+- [x] Reject mixed task types/time buckets, inconsistent atom order, inconsistent topology, invalid masks, non-monotonic time, and non-positive intervals.
+- [x] Test bond index offsets and sample/frame graph ids.
+
+Acceptance: CPU tests cover every field and failure mode documented in `PLAN.md §4`.
+
+## T02 — Ordered clip preprocessing and loading
+
+- [x] Add clip generation for ATLAS without changing `preprocess_atlas()` pair output.
+- [x] Add clip generation for MISATO without changing `preprocess_misato_pl()` pair output.
+- [!] Add clip generation for mdCATH without changing `preprocess_mdcath()` pair output (intentionally skipped by operator; no raw path/timestamps supplied).
+- [x] Implement deterministic non-overlapping windows with configurable `clip_len`, `window_stride`, and source stride; random training windows remain a loader follow-up.
+- [x] Require native frame interval or per-frame timestamp metadata in every implemented trajectory configuration.
+- [x] Align every trajectory frame to frame 0 using a protein `align_mask`, applying the same transform to all complex atoms.
+- [x] Preserve atom identity/order, timestamps, sample origin, and transform/debug metadata.
+- [x] Forbid coarse-to-fine target interpolation; ATLAS 10 ps data is explicitly decimated to 100 ps for this run.
+- [x] Implement static `T=1` loading without frame replication.
+- [x] Measure serialized clip size before deciding whether existing mmap JSON/gzip is sufficient.
+
+Acceptance: a tiny real or locally generated trajectory round-trips through storage and collation with coordinates/topology unchanged within serialization tolerance.
+
+## T03 — Task-aware dynamic batching
+
+- [x] Add `T*N` as the initial complexity estimate for clip datasets.
+- [x] Keep minibatches homogeneous in task, temporal length, and `delta_time_ps` bucket.
+- [x] Add configurable static/trajectory and per-time-bucket sampling weights without coupling them to dataset size.
+- [x] Verify DDP samplers do not duplicate the same batch on every rank.
+- [x] Log atoms, frames, effective tokens, task type, native `delta_time_ps`, and physical clip span per batch.
+
+Acceptance: deterministic tests show the configured mixture and batch bound; a two-rank dry/smoke test shows distinct rank samples.
+
+### 2026-08-18 — T03 evidence
+
+- `data/clip_batching.py` adds `ClipItemSpec.effective_tokens = T*N`, homogeneous group packing, configurable task/bucket weights, deterministic epoch seeding, and a direct DataLoader builder.
+- `ClipMMapDataset` reads atom/frame/bucket metadata from `index.txt`; `StaticClipDataset` uses exact ANI1x/PCQM4Mv2 index counts and reads actual PDBBind atom counts because its legacy property zero is an adjacency budget.
+- DDP safety is implemented by building one global batch schedule and sharding by global batch id across explicit `num_replicas`/`rank`; no padding duplicates are introduced.
+- `summarize_clip_batch`/`ClipBatchLogger` emit atoms, frames, effective tokens, task type, native delta time, and physical clip span.
+- Deterministic CPU coverage: `python -m pytest -q` — 16 passed; `python -m py_compile data/clip_batching.py data/clip_dataset.py data/__init__.py tests/test_clip_batching.py` — passed.
+
+## T04 — Batched PVB frame encoder
+
+- [x] Implement metadata expansion and `(sample, frame)` graph ids.
+- [x] Replicate/offset covalent bonds by frame.
+- [x] Construct nonbonded graph edges with no cross-frame or cross-sample edges.
+- [x] Call the shared `TorchMD_VQ_ET` spatial encoder once for all frames and restore scalar/vector feature shapes.
+- [x] Add optional checkpoint initialization with a matched/missing/unexpected-key report.
+- [x] Add shape, frame-isolation, translation, and rotation tests.
+
+Acceptance: `T=1` and `T=16` pass; scalar features are invariant and vector features rotate within configured fp32 tolerance.
+
+## T05 — Causal equivariant temporal codec blocks
+
+- [ ] Implement mask-aware local causal temporal attention for invariant and vector features.
+- [ ] Implement continuous relative-time RBF/MLP attention bias from physical `|time_i-time_j|` and configurable time units/scale.
+- [ ] Implement scalar/vector FFN and normalization without learned xyz-axis mixing.
+- [ ] Implement causal stride-2 downsampling for ratios 1/2/4.
+- [ ] Implement repeat/interpolate plus causal refinement upsampling.
+- [ ] Propagate/downsample frame masks and physical timestamps explicitly; define latent time as the right edge of each causal receptive field.
+- [ ] Make temporal decoding query requested `target_time_ps` and enforce the documented causal chunk-to-target mapping.
+- [ ] Add prefix-causality at complete chunk boundaries, padding, all-masked-error, `T=1`, gradient, SE(3), 100 ps versus 1 ns, timestamp-rescaling, and irregular-time tests.
+
+Acceptance: appending future frames does not alter any valid prefix output in eval mode; ratio shapes are exact and documented.
+
+## T06 — Joint multi-frame decoder
+
+- [ ] Define `CodecLatent(z_h, z_v, latent_mask, latent_time_ps, x_anchor, topology metadata)`.
+- [ ] Decode all temporal positions jointly to coarse displacements from `x_anchor`.
+- [ ] Add a latent-conditioned shared TorchMD spatial refiner batched across frames.
+- [ ] If TorchMD is extended, make conditioning optional and prove the old forward/checkpoint path is unchanged.
+- [ ] Ensure decoder signatures cannot receive target `x[t>0]`.
+- [ ] Require `target_time_ps` in the trajectory decoder API and verify changing it changes temporal decoding without breaking SE(3) behavior.
+- [ ] Add an information-leak test and a two-clip overfit test.
+
+Acceptance: the decoder outputs `[T, N_total, 3]`, uses no temporal rollout loop, and overfits a tiny synthetic dataset without NaN/Inf.
+
+## T07 — Losses, trainer, config, and checkpointing
+
+- [ ] Implement masked coordinate, local/contact distance, bond, velocity, and acceleration losses.
+- [ ] Make `delta_time_ps` explicit in temporal losses; implement correct velocity and nonuniform-grid acceleration formulas.
+- [ ] Add train-split normalization statistics per time bucket with minimum-count/epsilon guards; checkpoint these statistics.
+- [ ] Set temporal losses exactly to zero for static samples.
+- [ ] Add staged loss-weight scheduling and per-task logging.
+- [ ] Log raw physical-unit temporal metrics and normalized optimization losses separately by time bucket.
+- [ ] Add isolated `train_codec.py`, `trainer/codec_trainer.py`, and `config/codec.yaml`.
+- [ ] Add explicit `time_unit`, time-bucket center/tolerance/weight, continuous time-embedding, and temporal-normalization configuration with validation.
+- [ ] Save a versioned config/schema with checkpoints; test save/resume and backward failure messages.
+- [ ] Keep existing `train.py` and model types functional.
+
+Acceptance: one optimizer step and checkpoint round-trip pass on CPU/synthetic data; old PVB import/checkpoint regression still passes.
+
+## T08 — Round-trip evaluation and controls
+
+- [ ] Implement framewise ratio-1/no-temporal control.
+- [ ] Implement ratio-1 temporal and ratio-4 temporal codec evaluation.
+- [ ] Report RMSD/dRMSD, bond RMSE, contacts, clashes, velocity/acceleration, torsion change, and frequency retention.
+- [ ] Report latent token count, throughput, wall time, and peak memory.
+- [ ] Stratify every temporal metric by native `delta_time_ps`; include physical clip span and latent interval and forbid an unqualified cross-bucket mean.
+- [ ] Separate frame-0 reconstruction from future-frame metrics.
+- [ ] Export machine-readable JSON plus a concise Markdown summary.
+
+Acceptance: evaluation runs on a tiny fixture and clearly distinguishes the three controls.
+
+## T09 — GPU and DDP smoke gates
+
+- [ ] Run one-GPU `T=16`, ratio-4 forward/backward/optimizer/validation/checkpoint smoke.
+- [ ] Smoke-test at least one 100 ps batch and one 1 ns batch, or equivalent synthetic buckets if real data is unavailable.
+- [ ] Record peak memory and reduce `T*N` bound if required.
+- [ ] Run two-GPU DDP smoke; use more GPUs only if already available and idle.
+- [ ] Confirm no hidden per-frame model loop dominates runtime.
+- [ ] Record commands and results in `HANDOFF.md`.
+
+Acceptance: smoke jobs exit cleanly and are reproducible from recorded commands. Do not start a full experiment in this task.
+
+## T10 — Pilot experiment handoff
+
+- [ ] Provide exact commands for the three G5 controls with fixed seeds and data split.
+- [ ] Provide per-time-bucket commands/configs and separate go/no-go rows for 100 ps and 1 ns data when available.
+- [ ] Record dataset/checkpoint paths as operator-supplied placeholders rather than guessing.
+- [ ] Add a result table template and go/no-go checklist.
+- [ ] Update README usage only after the command has been smoke-tested.
+- [ ] Update `HANDOFF.md` with completed IDs, diffs, tests, limitations, and next action.
+
+Acceptance: an operator can launch the pilot without reading implementation code; no quality claim is made before results exist.
+
+## Dependency order
+
+```text
+T00 -> T01 -> T02 -> T03
+             T01 -> T04 -> T05 -> T06 -> T07 -> T08 -> T09 -> T10
+```
+
+T02 and T04 may be developed in parallel only in separate worktrees and only if the user explicitly requests multiple writers. The default Luna worker is the sole writer and executes sequentially.

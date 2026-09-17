@@ -1,0 +1,61 @@
+=== original UniDataset against clip stores ===
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/workspace/PVB/data/mmap_dataset.py", line 119, in __getitem__
+    data = decompress(self._mmap[start:end])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/data/mmap_dataset.py", line 27, in decompress
+    serialized_x = f.read().decode()
+                   ^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 301, in read
+    return self._buffer.read(size)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/_compression.py", line 118, in readall
+    while data := self.read(sys.maxsize):
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 499, in read
+    if not self._read_gzip_header():
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 468, in _read_gzip_header
+    last_mtime = _read_gzip_header(self._fp)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 428, in _read_gzip_header
+    raise BadGzipFile('Not a gzipped file (%r)' % magic)
+gzip.BadGzipFile: Not a gzipped file (b'PK')
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/workspace/PVB/data/mmap_dataset.py", line 119, in __getitem__
+    data = decompress(self._mmap[start:end])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/data/mmap_dataset.py", line 27, in decompress
+    serialized_x = f.read().decode()
+                   ^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 301, in read
+    return self._buffer.read(size)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/_compression.py", line 118, in readall
+    while data := self.read(sys.maxsize):
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 499, in read
+    if not self._read_gzip_header():
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 468, in _read_gzip_header
+    last_mtime = _read_gzip_header(self._fp)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/gzip.py", line 428, in _read_gzip_header
+    raise BadGzipFile('Not a gzipped file (%r)' % magic)
+gzip.BadGzipFile: Not a gzipped file (b'PK')
+=== conversion wrapper help ===
+usage: migrate_clips_to_pvb_pairs.py [-h] --input-root INPUT_ROOT
+                                     --output-root OUTPUT_ROOT [--overwrite]
+
+Convert current npz-v1 clips into the original PVB gzip-JSON pair store. This
+is an external data adapter. It does not import or modify PVB_origin. Each
+T=16 clip contributes exactly T-1 adjacent pairs, preserving the stored atom
+order, topology, coordinates, masks, and native physical interval.
+
+options:
+  -h, --help            show this help message and exit
+  --input-root INPUT_ROOT
+  --output-root OUTPUT_ROOT
+  --overwrite

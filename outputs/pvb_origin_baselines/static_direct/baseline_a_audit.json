@@ -1,0 +1,61 @@
+{
+  "schema_version": "pvb.baseline.static_direct.audit.v1",
+  "status": "blocked_no_metrics",
+  "baseline": "A",
+  "checkpoint": {
+    "requested_file": "/data1/repo/PVB/ckpt/pdbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt",
+    "topk_map_entry": "0.26337328421718936: ckpt/pdbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt",
+    "sha256": "5d70374267e8302ed6082ddff8e8ef9a6d8de2a880b390c2e1dcefb687addd18",
+    "load_observed": true,
+    "model_class": "module.model.dyVAE"
+  },
+  "source": {
+    "root": "/data4/users/sihao/workspace/PVB_origin",
+    "commit": "c08e5e3cd49d45c6d748387e78224843bd356f50",
+    "working_tree_observed_clean": true
+  },
+  "command_arguments": {
+    "atlas_valid": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "misato_valid": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+    "device_argument": "cuda:0",
+    "physical_gpu_mapping": "CUDA_VISIBLE_DEVICES=4",
+    "seed": 20260810,
+    "max_tokens": 80000,
+    "max_batches": 32,
+    "selected_samples": 48,
+    "selected_by_bucket": {
+      "dt_100ps": 20,
+      "dt_80ps": 28
+    },
+    "rollout_frames": 16,
+    "sde_steps": 10
+  },
+  "data_scope": {
+    "pdb_included": false,
+    "preferred_validation_stores": true,
+    "fallback_under_data5_pvb": null,
+    "fallback_note": "Only PDB EPT/PVB original-format candidates were found under /data5/PVB; excluded by scope."
+  },
+  "runtime_observation": {
+    "selection_completed": true,
+    "checkpoint_loaded": true,
+    "first_rollout_completed": true,
+    "completed_samples_written": 0,
+    "metrics_file_written": false,
+    "per_sample_csv_written": false
+  },
+  "blocker": {
+    "type": "IndexError",
+    "message": "The shape of the mask [2466] at index 0 does not match the shape of the indexed tensor [1, 2466, 3] at index 0",
+    "location": "run_baseline_a.py _direct_one_step_metrics -> dynamic_direct/run_baseline_b.py one_step_metrics/_frame_rmsd",
+    "cause": "The adapter passed prediction[1:2].unsqueeze(0), producing [1, 1, N, 3], to a helper expecting [T, N, 3]; the mask is length N.",
+    "effect": "The run stopped after the first sample's model rollout and before appending metrics; no numeric result is reported."
+  },
+  "artifacts": {
+    "status": "baseline_a_status.json",
+    "log": "baseline_a_main.log",
+    "selection": "selection.json",
+    "wrapper": "run_baseline_a.py",
+    "dry_run_log": "baseline_a_dry_run.log"
+  }
+}

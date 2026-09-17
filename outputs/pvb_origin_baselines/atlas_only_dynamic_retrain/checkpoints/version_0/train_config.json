@@ -1,0 +1,1 @@
+{"save_dir": "/workspace/PVB/outputs/pvb_origin_baselines/atlas_only_dynamic_retrain/checkpoints/version_0", "lr": 0.0001, "max_epoch": 1, "metric_min_better": true, "warmup": 100, "patience": 1, "grad_clip": 1.0, "save_topk": 1, "loss_type": null, "ema": {"update_after_step": 1000000}}

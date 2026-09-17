@@ -1,0 +1,116 @@
+{
+  "candidate": "ratio4_state_detail",
+  "last_train": {
+    "detail_h_loss": 1.5650784969329834,
+    "detail_v_loss": 1.132982611656189,
+    "grad_norm": 0.815540611743927,
+    "learning_rate": 0.0002,
+    "loss": 1.214582085609436,
+    "observation_fraction": 0.5,
+    "state_h_loss": 1.044947624206543,
+    "state_v_loss": 1.1153193712234497,
+    "step": 200,
+    "tau_max": 0.7044580578804016,
+    "tau_mean": 0.7044580578804016,
+    "tau_min": 0.7044580578804016,
+    "valid_elements": {
+      "detail_h": 10228,
+      "detail_v": 10228,
+      "state_h": 10228,
+      "state_v": 10228
+    }
+  },
+  "schema": "pvb.dit.state_detail.t1_pilot.v1",
+  "validation_history": [
+    {
+      "batch_count": 52,
+      "fields": {
+        "detail_h": 4.26319532438772,
+        "detail_v": 3.0482446036414013,
+        "state_h": 4.466127143551774,
+        "state_v": 2.7946382910276206
+      },
+      "history_frames": [
+        4,
+        8
+      ],
+      "protocol": {
+        "future_interval": "[H,16)",
+        "history_schedule": [
+          4,
+          8
+        ],
+        "observed_interval": "[0,H)"
+      },
+      "sample_count": 144,
+      "step": 0,
+      "total": 3.6430513406521285,
+      "valid_elements": {
+        "detail_h": 72230400,
+        "detail_v": 216691200,
+        "state_h": 72230400,
+        "state_v": 216691200
+      }
+    },
+    {
+      "batch_count": 52,
+      "fields": {
+        "detail_h": 1.8366113291506265,
+        "detail_v": 1.5437325872308962,
+        "state_h": 1.2315845484664292,
+        "state_v": 1.3011858031045413
+      },
+      "history_frames": [
+        4,
+        8
+      ],
+      "protocol": {
+        "future_interval": "[H,16)",
+        "history_schedule": [
+          4,
+          8
+        ],
+        "observed_interval": "[0,H)"
+      },
+      "sample_count": 144,
+      "step": 100,
+      "total": 1.4782785669881233,
+      "valid_elements": {
+        "detail_h": 72230400,
+        "detail_v": 216691200,
+        "state_h": 72230400,
+        "state_v": 216691200
+      }
+    },
+    {
+      "batch_count": 52,
+      "fields": {
+        "detail_h": 1.7173912032396683,
+        "detail_v": 1.3817699231105178,
+        "state_h": 0.9930706185519684,
+        "state_v": 1.1419314058283723
+      },
+      "history_frames": [
+        4,
+        8
+      ],
+      "protocol": {
+        "future_interval": "[H,16)",
+        "history_schedule": [
+          4,
+          8
+        ],
+        "observed_interval": "[0,H)"
+      },
+      "sample_count": 144,
+      "step": 200,
+      "total": 1.3085407876826318,
+      "valid_elements": {
+        "detail_h": 72230400,
+        "detail_v": 216691200,
+        "state_h": 72230400,
+        "state_v": 216691200
+      }
+    }
+  ]
+}

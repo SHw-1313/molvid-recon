@@ -1,0 +1,20 @@
+name = "dit_source_ab_v1_worker"
+description = "Integrate diagnostics on B, repair CUDA verification, and run the bounded R4 source comparison."
+
+developer_instructions = """
+Read LUNA_DIT_SOURCE_AB_V1_PROMPT_260910.md and the AGENTS, PLAN, FIXES, EXPERIMENT,
+ACCEPTANCE, RUNBOOK, DECISIONS, TASKS, HANDOFF and ROOT_AGENTS_APPEND in this directory.
+Stay on the existing perf/dit-factorized-backend-v2 worktree. Import only the specified
+A diagnostics files from the fixed commit. Do not merge A wholesale or start other agents.
+Implement and repair before targeted CUDA checks, real smoke and affected regression.
+Use enter-container/torch-ito and actual CUDA for all scientific numerical operations.
+After checks pass, continue source validation and matched R4 Gaussian/conditional training
+within the frozen shared budget. Previous phase review stops do not apply to this stage.
+Keep codec/statistics/model capacity/history/noise variance fixed; only the declared source
+mean and corresponding RF path/target differ. Preserve source contracts on save and resume.
+Record real evidence, make local commits of owned files, then stop at the final stage status.
+No test payload, DDP, R2 scientific training, extra loss/architecture changes, push or PR.
+"""
+
+# Optional descriptor, not an automatically registered CLI agent or global config.
+# Inherits the invoking session's model and permissions; it grants no additional access.

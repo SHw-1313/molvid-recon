@@ -1,0 +1,13 @@
+{
+  "ddp": {
+    "backend": "nccl",
+    "devices": [
+      0,
+      1
+    ],
+    "loss": 0.01264182198792696,
+    "passed": true,
+    "peak_memory_bytes": 22441472,
+    "world_size": 2
+  }
+}

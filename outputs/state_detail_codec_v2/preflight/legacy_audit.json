@@ -1,0 +1,116 @@
+{
+  "legacy_behavior_evidence": {
+    "legacy_results_are_immutable": true,
+    "ratio1": "CausalTemporalEncoder(ratio=1) keeps 16 temporal tokens; JointMultiFrameDecoder upsamples and applies target-time query/refinement.",
+    "ratio4": "CausalTemporalEncoder(ratio=4) uses two causal downsamplers; legacy decoder reconstructs via time query and frame-zero x_anchor."
+  },
+  "legacy_checkpoint": {
+    "bytes": 23831538,
+    "frame_encoder_key_count": 42,
+    "frame_encoder_state_sha256": "e2ec7e6c1ed37c5b3bd6272f33b1ff48e4d697092de16f9925ef6fdd20a2414a",
+    "model_state_key_count": 101,
+    "path": "outputs/visnet_spatial_v1/tiny_overfit/run_20260901T192557/torchmd_et/codec_step_00004979.pt",
+    "sha256": "1146974b121844eb6c2120719575f1aec13a3ef6c907e0542216e4378680e128",
+    "step": 4979
+  },
+  "legacy_code_sha256": {
+    "module/coordinate_decoder.py": "c8ed828f73343d903166a4e2687654dd49975c2e28712c382bc401c71018b471",
+    "module/temporal_codec.py": "d8d1b1879f7e1007295ac1e77d758c9be0d1d2ada3240b33aadf4d5798ff735b",
+    "tests/test_codec_training.py": "b5e631e01179d0a59f15644bb595b1a8f445439285147b8bcd345dec1c75d656",
+    "tests/test_multiframe_codec.py": "63c9eac1b8f50a9c162528d7377a537a0b5107ac5d6196805842df0bc1c59264",
+    "tests/test_temporal_codec.py": "99b12b71d96ae05a182f1d4ea49eec5d146c6526976a9cbbd537d4d72ea407a2",
+    "trainer/codec_contract.py": "21b1bde59f98f6e8f349ed9a67156e3cd22a66f80fedb138f27a6641d6e706b0",
+    "trainer/codec_trainer.py": "5024a71f6a017ed6fb34287fa3858a74c6eb2a9cebeed46650d0d4e2a7da86e5"
+  },
+  "legacy_contract": {
+    "checkpoint_schema": "pvb.codec.checkpoint.v2",
+    "constructor": {
+      "bond_construction": {
+        "mode": "topology"
+      },
+      "cutoff_lower": 0.0,
+      "cutoff_upper": 5.0,
+      "distance_bond_cache_capacity": 4096,
+      "distance_bond_max": 2.2,
+      "distance_bond_max_num_neighbors": 64,
+      "distance_bond_min": 0.5,
+      "hidden_channels": 128,
+      "lmax": 1,
+      "max_num_neighbors": 32,
+      "neighbor_backend": "cuda_radius",
+      "num_heads": 8,
+      "num_rbf": 50,
+      "spatial_backbone": "torchmd_et",
+      "spatial_dtype": "float32",
+      "spatial_execution": {
+        "mode": "full"
+      },
+      "spatial_layers": 2,
+      "temporal_layers": 1,
+      "temporal_ratio": 1,
+      "time_scale_ps": 100.0,
+      "topology_cache_capacity": 4096,
+      "topology_device_cache_capacity": 4096,
+      "trainable_rbf": false,
+      "use_spatial_refiner": false,
+      "vecnorm_type": null,
+      "vertex": true
+    },
+    "coordinate_rule": "x_hat = x_anchor + displacement(decoded.h, decoded.v)",
+    "decoder": {
+      "num_heads": 8,
+      "temporal_layers": 1,
+      "time_scale_ps": 100.0
+    },
+    "latent_fields": [
+      "z_h",
+      "z_v",
+      "latent_mask",
+      "latent_time_ps",
+      "x_anchor",
+      "topology",
+      "abid"
+    ],
+    "legacy_anchor_shape": "[N,3]",
+    "model_schema": "pvb.codec.model_contract.v1",
+    "model_type": "trainer.codec_trainer.PVBCodecModel",
+    "temporal": {
+      "hidden_channels": 128,
+      "layers": 1,
+      "num_heads": 8,
+      "ratio": 1,
+      "time_scale_ps": 100.0
+    }
+  },
+  "schema_version": "pvb.codec.state_detail.preflight_audit.v1",
+  "source_branch": "feat/visnet-spatial-v2",
+  "source_commit": "045dbb8809e9d7aee418eb355b6477e05088d4fd",
+  "stored_artifacts": [
+    {
+      "bytes": 18452,
+      "path": "outputs/visnet_spatial_v1/tiny_overfit/run_20260901T192557/manifest_contract.json",
+      "sha256": "21992d86626eaf3b6d08dea12354b65060ec0be54b64c0adf9dc15b18f315a40"
+    },
+    {
+      "bytes": 967,
+      "path": "outputs/visnet_spatial_v1/tiny_overfit/run_20260901T192557/protocol.json",
+      "sha256": "d98805fee37c05370bc8fd52fd49c7f28e05532ebdc7366088aa0cc458263564"
+    },
+    {
+      "bytes": 216596,
+      "path": "outputs/visnet_spatial_v1/tiny_overfit/run_20260901T192557/torchmd_et/result.json",
+      "sha256": "c7d36b57e1eb663b04b82fb0620e80599e6b8209ff16c2d2fb3e78aed7475067"
+    },
+    {
+      "bytes": 216087,
+      "path": "outputs/visnet_spatial_v1/tiny_overfit/run_20260901T192557/visnet_bonded/result.json",
+      "sha256": "2e408514e90c116a066f59ef2e300552daceda3f1b646a632d04cd9ca23df5b0"
+    },
+    {
+      "bytes": 23831538,
+      "path": "outputs/visnet_spatial_v1/tiny_overfit/run_20260901T192557/torchmd_et/codec_step_00004979.pt",
+      "sha256": "1146974b121844eb6c2120719575f1aec13a3ef6c907e0542216e4378680e128"
+    }
+  ],
+  "target_branch": "feat/state-detail-codec-v2"
+}

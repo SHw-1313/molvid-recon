@@ -1,0 +1,227 @@
+{
+  "schema_version": "pvb.visnet_spatial_v2.implementation_evidence.v1",
+  "phase": "ViSNet spatial backbone v2 reference-faithful repair",
+  "source_branch": "feat/visnet-spatial-v1",
+  "source_commit": "bca9ea98df643f4965b009688f2967bd669e7fe2",
+  "reference_checkouts": {
+    "AI2BMD": {
+      "remote": "https://github.com/microsoft/AI2BMD.git",
+      "commit": "497efaa190ee6f6cbc6030710c44208a01ece52d",
+      "license": "MIT",
+      "license_sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "source_sha256": {
+        "visnet/models/visnet_block.py": "67ed05a2fcb746460e0783e7f0abb74fd79adb8b0b6ad3977fa8a27270c30eba",
+        "visnet/models/utils.py": "590eebb53061564940aad89b195f31ba78283aa301fed8cde2bc803b08fe3a1e"
+      }
+    },
+    "pytorch_geometric": {
+      "remote": "https://github.com/pyg-team/pytorch_geometric.git",
+      "commit": "79d33965a40b7fa83616a9f598a0f8619f25d939",
+      "license": "MIT",
+      "license_sha256": "89cfb6edc309735916a0c1189dccf761add4af6062ddb34b5a26f60d3efadfea",
+      "source_sha256": {
+        "torch_geometric/nn/models/visnet.py": "f8005ec06fb70730a16e81c0be888eddb6e2dddff8eb1f1e832bd3c31043e561"
+      }
+    }
+  },
+  "fixture_hashes": {
+    "seed": 20260902,
+    "dtype": "float32",
+    "input_sha256": "2a176f79e2f535d165aa7149a2be0a86263209582b21b896b8ba22a62d802ac7",
+    "state_sha256": "216821adcd5a38f46eea359cc06ed8e0cd8941aae214e6f7ef1d302742d6d0e2",
+    "output_sha256": {
+      "lmax1": "970b079b9762734f048071c0fc586f141942738b06aaec9f4ec0eb42ef7c8251",
+      "lmax2": "e802961640fd696b77e22ecb239531a54a6365b969efa53ce865f39e70d9952c"
+    },
+    "tolerances": {
+      "rtol": 2e-5,
+      "atol": 2e-6,
+      "observed_max_abs_difference": 0.0
+    }
+  },
+  "implementation_source_sha256": {
+    "AGENTS.md": "6db383f3e07b5ca37e99a174b1bba622eb7506381c87275b7e529f37ae1ad580",
+    "module/__init__.py": "929f2ba07d59f79ebce117156eee367dd7d553a16c8a21c2e4b2cf287f845095",
+    "module/multiframe_codec.py": "3c81ae58efce75a8f302bb15ab6cf3284a4aaf229c2062c4b337e80d7c6d75fb",
+    "module/visnet.py": "b0faa49ca34c9daf0895ed84a34f15f161c18260bcdcc4a13bec2a6df1512142",
+    "module/visnet_v2.py": "6beadfd705c6a2d47bf659cd66f691f8215c7bac65bae7e145ba7bf7713f1ffa",
+    "scripts/run_visnet_spatial_v2_micro_overfit.py": "946c21e02379220d769d340c1412508bffd681276956914c6a45f79ab14dad8f",
+    "scripts/run_visnet_spatial_v2_tiny_overfit.py": "92fe5e40b4c385199edbd94cf74054d657894e8eb601c87520364cfc81236eaf",
+    "tests/test_visnet_spatial_v2.py": "d6c5f8873a835e17eb95733c0d1972fafad00c64d5a835cf0f0ba52c19ba809a",
+    "trainer/codec_trainer.py": "5024a71f6a017ed6fb34287fa3858a74c6eb2a9cebeed46650d0d4e2a7da86e5"
+  },
+  "gate_0": {
+    "status": "passed",
+    "commands": [
+      "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider tests/test_visnet_spatial_v2.py",
+      "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider",
+      "PYTHONDONTWRITEBYTECODE=1 python -m py_compile module/visnet_v2.py module/visnet.py module/multiframe_codec.py module/__init__.py trainer/codec_trainer.py tests/test_visnet_spatial_v2.py scripts/run_visnet_spatial_v2_micro_overfit.py scripts/run_visnet_spatial_v2_tiny_overfit.py",
+      "git diff --check"
+    ],
+    "specialized_tests_passed": 22,
+    "full_suite_tests_passed": 89,
+    "warnings": 1,
+    "geometry": {
+      "primitive_base_vertex_and_full_block_fixture_max_abs": 0.0,
+      "angle_fixed_edge_distance_sensitive": true,
+      "dihedral_fixed_edge_distance_sensitive": true,
+      "finite_nonzero_geometry_gradients": true,
+      "native_radius_build_count": 1,
+      "external_bonded_native_build_count": 0,
+      "se3_equivariance": true,
+      "lmax2_internal_components": 8,
+      "public_vector_components": 3
+    },
+    "v1_regression": {
+      "selected_regression_suite_passed": 32,
+      "immutable_tiny_manifest_contract_sha256": "21992d86626eaf3b6d08dea12354b65060ec0be54b64c0adf9dc15b18f315a40",
+      "immutable_tiny_protocol_sha256": "d98805fee37c05370bc8fd52fd49c7f28e05532ebdc7366088aa0cc458263564"
+    }
+  },
+  "gate_1": {
+    "status": "passed",
+    "protocol": {
+      "seed": 20260902,
+      "fixed_sample_count": 3,
+      "steps": 500,
+      "max_tokens": 80000,
+      "precision": "fp32",
+      "checkpoint_resume": "500_to_501",
+      "geometry_gradient_gate": "required for v2; not applicable to legacy baselines"
+    },
+    "results": {
+      "torchmd_et": {
+        "initial_total": 1.6567615270614624,
+        "final_total": 0.32297465205192566,
+        "relative_reduction": 0.8050566440755212,
+        "steps_per_second": 0.9363412306064125,
+        "peak_allocated_gib": 54.99215126037598,
+        "peak_reserved_gib": 58.4140625,
+        "geometry_gradients": "finite_and_nonzero"
+      },
+      "visnet_bonded_v1": {
+        "initial_total": 1.5519970655441284,
+        "final_total": 0.5696617960929871,
+        "relative_reduction": 0.6329491796472796,
+        "steps_per_second": 1.1226960378520692,
+        "peak_allocated_gib": 35.31209325790405,
+        "peak_reserved_gib": 36.0390625,
+        "geometry_gradients": "not_applicable_legacy_backbone"
+      },
+      "visnet_v2_bonded_lmax1": {
+        "initial_total": 1.542722463607788,
+        "final_total": 0.33027148246765137,
+        "relative_reduction": 0.7859164624495819,
+        "steps_per_second": 0.6339137298562995,
+        "peak_allocated_gib": 69.13288879394531,
+        "peak_reserved_gib": 72.208984375,
+        "geometry_gradients": "finite_and_nonzero"
+      },
+      "visnet_v2_bonded_lmax2": {
+        "initial_total": 1.933403770128886,
+        "final_total": 0.33591245611508685,
+        "relative_reduction": 0.8262585077649384,
+        "steps_per_second": 0.2590630455598902,
+        "peak_allocated_gib": 62.681859493255615,
+        "peak_reserved_gib": 66.11328125,
+        "geometry_gradients": "finite_and_nonzero",
+        "logical_batch_accumulation": true
+      }
+    },
+    "selection": {
+      "selected_lmax": 1,
+      "reason": "lower absolute final loss, faster runtime, and lower memory than lmax=2",
+      "lmax1_final_total": 0.33027148246765137,
+      "lmax2_final_total": 0.33591245611508685
+    },
+    "artifact_sha256": {
+      "local_torchmd_result": "8b3704921dc98bfe410bd15840843a60712fc5c8d0ba11a946f7ddaef6ad3951",
+      "local_v1_bonded_result": "fc8ff473fc5b19c8b8a7a3918986a856b5f66159303a3cdc3fe840c5a35b268a",
+      "local_v2_lmax1_result": "5fdfcf46ff82dec18671b9b98473f3e005ff8e31a55e826b285419c517f501f1",
+      "remote_v2_lmax2_result": "6cd47e0e3ce84393c2c1cc0f052d2b48c591385358c2eb01594f162fe4dbb487",
+      "remote_v2_lmax2_checkpoint": "5fd972515bf9cb6f74a45c7ce02d35990b987ef21b7ae1368e17f5f7fd800122"
+    }
+  },
+  "gate_2": {
+    "status": "passed",
+    "manifest": {
+      "train_count": 441,
+      "late_holdout_count": 117,
+      "intersection_count": 0,
+      "source_manifest_sha256_match": true,
+      "train_index_sha256_match": true,
+      "valid_index_sha256_match": true,
+      "built_manifest_sha256_match": false,
+      "built_manifest_note": "path-dependent builder hash differs between the immutable v1 checkout and isolated neibu worker"
+    },
+    "protocol": {
+      "frames_per_clip": 16,
+      "time_bucket_id": "dt_100ps",
+      "precision": "fp32",
+      "max_tokens": 80000,
+      "replacement": false,
+      "exact_epoch_coverage": true,
+      "epochs": 30,
+      "safety_cap_steps": 6000,
+      "temporal_layers": 1,
+      "temporal_ratio": 1
+    },
+    "selected_bonded": {
+      "backbone": "visnet_v2_bonded",
+      "steps": 4979,
+      "initial_train_total": 0.7811038778617538,
+      "final_train_total": 0.3353972431956505,
+      "train_reduction": 0.5706112174045411,
+      "initial_future_drmsd": 1.0606348139765744,
+      "final_future_drmsd": 0.6462773866359406,
+      "future_drmsd_improvement": 0.3906692688948314,
+      "final_future_rmsd": 0.8797021821814704,
+      "final_future_bond_rmse": 0.16075404971509447,
+      "final_velocity_rmse": 0.004224299360090859,
+      "final_frequency_retention": 0.6789051819051433,
+      "tiny_quality_pass": false,
+      "checkpoint_resume": "4979_to_4980",
+      "training_elapsed_s": 10253.14757346129,
+      "train_tokens_per_s": 33645.067285766636,
+      "holdout_eval_s_per_epoch": 57.652223779354244,
+      "peak_allocated_gib": 35.509878635406494,
+      "peak_reserved_gib": 37.154296875
+    },
+    "radius_bounded_micro": {
+      "backbone": "visnet_v2_radius",
+      "steps": 500,
+      "initial_total": 1.9595201810201008,
+      "final_total": 0.4000779092311859,
+      "reduction": 0.7958286354453821,
+      "micro_quality_pass": true,
+      "checkpoint_resume": "500_to_501",
+      "training_elapsed_s": 973.6471209949814,
+      "steps_per_second": 0.5135330749902944,
+      "peak_allocated_gib": 35.37014436721802,
+      "peak_reserved_gib": 36.98046875,
+      "graph_mode": "native_radius",
+      "distance_edges": 319183,
+      "binary_covalent_edge_features": 0
+    },
+    "classification": {
+      "outcome": "IMPLEMENTED",
+      "future_drmsd_gap_recovery": 0.9578133100411423,
+      "v2_beats_v1_bonded_future_drmsd": true,
+      "v2_beats_v1_bonded_future_rmsd": true,
+      "v2_within_10_percent_of_torchmd_future_drmsd": true,
+      "v2_within_10_percent_of_torchmd_future_rmsd": true
+    },
+    "artifact_sha256": {
+      "tiny_manifest_contract": "f3ee81f99543ea6a4c6701c6fe390d77516635421521bd19ee2c136e6d2f32fc",
+      "tiny_protocol": "dcb9c0dc892e95fec5c3510f0f9a4f2428cb834943ff7f9107233a0a16bff418",
+      "tiny_result": "9fedb7a53bb366c5a7e9eda708647a136e35644bc0130a4a172ea6df015d75e9",
+      "tiny_checkpoint": "7b94e1c437123b1d2322f950308e9892cefecc56ac407476eb819b5b431509ed",
+      "aggregate_json": "726bc5545d1b49bf1c81b86e810cab21df5e92f20a645093eae2a288d18c8ef8",
+      "aggregate_csv": "f9236e714c6867e5fba72969c5e3a31ab58623b28c6394670f5f2f0e6a4ebbf3",
+      "eval_plot_png": "cdb8712e1cbbc7d2ea8299789ea842c132a0a2215651e6a63907b68c933df528",
+      "eval_plot_pdf": "a0620cde00c11d18e32763ccb7af2f938c3d132187b1cab4dd5aaf410a5a0e6a",
+      "radius_result": "78add57436dc72c54d55218c113012b1e8c371f6b70720fbba68de5d6eef57e5",
+      "radius_checkpoint": "46b33da70aaade185815886c356b2416b7e6b9f6c89ab1a669206527d089cd15"
+    }
+  }
+}

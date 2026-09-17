@@ -1,0 +1,3 @@
+condition,overall_loss_mean,atlas_loss_mean,misato_loss_mean,source
+C,1.815241908967495,1.2502820516824722,2.380201766252518,/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/valid_eval/baseline_d_valid_metrics.json
+D,1.3128217451274395,0.8206688287854195,1.8049746614694595,/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/valid_eval/baseline_d_valid_metrics.json

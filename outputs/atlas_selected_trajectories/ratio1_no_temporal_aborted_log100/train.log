@@ -1,0 +1,87 @@
+{"batches_per_epoch": 144, "requested_epochs": 50, "requested_steps": 7200, "train_subset": {"fraction": 1.0, "full_records": 441, "selected_records": 441}, "valid_subset": {"fraction": 1.0, "full_records": 117, "selected_records": 117}}
+{
+  "normalization_elapsed_s": 4.747870128951035,
+  "normalization_stats": {
+    "dt_100ps": {
+      "bucket_id": "dt_100ps",
+      "count": 10112304,
+      "coordinate_mean": [
+        0.0012902462622150779,
+        0.0003576275485102087,
+        -0.0007820837199687958
+      ],
+      "coordinate_std": [
+        8.916441917419434,
+        11.468255043029785,
+        11.738961219787598
+      ],
+      "velocity_scale": 0.0068625121208869015,
+      "acceleration_scale": 0.00011504922781352316,
+      "min_count": 32,
+      "epsilon": 1e-06,
+      "used_fallback": false
+    }
+  }
+}
+Traceback (most recent call last):
+  File "/workspace/PVB/train_codec.py", line 210, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/PVB/train_codec.py", line 187, in main
+    metrics = trainer.run(
+              ^^^^^^^^^^^^
+  File "/workspace/PVB/trainer/codec_trainer.py", line 466, in run
+    last = self.optimizer_step(batch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/trainer/codec_trainer.py", line 414, in optimizer_step
+    losses, _, moved_batch = self._loss_for_batch(batch)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/trainer/codec_trainer.py", line 386, in _loss_for_batch
+    output = self.model(batch)
+             ^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/trainer/codec_trainer.py", line 281, in forward
+    encoded = self.frame_encoder(batch)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/module/multiframe_codec.py", line 483, in forward
+    graph = self.build_graph(batch)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/module/multiframe_codec.py", line 432, in build_graph
+    distance_edges, _, _ = self._distance_edges(pos, graph_id)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/module/multiframe_codec.py", line 298, in _distance_edges
+    edge_index, edge_weight, _ = finder(pos, batch=graph_id)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/utils/torchmd_utils.py", line 351, in forward
+    edge_index, edge_vec, edge_weight, num_pairs = get_neighbor_pairs_kernel(
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/utils/torchmd_utils.py", line 55, in get_neighbor_pairs_kernel
+    edge_index = _radius_graph(
+                 ^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch_cluster/radius.py", line 140, in radius_graph
+    edge_index = radius(x, x, r, batch, batch,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch_cluster/radius.py", line 86, in radius
+    return torch.ops.torch_cluster.radius(x, y, ptr_x, ptr_y, r,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/_ops.py", line 1116, in __call__
+    return self._op(*args, **(kwargs or {}))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

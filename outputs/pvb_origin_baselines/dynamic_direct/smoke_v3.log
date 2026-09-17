@@ -1,0 +1,6 @@
+{"selection": {"batches": 1, "by_bucket": {"dt_100ps": 2}, "samples": 2}}
+{"cuda": "12.1", "device": "cuda:0", "torch": "2.5.1+cu121"}
+{"checkpoint": "/data1/repo/PVB/ckpt/misato_from_author_pretrain/version_0/checkpoint/epoch1_step4.ckpt", "checkpoint_sha256": "777a3695dd7af62aafb58547bb24ee303a7989663c434ba17ca8ba9a2ea1909e", "model_class": "module.model.dyVAE", "model_k_neighbors": 32, "model_using_ode": false}
+{"atoms": 2466, "bucket": "dt_100ps", "elapsed_s": 1.204151612939313, "one_step_rmsd": 1.8864925398973564, "rollout_future_rmsd": 1.8864925398973564, "sample": 1, "sample_id": "atlas_3bl9_A_R1_w000000", "total": 2}
+{"atoms": 2466, "bucket": "dt_100ps", "elapsed_s": 0.6343249409692362, "one_step_rmsd": 2.1401359946275584, "rollout_future_rmsd": 2.1401359946275584, "sample": 2, "sample_id": "atlas_3bl9_A_R1_w000001", "total": 2}
+{"by_bucket": {"dt_100ps": 2}, "complete": true, "output": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/baseline_b_metrics.json", "peak_gpu_bytes": 2205148160, "samples": 2}

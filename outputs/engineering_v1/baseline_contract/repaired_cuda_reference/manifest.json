@@ -1,0 +1,65 @@
+{
+  "controls": {
+    "ratio1_no_temporal": {
+      "bytes": 188521538,
+      "checkpoint": "/workspace/PVB/outputs/atlas_selected_trajectories/ratio1_no_temporal/codec_step_00007200.pt",
+      "checkpoint_schema": "pvb.codec.checkpoint.v1",
+      "checkpoint_sha256": "5208b3c3566e09a5e5eb74478c378e56f95efb7dd7e0c545731c58bada85543a",
+      "file": "ratio1_no_temporal.pt",
+      "parameter_count": 593992,
+      "sha256": "5f75542d2baaacee9767c34e84b391f0d9990145e544c9f3fd303a0d47db84c8"
+    },
+    "ratio1_temporal": {
+      "bytes": 194062082,
+      "checkpoint": "/workspace/PVB/outputs/atlas_selected_trajectories/ratio1_temporal/codec_step_00007200.pt",
+      "checkpoint_schema": "pvb.codec.checkpoint.v1",
+      "checkpoint_sha256": "4929fe74e3bef92febf15d18e5782a2d49358aec4e6f04ea00afc3794aa3ce3d",
+      "file": "ratio1_temporal.pt",
+      "parameter_count": 1974904,
+      "sha256": "95d1e9dd032067aca3fd263bd44904fbb47741e34cc5038bedcd0ef2de7d9117"
+    },
+    "ratio4_temporal": {
+      "bytes": 199607482,
+      "checkpoint": "/workspace/PVB/outputs/atlas_selected_trajectories/ratio4_temporal/codec_step_00007200.pt",
+      "checkpoint_schema": "pvb.codec.checkpoint.v1",
+      "checkpoint_sha256": "9a461fd09b3a20e6b03b239920b4357666b1d3f32bc12476c2b4448b70c63099",
+      "file": "ratio4_temporal.pt",
+      "parameter_count": 3356074,
+      "sha256": "f87fd19bbf4ce231bcb33f55394ce15dceb928664a93ec9725bc670af946dab4"
+    }
+  },
+  "created_by": "scripts/build_engineering_reference.py",
+  "fixed_batch": {
+    "sample_ids": [
+      "atlas_5e3e_A_R1_w000000",
+      "atlas_5e3e_A_R1_w000001",
+      "atlas_5e3e_A_R1_w000002",
+      "atlas_5e3e_A_R1_w000003",
+      "atlas_5e3e_A_R1_w000004"
+    ],
+    "shape": [
+      16,
+      4435,
+      3
+    ]
+  },
+  "loss_weights": {
+    "acceleration": 0.05,
+    "bond": 0.1,
+    "coordinate": 1.0,
+    "local": 0.1,
+    "velocity": 0.1
+  },
+  "policy": "immutable_repaired_cuda_fp32_reference",
+  "reproduction": "enter-container; source /home/sihao/miniforge3/bin/activate torch-ito; cd /workspace/PVB; python scripts/build_engineering_reference.py --allow-legacy-checkpoint --legacy-bond-mode topology",
+  "runtime": {
+    "cuda": "12.1",
+    "device": "cuda:0",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "torch": "2.5.1+cu121",
+    "torch_cluster": "1.6.3+pt25cu121",
+    "total_memory_bytes": 85094825984
+  },
+  "schema_version": "pvb.codec.engineering.reference_manifest.v1",
+  "source_commit": "9ad0b7c99718839a9a20008bbb04152646c119e0"
+}

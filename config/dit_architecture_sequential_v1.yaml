@@ -1,0 +1,130 @@
+schema: pvb.dit.architecture_sequential.config.v1
+run_id: 20260914_r4_architecture_sequential_v1
+manifest_root: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000
+output_root: outputs/dit_architecture_sequential_v1
+baseline:
+  capacity_run_root: /data4/users/sihao/workspace/molvid-dit-capacity-data-v1/outputs/dit_capacity_data_v1/20260914_capacity_data_v1
+  capacity_data_manifest: /data4/users/sihao/workspace/molvid-dit-capacity-data-v1/outputs/dit_capacity_data_v1/data_manifest_20260914
+  experiment_id: C48
+  expected_code_commit: c070e3c2aeecb6dc33d338e2429bfb426876faac
+  expected_successful_updates: 4500
+  expected_effective_atom_frame_tokens: 267988032
+  fallback_target_updates: 20000
+candidate:
+  ratio: 4
+  mode: ratio4_state_detail
+  codec_result: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/result.json
+  codec_checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+  codec_checkpoint_sha256: ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df
+  statistics: /data4/users/sihao/workspace/molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500/ratio4_state_detail/shared/statistics.pt
+  statistics_file_sha256: 4d07bf53f317a6f2937a027695d2d70993674903d0fcefc1fa49e0482a529583
+model:
+  codec_width: 128
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+  ffn_multiplier: 4
+  dropout: 0.0
+  execution_backend: factorized_v2
+source:
+  mode: conditional
+  center_kind: repeat_last_coordinate_encode
+  sigma: 1.0
+schedule:
+  frames: 16
+  observation_history: [4, 8]
+  history_order: [4, 8]
+  clips_per_trajectory: 24
+  max_atom_frame_tokens: 80000
+  validation_interval: 500
+  checkpoint_interval: 500
+  generation_interval: 1000
+budget:
+  gpu_hours_total: 48.0
+  wall_hours_total: 72.0
+  reserve_fraction: 0.25
+  profile_warmup_updates: 5
+  profile_measured_updates: 20
+  profile_generation_batches: 2
+  baseline_candidate_updates: [20000, 10000, 4500]
+  round_candidate_updates: [5000, 3500, 2000]
+  inconclusive_extension_fraction: 0.5
+round2:
+  max_atom_frame_tokens: 60000
+  tau_threshold: 0.75
+  target_auxiliary_gradient_ratio: 0.10
+  lambda_min: 0.01
+  lambda_max: 1.0
+  future_rounds_training_reserve_gpu_hours: 8.0
+  calibration:
+    source: fixed_quick_train
+    histories: [4, 8]
+    min_applicable_batches: 3
+    seed: 2026091402
+round3:
+  max_atom_frame_tokens: 60000
+  hidden: 64
+  block_frames: 4
+  tau_min: 0.75
+  tau_max: 0.95
+  coordinate_weight: 1.0
+  bond_weight: 0.10
+  motion_weight: 0.10
+  future_rounds_training_reserve_gpu_hours: 8.0
+  evaluation_recovery_reserve_gpu_hours: 12.0
+round4:
+  max_atom_frame_tokens: 60000
+  validation_max_atom_frame_tokens: 56672
+  evaluation_recovery_reserve_gpu_hours: 12.0
+  corruption:
+    probabilities: [0.50, 0.25, 0.25]
+    sigmas_angstrom: [0.0, 0.02, 0.05]
+    seed: 2026091404
+  rollout:
+    first_window: 30
+    clip_len: 16
+    window_stride_frames: 16
+    history_frames: 8
+    segments: 3
+    draws: [0, 1]
+    steps: 16
+evaluation:
+  generation_seed: 20260914
+  training_seed_base: 20260914
+  fixed_replica: R1
+  fixed_window: 30
+  quick_train_systems: 8
+  quick_valid_systems: 8
+  quick_draws: [0, 1, 2, 3]
+  final_valid_replicas: [R1, R2, R3]
+  final_valid_windows: [0, 30, 61]
+  final_draws: [0]
+  histories: [4, 8]
+  euler_steps: 16
+  smoke:
+    root: outputs/atlas_selected_trajectories/clip_store
+    systems: [atlas_1v7r_A, atlas_2wlt_A, atlas_5e3e_A]
+    replicas: [R1, R2, R3]
+    window: 0
+decision:
+  primary_relative_improvement: 0.10
+  opposite_trend_tolerance: 0.02
+  minimum_systems_same_direction: 5
+  bond_relative_worsening: 0.05
+  contact_f1_absolute_drop: 0.01
+  amplitude_relative_worsening: 0.10
+protocol:
+  train_split_only: true
+  validation_split_only: true
+  test_payload_forbidden: true
+  codec_frozen: true
+  statistics_frozen: true
+  frame_encoder_frozen: true
+  tf32: false
+  deterministic_cuda: true
+  amp: bfloat16
+  optimizer: AdamW
+  learning_rate: 0.0002
+  weight_decay: 0.01
+  grad_clip: 1.0

@@ -1,0 +1,43 @@
+data:
+  dataset: uni
+  same_origin: false
+  complexity: n
+  ubound_per_batch: 8000
+  max_batches: 60000
+  path:
+    atlas_train: clip:///data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/train
+    atlas_valid: clip:///data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid
+    misato_train: clip:///data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/train
+    misato_valid: clip:///data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid
+training:
+  lr: 5.0e-5
+  warmup: 1000
+  max_epoch: 1
+  grad_clip: 1.0
+  patience: 5
+  save_topk: 10
+  loss_type: mse
+  batch_size: 1
+  num_workers: 0
+  shuffle: true
+  save_dir: /workspace/PVB/outputs/pvb_origin_baselines/static_retrain/checkpoints_retry
+  wrapper: {}
+model:
+  model_type: md
+  ckpt: /data1/repo/PVB/ckpt/pdbbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt
+  hidden_dim: 256
+  ffn_dim: 512
+  rbf_dim: 32
+  heads: 8
+  layers: 8
+  cutoff_lower: 0.0
+  cutoff_upper: 10.0
+  cutoff_H: 1.0
+  k_neighbors: 32
+  coord_prior_var: 1.0
+  sigma: 1.0
+  additional_noise_scale: 0.0
+  kl_weight: 0.0
+  re_weight: 1.0
+  using_ode: false
+  backbone: torchmd

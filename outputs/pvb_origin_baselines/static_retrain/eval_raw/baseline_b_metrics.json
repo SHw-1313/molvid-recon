@@ -1,0 +1,1963 @@
+{
+  "baseline": "B",
+  "blockers": [
+    "Preferred validation stores are npz-v1 clip records and cannot be read by PVB_origin's gzip-JSON MMAPDataset; this run used a read-only adapter in the output directory.",
+    "No ATLAS or MISATO original-format migrated store was found under /data5/PVB; the only original-format candidate found there is a PDB EPT/PVB store and was excluded by scope.",
+    "The original PVB evaluator's raw test JSONL/trajectory path was not used because the pilot validation stores are clip stores; metrics are computed on the exact selected clips with per-clip inference."
+  ],
+  "by_time_bucket": {
+    "dt_100ps": {
+      "atoms_mean": 2466.0,
+      "native_delta_time_ps": 100.0,
+      "one_step": {
+        "bond_rmse": 0.14730805847210424,
+        "clash_rate": 1.6478281850140775e-07,
+        "contact_error": 0.0006914781464729458,
+        "drmsd": 1.5333433127984235,
+        "rmsd": 2.032921822974547
+      },
+      "rollout16": {
+        "acceleration_rmse": 0.0001917074738210976,
+        "all_frames": {
+          "bond_rmse": 0.18098241917534436,
+          "clash_rate": 7.693297824573619e-07,
+          "contact_error": 0.0018205545435193925,
+          "drmsd": 2.833698627041092,
+          "rmsd": 3.6540184632419974
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.49716954305768013,
+        "future": {
+          "bond_rmse": 0.186917839741533,
+          "clash_rate": 8.206184549663931e-07,
+          "contact_error": 0.0019419249845668673,
+          "drmsd": 2.9266314191685,
+          "rmsd": 3.773854116116764
+        },
+        "velocity_rmse": 0.012048644375831818
+      },
+      "runtime": {
+        "samples_per_s": 0.0608818847109805,
+        "wall_time_s": 328.50494190421887
+      },
+      "sample_count": 20
+    },
+    "dt_80ps": {
+      "atoms_mean": 2696.5714285714284,
+      "native_delta_time_ps": 80.0,
+      "one_step": {
+        "bond_rmse": 0.1335342420331141,
+        "clash_rate": 4.146189981822447e-08,
+        "contact_error": 0.0005928387389368643,
+        "drmsd": 1.132212866326364,
+        "rmsd": 1.435681682555332
+      },
+      "rollout16": {
+        "acceleration_rmse": 0.00021873513638692978,
+        "all_frames": {
+          "bond_rmse": 0.15223598665379243,
+          "clash_rate": 1.8673360940064348e-07,
+          "contact_error": 0.001799791760277003,
+          "drmsd": 2.198414689114514,
+          "rmsd": 2.5084197680077485
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.437825573342187,
+        "future": {
+          "bond_rmse": 0.15722864890085322,
+          "clash_rate": 1.99182523427258e-07,
+          "contact_error": 0.0019197779641087567,
+          "drmsd": 2.2705129722899136,
+          "rmsd": 2.5906848767111397
+        },
+        "velocity_rmse": 0.010786784142918676
+      },
+      "runtime": {
+        "samples_per_s": 0.0457419501946703,
+        "wall_time_s": 612.1295633622212
+      },
+      "sample_count": 28
+    }
+  },
+  "checkpoint": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/checkpoints_pilot500/version_0/checkpoint/epoch0_step992.ckpt",
+  "checkpoint_sha256": "a7f5332152321f873224dd243697e5a191a0851cc5253af3161e269ac30d2954",
+  "data": {
+    "atlas_valid": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "batch_count": 32,
+    "misato_valid": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+    "pdb_included": false,
+    "policy": {
+      "batching_cost": "frames * atoms",
+      "max_batches": 32,
+      "max_tokens": 80000,
+      "replacement": false,
+      "shuffle": false,
+      "task_weights": {},
+      "time_bucket_weights": {}
+    },
+    "sample_count": 48,
+    "sample_count_by_bucket": {
+      "dt_100ps": 20,
+      "dt_80ps": 28
+    },
+    "selection_file": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/eval_raw/selection.json"
+  },
+  "description": "Unmodified PVB dyVAE dynamic-structure checkpoint, direct native-step inference; no retraining.",
+  "inference": {
+    "direct_one_step_target": "frame 1 at each store's native delta_time_ps",
+    "method": "dyVAE.inference",
+    "rollout_frames": 16,
+    "rollout_policy": "frame 0 is the input; each later frame is a sequential direct model.inference call",
+    "rollout_transition_count": 15,
+    "sde_steps": 10
+  },
+  "per_sample": [
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.989525893004611,
+      "one_step": {
+        "bond_rmse": 0.13826457504984294,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0007217487436719239,
+        "drmsd": 1.699064962509136,
+        "rmsd": 1.9788880068378218
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0001889214795905187,
+        "all_frames": {
+          "bond_rmse": 0.17206704724403807,
+          "clash_rate": 4.325548843553406e-07,
+          "contact_error": 0.001864105579443276,
+          "drmsd": 2.9877083422425397,
+          "rmsd": 4.330415525871505
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.3628924787044525,
+        "future": {
+          "bond_rmse": 0.17771008084441578,
+          "clash_rate": 4.613918918039417e-07,
+          "contact_error": 0.001988379517570138,
+          "drmsd": 3.0856919589319802,
+          "rmsd": 4.472434065851465
+        },
+        "velocity_rmse": 0.012138811459356396
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000000"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.480016395100392,
+      "one_step": {
+        "bond_rmse": 0.1511924103778807,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0006937356665730476,
+        "drmsd": 1.8848093294600916,
+        "rmsd": 2.31166288328331
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00018922760653028618,
+        "all_frames": {
+          "bond_rmse": 0.16715988862568007,
+          "clash_rate": 5.56141969809687e-07,
+          "contact_error": 0.001775864395312965,
+          "drmsd": 2.6323740789396535,
+          "rmsd": 3.1737154427112255
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.6065388917922974,
+        "future": {
+          "bond_rmse": 0.1726419827016598,
+          "clash_rate": 5.932182034484867e-07,
+          "contact_error": 0.0018942554015666246,
+          "drmsd": 2.718704223247431,
+          "rmsd": 3.2777992632174304
+        },
+        "velocity_rmse": 0.011782295695780647
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000001"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 12.30963819497265,
+      "one_step": {
+        "bond_rmse": 0.13365014375032427,
+        "clash_rate": 0.0,
+        "contact_error": 0.0004286799521651119,
+        "drmsd": 1.1382431872201888,
+        "rmsd": 1.4964860446634838
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00021749158262521535,
+        "all_frames": {
+          "bond_rmse": 0.14860240660360946,
+          "clash_rate": 4.9962697090677466e-08,
+          "contact_error": 0.0011955448426306248,
+          "drmsd": 2.250261291590852,
+          "rmsd": 2.517563351513093
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.2632012367248535,
+        "future": {
+          "bond_rmse": 0.1534759011452189,
+          "clash_rate": 5.3293547352950554e-08,
+          "contact_error": 0.0012752478942275047,
+          "drmsd": 2.3240599505887674,
+          "rmsd": 2.6001283283842285
+        },
+        "velocity_rmse": 0.010767705232576485
+      },
+      "sample_id": "misato_4U03_w000000"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 12.258587361080572,
+      "one_step": {
+        "bond_rmse": 0.13572842370379093,
+        "clash_rate": 1.9985078836270986e-07,
+        "contact_error": 0.00042528248741291463,
+        "drmsd": 1.104861466712556,
+        "rmsd": 1.3712176840216042
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00021141836399109145,
+        "all_frames": {
+          "bond_rmse": 0.15558841834555417,
+          "clash_rate": 4.246829234944016e-07,
+          "contact_error": 0.0012625324307009578,
+          "drmsd": 2.090398810998963,
+          "rmsd": 2.600408441300034
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.214706540107727,
+        "future": {
+          "bond_rmse": 0.16069101976970915,
+          "clash_rate": 4.5299518092178914e-07,
+          "contact_error": 0.0013467012904584408,
+          "drmsd": 2.1589546379635167,
+          "rmsd": 2.6856903370772143
+        },
+        "velocity_rmse": 0.010478206810617988
+      },
+      "sample_id": "misato_4U03_w000001"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 12.263148176018149,
+      "one_step": {
+        "bond_rmse": 0.13709160507555468,
+        "clash_rate": 1.9985078836270986e-07,
+        "contact_error": 0.00041568963206373155,
+        "drmsd": 1.2451676422069025,
+        "rmsd": 1.5110923395829714
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002182545077257305,
+        "all_frames": {
+          "bond_rmse": 0.15485256664608177,
+          "clash_rate": 3.9970160514712916e-07,
+          "contact_error": 0.0012964694760739803,
+          "drmsd": 2.292725012333083,
+          "rmsd": 2.554144658734924
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.64445161819458,
+        "future": {
+          "bond_rmse": 0.15993103614213522,
+          "clash_rate": 4.2634837882360443e-07,
+          "contact_error": 0.0013829008676111698,
+          "drmsd": 2.367916385244066,
+          "rmsd": 2.637909344912197
+        },
+        "velocity_rmse": 0.010686178727718298
+      },
+      "sample_id": "misato_4U03_w000002"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 10.224613755010068,
+      "one_step": {
+        "bond_rmse": 0.14346104766229892,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006986791267991066,
+        "drmsd": 1.5281092293828504,
+        "rmsd": 1.950378439934148
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00020175306781986639,
+        "all_frames": {
+          "bond_rmse": 0.1863916041047654,
+          "clash_rate": 1.318262548011262e-06,
+          "contact_error": 0.0017900769598782063,
+          "drmsd": 2.7505789060745887,
+          "rmsd": 3.365161542940102
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.42973819375038147,
+        "future": {
+          "bond_rmse": 0.19250440869608607,
+          "clash_rate": 1.4061467936699046e-06,
+          "contact_error": 0.0019094154704362154,
+          "drmsd": 2.8407857347930023,
+          "rmsd": 3.47552392426764
+        },
+        "velocity_rmse": 0.012607886098452632
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000002"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 12.82998386991676,
+      "one_step": {
+        "bond_rmse": 0.15178388644067542,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0007876618765294552,
+        "drmsd": 1.9191829155739133,
+        "rmsd": 2.6970764579981945
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00020229530177903756,
+        "all_frames": {
+          "bond_rmse": 0.16891656752348055,
+          "clash_rate": 2.2657637543943565e-07,
+          "contact_error": 0.0018413655925542116,
+          "drmsd": 3.549874671550507,
+          "rmsd": 3.8325889251604712
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.4076399505138397,
+        "future": {
+          "bond_rmse": 0.17445627579532183,
+          "clash_rate": 2.4168147660930117e-07,
+          "contact_error": 0.0019641234539449215,
+          "drmsd": 3.666294873779449,
+          "rmsd": 3.9582809177073734
+        },
+        "velocity_rmse": 0.012896088368983842
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000003"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 14.394210794009268,
+      "one_step": {
+        "bond_rmse": 0.13549603297481064,
+        "clash_rate": 1.9985078836270986e-07,
+        "contact_error": 0.00044306920608505607,
+        "drmsd": 1.177662051686252,
+        "rmsd": 1.4251629886775283
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002183686913768903,
+        "all_frames": {
+          "bond_rmse": 0.14758220637682065,
+          "clash_rate": 4.9962697090677466e-08,
+          "contact_error": 0.0012732993345707655,
+          "drmsd": 2.1999750005862215,
+          "rmsd": 2.600482521765586
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.331845998764038,
+        "future": {
+          "bond_rmse": 0.15242224285095032,
+          "clash_rate": 5.3293547352950554e-08,
+          "contact_error": 0.0013581860112026334,
+          "drmsd": 2.2721244454688265,
+          "rmsd": 2.685766858887847
+        },
+        "velocity_rmse": 0.010734524215069964
+      },
+      "sample_id": "misato_4U03_w000003"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 17.84436333004851,
+      "one_step": {
+        "bond_rmse": 0.14837643973673173,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006007981719449162,
+        "drmsd": 1.589117760761725,
+        "rmsd": 2.2094951548405612
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00017401043940854766,
+        "all_frames": {
+          "bond_rmse": 0.1827305222782378,
+          "clash_rate": 8.033162544052175e-07,
+          "contact_error": 0.0018558045849204063,
+          "drmsd": 3.415902835473586,
+          "rmsd": 4.37840944682628
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.41193410754203796,
+        "future": {
+          "bond_rmse": 0.18872327913843137,
+          "clash_rate": 8.568706562073203e-07,
+          "contact_error": 0.001979525201022625,
+          "drmsd": 3.5279293144566735,
+          "rmsd": 4.522001944594237
+        },
+        "velocity_rmse": 0.011285063479125723
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000004"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 22.07869514799677,
+      "one_step": {
+        "bond_rmse": 0.15034717700099584,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006881330627948046,
+        "drmsd": 1.5199090247786267,
+        "rmsd": 2.1791561668634163
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019209857599350013,
+        "all_frames": {
+          "bond_rmse": 0.16749991924013496,
+          "clash_rate": 2.6777206585393287e-07,
+          "contact_error": 0.0017366872634738684,
+          "drmsd": 2.9732593220393255,
+          "rmsd": 4.233588677062032
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.27892276644706726,
+        "future": {
+          "bond_rmse": 0.17299318169480102,
+          "clash_rate": 2.856235425952036e-07,
+          "contact_error": 0.0018524664919823408,
+          "drmsd": 3.0707690649325103,
+          "rmsd": 4.372431627876427
+        },
+        "velocity_rmse": 0.012163699848412457
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000005"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 12.179479977930896,
+      "one_step": {
+        "bond_rmse": 0.131722351875699,
+        "clash_rate": 0.0,
+        "contact_error": 0.0003215599281247705,
+        "drmsd": 1.1638054275834535,
+        "rmsd": 1.4821776338394073
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002132744977766046,
+        "all_frames": {
+          "bond_rmse": 0.16384585017710498,
+          "clash_rate": 3.6222954236109217e-07,
+          "contact_error": 0.001279020099900663,
+          "drmsd": 2.139083418594072,
+          "rmsd": 2.5073323488335815
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.5072321891784668,
+        "future": {
+          "bond_rmse": 0.16921925798271206,
+          "clash_rate": 3.863782183088915e-07,
+          "contact_error": 0.0013642881531268358,
+          "drmsd": 2.2092358406410018,
+          "rmsd": 2.589561665680377
+        },
+        "velocity_rmse": 0.010584972109820835
+      },
+      "sample_id": "misato_4U03_w000004"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 12.124333924963139,
+      "one_step": {
+        "bond_rmse": 0.13066106687342097,
+        "clash_rate": 0.0,
+        "contact_error": 0.00044546741992235184,
+        "drmsd": 1.2059210452271647,
+        "rmsd": 1.4942030151904553
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00021337485490825723,
+        "all_frames": {
+          "bond_rmse": 0.14981310048657362,
+          "clash_rate": 3.7472025837814726e-07,
+          "contact_error": 0.0012372387573122978,
+          "drmsd": 2.0618243411230406,
+          "rmsd": 2.4260690122193105
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.5054954290390015,
+        "future": {
+          "bond_rmse": 0.15472630004552373,
+          "clash_rate": 3.9970160514712916e-07,
+          "contact_error": 0.0013197214575484395,
+          "drmsd": 2.129443067711717,
+          "rmsd": 2.505633396773091
+        },
+        "velocity_rmse": 0.010507983326298884
+      },
+      "sample_id": "misato_4U03_w000005"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 11.981089000939392,
+      "one_step": {
+        "bond_rmse": 0.13680071417422734,
+        "clash_rate": 0.0,
+        "contact_error": 0.00041871474240906537,
+        "drmsd": 1.0639758798798042,
+        "rmsd": 1.4357767971964854
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022534938132489631,
+        "all_frames": {
+          "bond_rmse": 0.15256224149660982,
+          "clash_rate": 2.5235941336632095e-08,
+          "contact_error": 0.0011547714238986373,
+          "drmsd": 2.2159615846120433,
+          "rmsd": 2.7335500290114316
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.3170719146728516,
+        "future": {
+          "bond_rmse": 0.15756559839421497,
+          "clash_rate": 2.691833955736911e-08,
+          "contact_error": 0.0012317562941461802,
+          "drmsd": 2.288635318201757,
+          "rmsd": 2.823198442836039
+        },
+        "velocity_rmse": 0.011195518437602444
+      },
+      "sample_id": "misato_5ZU0_w000000"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 11.971457279054448,
+      "one_step": {
+        "bond_rmse": 0.12831636042438624,
+        "clash_rate": 0.0,
+        "contact_error": 0.00048129988135769963,
+        "drmsd": 1.2366451682529598,
+        "rmsd": 1.5336977798538372
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00023750515395866455,
+        "all_frames": {
+          "bond_rmse": 0.15376962440552827,
+          "clash_rate": 1.8926955647202703e-07,
+          "contact_error": 0.0011610804358497262,
+          "drmsd": 2.1817372299839963,
+          "rmsd": 2.5824788639056724
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.119396686553955,
+        "future": {
+          "bond_rmse": 0.15881259105766835,
+          "clash_rate": 2.0188753069305676e-07,
+          "contact_error": 0.0012384859146550298,
+          "drmsd": 2.253288620762878,
+          "rmsd": 2.6671725826371433
+        },
+        "velocity_rmse": 0.011647395864618198
+      },
+      "sample_id": "misato_5ZU0_w000001"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.337812504032627,
+      "one_step": {
+        "bond_rmse": 0.14359661061049503,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0006347434245981276,
+        "drmsd": 1.296062444730762,
+        "rmsd": 1.7024658747542516
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019489412781647413,
+        "all_frames": {
+          "bond_rmse": 0.1864823600714524,
+          "clash_rate": 1.421251795363787e-06,
+          "contact_error": 0.001798707526177168,
+          "drmsd": 2.8927052203994905,
+          "rmsd": 3.9500173785636172
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.4429401457309723,
+        "future": {
+          "bond_rmse": 0.1925981546010037,
+          "clash_rate": 1.516002043899789e-06,
+          "contact_error": 0.001918621244840324,
+          "drmsd": 2.987573317900999,
+          "rmsd": 4.07956059352358
+        },
+        "velocity_rmse": 0.012383207135688556
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000006"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.34174304397311,
+      "one_step": {
+        "bond_rmse": 0.14344151246103887,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006594608421437442,
+        "drmsd": 1.441804081462915,
+        "rmsd": 2.3104096321111234
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002014959679104097,
+        "all_frames": {
+          "bond_rmse": 0.16812483056318686,
+          "clash_rate": 1.8538067081408371e-07,
+          "contact_error": 0.001869172672741115,
+          "drmsd": 2.8805673845670143,
+          "rmsd": 3.912004184689458
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.3766971528530121,
+        "future": {
+          "bond_rmse": 0.1736385833673758,
+          "clash_rate": 1.97739396412544e-07,
+          "contact_error": 0.001993784448131919,
+          "drmsd": 2.9750375120218253,
+          "rmsd": 4.040300721788584
+        },
+        "velocity_rmse": 0.012469584860920074
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000007"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 36.033182485960424,
+      "one_step": {
+        "bond_rmse": 0.13791028955094156,
+        "clash_rate": 0.0,
+        "contact_error": 0.00046434131218120456,
+        "drmsd": 1.2556079476367774,
+        "rmsd": 1.6638484333592092
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00023685578665112286,
+        "all_frames": {
+          "bond_rmse": 0.15475673595128936,
+          "clash_rate": 8.832580533635337e-08,
+          "contact_error": 0.001203110907226801,
+          "drmsd": 2.2274812643202972,
+          "rmsd": 2.6417055345758524
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.1905282735824585,
+        "future": {
+          "bond_rmse": 0.15983206223335286,
+          "clash_rate": 9.42141937798624e-08,
+          "contact_error": 0.001283318386413157,
+          "drmsd": 2.300532743702248,
+          "rmsd": 2.728341820000103
+        },
+        "velocity_rmse": 0.011722533042559602
+      },
+      "sample_id": "misato_5ZU0_w000002"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 30.65883275808301,
+      "one_step": {
+        "bond_rmse": 0.12901650395416786,
+        "clash_rate": 0.0,
+        "contact_error": 0.0003981222107540816,
+        "drmsd": 1.0924203147023146,
+        "rmsd": 1.4315564389736504
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022769568002410146,
+        "all_frames": {
+          "bond_rmse": 0.15420804907439215,
+          "clash_rate": 1.009437795573831e-07,
+          "contact_error": 0.0012446492910385132,
+          "drmsd": 2.175602520325469,
+          "rmsd": 2.599106737893028
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.2856570482254028,
+        "future": {
+          "bond_rmse": 0.15926538395608456,
+          "clash_rate": 1.0767335822947643e-07,
+          "contact_error": 0.0013276258250698447,
+          "drmsd": 2.246952536230626,
+          "rmsd": 2.684345967287884
+        },
+        "velocity_rmse": 0.011252588148850735
+      },
+      "sample_id": "misato_5ZU0_w000003"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 22.141822646954097,
+      "one_step": {
+        "bond_rmse": 0.14102488854538603,
+        "clash_rate": 0.0,
+        "contact_error": 0.0007365791825577617,
+        "drmsd": 1.7496733360582506,
+        "rmsd": 2.219523979908236
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019896000070131615,
+        "all_frames": {
+          "bond_rmse": 0.16499224681592173,
+          "clash_rate": 1.235871138760558e-07,
+          "contact_error": 0.001735925325192511,
+          "drmsd": 2.987303250908857,
+          "rmsd": 4.0300291119984095
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.386865496635437,
+        "future": {
+          "bond_rmse": 0.17040326998112854,
+          "clash_rate": 1.318262548011262e-07,
+          "contact_error": 0.0018516536802053452,
+          "drmsd": 3.0852736133190795,
+          "rmsd": 4.162196215292441
+        },
+        "velocity_rmse": 0.01274266547310706
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000008"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 21.90267396904528,
+      "one_step": {
+        "bond_rmse": 0.15528220625775055,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006726434803567827,
+        "drmsd": 1.5893306419671929,
+        "rmsd": 1.915834626369806
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019228923078658575,
+        "all_frames": {
+          "bond_rmse": 0.16283807936146802,
+          "clash_rate": 1.235871138760558e-07,
+          "contact_error": 0.001757388119585812,
+          "drmsd": 3.0818985014781206,
+          "rmsd": 4.442485104580425
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.19574590027332306,
+        "future": {
+          "bond_rmse": 0.16817844409122368,
+          "clash_rate": 1.318262548011262e-07,
+          "contact_error": 0.0018745474517345428,
+          "drmsd": 3.1829712054274193,
+          "rmsd": 4.588178928454796
+        },
+        "velocity_rmse": 0.012413660864315121
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000009"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 30.211418811930344,
+      "one_step": {
+        "bond_rmse": 0.13820480884757527,
+        "clash_rate": 0.0,
+        "contact_error": 0.0004219449474476278,
+        "drmsd": 1.1357142673776905,
+        "rmsd": 1.4632127150062901
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022721171754043937,
+        "all_frames": {
+          "bond_rmse": 0.1596957424634471,
+          "clash_rate": 3.4068523291352903e-07,
+          "contact_error": 0.0012636014726012945,
+          "drmsd": 2.134678621604526,
+          "rmsd": 2.5430236904227357
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.25048828125,
+        "future": {
+          "bond_rmse": 0.1649330520998637,
+          "clash_rate": 3.6339756093184405e-07,
+          "contact_error": 0.0013478416949510574,
+          "drmsd": 2.2046866867745223,
+          "rmsd": 2.626423676751995
+        },
+        "velocity_rmse": 0.011136242140601892
+      },
+      "sample_id": "misato_5ZU0_w000004"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 32.38655226503033,
+      "one_step": {
+        "bond_rmse": 0.13523607790671996,
+        "clash_rate": 0.0,
+        "contact_error": 0.00035875412868335843,
+        "drmsd": 1.2116161290682972,
+        "rmsd": 1.5677961238304639
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00023259185037360338,
+        "all_frames": {
+          "bond_rmse": 0.16127474920205723,
+          "clash_rate": 3.533031645019946e-07,
+          "contact_error": 0.0013315870892256498,
+          "drmsd": 2.2640550106496,
+          "rmsd": 2.634449616774858
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.2929216623306274,
+        "future": {
+          "bond_rmse": 0.16656384549841013,
+          "clash_rate": 3.7685671827603073e-07,
+          "contact_error": 0.001420359592884779,
+          "drmsd": 2.3383060554695168,
+          "rmsd": 2.720847975578069
+        },
+        "velocity_rmse": 0.011521662079295399
+      },
+      "sample_id": "misato_5ZU0_w000005"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 37.14817936194595,
+      "one_step": {
+        "bond_rmse": 0.13143825597087644,
+        "clash_rate": 0.0,
+        "contact_error": 0.00037004833575338125,
+        "drmsd": 1.0732444645143326,
+        "rmsd": 1.3479823505763011
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002251849438243363,
+        "all_frames": {
+          "bond_rmse": 0.14955420560031304,
+          "clash_rate": 7.253952816199671e-08,
+          "contact_error": 0.0012357109226286411,
+          "drmsd": 2.3649600788965066,
+          "rmsd": 2.701190763615719
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.227311134338379,
+        "future": {
+          "bond_rmse": 0.15445891454841307,
+          "clash_rate": 7.737551044328939e-08,
+          "contact_error": 0.0013180917594581842,
+          "drmsd": 2.4425202536548514,
+          "rmsd": 2.7897779044075195
+        },
+        "velocity_rmse": 0.011078216479343084
+      },
+      "sample_id": "misato_4DCV_w000000"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 36.211593243991956,
+      "one_step": {
+        "bond_rmse": 0.1446819679446779,
+        "clash_rate": 0.0,
+        "contact_error": 0.0004135720373596996,
+        "drmsd": 1.1759400117975558,
+        "rmsd": 1.4623658240953443
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022815346929296748,
+        "all_frames": {
+          "bond_rmse": 0.15116117671203438,
+          "clash_rate": 3.6269767633712036e-08,
+          "contact_error": 0.0011934686917811632,
+          "drmsd": 2.371088822939434,
+          "rmsd": 2.6320805197112898
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.2769986391067505,
+        "future": {
+          "bond_rmse": 0.1561185880226991,
+          "clash_rate": 3.868775522164469e-08,
+          "contact_error": 0.001273033325560391,
+          "drmsd": 2.4488499803369517,
+          "rmsd": 2.71840113012864
+        },
+        "velocity_rmse": 0.011392261117726224
+      },
+      "sample_id": "misato_4DCV_w000001"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 23.22146483103279,
+      "one_step": {
+        "bond_rmse": 0.1472385447366214,
+        "clash_rate": 0.0,
+        "contact_error": 0.0007079069619067013,
+        "drmsd": 1.3466579554452305,
+        "rmsd": 1.9843858132856218
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019053583825477986,
+        "all_frames": {
+          "bond_rmse": 0.2947373855251823,
+          "clash_rate": 2.7807100195786916e-06,
+          "contact_error": 0.002081433543935418,
+          "drmsd": 2.4120815012939087,
+          "rmsd": 3.0265359305267685
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.9206348657608032,
+        "future": {
+          "bond_rmse": 0.3044034661017995,
+          "clash_rate": 2.9660907330253394e-06,
+          "contact_error": 0.0022201959509402514,
+          "drmsd": 2.4911871071172547,
+          "rmsd": 3.125792898677448
+        },
+        "velocity_rmse": 0.011544869785968982
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000010"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 21.425547502934933,
+      "one_step": {
+        "bond_rmse": 0.14736469235259686,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0006884626345708966,
+        "drmsd": 1.4806640013118721,
+        "rmsd": 1.8663209955568794
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019940107431877134,
+        "all_frames": {
+          "bond_rmse": 0.17510145452393344,
+          "clash_rate": 6.797291121074522e-07,
+          "contact_error": 0.0017482838593423367,
+          "drmsd": 2.9198751694634177,
+          "rmsd": 3.47662915798105
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.5328749418258667,
+        "future": {
+          "bond_rmse": 0.18084399567833417,
+          "clash_rate": 7.250443445627752e-07,
+          "contact_error": 0.0018648362020030618,
+          "drmsd": 3.0156341710717087,
+          "rmsd": 3.590647411359494
+        },
+        "velocity_rmse": 0.012170941528726721
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000011"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 30.71322479401715,
+      "one_step": {
+        "bond_rmse": 0.13027383984413526,
+        "clash_rate": 1.934387512392277e-07,
+        "contact_error": 0.0004613514174707234,
+        "drmsd": 1.1999045035987876,
+        "rmsd": 1.493599428384975
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022659778734195795,
+        "all_frames": {
+          "bond_rmse": 0.14903338562844423,
+          "clash_rate": 2.4179843904903464e-08,
+          "contact_error": 0.0012302824761718512,
+          "drmsd": 2.4147275730746003,
+          "rmsd": 2.6430341576610834
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.2602421045303345,
+        "future": {
+          "bond_rmse": 0.1539210256755051,
+          "clash_rate": 2.579183444595401e-08,
+          "contact_error": 0.0013123013777658343,
+          "drmsd": 2.4939199901188207,
+          "rmsd": 2.7297140450980155
+        },
+        "velocity_rmse": 0.011214256246070269
+      },
+      "sample_id": "misato_4DCV_w000002"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 30.436251754988916,
+      "one_step": {
+        "bond_rmse": 0.1338271135669441,
+        "clash_rate": 0.0,
+        "contact_error": 0.0003675336192827672,
+        "drmsd": 1.1277403305102585,
+        "rmsd": 1.4378776054342137
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022778992545988277,
+        "all_frames": {
+          "bond_rmse": 0.15049299867676055,
+          "clash_rate": 1.329891432533259e-07,
+          "contact_error": 0.0012133566197007895,
+          "drmsd": 2.14120241716898,
+          "rmsd": 2.45835367830123
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.3468297719955444,
+        "future": {
+          "bond_rmse": 0.15542849709706152,
+          "clash_rate": 1.418550965581744e-07,
+          "contact_error": 0.0012942471075803041,
+          "drmsd": 2.2114243257854285,
+          "rmsd": 2.538976861536546
+        },
+        "velocity_rmse": 0.011120423552054226
+      },
+      "sample_id": "misato_4DCV_w000003"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 32.261874819057994,
+      "one_step": {
+        "bond_rmse": 0.1329867818285388,
+        "clash_rate": 0.0,
+        "contact_error": 0.0003182067594025284,
+        "drmsd": 1.1559862403050731,
+        "rmsd": 1.4149777311587957
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00022345712961299388,
+        "all_frames": {
+          "bond_rmse": 0.14752859496095297,
+          "clash_rate": 4.835968780980693e-08,
+          "contact_error": 0.0011567516485229135,
+          "drmsd": 2.206081489849357,
+          "rmsd": 2.4715814891225105
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.4056912660598755,
+        "future": {
+          "bond_rmse": 0.15236688095943682,
+          "clash_rate": 5.158366889190802e-08,
+          "contact_error": 0.0012338684173300862,
+          "drmsd": 2.2784312352445033,
+          "rmsd": 2.5526384541382208
+        },
+        "velocity_rmse": 0.010970122252691717
+      },
+      "sample_id": "misato_4DCV_w000004"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 32.19523212895729,
+      "one_step": {
+        "bond_rmse": 0.1373467667132255,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006789052276872098,
+        "drmsd": 1.3098705837882625,
+        "rmsd": 1.7446367641029659
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019272235353262054,
+        "all_frames": {
+          "bond_rmse": 0.1717586285934164,
+          "clash_rate": 7.209248451545136e-07,
+          "contact_error": 0.0018382759299129248,
+          "drmsd": 2.759200225168221,
+          "rmsd": 3.463023089066152
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.4321030080318451,
+        "future": {
+          "bond_rmse": 0.17739154952927322,
+          "clash_rate": 7.689864673920965e-07,
+          "contact_error": 0.001960827736184001,
+          "drmsd": 2.8496898616225033,
+          "rmsd": 3.5765949292793797
+        },
+        "velocity_rmse": 0.012181939324075738
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000012"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 22.183819375000894,
+      "one_step": {
+        "bond_rmse": 0.1432095745442801,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006759391399100423,
+        "drmsd": 1.4728124722861795,
+        "rmsd": 1.8295737500751674
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00018829877091382154,
+        "all_frames": {
+          "bond_rmse": 0.18479562560194787,
+          "clash_rate": 7.827183594599774e-07,
+          "contact_error": 0.0018533123657107353,
+          "drmsd": 2.590893286789144,
+          "rmsd": 3.535008413690593
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.46185848116874695,
+        "future": {
+          "bond_rmse": 0.1908561138041536,
+          "clash_rate": 8.348997084794973e-07,
+          "contact_error": 0.001976866740733385,
+          "drmsd": 2.6758631338691354,
+          "rmsd": 3.6509410428897953
+        },
+        "velocity_rmse": 0.011741735471603744
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000013"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 20.37843762594275,
+      "one_step": {
+        "bond_rmse": 0.150897583530744,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0006568243261426687,
+        "drmsd": 1.8544757956794324,
+        "rmsd": 2.1697093677586294
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00020487012106887737,
+        "all_frames": {
+          "bond_rmse": 0.18887882098215203,
+          "clash_rate": 1.2770668718076195e-06,
+          "contact_error": 0.0018916449043899775,
+          "drmsd": 2.890275428873265,
+          "rmsd": 3.936969055224701
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.410593718290329,
+        "future": {
+          "bond_rmse": 0.19507321004362893,
+          "clash_rate": 1.3622045571537456e-06,
+          "contact_error": 0.002017754828557372,
+          "drmsd": 2.9850635632978926,
+          "rmsd": 4.066084468836677
+        },
+        "velocity_rmse": 0.012883752468331561
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000014"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 26.713887550053187,
+      "one_step": {
+        "bond_rmse": 0.1520224386172886,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0007372383261099458,
+        "drmsd": 1.4044591732969698,
+        "rmsd": 1.8882120671380744
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00018806201507980778,
+        "all_frames": {
+          "bond_rmse": 0.19041288252798155,
+          "clash_rate": 1.0916862720478093e-06,
+          "contact_error": 0.00195045187138021,
+          "drmsd": 3.1064761657046107,
+          "rmsd": 4.008119924551889
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.35576874017715454,
+        "future": {
+          "bond_rmse": 0.19665757502908557,
+          "clash_rate": 1.164465288638894e-06,
+          "contact_error": 0.0020804819650948048,
+          "drmsd": 3.2083548673097,
+          "rmsd": 4.139568381177715
+        },
+        "velocity_rmse": 0.012179926941203649
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000015"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 36.840114725986496,
+      "one_step": {
+        "bond_rmse": 0.1410304225544035,
+        "clash_rate": 0.0,
+        "contact_error": 0.000395775685319677,
+        "drmsd": 1.130673618905568,
+        "rmsd": 1.44202292051895
+      },
+      "rollout": {
+        "acceleration_rmse": 0.000222955290934574,
+        "all_frames": {
+          "bond_rmse": 0.1510748902042709,
+          "clash_rate": 4.835968780980693e-08,
+          "contact_error": 0.0012889791978523135,
+          "drmsd": 2.3760731932608192,
+          "rmsd": 2.653594990181758
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.2405188083648682,
+        "future": {
+          "bond_rmse": 0.1560294740859644,
+          "clash_rate": 5.158366889190802e-08,
+          "contact_error": 0.0013749111676588655,
+          "drmsd": 2.4539978029696727,
+          "rmsd": 2.7406212662048306
+        },
+        "velocity_rmse": 0.011125046443139067
+      },
+      "sample_id": "misato_4DCV_w000005"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 23.20382833306212,
+      "one_step": {
+        "bond_rmse": 0.13419635757996076,
+        "clash_rate": 3.6794207858292793e-07,
+        "contact_error": 0.0006144632934592664,
+        "drmsd": 1.1541811502606003,
+        "rmsd": 1.5182645170917561
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00021342776238170676,
+        "all_frames": {
+          "bond_rmse": 0.15061783038483503,
+          "clash_rate": 1.1498190133352182e-07,
+          "contact_error": 0.0018339152447879314,
+          "drmsd": 2.171166283767505,
+          "rmsd": 2.4679232794523696
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.5899147987365723,
+        "future": {
+          "bond_rmse": 0.1555574207380942,
+          "clash_rate": 1.2264736426459422e-07,
+          "contact_error": 0.0019561764784157276,
+          "drmsd": 2.242370810641494,
+          "rmsd": 2.548860396257629
+        },
+        "velocity_rmse": 0.01053318081422728
+      },
+      "sample_id": "misato_5HJQ_w000000"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 21.691802161978558,
+      "one_step": {
+        "bond_rmse": 0.13840500579415996,
+        "clash_rate": 0.0,
+        "contact_error": 0.0005842919927090406,
+        "drmsd": 1.19350201492555,
+        "rmsd": 1.4051048278392264
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002107132017972865,
+        "all_frames": {
+          "bond_rmse": 0.14980998595614528,
+          "clash_rate": 6.898913795794215e-08,
+          "contact_error": 0.0018010535277426243,
+          "drmsd": 2.248061828828685,
+          "rmsd": 2.4616204177069183
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.404685139656067,
+        "future": {
+          "bond_rmse": 0.1547230917992298,
+          "clash_rate": 7.358841713767106e-08,
+          "contact_error": 0.0019211238250136375,
+          "drmsd": 2.321788382679462,
+          "rmsd": 2.5423507291022704
+        },
+        "velocity_rmse": 0.010348373750788429
+      },
+      "sample_id": "misato_5HJQ_w000001"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 23.970651778043248,
+      "one_step": {
+        "bond_rmse": 0.12914030904667784,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006358039099723101,
+        "drmsd": 1.0834730987377936,
+        "rmsd": 1.3823600934169447
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002215998811031749,
+        "all_frames": {
+          "bond_rmse": 0.15005783317201374,
+          "clash_rate": 3.6794207858292793e-07,
+          "contact_error": 0.0017711351392790675,
+          "drmsd": 2.186398910240798,
+          "rmsd": 2.413454442155549
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.4571841955184937,
+        "future": {
+          "bond_rmse": 0.15497906088715394,
+          "clash_rate": 3.9247154859367583e-07,
+          "contact_error": 0.00188921089284122,
+          "drmsd": 2.2581031902578728,
+          "rmsd": 2.4926052401104597
+        },
+        "velocity_rmse": 0.010798748350599087
+      },
+      "sample_id": "misato_5HJQ_w000002"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 32.3603165440727,
+      "one_step": {
+        "bond_rmse": 0.1302155985394796,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006759095704182982,
+        "drmsd": 1.0191057859397086,
+        "rmsd": 1.3117152093018212
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002131074698443433,
+        "all_frames": {
+          "bond_rmse": 0.15224450497780087,
+          "clash_rate": 4.599276053340873e-07,
+          "contact_error": 0.0018089181976392865,
+          "drmsd": 2.057242425900696,
+          "rmsd": 2.420913013015824
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.6774203777313232,
+        "future": {
+          "bond_rmse": 0.15723744941123502,
+          "clash_rate": 4.905894570583769e-07,
+          "contact_error": 0.0019295128295198083,
+          "drmsd": 2.124710848714081,
+          "rmsd": 2.5003082085405617
+        },
+        "velocity_rmse": 0.010466693408277244
+      },
+      "sample_id": "misato_5HJQ_w000003"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 21.5752693930408,
+      "one_step": {
+        "bond_rmse": 0.12926065248728197,
+        "clash_rate": 0.0,
+        "contact_error": 0.0005394030595198274,
+        "drmsd": 1.1406992012867205,
+        "rmsd": 1.470009284217217
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00021693919277520818,
+        "all_frames": {
+          "bond_rmse": 0.14793654031849196,
+          "clash_rate": 4.599275982286599e-08,
+          "contact_error": 0.0017042156541720033,
+          "drmsd": 2.0617776241475574,
+          "rmsd": 2.3937438367161703
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.468002438545227,
+        "future": {
+          "bond_rmse": 0.15278821079316954,
+          "clash_rate": 4.905894712692316e-08,
+          "contact_error": 0.0018178301397711039,
+          "drmsd": 2.129394811163562,
+          "rmsd": 2.472248061779681
+        },
+        "velocity_rmse": 0.010733265110924388
+      },
+      "sample_id": "misato_5HJQ_w000004"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 21.710279720951803,
+      "one_step": {
+        "bond_rmse": 0.1284961752391904,
+        "clash_rate": 0.0,
+        "contact_error": 0.000440426665591076,
+        "drmsd": 1.0830782565570505,
+        "rmsd": 1.4324463454445735
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00021848505933744192,
+        "all_frames": {
+          "bond_rmse": 0.1551704004890065,
+          "clash_rate": 6.898913795794215e-08,
+          "contact_error": 0.001648472505621612,
+          "drmsd": 2.03576229392594,
+          "rmsd": 2.3638751836315435
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.579720377922058,
+        "future": {
+          "bond_rmse": 0.16025929508761033,
+          "clash_rate": 7.358841713767106e-08,
+          "contact_error": 0.0017583707813173532,
+          "drmsd": 2.102526475555972,
+          "rmsd": 2.441399902335498
+        },
+        "velocity_rmse": 0.010751987655035903
+      },
+      "sample_id": "misato_5HJQ_w000005"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 20.95443335105665,
+      "one_step": {
+        "bond_rmse": 0.13187535014716212,
+        "clash_rate": 0.0,
+        "contact_error": 0.0014599786372855306,
+        "drmsd": 1.0834827258955946,
+        "rmsd": 1.3462552957244678
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019731344109698382,
+        "all_frames": {
+          "bond_rmse": 0.15150068610377485,
+          "clash_rate": 2.1777724157345801e-07,
+          "contact_error": 0.00463484413921833,
+          "drmsd": 2.178161743379556,
+          "rmsd": 2.254348790772844
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.621246099472046,
+        "future": {
+          "bond_rmse": 0.15646923896617154,
+          "clash_rate": 2.322957328715347e-07,
+          "contact_error": 0.004943834152072668,
+          "drmsd": 2.2495958177145097,
+          "rmsd": 2.328281474135534
+        },
+        "velocity_rmse": 0.009767125059194099
+      },
+      "sample_id": "misato_4J8T_w000000"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 4.7775188910309225,
+      "one_step": {
+        "bond_rmse": 0.12467167994757297,
+        "clash_rate": 0.0,
+        "contact_error": 0.0013763521565124393,
+        "drmsd": 0.9536791581908342,
+        "rmsd": 1.2713589232826041
+      },
+      "rollout": {
+        "acceleration_rmse": 0.0002068247076819848,
+        "all_frames": {
+          "bond_rmse": 0.14972846915973986,
+          "clash_rate": 7.622203384016757e-07,
+          "contact_error": 0.004425995983183384,
+          "drmsd": 2.1460040373324256,
+          "rmsd": 2.2914435075708655
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.6944608688354492,
+        "future": {
+          "bond_rmse": 0.15463889519181792,
+          "clash_rate": 8.130350579449441e-07,
+          "contact_error": 0.00472106272354722,
+          "drmsd": 2.2163835182140277,
+          "rmsd": 2.3665927857521707
+        },
+        "velocity_rmse": 0.010152612347634732
+      },
+      "sample_id": "misato_4J8T_w000001"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 4.745005374075845,
+      "one_step": {
+        "bond_rmse": 0.13729339135316287,
+        "clash_rate": 0.0,
+        "contact_error": 0.0015679961070418358,
+        "drmsd": 1.114079828114193,
+        "rmsd": 1.3816145540969555
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019880201578333431,
+        "all_frames": {
+          "bond_rmse": 0.15048935980784725,
+          "clash_rate": 0.0,
+          "contact_error": 0.004308613948523998,
+          "drmsd": 2.271180490911311,
+          "rmsd": 2.4210252809398143
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 1.70969557762146,
+        "future": {
+          "bond_rmse": 0.15542474008774373,
+          "clash_rate": 0.0,
+          "contact_error": 0.004595855250954628,
+          "drmsd": 2.345665212764762,
+          "rmsd": 2.5004242537051278
+        },
+        "velocity_rmse": 0.009874729792226894
+      },
+      "sample_id": "misato_4J8T_w000002"
+    },
+    {
+      "bucket": "dt_80ps",
+      "elapsed_s": 4.757288084947504,
+      "one_step": {
+        "bond_rmse": 0.13133149597135133,
+        "clash_rate": 0.0,
+        "contact_error": 0.0013554455945268273,
+        "drmsd": 0.9815493400442095,
+        "rmsd": 1.204904206769756
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019384047228923902,
+        "all_frames": {
+          "bond_rmse": 0.14965507292468805,
+          "clash_rate": 0.0,
+          "contact_error": 0.004235549829900265,
+          "drmsd": 2.091937974860063,
+          "rmsd": 2.2472553467113507
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 2.376197576522827,
+        "future": {
+          "bond_rmse": 0.15456309469673954,
+          "clash_rate": 0.0,
+          "contact_error": 0.004517919383943081,
+          "drmsd": 2.1605442795421492,
+          "rmsd": 2.3209554378730077
+        },
+        "velocity_rmse": 0.009467403486159534
+      },
+      "sample_id": "misato_4J8T_w000003"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.302307417034172,
+      "one_step": {
+        "bond_rmse": 0.1594560774567669,
+        "clash_rate": 3.295656370028155e-07,
+        "contact_error": 0.0007725018658675253,
+        "drmsd": 1.4043001007764584,
+        "rmsd": 2.122571118065333
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00018672083272561324,
+        "all_frames": {
+          "bond_rmse": 0.17162415232244144,
+          "clash_rate": 8.445119874522788e-07,
+          "contact_error": 0.0018429722404107451,
+          "drmsd": 2.407521295978164,
+          "rmsd": 3.0348668494389077
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.6048276424407959,
+        "future": {
+          "bond_rmse": 0.17725267214166512,
+          "clash_rate": 9.008127790366416e-07,
+          "contact_error": 0.0019658373203128576,
+          "drmsd": 2.486477328226457,
+          "rmsd": 3.134397034648449
+        },
+        "velocity_rmse": 0.011722334422845503
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000016"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.307142098085023,
+      "one_step": {
+        "bond_rmse": 0.15360495392575083,
+        "clash_rate": 0.0,
+        "contact_error": 0.0007217487436719239,
+        "drmsd": 1.5381201943109701,
+        "rmsd": 2.0068124143238153
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00017967804102258527,
+        "all_frames": {
+          "bond_rmse": 0.17530968780267994,
+          "clash_rate": 9.475011779613851e-07,
+          "contact_error": 0.0017775327432900667,
+          "drmsd": 2.61732523541486,
+          "rmsd": 3.1090501778554254
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.7425165772438049,
+        "future": {
+          "bond_rmse": 0.1810590704394602,
+          "clash_rate": 1.010668029266526e-06,
+          "contact_error": 0.0018960351590067148,
+          "drmsd": 2.703161956005279,
+          "rmsd": 3.2110129391609408
+        },
+        "velocity_rmse": 0.011111116993640442
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000017"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.306720623048022,
+      "one_step": {
+        "bond_rmse": 0.15096114056423574,
+        "clash_rate": 6.59131274005631e-07,
+        "contact_error": 0.0006133216666057706,
+        "drmsd": 1.3519017229335735,
+        "rmsd": 1.7734571279372242
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00017596116941477507,
+        "all_frames": {
+          "bond_rmse": 0.17534627608609488,
+          "clash_rate": 7.003269502092735e-07,
+          "contact_error": 0.0017506938893347979,
+          "drmsd": 2.401978305220003,
+          "rmsd": 2.8671469204808893
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.9066919684410095,
+        "future": {
+          "bond_rmse": 0.18109685248415464,
+          "clash_rate": 7.470154628208547e-07,
+          "contact_error": 0.0018674068851396441,
+          "drmsd": 2.4807524751610304,
+          "rmsd": 2.9611766386465557
+        },
+        "velocity_rmse": 0.010896682238466108
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000018"
+    },
+    {
+      "bucket": "dt_100ps",
+      "elapsed_s": 9.299132197047584,
+      "one_step": {
+        "bond_rmse": 0.1372886428574785,
+        "clash_rate": 0.0,
+        "contact_error": 0.0006825304590165615,
+        "drmsd": 1.286540529454054,
+        "rmsd": 1.797865818346352
+      },
+      "rollout": {
+        "acceleration_rmse": 0.00019195346175375738,
+        "all_frames": {
+          "bond_rmse": 0.1644804037126919,
+          "clash_rate": 1.0298926156337984e-07,
+          "contact_error": 0.0016513915034011006,
+          "drmsd": 2.4161734132425403,
+          "rmsd": 2.9746044056200285
+        },
+        "frame0": {
+          "bond_rmse": 0.0,
+          "clash_rate": 0.0,
+          "contact_error": 0.0,
+          "drmsd": 0.0,
+          "rmsd": 0.0
+        },
+        "frequency_retention": 0.675605833530426,
+        "future": {
+          "bond_rmse": 0.16987462866765715,
+          "clash_rate": 1.0985521470274762e-07,
+          "contact_error": 0.0017614845419302583,
+          "drmsd": 2.4954131008786633,
+          "rmsd": 3.072158375084853
+        },
+        "velocity_rmse": 0.011656625057631405
+      },
+      "sample_id": "atlas_3bl9_A_R1_w000019"
+    }
+  ],
+  "runtime": {
+    "device": "cuda:0",
+    "peak_gpu_bytes": 2914745344,
+    "total_wall_time_s": 1032.032556295977
+  },
+  "schema_version": "pvb.baseline.dynamic_direct.v1",
+  "seed": 20260810,
+  "source_commit": "c08e5e3cd49d45c6d748387e78224843bd356f50",
+  "source_status": [
+    "## main...origin/main"
+  ]
+}

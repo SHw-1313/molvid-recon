@@ -1,0 +1,14 @@
+{
+  "dataset_pairs": 262260,
+  "device": "cuda:4",
+  "dynamic_batches": 106401,
+  "kl_loss": 0.000970265013165772,
+  "loss": 1.8911799192428589,
+  "loss_finite": true,
+  "rec_drf_loss": 0.9629113078117371,
+  "rec_vel_loss": 0.9274923801422119,
+  "sample_atoms": 2466,
+  "seed": 20260810,
+  "source": "atlas_dt_100ps/valid",
+  "wall_time_s": 1.2093827724456787
+}

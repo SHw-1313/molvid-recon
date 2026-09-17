@@ -1,0 +1,57 @@
+{
+  "backbones": {},
+  "protocol": {
+    "bond_construction_mode": "topology for external backbones; ignored by visnet_radius",
+    "cuda_only": true,
+    "data_contract": {
+      "atoms_per_sample": [
+        887,
+        1503,
+        2499
+      ],
+      "effective_tokens": 78224,
+      "frames": 16,
+      "packed_atoms": 4889,
+      "sample_ids": [
+        "atlas_5e3e_A_R1_w000000",
+        "atlas_1v7r_A_R1_w000000",
+        "atlas_2wlt_A_R1_w000000"
+      ],
+      "source_split": "train",
+      "systems": [
+        "atlas_5e3e_A",
+        "atlas_1v7r_A",
+        "atlas_2wlt_A"
+      ],
+      "time_bucket_ids": [
+        "dt_100ps",
+        "dt_100ps",
+        "dt_100ps"
+      ],
+      "validation_samples_used": false
+    },
+    "data_root": "/workspace/PVB/outputs/atlas_selected_trajectories/clip_store/train",
+    "log_every": 10,
+    "max_tokens": 80000,
+    "model_policy": "fresh full-width models with temporal_layers=1 and temporal_ratio=1",
+    "precision": "fp32",
+    "quality_gate": "aggregate total-loss reduction >= 30% after 500 steps",
+    "resume_gate": "load step 500 checkpoint and complete one additional step",
+    "runtime": {
+      "cuda": "12.1",
+      "device": "cuda:0",
+      "gpu": "NVIDIA A100-SXM4-80GB",
+      "torch": "2.5.1+cu121",
+      "torch_cluster": "1.6.3+pt25cu121",
+      "total_memory_bytes": 85094825984
+    },
+    "schema_version": "pvb.codec.visnet_spatial.micro_overfit.v1",
+    "seed": 20260901,
+    "selection_policy": "one fixed R1/w000000 train clip from each selected system",
+    "spatial_backbones": [
+      "torchmd_et"
+    ],
+    "steps": 500
+  },
+  "status": "running"
+}

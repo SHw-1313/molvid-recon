@@ -1,0 +1,29 @@
+schema_version: pvb.dit.factorized_backend.profile.v2
+run_id: 20260909_backend_v2
+output_root: outputs/dit_factorized_backend_v2
+manifest_root: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000
+data_split: train
+seed: 20260909
+device: cuda:0
+precision:
+  equivalence_dtype: float32
+  profile_amp: true
+  tf32: false
+profile:
+  warmup_steps: 5
+  measured_steps: 20
+  candidate_batch_probe: 32
+  cases:
+    - r4_small
+    - r4_median
+    - r4_large
+    - r2_median
+checkpoints:
+  ratio2_state_detail:
+    dit: /data4/users/sihao/workspace/molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500/ratio2_state_detail/seed20260907_S4500/best_validation.pt
+    codec_result: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio2_state_detail/result.json
+    codec_checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio2_state_detail/codec_best.pt
+  ratio4_state_detail:
+    dit: /data4/users/sihao/workspace/molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500/ratio4_state_detail/seed20260907_S4500/best_validation.pt
+    codec_result: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/result.json
+    codec_checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt

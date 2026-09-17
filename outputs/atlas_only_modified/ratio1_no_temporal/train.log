@@ -1,0 +1,22 @@
+{
+  "dt_100ps": {
+    "bucket_id": "dt_100ps",
+    "count": 15788032,
+    "coordinate_mean": [
+      -0.00021263850794639438,
+      0.001043188851326704,
+      0.000427926832344383
+    ],
+    "coordinate_std": [
+      12.17697811126709,
+      11.264618873596191,
+      13.234342575073242
+    ],
+    "velocity_scale": 0.007676465158115838,
+    "acceleration_scale": 0.0001270234338927651,
+    "min_count": 32,
+    "epsilon": 1e-06,
+    "used_fallback": false
+  }
+}
+{"checkpoint": "outputs/atlas_only_modified/ratio1_no_temporal/codec_step_00001000.pt", "log": "outputs/atlas_only_modified/ratio1_no_temporal/train_metrics.jsonl", "metrics": {"acceleration": 0.7980864644050598, "acceleration_raw": 1.2877087840479362e-08, "bond": 0.03253822401165962, "bucket_dt_100ps_acceleration": 0.7980864644050598, "bucket_dt_100ps_acceleration_raw": 1.2877087840479362e-08, "bucket_dt_100ps_velocity": 0.7806909680366516, "bucket_dt_100ps_velocity_raw": 4.60046467196662e-05, "coordinate": 0.7003487944602966, "local": 0.03253822401165962, "task_trajectory_total": 0.8248298168182373, "total": 0.8248298168182373, "velocity": 0.7806909680366516, "velocity_raw": 4.60046467196662e-05}, "step": 1000}

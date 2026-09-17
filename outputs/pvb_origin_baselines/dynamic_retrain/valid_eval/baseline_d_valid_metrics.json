@@ -1,0 +1,39 @@
+{
+  "batches_per_source": 500,
+  "checkpoint": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/checkpoints/version_1/checkpoint/epoch0_step1000.ckpt",
+  "device": "cuda:0",
+  "max_batches_total": 1000,
+  "overall_loss_mean": 1.3128217451274395,
+  "pair_bound": 5000,
+  "pair_policy": "all_adjacent_pairs_streamed_from_each_T16_clip",
+  "per_source": {
+    "atlas_dt_100ps": {
+      "atoms": 1955202,
+      "batches": 500,
+      "kl_loss_mean": 0.0022729349164292215,
+      "loss_mean": 0.8206688287854195,
+      "pair_records": 1179,
+      "rec_drf_loss_mean": 0.4518470739722252,
+      "rec_vel_loss_mean": 0.36700340794026853,
+      "unique_clips": 1132
+    },
+    "misato_dt_80ps": {
+      "atoms": 1838671,
+      "batches": 500,
+      "kl_loss_mean": 0.006450419659726322,
+      "loss_mean": 1.8049746614694595,
+      "pair_records": 685,
+      "rec_drf_loss_mean": 1.0289057489037514,
+      "rec_vel_loss_mean": 0.7709085751622915,
+      "unique_clips": 628
+    }
+  },
+  "ref_repo": "/workspace/PVB_origin",
+  "schema_version": "pvb.origin.baseline_d.eval.v1",
+  "seed": 20260810,
+  "valid_roots": {
+    "atlas_dt_100ps": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "misato_dt_80ps": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid"
+  },
+  "wall_time_s": 379.4502890110016
+}

@@ -1,0 +1,8 @@
+{
+  "arms": [
+    "gaussian",
+    "conditional"
+  ],
+  "note": "generation monitor recorded at fixed interval; final paired evaluation is authoritative",
+  "step": 12000
+}

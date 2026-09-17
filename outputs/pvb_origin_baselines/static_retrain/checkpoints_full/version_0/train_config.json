@@ -1,0 +1,1 @@
+{"save_dir": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/checkpoints_full/version_0", "lr": 5e-05, "max_epoch": 1, "metric_min_better": true, "warmup": 1000, "patience": 5, "grad_clip": 1.0, "save_topk": 10, "loss_type": null, "ema": {"update_after_step": 1000000}}

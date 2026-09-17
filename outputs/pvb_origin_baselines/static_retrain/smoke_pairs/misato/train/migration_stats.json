@@ -1,0 +1,17 @@
+{
+  "source": "misato",
+  "split": "train",
+  "input_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/train",
+  "output_root": "outputs/pvb_origin_baselines/static_retrain/smoke_pairs/misato/train",
+  "input_records": 41910,
+  "records_written": 2,
+  "total_atoms": 8920,
+  "compressed_bytes": 563658,
+  "data_sha256": "48cc0fc4f63eded2686eae944b1de4e3b154ccf52954ba06e7b484297a6024ba",
+  "frame_mapping": {
+    "x0": 0,
+    "x1": 1
+  },
+  "time_policy": "native clip interval; no interpolation",
+  "elapsed_s": 0.3457660675048828
+}

@@ -1,0 +1,30 @@
+{
+  "arms": {
+    "conditional": {
+      "actual_optimizer_updates": 20000,
+      "elapsed_wall_seconds": 16961.292273500003,
+      "history_rows": 20000,
+      "initialization_hash": "be57b911c473805a7995e3ea33803e4947cacd8275ff44bb80f6b9c48aeac7ae"
+    },
+    "gaussian": {
+      "actual_optimizer_updates": 20000,
+      "elapsed_wall_seconds": 16961.292273500003,
+      "history_rows": 20000,
+      "initialization_hash": "be57b911c473805a7995e3ea33803e4947cacd8275ff44bb80f6b9c48aeac7ae"
+    }
+  },
+  "cache": {
+    "bytes": 0,
+    "capacity_bytes": 8589934592,
+    "entries": 0,
+    "evictions": 0,
+    "hits": 0,
+    "misses": 20000,
+    "mode": "disabled",
+    "schema": "pvb.dit.state_detail.latent_cache.v1"
+  },
+  "schema": "pvb.dit.state_detail.source_ab.train.v1",
+  "status": "PASS",
+  "target_steps": 20000,
+  "test_payload_opened": false
+}

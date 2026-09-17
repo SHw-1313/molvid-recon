@@ -1,0 +1,56 @@
+{
+  "backbones": [
+    "visnet_v2_bonded_lmax2"
+  ],
+  "checkpoint_resume": "step 500 to step 501",
+  "configs": {
+    "visnet_v2_bonded_lmax2": {
+      "backbone": "visnet_v2_bonded",
+      "lmax": 2,
+      "logical_batch_accumulation": true,
+      "v2": true,
+      "vertex_type": "edge"
+    }
+  },
+  "data_contract": {
+    "effective_tokens": 78224,
+    "frames": 16,
+    "packed_atoms": 4889,
+    "sample_ids": [
+      "atlas_5e3e_A_R1_w000000",
+      "atlas_1v7r_A_R1_w000000",
+      "atlas_2wlt_A_R1_w000000"
+    ],
+    "source_split": "train",
+    "time_bucket_ids": [
+      "dt_100ps",
+      "dt_100ps",
+      "dt_100ps"
+    ],
+    "validation_samples_used": false
+  },
+  "data_root": "/workspace/PVB_visnet_v2_worker/outputs/atlas_selected_trajectories/clip_store/train",
+  "log_every": 10,
+  "max_tokens": 80000,
+  "precision": "fp32",
+  "quality_gate": "finite plus nonzero geometry gradients and at least 30 percent total-loss reduction",
+  "replacement": true,
+  "runtime": {
+    "cuda": "12.1",
+    "device": "cuda:0",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "torch": "2.5.1+cu121",
+    "torch_cluster": "1.6.3+pt25cu121",
+    "total_memory_bytes": 85293072384
+  },
+  "sample_ids": [
+    "atlas_5e3e_A_R1_w000000",
+    "atlas_1v7r_A_R1_w000000",
+    "atlas_2wlt_A_R1_w000000"
+  ],
+  "schema_version": "pvb.codec.visnet_spatial.micro_overfit.v2",
+  "seed": 20260902,
+  "steps": 500,
+  "temporal_layers": 1,
+  "temporal_ratio": 1
+}

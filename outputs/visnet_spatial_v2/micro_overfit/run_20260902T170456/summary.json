@@ -1,0 +1,912 @@
+{
+  "backbones": {
+    "torchmd_et": {
+      "aggregate_final_total": 0.32297465205192566,
+      "aggregate_initial_total": 1.6567615270614624,
+      "aggregate_relative_reduction": 0.8050566440755212,
+      "checkpoint": "/workspace/PVB/outputs/visnet_spatial_v2/micro_overfit/run_20260902T170456/torchmd_et/codec_step_00000500.pt",
+      "final_metrics": {
+        "aggregate": {
+          "acceleration": 0.5113310813903809,
+          "acceleration_raw": 7.456769424152299e-09,
+          "bond": 0.08535540848970413,
+          "bucket_dt_100ps_acceleration": 0.5113310813903809,
+          "bucket_dt_100ps_acceleration_raw": 7.456769424152299e-09,
+          "bucket_dt_100ps_velocity": 0.4957425892353058,
+          "bucket_dt_100ps_velocity_raw": 2.659103847690858e-05,
+          "coordinate": 0.230762779712677,
+          "local": 0.08535540848970413,
+          "task_trajectory_total": 0.32297465205192566,
+          "total": 0.32297465205192566,
+          "velocity": 0.4957425892353058,
+          "velocity_raw": 2.659103847690858e-05
+        },
+        "per_system": {
+          "atlas_1v7r_A_R1_w000000": {
+            "acceleration": 0.45342302322387695,
+            "acceleration_raw": 6.612292935415098e-09,
+            "bond": 0.07894884049892426,
+            "bucket_dt_100ps_acceleration": 0.45342302322387695,
+            "bucket_dt_100ps_acceleration_raw": 6.612292935415098e-09,
+            "bucket_dt_100ps_velocity": 0.4296218454837799,
+            "bucket_dt_100ps_velocity_raw": 2.3044400222715922e-05,
+            "coordinate": 0.19311396777629852,
+            "local": 0.07894884049892426,
+            "task_trajectory_total": 0.2745370864868164,
+            "total": 0.2745370864868164,
+            "velocity": 0.4296218454837799,
+            "velocity_raw": 2.3044400222715922e-05
+          },
+          "atlas_2wlt_A_R1_w000000": {
+            "acceleration": 0.5170016288757324,
+            "acceleration_raw": 7.539463275918479e-09,
+            "bond": 0.08229927718639374,
+            "bucket_dt_100ps_acceleration": 0.5170016288757324,
+            "bucket_dt_100ps_acceleration_raw": 7.539463275918479e-09,
+            "bucket_dt_100ps_velocity": 0.49800869822502136,
+            "bucket_dt_100ps_velocity_raw": 2.6712588805821724e-05,
+            "coordinate": 0.23112232983112335,
+            "local": 0.08229927718639374,
+            "task_trajectory_total": 0.32323312759399414,
+            "total": 0.32323312759399414,
+            "velocity": 0.49800869822502136,
+            "velocity_raw": 2.6712588805821724e-05
+          },
+          "atlas_5e3e_A_R1_w000000": {
+            "acceleration": 0.5934789776802063,
+            "acceleration_raw": 8.65473648303805e-09,
+            "bond": 0.1046648845076561,
+            "bucket_dt_100ps_acceleration": 0.5934789776802063,
+            "bucket_dt_100ps_acceleration_raw": 8.65473648303805e-09,
+            "bucket_dt_100ps_velocity": 0.6013981103897095,
+            "bucket_dt_100ps_velocity_raw": 3.2258274586638436e-05,
+            "coordinate": 0.2935448884963989,
+            "local": 0.1046648845076561,
+            "task_trajectory_total": 0.40429162979125977,
+            "total": 0.40429162979125977,
+            "velocity": 0.6013981103897095,
+            "velocity_raw": 3.2258274586638436e-05
+          }
+        }
+      },
+      "finite_losses_and_gradients": true,
+      "geometry_gradient_diagnostics": {
+        "finite": true,
+        "loss_used": 0.32297468185424805,
+        "nonzero": true,
+        "nonzero_parameters": [
+          "frame_encoder.spatial_encoder.distance_expansion.betas",
+          "frame_encoder.spatial_encoder.distance_expansion.means",
+          "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias",
+          "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight",
+          "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias",
+          "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight",
+          "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight"
+        ],
+        "parameter_count_with_grad": 7
+      },
+      "graph_diagnostics": {
+        "backbone": "torchmd_et",
+        "backend_used": "cuda_radius",
+        "binary_covalent_edge_features": 159680,
+        "distance_edges": 1779510,
+        "graph_mode": "external",
+        "nodes": 78224,
+        "replicated_covalent_edges": 159680,
+        "union_edges": 1779512
+      },
+      "initial_metrics": {
+        "aggregate": {
+          "acceleration": 0.9938715100288391,
+          "acceleration_raw": 1.4493683586636052e-08,
+          "bond": 0.09219624102115631,
+          "bucket_dt_100ps_acceleration": 0.9938715100288391,
+          "bucket_dt_100ps_acceleration_raw": 1.4493683586636052e-08,
+          "bucket_dt_100ps_velocity": 0.991233229637146,
+          "bucket_dt_100ps_velocity_raw": 5.316856186254881e-05,
+          "coordinate": 1.6567615270614624,
+          "local": 0.09219624102115631,
+          "task_trajectory_total": 1.6567615270614624,
+          "total": 1.6567615270614624,
+          "velocity": 0.991233229637146,
+          "velocity_raw": 5.316856186254881e-05
+        },
+        "per_system": {
+          "atlas_1v7r_A_R1_w000000": {
+            "acceleration": 0.829993724822998,
+            "acceleration_raw": 1.2103844149180532e-08,
+            "bond": 0.0927325114607811,
+            "bucket_dt_100ps_acceleration": 0.829993724822998,
+            "bucket_dt_100ps_acceleration_raw": 1.2103844149180532e-08,
+            "bucket_dt_100ps_velocity": 0.7864863872528076,
+            "bucket_dt_100ps_velocity_raw": 4.2186187783954665e-05,
+            "coordinate": 0.8719794750213623,
+            "local": 0.0927325114607811,
+            "task_trajectory_total": 0.8719794750213623,
+            "total": 0.8719794750213623,
+            "velocity": 0.7864863872528076,
+            "velocity_raw": 4.2186187783954665e-05
+          },
+          "atlas_2wlt_A_R1_w000000": {
+            "acceleration": 0.9599552154541016,
+            "acceleration_raw": 1.3999080117343965e-08,
+            "bond": 0.08894377201795578,
+            "bucket_dt_100ps_acceleration": 0.9599552154541016,
+            "bucket_dt_100ps_acceleration_raw": 1.3999080117343965e-08,
+            "bucket_dt_100ps_velocity": 0.9409979581832886,
+            "bucket_dt_100ps_velocity_raw": 5.047400190960616e-05,
+            "coordinate": 1.325380802154541,
+            "local": 0.08894377201795578,
+            "task_trajectory_total": 1.325380802154541,
+            "total": 1.325380802154541,
+            "velocity": 0.9409979581832886,
+            "velocity_raw": 5.047400190960616e-05
+          },
+          "atlas_5e3e_A_R1_w000000": {
+            "acceleration": 1.3671131134033203,
+            "acceleration_raw": 1.9936686967980677e-08,
+            "bond": 0.1003170907497406,
+            "bucket_dt_100ps_acceleration": 1.3671131134033203,
+            "bucket_dt_100ps_acceleration_raw": 1.9936686967980677e-08,
+            "bucket_dt_100ps_velocity": 1.4797027111053467,
+            "bucket_dt_100ps_velocity_raw": 7.93694780441001e-05,
+            "coordinate": 3.9201748371124268,
+            "local": 0.1003170907497406,
+            "task_trajectory_total": 3.9201748371124268,
+            "total": 3.9201748371124268,
+            "velocity": 1.4797027111053467,
+            "velocity_raw": 7.93694780441001e-05
+          }
+        }
+      },
+      "label": "torchmd_et",
+      "lmax": 1,
+      "log": "/workspace/PVB/outputs/visnet_spatial_v2/micro_overfit/run_20260902T170456/torchmd_et/train_metrics.jsonl",
+      "micro_overfit_quality_pass": true,
+      "model_contract": {
+        "architecture": {
+          "decoder": {
+            "num_heads": 8,
+            "temporal_layers": 1,
+            "time_scale_ps": 100.0
+          },
+          "spatial": {
+            "backbone": "torchmd_et",
+            "dtype": "float32",
+            "hidden_channels": 128,
+            "layers": 2,
+            "lmax": 1,
+            "num_heads": 8,
+            "num_rbf": 50,
+            "spatial_refiner": false,
+            "trainable_rbf": false,
+            "vecnorm_type": null,
+            "vertex": true
+          },
+          "temporal": {
+            "hidden_channels": 128,
+            "layers": 1,
+            "num_heads": 8,
+            "ratio": 1,
+            "time_scale_ps": 100.0
+          }
+        },
+        "constructor": {
+          "bond_construction": {
+            "mode": "topology"
+          },
+          "cutoff_lower": 0.0,
+          "cutoff_upper": 5.0,
+          "distance_bond_cache_capacity": 4096,
+          "distance_bond_max": 2.2,
+          "distance_bond_max_num_neighbors": 64,
+          "distance_bond_min": 0.5,
+          "hidden_channels": 128,
+          "lmax": 1,
+          "max_num_neighbors": 32,
+          "neighbor_backend": "cuda_radius",
+          "num_heads": 8,
+          "num_rbf": 50,
+          "spatial_backbone": "torchmd_et",
+          "spatial_dtype": "float32",
+          "spatial_execution": {
+            "mode": "full"
+          },
+          "spatial_layers": 2,
+          "temporal_layers": 1,
+          "temporal_ratio": 1,
+          "time_scale_ps": 100.0,
+          "topology_cache_capacity": 4096,
+          "topology_device_cache_capacity": 4096,
+          "trainable_rbf": false,
+          "use_spatial_refiner": false,
+          "vecnorm_type": null,
+          "vertex": true
+        },
+        "graph": {
+          "bond_construction": {
+            "mode": "topology"
+          },
+          "cutoff_lower": 0.0,
+          "cutoff_upper": 5.0,
+          "distance_bond_cache_capacity": 4096,
+          "distance_bond_max": 2.2,
+          "distance_bond_max_num_neighbors": 64,
+          "distance_bond_min": 0.5,
+          "graph_mode": "external",
+          "max_num_neighbors": 32,
+          "neighbor_backend": "cuda_radius",
+          "schema_version": "pvb.codec.graph_contract.v1",
+          "spatial_backbone": "torchmd_et",
+          "spatial_execution": {
+            "mode": "full"
+          },
+          "topology_cache_capacity": 4096,
+          "topology_device_cache_capacity": 4096
+        },
+        "model_type": "trainer.codec_trainer.PVBCodecModel",
+        "schema_version": "pvb.codec.model_contract.v1"
+      },
+      "precision": "fp32",
+      "resume": {
+        "checkpoint_step": 500,
+        "resumed_step": 501,
+        "status": "passed"
+      },
+      "runtime": {
+        "peak_allocated_bytes": 59047372800,
+        "peak_reserved_bytes": 62721622016,
+        "steps_per_second": 0.9363412306064125,
+        "training_elapsed_s": 533.9933601729572
+      },
+      "spatial_backbone": "torchmd_et",
+      "steps": 500,
+      "temporal_layers": 1,
+      "temporal_ratio": 1,
+      "vertex_type": null
+    },
+    "visnet_bonded": {
+      "aggregate_final_total": 0.5696617960929871,
+      "aggregate_initial_total": 1.5519970655441284,
+      "aggregate_relative_reduction": 0.6329491796472796,
+      "checkpoint": "/workspace/PVB/outputs/visnet_spatial_v2/micro_overfit/run_20260902T170456/visnet_bonded/codec_step_00000500.pt",
+      "final_metrics": {
+        "aggregate": {
+          "acceleration": 0.6025155782699585,
+          "acceleration_raw": 8.786518179704217e-09,
+          "bond": 0.15152525901794434,
+          "bucket_dt_100ps_acceleration": 0.6025155782699585,
+          "bucket_dt_100ps_acceleration_raw": 8.786518179704217e-09,
+          "bucket_dt_100ps_velocity": 0.5944923162460327,
+          "bucket_dt_100ps_velocity_raw": 3.188785558450036e-05,
+          "coordinate": 0.44978174567222595,
+          "local": 0.15152525901794434,
+          "task_trajectory_total": 0.5696617960929871,
+          "total": 0.5696617960929871,
+          "velocity": 0.5944923162460327,
+          "velocity_raw": 3.188785558450036e-05
+        },
+        "per_system": {
+          "atlas_1v7r_A_R1_w000000": {
+            "acceleration": 0.4972616136074066,
+            "acceleration_raw": 7.251593547863422e-09,
+            "bond": 0.11988109350204468,
+            "bucket_dt_100ps_acceleration": 0.4972616136074066,
+            "bucket_dt_100ps_acceleration_raw": 7.251593547863422e-09,
+            "bucket_dt_100ps_velocity": 0.4761747121810913,
+            "bucket_dt_100ps_velocity_raw": 2.554143975430634e-05,
+            "coordinate": 0.3424800634384155,
+            "local": 0.11988109350204468,
+            "task_trajectory_total": 0.43893682956695557,
+            "total": 0.43893682956695557,
+            "velocity": 0.4761747121810913,
+            "velocity_raw": 2.554143975430634e-05
+          },
+          "atlas_2wlt_A_R1_w000000": {
+            "acceleration": 0.5869078636169434,
+            "acceleration_raw": 8.558910025158184e-09,
+            "bond": 0.14255155622959137,
+            "bucket_dt_100ps_acceleration": 0.5869078636169434,
+            "bucket_dt_100ps_acceleration_raw": 8.558910025158184e-09,
+            "bucket_dt_100ps_velocity": 0.5685885548591614,
+            "bucket_dt_100ps_velocity_raw": 3.049840779567603e-05,
+            "coordinate": 0.4291742146015167,
+            "local": 0.14255155622959137,
+            "task_trajectory_total": 0.5438888072967529,
+            "total": 0.5438888072967529,
+            "velocity": 0.5685885548591614,
+            "velocity_raw": 3.049840779567603e-05
+          },
+          "atlas_5e3e_A_R1_w000000": {
+            "acceleration": 0.8248384594917297,
+            "acceleration_raw": 1.2028665175023434e-08,
+            "bond": 0.22991132736206055,
+            "bucket_dt_100ps_acceleration": 0.8248384594917297,
+            "bucket_dt_100ps_acceleration_raw": 1.2028665175023434e-08,
+            "bucket_dt_100ps_velocity": 0.8679587244987488,
+            "bucket_dt_100ps_velocity_raw": 4.65562661702279e-05,
+            "coordinate": 0.6896604895591736,
+            "local": 0.22991132736206055,
+            "task_trajectory_total": 0.8636805415153503,
+            "total": 0.8636805415153503,
+            "velocity": 0.8679587244987488,
+            "velocity_raw": 4.65562661702279e-05
+          }
+        }
+      },
+      "finite_losses_and_gradients": true,
+      "geometry_gradient_diagnostics": {
+        "finite": true,
+        "loss_used": 0.5696618556976318,
+        "nonzero": false,
+        "nonzero_parameters": [],
+        "parameter_count_with_grad": 0
+      },
+      "graph_diagnostics": {
+        "backbone": "visnet_bonded",
+        "backend_used": "cuda_radius",
+        "binary_covalent_edge_features": 159680,
+        "distance_edges": 1779510,
+        "graph_mode": "external",
+        "nodes": 78224,
+        "replicated_covalent_edges": 159680,
+        "union_edges": 1779512
+      },
+      "initial_metrics": {
+        "aggregate": {
+          "acceleration": 0.9965898394584656,
+          "acceleration_raw": 1.4533324765864108e-08,
+          "bond": 0.07946499437093735,
+          "bucket_dt_100ps_acceleration": 0.9965898394584656,
+          "bucket_dt_100ps_acceleration_raw": 1.4533324765864108e-08,
+          "bucket_dt_100ps_velocity": 0.9959044456481934,
+          "bucket_dt_100ps_velocity_raw": 5.341912037692964e-05,
+          "coordinate": 1.5519970655441284,
+          "local": 0.07946499437093735,
+          "task_trajectory_total": 1.5519970655441284,
+          "total": 1.5519970655441284,
+          "velocity": 0.9959044456481934,
+          "velocity_raw": 5.341912037692964e-05
+        },
+        "per_system": {
+          "atlas_1v7r_A_R1_w000000": {
+            "acceleration": 0.8190754652023315,
+            "acceleration_raw": 1.194462306841615e-08,
+            "bond": 0.08232657611370087,
+            "bucket_dt_100ps_acceleration": 0.8190754652023315,
+            "bucket_dt_100ps_acceleration_raw": 1.194462306841615e-08,
+            "bucket_dt_100ps_velocity": 0.774751603603363,
+            "bucket_dt_100ps_velocity_raw": 4.1556748328730464e-05,
+            "coordinate": 0.7507709860801697,
+            "local": 0.08232657611370087,
+            "task_trajectory_total": 0.7507709860801697,
+            "total": 0.7507709860801697,
+            "velocity": 0.774751603603363,
+            "velocity_raw": 4.1556748328730464e-05
+          },
+          "atlas_2wlt_A_R1_w000000": {
+            "acceleration": 0.9605005383491516,
+            "acceleration_raw": 1.400703286691396e-08,
+            "bond": 0.0805572122335434,
+            "bucket_dt_100ps_acceleration": 0.9605005383491516,
+            "bucket_dt_100ps_acceleration_raw": 1.400703286691396e-08,
+            "bucket_dt_100ps_velocity": 0.9416987895965576,
+            "bucket_dt_100ps_velocity_raw": 5.051159314461984e-05,
+            "coordinate": 1.2207574844360352,
+            "local": 0.0805572122335434,
+            "task_trajectory_total": 1.2207574844360352,
+            "total": 1.2207574844360352,
+            "velocity": 0.9416987895965576,
+            "velocity_raw": 5.051159314461984e-05
+          },
+          "atlas_5e3e_A_R1_w000000": {
+            "acceleration": 1.399060606956482,
+            "acceleration_raw": 2.04025774053207e-08,
+            "bond": 0.07159736752510071,
+            "bucket_dt_100ps_acceleration": 1.399060606956482,
+            "bucket_dt_100ps_acceleration_raw": 2.04025774053207e-08,
+            "bucket_dt_100ps_velocity": 1.5233595371246338,
+            "bucket_dt_100ps_velocity_raw": 8.171117951860651e-05,
+            "coordinate": 3.842876672744751,
+            "local": 0.07159736752510071,
+            "task_trajectory_total": 3.842876672744751,
+            "total": 3.842876672744751,
+            "velocity": 1.5233595371246338,
+            "velocity_raw": 8.171117951860651e-05
+          }
+        }
+      },
+      "label": "visnet_bonded",
+      "lmax": 1,
+      "log": "/workspace/PVB/outputs/visnet_spatial_v2/micro_overfit/run_20260902T170456/visnet_bonded/train_metrics.jsonl",
+      "micro_overfit_quality_pass": false,
+      "model_contract": {
+        "architecture": {
+          "decoder": {
+            "num_heads": 8,
+            "temporal_layers": 1,
+            "time_scale_ps": 100.0
+          },
+          "spatial": {
+            "backbone": "visnet_bonded",
+            "dtype": "float32",
+            "hidden_channels": 128,
+            "layers": 2,
+            "lmax": 1,
+            "num_heads": 8,
+            "num_rbf": 50,
+            "spatial_refiner": false,
+            "trainable_rbf": false,
+            "vecnorm_type": null,
+            "vertex": true
+          },
+          "temporal": {
+            "hidden_channels": 128,
+            "layers": 1,
+            "num_heads": 8,
+            "ratio": 1,
+            "time_scale_ps": 100.0
+          }
+        },
+        "constructor": {
+          "bond_construction": {
+            "mode": "topology"
+          },
+          "cutoff_lower": 0.0,
+          "cutoff_upper": 5.0,
+          "distance_bond_cache_capacity": 4096,
+          "distance_bond_max": 2.2,
+          "distance_bond_max_num_neighbors": 64,
+          "distance_bond_min": 0.5,
+          "hidden_channels": 128,
+          "lmax": 1,
+          "max_num_neighbors": 32,
+          "neighbor_backend": "cuda_radius",
+          "num_heads": 8,
+          "num_rbf": 50,
+          "spatial_backbone": "visnet_bonded",
+          "spatial_dtype": "float32",
+          "spatial_execution": {
+            "mode": "full"
+          },
+          "spatial_layers": 2,
+          "temporal_layers": 1,
+          "temporal_ratio": 1,
+          "time_scale_ps": 100.0,
+          "topology_cache_capacity": 4096,
+          "topology_device_cache_capacity": 4096,
+          "trainable_rbf": false,
+          "use_spatial_refiner": false,
+          "vecnorm_type": null,
+          "vertex": true
+        },
+        "graph": {
+          "bond_construction": {
+            "mode": "topology"
+          },
+          "cutoff_lower": 0.0,
+          "cutoff_upper": 5.0,
+          "distance_bond_cache_capacity": 4096,
+          "distance_bond_max": 2.2,
+          "distance_bond_max_num_neighbors": 64,
+          "distance_bond_min": 0.5,
+          "graph_mode": "external",
+          "max_num_neighbors": 32,
+          "neighbor_backend": "cuda_radius",
+          "schema_version": "pvb.codec.graph_contract.v1",
+          "spatial_backbone": "visnet_bonded",
+          "spatial_execution": {
+            "mode": "full"
+          },
+          "topology_cache_capacity": 4096,
+          "topology_device_cache_capacity": 4096
+        },
+        "model_type": "trainer.codec_trainer.PVBCodecModel",
+        "schema_version": "pvb.codec.model_contract.v1"
+      },
+      "precision": "fp32",
+      "resume": {
+        "checkpoint_step": 500,
+        "resumed_step": 501,
+        "status": "passed"
+      },
+      "runtime": {
+        "peak_allocated_bytes": 37916071424,
+        "peak_reserved_bytes": 38696648704,
+        "steps_per_second": 1.1226960378520692,
+        "training_elapsed_s": 445.356519612018
+      },
+      "spatial_backbone": "visnet_bonded",
+      "steps": 500,
+      "temporal_layers": 1,
+      "temporal_ratio": 1,
+      "vertex_type": null
+    },
+    "visnet_v2_bonded_lmax1": {
+      "aggregate_final_total": 0.33027148246765137,
+      "aggregate_initial_total": 1.542722463607788,
+      "aggregate_relative_reduction": 0.7859164624495819,
+      "checkpoint": "/workspace/PVB/outputs/visnet_spatial_v2/micro_overfit/run_20260902T170456/visnet_v2_bonded_lmax1/codec_step_00000500.pt",
+      "final_metrics": {
+        "aggregate": {
+          "acceleration": 0.5329643487930298,
+          "acceleration_raw": 7.772248622472944e-09,
+          "bond": 0.09080663323402405,
+          "bucket_dt_100ps_acceleration": 0.5329643487930298,
+          "bucket_dt_100ps_acceleration_raw": 7.772248622472944e-09,
+          "bucket_dt_100ps_velocity": 0.5151145458221436,
+          "bucket_dt_100ps_velocity_raw": 2.7630127078737132e-05,
+          "coordinate": 0.23395048081874847,
+          "local": 0.09080663323402405,
+          "task_trajectory_total": 0.33027148246765137,
+          "total": 0.33027148246765137,
+          "velocity": 0.5151145458221436,
+          "velocity_raw": 2.7630127078737132e-05
+        },
+        "per_system": {
+          "atlas_1v7r_A_R1_w000000": {
+            "acceleration": 0.460274875164032,
+            "acceleration_raw": 6.712213895809782e-09,
+            "bond": 0.08083882927894592,
+            "bucket_dt_100ps_acceleration": 0.460274875164032,
+            "bucket_dt_100ps_acceleration_raw": 6.712213895809782e-09,
+            "bucket_dt_100ps_velocity": 0.4379507303237915,
+            "bucket_dt_100ps_velocity_raw": 2.3491151296184398e-05,
+            "coordinate": 0.19513101875782013,
+            "local": 0.08083882927894592,
+            "task_trajectory_total": 0.27810758352279663,
+            "total": 0.27810758352279663,
+            "velocity": 0.4379507303237915,
+            "velocity_raw": 2.3491151296184398e-05
+          },
+          "atlas_2wlt_A_R1_w000000": {
+            "acceleration": 0.5449650287628174,
+            "acceleration_raw": 7.947255298290656e-09,
+            "bond": 0.0893474817276001,
+            "bucket_dt_100ps_acceleration": 0.5449650287628174,
+            "bucket_dt_100ps_acceleration_raw": 7.947255298290656e-09,
+            "bucket_dt_100ps_velocity": 0.5214408040046692,
+            "bucket_dt_100ps_velocity_raw": 2.7969459551968612e-05,
+            "coordinate": 0.23326466977596283,
+            "local": 0.0893474817276001,
+            "task_trajectory_total": 0.3305265009403229,
+            "total": 0.3305265009403229,
+            "velocity": 0.5214408040046692,
+            "velocity_raw": 2.7969459551968612e-05
+          },
+          "atlas_5e3e_A_R1_w000000": {
+            "acceleration": 0.622324526309967,
+            "acceleration_raw": 9.075392881641164e-09,
+            "bond": 0.11170238256454468,
+            "bucket_dt_100ps_acceleration": 0.622324526309967,
+            "bucket_dt_100ps_acceleration_raw": 9.075392881641164e-09,
+            "bucket_dt_100ps_velocity": 0.6280436515808105,
+            "bucket_dt_100ps_velocity_raw": 3.368750913068652e-05,
+            "coordinate": 0.3016614615917206,
+            "local": 0.11170238256454468,
+            "task_trajectory_total": 0.4179225265979767,
+            "total": 0.4179225265979767,
+            "velocity": 0.6280436515808105,
+            "velocity_raw": 3.368750913068652e-05
+          }
+        }
+      },
+      "finite_losses_and_gradients": true,
+      "geometry_gradient_diagnostics": {
+        "finite": true,
+        "loss_used": 0.33027151226997375,
+        "nonzero": true,
+        "nonzero_parameters": [
+          "frame_encoder.spatial_encoder.representation.edge_embedding.edge_proj.bias",
+          "frame_encoder.spatial_encoder.representation.edge_embedding.edge_proj.weight",
+          "frame_encoder.spatial_encoder.representation.neighbor_embedding.combine.bias",
+          "frame_encoder.spatial_encoder.representation.neighbor_embedding.combine.weight",
+          "frame_encoder.spatial_encoder.representation.neighbor_embedding.distance_proj.bias",
+          "frame_encoder.spatial_encoder.representation.neighbor_embedding.distance_proj.weight",
+          "frame_encoder.spatial_encoder.representation.neighbor_embedding.embedding.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.dk_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.dk_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.dv_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.dv_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.k_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.k_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.layernorm.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.layernorm.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.o_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.o_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.q_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.q_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.s_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.s_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.v_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.0.v_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.dk_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.dk_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.dv_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.dv_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.k_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.k_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.layernorm.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.layernorm.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.o_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.o_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.q_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.q_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.s_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.s_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.v_proj.bias",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.v_proj.weight",
+          "frame_encoder.spatial_encoder.representation.vis_mp_layers.1.vec_proj.weight"
+        ],
+        "parameter_count_with_grad": 47
+      },
+      "graph_diagnostics": {
+        "backbone": "visnet_v2_bonded",
+        "backend_used": "cuda_radius",
+        "binary_covalent_edge_features": 159680,
+        "distance_edges": 1779510,
+        "graph_mode": "external",
+        "nodes": 78224,
+        "replicated_covalent_edges": 159680,
+        "union_edges": 1779512
+      },
+      "initial_metrics": {
+        "aggregate": {
+          "acceleration": 0.9740192294120789,
+          "acceleration_raw": 1.4204176501664278e-08,
+          "bond": 0.08142214268445969,
+          "bucket_dt_100ps_acceleration": 0.9740192294120789,
+          "bucket_dt_100ps_acceleration_raw": 1.4204176501664278e-08,
+          "bucket_dt_100ps_velocity": 0.9740126132965088,
+          "bucket_dt_100ps_velocity_raw": 5.2244868129491806e-05,
+          "coordinate": 1.542722463607788,
+          "local": 0.08142214268445969,
+          "task_trajectory_total": 1.542722463607788,
+          "total": 1.542722463607788,
+          "velocity": 0.9740126132965088,
+          "velocity_raw": 5.2244868129491806e-05
+        },
+        "per_system": {
+          "atlas_1v7r_A_R1_w000000": {
+            "acceleration": 0.7964832186698914,
+            "acceleration_raw": 1.1615158612698906e-08,
+            "bond": 0.08093457669019699,
+            "bucket_dt_100ps_acceleration": 0.7964832186698914,
+            "bucket_dt_100ps_acceleration_raw": 1.1615158612698906e-08,
+            "bucket_dt_100ps_velocity": 0.7534809112548828,
+            "bucket_dt_100ps_velocity_raw": 4.0415812691207975e-05,
+            "coordinate": 0.7437291741371155,
+            "local": 0.08093457669019699,
+            "task_trajectory_total": 0.7437291741371155,
+            "total": 0.7437291741371155,
+            "velocity": 0.7534809112548828,
+            "velocity_raw": 4.0415812691207975e-05
+          },
+          "atlas_2wlt_A_R1_w000000": {
+            "acceleration": 0.9392954707145691,
+            "acceleration_raw": 1.3697797562883807e-08,
+            "bond": 0.08255337923765182,
+            "bucket_dt_100ps_acceleration": 0.9392954707145691,
+            "bucket_dt_100ps_acceleration_raw": 1.3697797562883807e-08,
+            "bucket_dt_100ps_velocity": 0.92116779088974,
+            "bucket_dt_100ps_velocity_raw": 4.94103369419463e-05,
+            "coordinate": 1.2108423709869385,
+            "local": 0.08255337923765182,
+            "task_trajectory_total": 1.2108423709869385,
+            "total": 1.2108423709869385,
+            "velocity": 0.92116779088974,
+            "velocity_raw": 4.94103369419463e-05
+          },
+          "atlas_5e3e_A_R1_w000000": {
+            "acceleration": 1.3726797103881836,
+            "acceleration_raw": 2.001786469918443e-08,
+            "bond": 0.07910643517971039,
+            "bucket_dt_100ps_acceleration": 1.3726797103881836,
+            "bucket_dt_100ps_acceleration_raw": 2.001786469918443e-08,
+            "bucket_dt_100ps_velocity": 1.4965806007385254,
+            "bucket_dt_100ps_velocity_raw": 8.027478907024488e-05,
+            "coordinate": 3.831623077392578,
+            "local": 0.07910643517971039,
+            "task_trajectory_total": 3.831623077392578,
+            "total": 3.831623077392578,
+            "velocity": 1.4965806007385254,
+            "velocity_raw": 8.027478907024488e-05
+          }
+        }
+      },
+      "label": "visnet_v2_bonded_lmax1",
+      "lmax": 1,
+      "log": "/workspace/PVB/outputs/visnet_spatial_v2/micro_overfit/run_20260902T170456/visnet_v2_bonded_lmax1/train_metrics.jsonl",
+      "micro_overfit_quality_pass": true,
+      "model_contract": {
+        "architecture": {
+          "decoder": {
+            "num_heads": 8,
+            "temporal_layers": 1,
+            "time_scale_ps": 100.0
+          },
+          "spatial": {
+            "backbone": "visnet_v2_bonded",
+            "dtype": "float32",
+            "hidden_channels": 128,
+            "internal_vector_components": 3,
+            "layers": 2,
+            "lmax": 1,
+            "num_heads": 8,
+            "num_rbf": 50,
+            "public_vector_components": 3,
+            "rbf_type": "expnorm",
+            "reference_provenance": {
+              "cross_check_commit": "79d33965a40b7fa83616a9f598a0f8619f25d939",
+              "primary_commit": "497efaa190ee6f6cbc6030710c44208a01ece52d"
+            },
+            "representation": "AI2BMD ViSNet ViS-MP",
+            "spatial_refiner": false,
+            "trainable_rbf": false,
+            "trainable_vecnorm": false,
+            "vecnorm_type": "max_min",
+            "vertex": true,
+            "vertex_type": "edge"
+          },
+          "temporal": {
+            "hidden_channels": 128,
+            "layers": 1,
+            "num_heads": 8,
+            "ratio": 1,
+            "time_scale_ps": 100.0
+          }
+        },
+        "constructor": {
+          "bond_construction": {
+            "mode": "topology"
+          },
+          "cutoff_lower": 0.0,
+          "cutoff_upper": 5.0,
+          "distance_bond_cache_capacity": 4096,
+          "distance_bond_max": 2.2,
+          "distance_bond_max_num_neighbors": 64,
+          "distance_bond_min": 0.5,
+          "hidden_channels": 128,
+          "lmax": 1,
+          "max_num_neighbors": 32,
+          "neighbor_backend": "cuda_radius",
+          "num_heads": 8,
+          "num_rbf": 50,
+          "rbf_type": "expnorm",
+          "spatial_backbone": "visnet_v2_bonded",
+          "spatial_dtype": "float32",
+          "spatial_execution": {
+            "mode": "full"
+          },
+          "spatial_layers": 2,
+          "temporal_layers": 1,
+          "temporal_ratio": 1,
+          "time_scale_ps": 100.0,
+          "topology_cache_capacity": 4096,
+          "topology_device_cache_capacity": 4096,
+          "trainable_rbf": false,
+          "trainable_vecnorm": false,
+          "use_spatial_refiner": false,
+          "vecnorm_type": "max_min",
+          "vertex": true,
+          "vertex_type": "edge"
+        },
+        "graph": {
+          "bond_construction": {
+            "mode": "topology"
+          },
+          "cutoff_lower": 0.0,
+          "cutoff_upper": 5.0,
+          "distance_bond_cache_capacity": 4096,
+          "distance_bond_max": 2.2,
+          "distance_bond_max_num_neighbors": 64,
+          "distance_bond_min": 0.5,
+          "graph_mode": "external",
+          "max_num_neighbors": 32,
+          "neighbor_backend": "cuda_radius",
+          "schema_version": "pvb.codec.graph_contract.v1",
+          "spatial_backbone": "visnet_v2_bonded",
+          "spatial_execution": {
+            "mode": "full"
+          },
+          "topology_cache_capacity": 4096,
+          "topology_device_cache_capacity": 4096
+        },
+        "model_type": "trainer.codec_trainer.PVBCodecModel",
+        "schema_version": "pvb.codec.model_contract.v2"
+      },
+      "precision": "fp32",
+      "resume": {
+        "checkpoint_step": 500,
+        "resumed_step": 501,
+        "status": "passed"
+      },
+      "runtime": {
+        "peak_allocated_bytes": 74230874112,
+        "peak_reserved_bytes": 77533806592,
+        "steps_per_second": 0.6339137298562995,
+        "training_elapsed_s": 788.7508606468327
+      },
+      "spatial_backbone": "visnet_v2_bonded",
+      "steps": 500,
+      "temporal_layers": 1,
+      "temporal_ratio": 1,
+      "vertex_type": "edge"
+    }
+  },
+  "protocol": {
+    "backbones": [
+      "torchmd_et",
+      "visnet_bonded",
+      "visnet_v2_bonded_lmax1",
+      "visnet_v2_bonded_lmax2"
+    ],
+    "checkpoint_resume": "step 500 to step 501",
+    "configs": {
+      "torchmd_et": {
+        "lmax": 1,
+        "v2": false,
+        "vertex_type": null
+      },
+      "visnet_bonded": {
+        "lmax": 1,
+        "v2": false,
+        "vertex_type": null
+      },
+      "visnet_v2_bonded_lmax1": {
+        "backbone": "visnet_v2_bonded",
+        "lmax": 1,
+        "v2": true,
+        "vertex_type": "edge"
+      },
+      "visnet_v2_bonded_lmax2": {
+        "backbone": "visnet_v2_bonded",
+        "lmax": 2,
+        "v2": true,
+        "vertex_type": "edge"
+      }
+    },
+    "data_contract": {
+      "effective_tokens": 78224,
+      "frames": 16,
+      "packed_atoms": 4889,
+      "sample_ids": [
+        "atlas_5e3e_A_R1_w000000",
+        "atlas_1v7r_A_R1_w000000",
+        "atlas_2wlt_A_R1_w000000"
+      ],
+      "source_split": "train",
+      "time_bucket_ids": [
+        "dt_100ps",
+        "dt_100ps",
+        "dt_100ps"
+      ],
+      "validation_samples_used": false
+    },
+    "data_root": "/workspace/PVB/outputs/atlas_selected_trajectories/clip_store/train",
+    "log_every": 10,
+    "max_tokens": 80000,
+    "precision": "fp32",
+    "quality_gate": "finite plus nonzero geometry gradients and at least 30 percent total-loss reduction",
+    "replacement": true,
+    "runtime": {
+      "cuda": "12.1",
+      "device": "cuda:0",
+      "gpu": "NVIDIA A100-SXM4-80GB",
+      "torch": "2.5.1+cu121",
+      "torch_cluster": "1.6.3+pt25cu121",
+      "total_memory_bytes": 85094825984
+    },
+    "sample_ids": [
+      "atlas_5e3e_A_R1_w000000",
+      "atlas_1v7r_A_R1_w000000",
+      "atlas_2wlt_A_R1_w000000"
+    ],
+    "schema_version": "pvb.codec.visnet_spatial.micro_overfit.v2",
+    "seed": 20260902,
+    "steps": 500,
+    "temporal_layers": 1,
+    "temporal_ratio": 1
+  },
+  "status": "running"
+}

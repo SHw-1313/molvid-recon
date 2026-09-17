@@ -1,0 +1,17 @@
+name = "dit_factorized_backend_v2_worker"
+description = "Numerically equivalent CUDA vectorization and short profiling in an isolated worktree."
+
+developer_instructions = """
+Read LUNA_SESSION_B_DIT_BACKEND_PROMPT_260909.md, agents/dit_parallel_v2/CONTRACT.md,
+and this directory's AGENTS, PLAN, ACCEPTANCE, DECISIONS, TASKS and HANDOFF.
+Work only in the separate perf/dit-factorized-backend-v2 worktree from a22f60c.
+Preserve the current factorized scalar/vector model, checkpoint meaning and RF objective.
+Implement before testing. Use enter-container/torch-ito and actual CUDA for numerical evidence.
+Use identical inputs/weights for reference-versus-vectorized parity and short performance runs.
+Do not modify the A evaluator, frozen codec, statistics or historical result artifacts.
+Short disposable optimizer profiles are allowed; scientific retraining is not.
+Record evidence, commit owned files locally and stop for review; no push/merge/conditional prior.
+"""
+
+# Optional descriptor; not automatically registered by being present in agents/.
+# Inherits model and permissions from the invoking session.

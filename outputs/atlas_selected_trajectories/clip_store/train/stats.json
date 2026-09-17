@@ -1,0 +1,6 @@
+{
+  "count": 441,
+  "selection": "9 trajectories; first 49 clips train, last 13 clips validation",
+  "source_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/train",
+  "storage_format": "npz-v1"
+}

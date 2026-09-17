@@ -1,0 +1,49 @@
+nohup: ignoring input
+/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/probe_origin_memory.py:52: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model = torch.load(CKPT, map_location="cpu")
+{
+  "source": "misato",
+  "split": "train",
+  "targets": {
+    "4000": {
+      "index": 0,
+      "atoms": 4460,
+      "status": "ok",
+      "loss": 1.992345929145813,
+      "peak_bytes": 40340493824,
+      "seconds": 0.9145016670227051
+    },
+    "8000": {
+      "index": 90,
+      "atoms": 8565,
+      "status": "ok",
+      "loss": 2.8918871879577637,
+      "peak_bytes": 75096517632,
+      "seconds": 1.0131299495697021
+    },
+    "12000": {
+      "index": 192,
+      "atoms": 12280,
+      "status": "runtime_error",
+      "error": "CUDA out of memory. Tried to allocate 1.13 GiB. GPU 0 has a total capacity of 79.25 GiB of which 323.88 MiB is free. Process 1452866 has 78.93 GiB memory in use. Of the allocated memory 77.90 GiB is allocated by PyTorch, and 536.52 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#envi",
+      "peak_bytes": 83648557056,
+      "seconds": 1.5969789028167725
+    },
+    "16000": {
+      "index": 1896,
+      "atoms": 16999,
+      "status": "runtime_error",
+      "error": "CUDA out of memory. Tried to allocate 534.00 MiB. GPU 0 has a total capacity of 79.25 GiB of which 469.88 MiB is free. Process 1452866 has 78.78 GiB memory in use. Of the allocated memory 77.67 GiB is allocated by PyTorch, and 632.83 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#en",
+      "peak_bytes": 83394479104,
+      "seconds": 1.7794506549835205
+    },
+    "20000": {
+      "index": 16350,
+      "atoms": 20561,
+      "status": "runtime_error",
+      "error": "CUDA out of memory. Tried to allocate 644.00 MiB. GPU 0 has a total capacity of 79.25 GiB of which 331.88 MiB is free. Process 1452866 has 78.92 GiB memory in use. Of the allocated memory 78.13 GiB is allocated by PyTorch, and 294.63 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#en",
+      "peak_bytes": 83893806592,
+      "seconds": 1.7989685535430908
+    }
+  }
+}

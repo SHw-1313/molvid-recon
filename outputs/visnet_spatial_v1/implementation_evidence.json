@@ -1,0 +1,27 @@
+{
+  "schema_version": "pvb.codec.visnet_spatial.implementation_evidence.v1",
+  "status": "passed",
+  "test_command": "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider",
+  "test_result": "67 passed, 1 warning",
+  "tests_run_through": "enter-container with torch-ito",
+  "cuda_tests": "passed",
+  "gates": {
+    "factory_and_contract": "passed",
+    "scalar_vector_shapes": "passed",
+    "frame_sample_isolation": "passed",
+    "native_no_double_graph": "passed; native neighbor call count exactly 1",
+    "se3_invariance_equivariance": "passed",
+    "coordinate_and_parameter_gradients": "passed",
+    "bond_type_sensitivity": "passed",
+    "static_t1_and_dynamic_t16": "passed",
+    "checkpoint_contract_and_resume": "passed"
+  },
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "torch_cluster": "1.6.3+pt25cu121",
+    "torch_geometric": "2.6.1",
+    "gpu": "NVIDIA A100-SXM4-80GB"
+  },
+  "note": "Engineering acceptance remains distinct from this implementation gate; legacy control checkpoints are not silently accepted."
+}

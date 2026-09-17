@@ -1,0 +1,91 @@
+{
+  "batches_per_epoch_schedule": [
+    164,
+    168,
+    170,
+    165,
+    165,
+    168,
+    165,
+    169,
+    165,
+    165,
+    167,
+    165,
+    167,
+    165,
+    163,
+    166,
+    166,
+    164,
+    166,
+    164,
+    167,
+    166,
+    171,
+    167,
+    165,
+    165,
+    164,
+    164,
+    164,
+    166
+  ],
+  "block_local": true,
+  "common_frame_encoder_checkpoint": "/workspace/PVB_state_detail_codec_v2/outputs/state_detail_codec_v2/preflight/torchmd_frame_encoder_step_00004979.pt",
+  "common_frame_encoder_checkpoint_sha256": "e2ec7e6c1ed37c5b3bd6272f33b1ff48e4d697092de16f9925ef6fdd20a2414a",
+  "cross_block_temporal_attention": false,
+  "epochs": 30,
+  "exact_epoch_coverage": true,
+  "frames_per_clip": 16,
+  "freeze_frame_encoder": true,
+  "late_holdout_count": 117,
+  "late_holdout_windows": [
+    49,
+    61
+  ],
+  "lazy_loading": true,
+  "loss_schedule_resolved_after_loader_length": true,
+  "max_tokens": 80000,
+  "mode": "ratio2_state_detail",
+  "modes": [
+    "ratio1_state_detail",
+    "ratio2_state_detail",
+    "ratio4_state_detail",
+    "ratio4_matched_pooling"
+  ],
+  "precision": "fp32",
+  "ratio": 2,
+  "replacement": false,
+  "replicas": [
+    "R1",
+    "R2",
+    "R3"
+  ],
+  "runtime": {
+    "cuda": "12.1",
+    "device": "cuda:0",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "torch": "2.5.1+cu121",
+    "torch_cluster": "1.6.3+pt25cu121",
+    "total_memory_bytes": 85293072384
+  },
+  "safety_cap_steps": 6000,
+  "schema_version": "pvb.codec.state_detail.t0_protocol.v2",
+  "seed": 20260903,
+  "spatial_backbone": "torchmd_et",
+  "spatial_refiner": false,
+  "systems": [
+    "atlas_5e3e_A",
+    "atlas_1v7r_A",
+    "atlas_2wlt_A"
+  ],
+  "temporal_layers": 1,
+  "time_bucket_id": "dt_100ps",
+  "total_steps": 4976,
+  "train_count": 441,
+  "train_windows": [
+    0,
+    48
+  ]
+}

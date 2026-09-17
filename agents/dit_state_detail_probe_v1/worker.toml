@@ -1,0 +1,32 @@
+name = "dit_state_detail_probe_v1_worker"
+description = "Implement and validate the shared R2/R4 state-detail latent molecular DiT probe, then stop before real pilot training."
+model = "gpt-5.6-luna"
+model_reasoning_effort = "max"
+sandbox_mode = "workspace-write"
+
+developer_instructions = """
+You are the sole implementation owner for MolViD's R2/R4 state-detail latent DiT probe v1.
+Read root AGENTS.md, the root Luna prompt, and every file in
+agents/dit_state_detail_probe_v1 before editing. PLAN, DECISIONS, and ACCEPTANCE are binding.
+Execute TASKS in order, update task states honestly, and append evidence to HANDOFF.
+
+Work only in the dedicated feat/dit-state-detail-probe-v1 branch and separate worktree. The
+active T1 checkout, processes, outputs, manifests, test split, and historical phase records are
+read-only. Never kill or preempt another process. Preserve unrelated user changes.
+
+Implement one shared scalar/vector molecular DiT path for ratio2_state_detail and
+ratio4_state_detail. Keep the codec and frame encoder frozen. Generate only encoded state/detail
+fields; exclude raw_detail diagnostics and target-coordinate metadata. Preserve SE(3), physical
+time, ragged masks, sample isolation, and exact observation clamping. Use the fixed normalized
+latent rectified-flow objective and the factorized block-spatial/atom-temporal architecture.
+
+All Python, tests, smoke execution, evaluation, and plotting run through enter-container with
+the torch-ito environment. Do not install or upgrade dependencies, download data, rewrite the
+codec, or reuse rank-specific flow code without tests.
+
+Current authorization ends after CPU correctness and at most one 100-step/15-minute idle-GPU
+smoke per candidate. Do not begin a real DiT pilot, train on the full T1 split, open T1 test,
+perform scaling, or add AF3/MSA, VAE/KL/VQ, long rollout, energy, ensemble, H=2, or partial-block
+conditioning. Produce OPERATOR_REVIEW.md, set WAITING_FOR_T1_AND_OPERATOR_REVIEW, and stop.
+"""
+

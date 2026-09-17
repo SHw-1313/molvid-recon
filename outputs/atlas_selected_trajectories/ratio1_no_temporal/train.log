@@ -1,0 +1,26 @@
+{"batches_per_epoch": 144, "requested_epochs": 50, "requested_steps": 7200, "train_subset": {"fraction": 1.0, "full_records": 441, "selected_records": 441}, "valid_subset": {"fraction": 1.0, "full_records": 117, "selected_records": 117}}
+{
+  "normalization_elapsed_s": 5.59042318596039,
+  "normalization_stats": {
+    "dt_100ps": {
+      "bucket_id": "dt_100ps",
+      "count": 10112304,
+      "coordinate_mean": [
+        0.0012902462622150779,
+        0.0003576275485102087,
+        -0.0007820837199687958
+      ],
+      "coordinate_std": [
+        8.916441917419434,
+        11.468255043029785,
+        11.738961219787598
+      ],
+      "velocity_scale": 0.0068625121208869015,
+      "acceleration_scale": 0.00011504922781352316,
+      "min_count": 32,
+      "epsilon": 1e-06,
+      "used_fallback": false
+    }
+  }
+}
+{"batches_per_epoch": 144, "checkpoint": "outputs/atlas_selected_trajectories/ratio1_no_temporal/codec_step_00007200.pt", "completed_epochs": 50, "log": "outputs/atlas_selected_trajectories/ratio1_no_temporal/train_metrics.jsonl", "metrics": {"acceleration": 0.6128517985343933, "acceleration_raw": 8.111905813734666e-09, "bond": 0.03659659996628761, "bucket_dt_100ps_acceleration": 0.6128517985343933, "bucket_dt_100ps_acceleration_raw": 8.111905813734666e-09, "bucket_dt_100ps_velocity": 0.6241583228111267, "bucket_dt_100ps_velocity_raw": 2.939415571745485e-05, "coordinate": 0.4984307587146759, "local": 0.03659659996628761, "task_trajectory_total": 0.5988084673881531, "total": 0.5988084673881531, "velocity": 0.6241583228111267, "velocity_raw": 2.939415571745485e-05}, "normalization_elapsed_s": 5.59042318596039, "step": 7200, "total_elapsed_s": 5139.022147853975, "training_elapsed_s": 5133.431724668015}

@@ -1,0 +1,108 @@
+schema_version: pvb.codec.config.v1
+
+time:
+  unit: ps
+  continuous_scale_ps: 100.0
+  buckets:
+    - id: static
+      center_ps: 0.0
+      tolerance_ps: 0.0
+      weight: 1.0
+    - id: dt_80ps
+      center_ps: 80.0
+      tolerance_ps: 0.5
+      weight: 1.0
+    - id: dt_100ps
+      center_ps: 100.0
+      tolerance_ps: 0.5
+      weight: 1.0
+    - id: dt_1ns
+      center_ps: 1000.0
+      tolerance_ps: 5.0
+      weight: 1.0
+  normalization:
+    min_count: 32
+    epsilon: 1.0e-6
+
+training:
+  device: cuda
+  precision: fp32
+  lr: 1.0e-4
+  weight_decay: 1.0e-6
+  max_steps: 200
+  warmup_steps: 20
+  grad_clip: 1.0
+  save_dir: outputs/engineering_v1/phase_a/checkpoints
+  loss_weights:
+    coordinate: 1.0
+    local: 0.1
+    bond: 0.1
+    velocity: 0.1
+    acceleration: 0.05
+  loss_schedule:
+    - start_step: 0
+      weights:
+        coordinate: 1.0
+        local: 0.0
+        bond: 0.0
+        velocity: 0.0
+        acceleration: 0.0
+    - start_step: 100
+      weights:
+        coordinate: 1.0
+        local: 0.1
+        bond: 0.1
+        velocity: 0.1
+        acceleration: 0.05
+
+model:
+  hidden_channels: 128
+  spatial_layers: 2
+  temporal_layers: 1
+  temporal_ratio: 4
+  num_rbf: 50
+  num_heads: 8
+  cutoff_lower: 0.0
+  cutoff_upper: 5.0
+  max_num_neighbors: 32
+  neighbor_backend: cuda_radius
+  bond_construction:
+    mode: topology
+  spatial_execution:
+    mode: full
+
+# This is the complete real-data path used for loader eligibility and fixed-batch checks.
+data:
+  train_roots:
+    - outputs/atlas_selected_trajectories/clip_store/train
+  valid_roots:
+    - outputs/atlas_selected_trajectories/clip_store/valid
+  max_tokens: 80000
+  num_workers: 2
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 2
+  trusted_store_fast_path: true
+  strict_record_validation: false
+  non_blocking_transfer: true
+  oversize_policy: error
+  seed: 20260819
+  acceptance_sampling:
+    replacement: false
+
+acceptance:
+  fixed_batch_size: 5
+  fixed_batch_index: 0
+  optimizer_steps: 200
+  tiny_epochs: 5
+  tiny_samples: 8
+  log_every: 10
+  fp32_scalar_rtol: 2.0e-4
+  fp32_scalar_atol: 2.0e-5
+  fp32_vector_rtol: 5.0e-4
+  fp32_vector_atol: 5.0e-5
+  total_loss_relative: 1.0e-4
+  gradient_relative: 1.0e-3
+  bf16_total_loss_relative: 2.0e-2
+  bf16_coordinate_relative: 5.0e-3
+  throughput_multiplier: 1.20

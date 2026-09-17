@@ -1,0 +1,257 @@
+{
+  "controls": {
+    "ratio1_no_temporal": {
+      "by_time_bucket": {
+        "dt_100ps": {
+          "latent_interval_ps": 100.0,
+          "latent_tokens": 78912.0,
+          "metrics": {
+            "acceleration_rmse": 0.00016470558859935607,
+            "all_frames": {
+              "bond_rmse": 0.17272112592711525,
+              "clash_rate": 1.719920639686734e-07,
+              "contact_error": 3.875382881233236e-05,
+              "drmsd": 2.16144821868506,
+              "rmsd": 3.067703341851149,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.20947408188767086,
+              "clash_rate": 0.0,
+              "contact_error": 7.298230775631964e-05,
+              "drmsd": 0.27571211390994377,
+              "rmsd": 0.335855524698439,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.013194546103477478,
+            "future": {
+              "bond_rmse": 0.16998826598975827,
+              "clash_rate": 1.8345820365084365e-07,
+              "contact_error": 3.647192916105269e-05,
+              "drmsd": 2.231162957417254,
+              "rmsd": 3.167077022007713,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.0102845910334123
+          },
+          "native_delta_time_ps": 100.0,
+          "physical_clip_span_ps": 1500.0,
+          "sample_count": 20
+        },
+        "dt_80ps": {
+          "latent_interval_ps": 80.0,
+          "latent_tokens": 54912.0,
+          "metrics": {
+            "acceleration_rmse": 0.00017218924544328587,
+            "all_frames": {
+              "bond_rmse": 0.16778136760162832,
+              "clash_rate": 1.1294829265812661e-07,
+              "contact_error": 4.0224713757197605e-05,
+              "drmsd": 1.1304026893460857,
+              "rmsd": 1.5357726216826222,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.202793570167748,
+              "clash_rate": 0.0,
+              "contact_error": 6.382115857790764e-05,
+              "drmsd": 0.2664007119975132,
+              "rmsd": 0.32206146379042083,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.04085762968117541,
+            "future": {
+              "bond_rmse": 0.1651817774334587,
+              "clash_rate": 1.2047817773722355e-07,
+              "contact_error": 3.865161649876179e-05,
+              "drmsd": 1.1654398519556532,
+              "rmsd": 1.5839435696699793,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.008257044581765497
+          },
+          "native_delta_time_ps": 80.0,
+          "physical_clip_span_ps": 1200.0,
+          "sample_count": 28
+        }
+      },
+      "ratio": 1,
+      "runtime": {
+        "peak_gpu_bytes": 24979119616,
+        "samples_per_s": 0.4122163567757723,
+        "wall_time_s": 116.44370537705254
+      },
+      "sample_count": 48,
+      "temporal": false
+    },
+    "ratio1_temporal": {
+      "by_time_bucket": {
+        "dt_100ps": {
+          "latent_interval_ps": 100.0,
+          "latent_tokens": 78912.0,
+          "metrics": {
+            "acceleration_rmse": 0.00013997190138059402,
+            "all_frames": {
+              "bond_rmse": 0.24566490948446357,
+              "clash_rate": 5.097968283962473e-07,
+              "contact_error": 9.33474009798374e-05,
+              "drmsd": 1.9413425620490508,
+              "rmsd": 2.7502819751944805,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.1076049315416868,
+              "clash_rate": 0.0,
+              "contact_error": 0.00021425061568152158,
+              "drmsd": 0.1426715110574264,
+              "rmsd": 0.17087984435206066,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.22996740639209748,
+            "future": {
+              "bond_rmse": 0.2521930783787284,
+              "clash_rate": 5.437832982124746e-07,
+              "contact_error": 8.528718935849611e-05,
+              "drmsd": 2.004657446346775,
+              "rmsd": 2.8401184866741103,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.00881832226159872
+          },
+          "native_delta_time_ps": 100.0,
+          "physical_clip_span_ps": 1500.0,
+          "sample_count": 20
+        },
+        "dt_80ps": {
+          "latent_interval_ps": 80.0,
+          "latent_tokens": 54912.0,
+          "metrics": {
+            "acceleration_rmse": 0.00013760703438305027,
+            "all_frames": {
+              "bond_rmse": 0.22337962573903142,
+              "clash_rate": 2.4857947264225994e-07,
+              "contact_error": 0.00012651555682003328,
+              "drmsd": 0.9185566893445646,
+              "rmsd": 1.2549502185873165,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.10859998043684009,
+              "clash_rate": 0.0,
+              "contact_error": 0.0001892926699259657,
+              "drmsd": 0.1435849832208888,
+              "rmsd": 0.17120317895800674,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.5158231109380722,
+            "future": {
+              "bond_rmse": 0.22899341168826606,
+              "clash_rate": 2.651514308318135e-07,
+              "contact_error": 0.0001223304160785946,
+              "drmsd": 0.9479503456734771,
+              "rmsd": 1.2953428923877384,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.006621834083310798
+          },
+          "native_delta_time_ps": 80.0,
+          "physical_clip_span_ps": 1200.0,
+          "sample_count": 28
+        }
+      },
+      "ratio": 1,
+      "runtime": {
+        "peak_gpu_bytes": 24979119616,
+        "samples_per_s": 0.4099572727072282,
+        "wall_time_s": 117.08537253900431
+      },
+      "sample_count": 48,
+      "temporal": true
+    },
+    "ratio4_temporal": {
+      "by_time_bucket": {
+        "dt_100ps": {
+          "latent_interval_ps": 400.0,
+          "latent_tokens": 19728.0,
+          "metrics": {
+            "acceleration_rmse": 0.00017359264098649554,
+            "all_frames": {
+              "bond_rmse": 0.18605455907911794,
+              "clash_rate": 3.1236642143994686e-06,
+              "contact_error": 0.00021888101327931507,
+              "drmsd": 2.025919280605462,
+              "rmsd": 2.872949793257104,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.15114604587518984,
+              "clash_rate": 3.1143952128331875e-06,
+              "contact_error": 0.00017361517529934645,
+              "drmsd": 0.4974578241895002,
+              "rmsd": 0.624495660438957,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.054408657178282735,
+            "future": {
+              "bond_rmse": 0.18815018924452684,
+              "clash_rate": 3.1242821705745884e-06,
+              "contact_error": 0.00022189874143805355,
+              "drmsd": 2.0882667842007687,
+              "rmsd": 2.9625689132277655,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.010817302625015218
+          },
+          "native_delta_time_ps": 100.0,
+          "physical_clip_span_ps": 1500.0,
+          "sample_count": 20
+        },
+        "dt_80ps": {
+          "latent_interval_ps": 320.0,
+          "latent_tokens": 13728.0,
+          "metrics": {
+            "acceleration_rmse": 0.00018839621331449106,
+            "all_frames": {
+              "bond_rmse": 0.1743062647097443,
+              "clash_rate": 1.7934503944161406e-06,
+              "contact_error": 0.00012887672611131248,
+              "drmsd": 1.014348992479999,
+              "rmsd": 1.3781688893029909,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.14562916517078628,
+              "clash_rate": 1.6518045449422722e-06,
+              "contact_error": 0.00011022413640272465,
+              "drmsd": 0.4256910699067518,
+              "rmsd": 0.5483756683098784,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.10659111054106192,
+            "future": {
+              "bond_rmse": 0.1760503642251,
+              "clash_rate": 1.8028934918716417e-06,
+              "contact_error": 0.00013012022695461795,
+              "drmsd": 1.0417826053836616,
+              "rmsd": 1.4162143731065877,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.009080349959445637
+          },
+          "native_delta_time_ps": 80.0,
+          "physical_clip_span_ps": 1200.0,
+          "sample_count": 28
+        }
+      },
+      "ratio": 4,
+      "runtime": {
+        "peak_gpu_bytes": 24979119616,
+        "samples_per_s": 0.3053973987883968,
+        "wall_time_s": 157.17226207698695
+      },
+      "sample_count": 48,
+      "temporal": true
+    }
+  },
+  "schema_version": "pvb.codec.eval.v1"
+}

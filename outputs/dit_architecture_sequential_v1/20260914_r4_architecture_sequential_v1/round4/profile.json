@@ -1,0 +1,426 @@
+{
+  "available_round4_training_seconds": 88182.91249162145,
+  "choices": [
+    {
+      "added_updates_per_arm": 5000,
+      "estimated_pair_gpu_seconds_including_extension": 62826.78480888717,
+      "extension_updates_per_arm": 2500,
+      "feasible": true
+    },
+    {
+      "added_updates_per_arm": 3500,
+      "estimated_pair_gpu_seconds_including_extension": 43978.74936622102,
+      "extension_updates_per_arm": 1750,
+      "feasible": true
+    },
+    {
+      "added_updates_per_arm": 2000,
+      "estimated_pair_gpu_seconds_including_extension": 25130.713923554868,
+      "extension_updates_per_arm": 1000,
+      "feasible": true
+    }
+  ],
+  "code": {
+    "files": {
+      "config/dit_architecture_sequential_v1.neibu.yaml": "a16263f2fc40f292a51333c65049bab87f87defa88f0010c752e0519f241356a",
+      "config/dit_architecture_sequential_v1.yaml": "45c117c6e52904040bf5dd0be06afa77a95451861de13ba00a5deb45f6573de1",
+      "evaluation/dit_architecture_sequential_v1.py": "eabbdf4c09509d6dff522664ae14086cbf3d2cd76799c0d9487a49c4f3014195",
+      "module/dit_geometry_supervision.py": "483f1505b90d9d5b39414881919357bd6c6b294acb079b2e6bb52e5f3cd1f914",
+      "module/dit_history_corruption.py": "a5d01810e582ed5c5a812f79a449587511e866f9aac7efb1b7d5adef880dbcbe",
+      "scripts/run_dit_architecture_round2.py": "0d7a5e574ab22bafc4170bb1e8dfb2aba3906dd2f83d69a9e5c984e8c402d492",
+      "scripts/run_dit_architecture_round4.py": "1f7088f6141efb4dfc8de3b665983ae30122cff6c9ba00dbe05d20ee0a32caa9",
+      "scripts/run_dit_architecture_sequential_v1.py": "301b6b448e9d704bab8ceed4aa0c7c71ce7568ce856e1c460305aca537d670ae",
+      "tests/test_dit_architecture_round4_cuda.py": "0edd1bc8be5010a60665d0a81de0a1bedfc0a6ce02f1515d79f3a36c7e401c1e"
+    },
+    "head": "16e037abe1f7cfff71b6fd7d5cd38ff50afe4643",
+    "source_hash": "b3ac2813a4de8e0a93af6fc75f521d6ac5c10a038c16b4db2d109286391ed416"
+  },
+  "device": {
+    "amp": "bfloat16",
+    "cuda_runtime": "12.1",
+    "logical_index": 0,
+    "name": "NVIDIA A100-SXM4-80GB",
+    "requested_device": "cuda:0",
+    "tf32": false,
+    "torch": "2.5.1+cu121",
+    "uuid": "772dbaae-f0d8-747e-6599-cb0c46231009",
+    "visible_devices": "2"
+  },
+  "evaluation_recovery_reserve_seconds": 43200.0,
+  "frozen_before_training": true,
+  "future_rounds_training_reserve_seconds": 0.0,
+  "geometry_supervision": {
+    "coordinate_units": "angstrom",
+    "enabled": true,
+    "future_target_clean": true,
+    "lambda_bond": 0.2303875588749564,
+    "objective": "rf_plus_future_endpoint_bond_mse",
+    "target_auxiliary_gradient_ratio": 0.1,
+    "tau_threshold": 0.75,
+    "topology": "registered_static_covalent_bonds_only"
+  },
+  "gpu_seconds_total": 172800.0,
+  "parent_checkpoint": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round2/candidate/checkpoint_final.pt",
+  "parent_checkpoint_sha256": "7fec9b339201765572ddadf0c64892fe9b7db7f59fdc8148b6f5c4036f514e34",
+  "parent_model_state_hash": "b6ed3d56b6c66370c65bf2c7c9ad1a56da505470813eb23d00c7a50c05bbe6c2",
+  "prior_round_training_seconds": 41417.08750837854,
+  "profile": {
+    "corruption_samples": [
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 3,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.019999999552965164,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 2,
+        "sigmas_angstrom": [
+          0.05000000074505806,
+          0.05000000074505806,
+          0.019999999552965164,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 4,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 2,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 2,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.019999999552965164,
+          0.019999999552965164,
+          0.0,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 3,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0,
+          0.0,
+          0.019999999552965164,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 3,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 1,
+        "sigmas_angstrom": [
+          0.05000000074505806,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 3,
+        "sigmas_angstrom": [
+          0.05000000074505806,
+          0.05000000074505806,
+          0.0,
+          0.05000000074505806
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 3,
+        "sigmas_angstrom": [
+          0.05000000074505806,
+          0.05000000074505806,
+          0.0,
+          0.05000000074505806
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 2,
+        "sigma_0_05_samples": 1,
+        "sigmas_angstrom": [
+          0.0,
+          0.019999999552965164,
+          0.05000000074505806,
+          0.019999999552965164
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 4,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 3,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0,
+          0.0,
+          0.0,
+          0.019999999552965164
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 3,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.019999999552965164,
+          0.019999999552965164,
+          0.019999999552965164,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 3,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0,
+          0.0,
+          0.019999999552965164,
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 0,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.019999999552965164
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 0,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 1,
+        "sigmas_angstrom": [
+          0.05000000074505806
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 0,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.019999999552965164
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 1,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 0,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.0
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      },
+      {
+        "cache_policy": "disabled_online_corruption",
+        "clean_samples": 0,
+        "control_sigma_all_zero": true,
+        "schema": "pvb.dit.architecture_sequential.v1.history_corruption.v1",
+        "sigma_0_02_samples": 1,
+        "sigma_0_05_samples": 0,
+        "sigmas_angstrom": [
+          0.019999999552965164
+        ],
+        "target_gauge": "clean_centered_fields_with_condition_observed_frame0_origin"
+      }
+    ],
+    "generation": {
+      "bond_rmse": 0.5081248276582357,
+      "contact_f1": 0.7800184916494713,
+      "history_frames": 8,
+      "noise_sha256": "4db73a229a21ed1f8b665a87e2cbd4e100b8ee045411656f8276205744719bb1",
+      "observed_clamp_exact": true,
+      "sample_id": "atlas_1dj0_B_R1_w000011",
+      "seconds": 3.0577468778938055
+    },
+    "measured_updates": 20,
+    "online_corruption_cache": "disabled",
+    "pair_p90_seconds_per_update": 8.376904641184955,
+    "pair_seconds": [
+      10.538171607069671,
+      8.291221088729799,
+      7.202665522694588,
+      8.263924844563007,
+      8.357203206978738,
+      8.297163504175842,
+      8.323314849287271,
+      8.300889999605715,
+      8.376865750178695,
+      7.156288801692426,
+      8.377254660241306,
+      8.345040317624807,
+      8.29996061231941,
+      4.39667138364166,
+      5.07979136146605,
+      4.38281546253711,
+      5.094488530419767,
+      5.124954305589199,
+      4.420359132811427,
+      5.085304600186646
+    ],
+    "peak_memory_bytes": 56043172352,
+    "warmup_updates": 5
+  },
+  "round4_settings": {
+    "corruption": {
+      "probabilities": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "seed": 2026091404,
+      "sigmas_angstrom": [
+        0.0,
+        0.02,
+        0.05
+      ]
+    },
+    "evaluation_recovery_reserve_gpu_hours": 12.0,
+    "max_atom_frame_tokens": 60000,
+    "rollout": {
+      "clip_len": 16,
+      "draws": [
+        0,
+        1
+      ],
+      "first_window": 30,
+      "history_frames": 8,
+      "segments": 3,
+      "steps": 16,
+      "window_stride_frames": 16
+    },
+    "validation_max_atom_frame_tokens": 56672
+  },
+  "round4_settings_hash": "57dde0e64a33d6e11971c4c0a45a207a7e3cee42ba3507e470adfd2bb3f834db",
+  "schema": "pvb.dit.architecture_sequential.v1.round4.budget.v1",
+  "selected_round4_added_updates": 5000,
+  "selected_round4_extended_total_future_atom_frame_tokens_per_arm": 214347964,
+  "selected_round4_extended_total_updates": 7500,
+  "selected_round4_extension_added_updates": 2500,
+  "selected_round4_extension_future_atom_frame_tokens_per_arm": 72028340,
+  "selected_round4_future_atom_frame_tokens_per_arm": 142319624,
+  "status": "PASS",
+  "test_payload_opened": false
+}

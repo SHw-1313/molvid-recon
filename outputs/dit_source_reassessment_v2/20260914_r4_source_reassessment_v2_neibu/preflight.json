@@ -1,0 +1,84 @@
+{
+  "actual_head": "54bd76bd4b2e9bd2f9b938e952fc3694982b5dc0",
+  "baseline_commit": "5c2754fcce44ed77dad77db09db709408fee7634",
+  "branch_contract": "perf/dit-factorized-backend-v2",
+  "code_commit": "54bd76bd4b2e9bd2f9b938e952fc3694982b5dc0",
+  "code_file_sha256": {
+    "data/clip_dataset.py": "7f5979d88b652a2c8ffbed87609f52f4bd5bbb0e8279c2bba278b9a8bc1cbb42",
+    "evaluation/codec_evaluation.py": "a1ffa2560b7f499147bee3b722706eff3edeff2fe3b8c2af9d33d6c053a55087",
+    "evaluation/dit_reassessment.py": "7a046eaabc1fee740ea80e2a8dc88ef99d99b00bb09d31d57edd9150584d043d",
+    "evaluation/dit_reassessment_interpretation.py": "97933f5e6eda1b98b5359de394b943de19c653151a15351b6341a89a2bf70815",
+    "module/latent_flow_source.py": "c2278dce4964eecd0d278566b706271d4c0976b1f10ffe9c600e8324e7a307ab",
+    "module/latent_rectified_flow.py": "81d5d4d1f7313a8332845cbfea5fa9a8df27f316856320c197745fd5e2b593df",
+    "module/molecular_dit.py": "6692d4b055adb9d8451e559ef6f067a5da81c2486d6b0f903f7880dcc9f2c694",
+    "module/state_detail_codec_v2.py": "5ff5fd0f08b772e59c0067fbcc0a3c8a3881d7e921084a92bd97d8f418080928",
+    "module/state_detail_latent_adapter.py": "c4f341454d441bb3a36db8213a0ff14b9e304ed4376c5385c81f9bc9abe11e1c",
+    "scripts/run_dit_source_ab.py": "86113d27a4dfd8950542e1530bdaa690c0fc2c2f518121962b8e60c27e83c88a",
+    "scripts/run_dit_source_reassessment.py": "75bb6353ead776d68f3c767b395fcc81806c0849ab1a31f4aad35597b3e25606",
+    "scripts/run_state_detail_dit_pilot.py": "1c3aceec6b01e8fd5ccf8edb7d1aef1363a51789c2949fa17b7cfce7ffab66d0",
+    "scripts/write_dit_reassessment_interpretation.py": "2e7fec33658830ad7189fcbe35adb4469d5c0870d44cff23a18145ab59e7e16c"
+  },
+  "gpu_inventory_at_preflight": {
+    "compute_apps": [
+      "GPU-d78e7871-f469-cf96-b992-f0b722b14194, 2182745, [Not Found], 520",
+      "GPU-772dbaae-f0d8-747e-6599-cb0c46231009, 295532, [Not Found], 520",
+      "GPU-b8479347-a8f2-d14b-9705-54084bb055f1, 3169237, [Not Found], 520",
+      "GPU-3008856d-0145-8842-8ac2-e7b5b22c5427, 2634445, [Not Found], 524",
+      "GPU-e1eb0497-9e5b-a778-9759-1ddd483c3b75, 2468410, [Not Found], 522",
+      "GPU-2fcf7963-3e8e-c436-5429-512f1660c599, 2524083, [Not Found], 528",
+      "GPU-dba8e7ad-8485-2ea3-136d-e6c28c811691, 2430103, [Not Found], 528"
+    ],
+    "devices": [
+      "0, GPU-65b7cbe8-a24e-f4c7-975e-7a4077cb3fe5, 6, 81920",
+      "1, GPU-d78e7871-f469-cf96-b992-f0b722b14194, 527, 81920",
+      "2, GPU-772dbaae-f0d8-747e-6599-cb0c46231009, 527, 81920",
+      "3, GPU-b8479347-a8f2-d14b-9705-54084bb055f1, 527, 81920",
+      "4, GPU-3008856d-0145-8842-8ac2-e7b5b22c5427, 531, 81920",
+      "5, GPU-e1eb0497-9e5b-a778-9759-1ddd483c3b75, 529, 81920",
+      "6, GPU-2fcf7963-3e8e-c436-5429-512f1660c599, 535, 81920",
+      "7, GPU-dba8e7ad-8485-2ea3-136d-e6c28c811691, 535, 81920"
+    ]
+  },
+  "inputs": {
+    "codec_checkpoint": {
+      "path": "/data/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt",
+      "sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df"
+    },
+    "codec_result": {
+      "path": "/data/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/result.json",
+      "sha256": "1259299fa1e23f9dfd4915ae95a7cc4fc9dd2f3f4d1683b4adda5d677a2b981c"
+    },
+    "conditional_checkpoint": {
+      "path": "/output/molvid_dit_source_ab_v1/20260910_r4_source_ab_v1/conditional/checkpoint_step020000.pt",
+      "sha256": "8a3f8803655406468b8d50ca5a316f4a7858be31366f74bc2d897ca96769b12c"
+    },
+    "conditional_generation_jsonl": {
+      "path": "/output/molvid_dit_source_ab_v1/20260910_r4_source_ab_v1/conditional/generation_metrics.jsonl",
+      "sha256": "6cf75b20920648721da1c1e59ba2fb461cd5ceca0c1fb7760657c748bd8c28eb"
+    },
+    "gaussian_checkpoint": {
+      "path": "/output/molvid_dit_source_ab_v1/20260910_r4_source_ab_v1/gaussian/checkpoint_step020000.pt",
+      "sha256": "545a64f34ad6a2463a0a36e14a53c09f6c1e0fe6105ea6be9e30a34e84582c95"
+    },
+    "gaussian_generation_jsonl": {
+      "path": "/output/molvid_dit_source_ab_v1/20260910_r4_source_ab_v1/gaussian/generation_metrics.jsonl",
+      "sha256": "bc36b5b93cf619a6d8fb47151b1d68acb6899e215e6bed217cb128f679e80fd9"
+    },
+    "statistics": {
+      "path": "/data/dit_state_detail_pilot_v1/full_20260908_S4500/ratio4_state_detail/shared/statistics.pt",
+      "sha256": "4d07bf53f317a6f2937a027695d2d70993674903d0fcefc1fa49e0482a529583"
+    }
+  },
+  "legacy_output_root": "/output/molvid_dit_source_ab_v1/20260910_r4_source_ab_v1",
+  "manifest_content_sha256": "f8a764eb38e90c7485bf9799115d570bb868f34584ebbafab8c799fec03df4d2",
+  "manifest_root": "/data/state_detail_codec_v2/t1/manifest_20260904_token80000",
+  "manifest_sha256": "88325925b339ef34a421d48b5439bfc869fb1003b9c59e3d7eeac45b62da3d2e",
+  "materialization_sha256": "41685082d85ff36ba442d09e23495c2f00110272f769f45c54e77207db3d85e8",
+  "schema": "pvb.dit.state_detail.source_reassessment.v2.preflight.v1",
+  "shared_adapter_legacy_diagnostic": true,
+  "test_payload_opened": false,
+  "test_sampling_opened": false,
+  "train_clip_count": 8928,
+  "valid_clip_count": 1488,
+  "working_tree_diff_sha256": "unknown"
+}

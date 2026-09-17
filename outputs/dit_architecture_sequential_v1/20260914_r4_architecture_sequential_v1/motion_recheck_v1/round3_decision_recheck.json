@@ -1,0 +1,39 @@
+{
+  "motion_guard_all_histories_pass": true,
+  "motion_guard_by_comparison": {
+    "cross_vs_parent": {
+      "H4": {
+        "median_motion_ratio": 1.016518180186989,
+        "motion_ratio_system_count": 8,
+        "status": "PASS"
+      },
+      "H8": {
+        "median_motion_ratio": 1.0180894050076108,
+        "motion_ratio_system_count": 8,
+        "status": "PASS"
+      }
+    },
+    "local_vs_parent": {
+      "H4": {
+        "median_motion_ratio": 0.9978438880993549,
+        "motion_ratio_system_count": 8,
+        "status": "PASS"
+      },
+      "H8": {
+        "median_motion_ratio": 0.9975083235360891,
+        "motion_ratio_system_count": 8,
+        "status": "PASS"
+      }
+    }
+  },
+  "original": {
+    "selected_arm": "parent",
+    "status": "KEEP_PARENT"
+  },
+  "recomputed": {
+    "changed": false,
+    "reason": "both local/parent and cross-block/parent motion guards are complete and pass",
+    "selected_arm": "parent",
+    "status": "KEEP_PARENT"
+  }
+}

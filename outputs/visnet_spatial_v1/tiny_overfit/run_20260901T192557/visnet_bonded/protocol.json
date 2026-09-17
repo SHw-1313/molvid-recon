@@ -1,0 +1,52 @@
+{
+  "epochs": 30,
+  "exact_epoch_coverage": true,
+  "frames_per_clip": 16,
+  "grad_clip": 1.0,
+  "late_holdout_count": 117,
+  "late_holdout_windows": [
+    49,
+    61
+  ],
+  "lazy_loading": true,
+  "lr": 0.0001,
+  "max_tokens": 80000,
+  "precision": "fp32",
+  "replacement": false,
+  "replicas": [
+    "R1",
+    "R2",
+    "R3"
+  ],
+  "runtime": {
+    "cuda": "12.1",
+    "device": "cuda:0",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "torch": "2.5.1+cu121",
+    "total_memory_bytes": 85293072384
+  },
+  "safety_cap_steps": 6000,
+  "schema_version": "pvb.codec.visnet_spatial.tiny_overfit.v1",
+  "seed": 20260901,
+  "spatial_backbone": "visnet_bonded",
+  "spatial_backbones": [
+    "torchmd_et",
+    "visnet_radius",
+    "visnet_bonded"
+  ],
+  "systems": [
+    "atlas_5e3e_A",
+    "atlas_1v7r_A",
+    "atlas_2wlt_A"
+  ],
+  "temporal_layers": 1,
+  "temporal_ratio": 1,
+  "time_bucket_id": "dt_100ps",
+  "train_count": 441,
+  "train_windows": [
+    0,
+    48
+  ],
+  "warmup_steps": 20,
+  "weight_decay": 1e-06
+}

@@ -1,0 +1,29 @@
+{
+  "cuda_device": "NVIDIA A100-SXM4-80GB",
+  "dataset_root": "outputs/atlas_selected_trajectories/clip_store/train",
+  "device": "cuda:0",
+  "fixed_sample_id": [
+    "atlas_5e3e_A_R1_w000000",
+    "atlas_5e3e_A_R1_w000001",
+    "atlas_5e3e_A_R1_w000002",
+    "atlas_5e3e_A_R1_w000003",
+    "atlas_5e3e_A_R1_w000004"
+  ],
+  "fixed_shape": {
+    "atoms": 4435,
+    "batch_size": 5,
+    "frames": 16,
+    "tokens": 70960,
+    "x": [
+      16,
+      4435,
+      3
+    ]
+  },
+  "git_branch": "fix/graph-runtime-v1",
+  "git_commit": "6459d3c0e823491b09295930bf6d5929a8f9961b",
+  "numpy": "2.4.6",
+  "python": "3.11.15 | packaged by conda-forge | (main, Jun 11 2026, 03:34:02) [GCC 14.3.0]",
+  "torch": "2.5.1+cu121",
+  "torch_cuda": "12.1"
+}

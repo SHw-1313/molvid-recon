@@ -1,0 +1,67 @@
+{
+  "backend": "factorized_v2",
+  "cache": {
+    "cache_key": "1dae9ae3f14fbd5f45d9967a40593e1e3016df6ca9879d735f374c7f37c84306",
+    "decision": "disabled_for_science_until_full-clip cache fits the frozen 8 GiB RAM bound",
+    "direct_seconds": 0.18447823030874133,
+    "mode_selected": "disabled",
+    "ram_hit_equal": true,
+    "ram_hit_seconds": 0.04219346586614847,
+    "ram_miss_seconds": 0.23607156332582235,
+    "ram_stats": {
+      "bytes": 72581120,
+      "capacity_bytes": 8589934592,
+      "entries": 1,
+      "evictions": 0,
+      "hits": 1,
+      "misses": 1,
+      "mode": "ram",
+      "schema": "pvb.dit.state_detail.latent_cache.v1"
+    },
+    "source_center_bytes": 72581120
+  },
+  "candidate_steps": [
+    4500,
+    10000,
+    20000
+  ],
+  "code_commit": "557a9042cb545750706e37040b26fc000e39b9dc",
+  "codec_checkpoint_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+  "codec_state_hash": "9a30e3838403cbd9f2cfa7344276cbdc7a8176d75ce5d4da028a3ea39ec390b9",
+  "data_hash": "9daaf83fe5ee862634f7d1d3530e730adb4a8529ed37a2bc2fd330304ebfe184",
+  "history_schedule": [
+    4,
+    8
+  ],
+  "init_hash": "be57b911c473805a7995e3ea33803e4947cacd8275ff44bb80f6b9c48aeac7ae",
+  "schema": "pvb.dit.state_detail.source_ab.experiment_contract.v1",
+  "selected_common_steps": 20000,
+  "source_center_kind": "repeat_last_coordinate_encode",
+  "source_contracts": {
+    "conditional": {
+      "center_kind": "repeat_last_coordinate_encode",
+      "future_source": "m_plus_eps",
+      "history": "observed_prefix_only_H4_H8",
+      "noise_std_per_coefficient": 1.0,
+      "normalization_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+      "schema": "pvb.dit.state_detail.source.v1",
+      "sigma": 1.0,
+      "source_mode": "conditional"
+    },
+    "gaussian": {
+      "center_kind": "repeat_last_coordinate_encode",
+      "future_source": "eps",
+      "history": "observed_prefix_only_H4_H8",
+      "noise_std_per_coefficient": 1.0,
+      "normalization_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+      "schema": "pvb.dit.state_detail.source.v1",
+      "sigma": 1.0,
+      "source_mode": "gaussian"
+    }
+  },
+  "statistics_file_sha256": "4d07bf53f317a6f2937a027695d2d70993674903d0fcefc1fa49e0482a529583",
+  "statistics_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+  "test_payload_opened": false,
+  "training_seed": 20260910,
+  "validation_seed": 20260910
+}

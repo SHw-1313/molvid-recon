@@ -1,0 +1,532 @@
+{
+  "bond_construction": {
+    "cuda_only": true,
+    "cutoff_interval_angstrom": "(0.5, 2.2]",
+    "mode": "distance_only",
+    "supplied_atom_topology_bond_inputs_used_for_inference": false,
+    "uses_canonical_coordinates_only": true
+  },
+  "boundary_checks": {
+    "cache": {
+      "entries": 1,
+      "evictions": 0,
+      "hits": 1,
+      "misses": 0
+    },
+    "lower_boundary_d_0.5_included": false,
+    "upper_boundary_d_2.2_included": true
+  },
+  "canonical_reference_policy": {
+    "count": 3,
+    "dataset_splits": [
+      "train",
+      "valid"
+    ],
+    "selection": "lexicographically earliest sample_id per stable topology_id",
+    "topology_ids": [
+      "1v7r_A::d2a5f97833bcb9c2af9d536358e0245a18f02e76542c7381c1466729016388b4",
+      "2wlt_A::924f8a73901dc77eaf16442206477658ab40ca5c6cb85f3ed2c8bf28428b0598",
+      "5e3e_A::75184f3b9f0f379e56ff670b2f368df8ac39ee225ec62a1d8731a70f5dec1b80"
+    ]
+  },
+  "claims": {
+    "convergence_or_quality_claimed": false,
+    "fixed_graph_and_short_run_acceptance": true,
+    "full_dataset_or_long_run_claimed": false,
+    "historical_cpu_output_identity_claimed": false
+  },
+  "common_initialization_and_training_contract": {
+    "mismatched_state_keys": [],
+    "optimizer": "AdamW",
+    "passed": true,
+    "precision": "fp32",
+    "seed": 20260825,
+    "state_keys": 86
+  },
+  "distance_diagnostics": {
+    "cache": {
+      "entries": 3,
+      "evictions": 0,
+      "hits": 3,
+      "misses": 0
+    },
+    "references": {
+      "1v7r_A::d2a5f97833bcb9c2af9d536358e0245a18f02e76542c7381c1466729016388b4": {
+        "atom_count": 1503,
+        "cutoff_interval_angstrom": "(0.5, 2.2]",
+        "inferred": {
+          "connected_components": 1,
+          "degree": {
+            "count": 1503,
+            "isolated_atoms": 0,
+            "max": 5.0,
+            "max_degree": 5,
+            "mean": 2.1290751829673984,
+            "median": 2.0,
+            "min": 1.0
+          },
+          "distance_angstrom": {
+            "count": 1600,
+            "max": 2.199816942214966,
+            "mean": 1.4594352196156979,
+            "median": 1.461711049079895,
+            "min": 1.1746081113815308
+          },
+          "edge_count_undirected": 1600
+        },
+        "sample_id": "atlas_1v7r_A_R1_w000000",
+        "set_metrics": {
+          "f1": 0.9818644607063315,
+          "false_negative": 0,
+          "false_positive": 57,
+          "jaccard": 0.964375,
+          "precision": 0.964375,
+          "recall": 1.0,
+          "true_positive": 1543
+        },
+        "supplied": {
+          "connected_components": 1,
+          "degree": {
+            "count": 1503,
+            "isolated_atoms": 0,
+            "max": 3.0,
+            "max_degree": 3,
+            "mean": 2.053226879574185,
+            "median": 2.0,
+            "min": 1.0
+          },
+          "distance_angstrom": {
+            "count": 1543,
+            "max": 1.8639994859695435,
+            "mean": 1.4330956972966469,
+            "median": 1.4547148942947388,
+            "min": 1.1746081113815308
+          },
+          "edge_count_undirected": 1543
+        }
+      },
+      "2wlt_A::924f8a73901dc77eaf16442206477658ab40ca5c6cb85f3ed2c8bf28428b0598": {
+        "atom_count": 2499,
+        "cutoff_interval_angstrom": "(0.5, 2.2]",
+        "inferred": {
+          "connected_components": 1,
+          "degree": {
+            "count": 2499,
+            "isolated_atoms": 0,
+            "max": 5.0,
+            "max_degree": 5,
+            "mean": 2.1032412965186076,
+            "median": 2.0,
+            "min": 1.0
+          },
+          "distance_angstrom": {
+            "count": 2628,
+            "max": 2.199932098388672,
+            "mean": 1.4594362363151219,
+            "median": 1.4686379432678223,
+            "min": 1.1708509922027588
+          },
+          "edge_count_undirected": 2628
+        },
+        "sample_id": "atlas_2wlt_A_R1_w000000",
+        "set_metrics": {
+          "f1": 0.9817900038744672,
+          "false_negative": 0,
+          "false_positive": 94,
+          "jaccard": 0.9642313546423136,
+          "precision": 0.9642313546423136,
+          "recall": 1.0,
+          "true_positive": 2534
+        },
+        "supplied": {
+          "connected_components": 1,
+          "degree": {
+            "count": 2499,
+            "isolated_atoms": 0,
+            "max": 3.0,
+            "max_degree": 3,
+            "mean": 2.0280112044817926,
+            "median": 2.0,
+            "min": 1.0
+          },
+          "distance_angstrom": {
+            "count": 2534,
+            "max": 1.8693629503250122,
+            "mean": 1.4329184620702182,
+            "median": 1.4609923362731934,
+            "min": 1.1708509922027588
+          },
+          "edge_count_undirected": 2534
+        }
+      },
+      "5e3e_A::75184f3b9f0f379e56ff670b2f368df8ac39ee225ec62a1d8731a70f5dec1b80": {
+        "atom_count": 887,
+        "cutoff_interval_angstrom": "(0.5, 2.2]",
+        "inferred": {
+          "connected_components": 1,
+          "degree": {
+            "count": 887,
+            "isolated_atoms": 0,
+            "max": 5.0,
+            "max_degree": 5,
+            "mean": 2.153325817361894,
+            "median": 2.0,
+            "min": 1.0
+          },
+          "distance_angstrom": {
+            "count": 955,
+            "max": 2.199477434158325,
+            "mean": 1.464390106725443,
+            "median": 1.4591096639633179,
+            "min": 1.1684582233428955
+          },
+          "edge_count_undirected": 955
+        },
+        "sample_id": "atlas_5e3e_A_R1_w000000",
+        "set_metrics": {
+          "f1": 0.9775160599571735,
+          "false_negative": 0,
+          "false_positive": 42,
+          "jaccard": 0.956020942408377,
+          "precision": 0.956020942408377,
+          "recall": 1.0,
+          "true_positive": 913
+        },
+        "supplied": {
+          "connected_components": 1,
+          "degree": {
+            "count": 887,
+            "isolated_atoms": 0,
+            "max": 3.0,
+            "max_degree": 3,
+            "mean": 2.0586245772266065,
+            "median": 2.0,
+            "min": 1.0
+          },
+          "distance_angstrom": {
+            "count": 913,
+            "max": 1.867056965827942,
+            "mean": 1.4320213456535131,
+            "median": 1.4506205320358276,
+            "min": 1.1684582233428955
+          },
+          "edge_count_undirected": 913
+        }
+      }
+    },
+    "topology_count": 3
+  },
+  "elapsed_s": 55.38706975616515,
+  "graph_input_invariance": {
+    "backend_used": "cuda_radius",
+    "bond_construction_mode": "distance_only",
+    "compared_graph_fields": [
+      "distance_edge_index",
+      "distance_edge_weight",
+      "bond_index",
+      "edge_index",
+      "edge_weight",
+      "bond_type"
+    ],
+    "edge_count": 678584,
+    "mutated_inputs": [
+      "atype",
+      "btype",
+      "block_id",
+      "bond_index"
+    ],
+    "passed": true
+  },
+  "phase": "B",
+  "runtime": {
+    "cuda": "12.1",
+    "device": "cuda:0",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "torch": "2.5.1+cu121",
+    "torch_cluster": "1.6.3+pt25cu121",
+    "total_memory_bytes": 85094825984
+  },
+  "short_training_acceptance": {
+    "common_contract": {
+      "data": "identical deterministic eight-clip tiny records",
+      "device": "cuda:0",
+      "learning_rate": 0.001,
+      "optimizer": "AdamW",
+      "precision": "fp32",
+      "seed": 20260825,
+      "warmup_steps": 20
+    },
+    "five_exact_epochs": {
+      "distance_only": {
+        "batches_per_epoch": 2,
+        "coverage": [
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 0
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 1
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 2
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 3
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 4
+          }
+        ],
+        "elapsed_s": 1.913605849025771,
+        "epochs": 5,
+        "final_batch_in_epoch": 0,
+        "final_epoch": 5,
+        "log_records": 10,
+        "mode": "distance_only",
+        "steps": 10
+      },
+      "topology": {
+        "batches_per_epoch": 2,
+        "coverage": [
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 0
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 1
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 2
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 3
+          },
+          {
+            "batches": [
+              [
+                0,
+                1,
+                2,
+                3
+              ],
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            "clips": 8,
+            "epoch": 4
+          }
+        ],
+        "elapsed_s": 0.6723066919948906,
+        "epochs": 5,
+        "final_batch_in_epoch": 0,
+        "final_epoch": 5,
+        "log_records": 10,
+        "mode": "topology",
+        "steps": 10
+      }
+    },
+    "two_hundred_steps": {
+      "distance_only": {
+        "batches_per_epoch": 2,
+        "checkpoint": "/workspace/PVB/outputs/engineering_v1/phase_b/distance_only_200_steps.pt",
+        "checkpoint_fields": [
+          "batch_in_epoch",
+          "config",
+          "epoch",
+          "model_state",
+          "normalization_stats",
+          "optimizer_state",
+          "precision",
+          "sampler_state",
+          "schema_version",
+          "step"
+        ],
+        "elapsed_s": 13.287231010152027,
+        "first_learning_rate": 0.0005,
+        "last_total": 0.0008700582548044622,
+        "log_records": 20,
+        "mode": "distance_only",
+        "resumed_step": 200,
+        "steps": 200
+      },
+      "topology": {
+        "batches_per_epoch": 2,
+        "checkpoint": "/workspace/PVB/outputs/engineering_v1/phase_b/topology_200_steps.pt",
+        "checkpoint_fields": [
+          "batch_in_epoch",
+          "config",
+          "epoch",
+          "model_state",
+          "normalization_stats",
+          "optimizer_state",
+          "precision",
+          "sampler_state",
+          "schema_version",
+          "step"
+        ],
+        "elapsed_s": 32.221560220001265,
+        "first_learning_rate": 0.0005,
+        "last_total": 0.0008865093695931137,
+        "log_records": 20,
+        "mode": "topology",
+        "resumed_step": 200,
+        "steps": 200
+      }
+    }
+  },
+  "source_audit": {
+    "canonical_selector": "topology_id",
+    "forbidden_input_names": [
+      "atype",
+      "btype",
+      "bond_index",
+      "atom_source_index"
+    ],
+    "forbidden_input_names_found": [],
+    "passed": true,
+    "reference_api_parameters": [
+      "self",
+      "topology_id",
+      "coordinates",
+      "device"
+    ]
+  },
+  "status": "passed"
+}

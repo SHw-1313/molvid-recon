@@ -1,0 +1,75 @@
+{
+  "schema": "pvb.origin.legacy_pair_migration.v1",
+  "sources": [
+    {
+      "source": "atlas",
+      "split": "train",
+      "input_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/train",
+      "output_root": "outputs/pvb_origin_baselines/static_retrain/smoke_pairs/atlas/train",
+      "input_records": 101556,
+      "records_written": 2,
+      "total_atoms": 1774,
+      "compressed_bytes": 101661,
+      "data_sha256": "90a47bfc1604f1325f7ca704ccc7cdf216d0cccab6f05e1fab5decc7f59fcf7a",
+      "frame_mapping": {
+        "x0": 0,
+        "x1": 1
+      },
+      "time_policy": "native clip interval; no interpolation",
+      "elapsed_s": 0.039582014083862305
+    },
+    {
+      "source": "atlas",
+      "split": "valid",
+      "input_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+      "output_root": "outputs/pvb_origin_baselines/static_retrain/smoke_pairs/atlas/valid_block",
+      "input_records": 17484,
+      "records_written": 2,
+      "total_atoms": 4932,
+      "compressed_bytes": 262105,
+      "data_sha256": "cd2e4d6ba7414365c5ac47ca4c7e93de1d44b28618d9156a23cd21fa40389fe7",
+      "frame_mapping": {
+        "x0": 0,
+        "x1": 1
+      },
+      "time_policy": "native clip interval; no interpolation",
+      "elapsed_s": 0.1032266616821289
+    },
+    {
+      "source": "misato",
+      "split": "train",
+      "input_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/train",
+      "output_root": "outputs/pvb_origin_baselines/static_retrain/smoke_pairs/misato/train",
+      "input_records": 41910,
+      "records_written": 2,
+      "total_atoms": 8920,
+      "compressed_bytes": 563658,
+      "data_sha256": "48cc0fc4f63eded2686eae944b1de4e3b154ccf52954ba06e7b484297a6024ba",
+      "frame_mapping": {
+        "x0": 0,
+        "x1": 1
+      },
+      "time_policy": "native clip interval; no interpolation",
+      "elapsed_s": 0.3457660675048828
+    },
+    {
+      "source": "misato",
+      "split": "valid",
+      "input_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+      "output_root": "outputs/pvb_origin_baselines/static_retrain/smoke_pairs/misato/valid_block",
+      "input_records": 4740,
+      "records_written": 2,
+      "total_atoms": 6332,
+      "compressed_bytes": 389098,
+      "data_sha256": "71d511c17c2b035d8eb57040e09bf935caf68c66b9d9b793f0c4da1111b0cef1",
+      "frame_mapping": {
+        "x0": 0,
+        "x1": 1
+      },
+      "time_policy": "native clip interval; no interpolation",
+      "elapsed_s": 0.13419747352600098
+    }
+  ],
+  "seed": 20260810,
+  "pdb_used": false
+}

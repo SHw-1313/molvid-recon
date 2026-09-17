@@ -1,0 +1,159 @@
+{
+  "candidate": "ratio4_state_detail",
+  "contracts": {
+    "adapter_hash": "e1a8a7582dfd51d980ede5dfa9e7be74f5095453c9b43f65b32b183e709c1653",
+    "codec_hash": "ce4410274ca19913ad4da1ce19e3bdc5a5552b05df048bb97d33833efa72f145",
+    "codec_unchanged": true,
+    "frame_encoder_unchanged": true,
+    "model_hash": "1c39fafb270fc8a6916bddd53adc3ecce40c78a0f4676c9980cf85a49c0d3620",
+    "statistics_hash": "a94d954ddc6a9849a8b8121b79dd40e4d9b846dae5478645ff2accbaf42720c5"
+  },
+  "data": {
+    "provenance": "existing T0 clip store; no T1 test access",
+    "root": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t0_data/clip_store/valid",
+    "sample_ids": [
+      "atlas_5e3e_A_R1_w000049",
+      "atlas_5e3e_A_R1_w000050"
+    ],
+    "split": "T0_valid",
+    "topology_ids": [
+      "5e3e_A::75184f3b9f0f379e56ff670b2f368df8ac39ee225ec62a1d8731a70f5dec1b80",
+      "5e3e_A::75184f3b9f0f379e56ff670b2f368df8ac39ee225ec62a1d8731a70f5dec1b80"
+    ]
+  },
+  "execution_evidence_only": true,
+  "generation": {
+    "finite_decode": true,
+    "raw_detail_h": null,
+    "raw_detail_v": null,
+    "steps16": {
+      "adapter_hash": "53b19bb5b8af6b11d7d30dbdcc9aec612d166d4c0a8cac4caa495d80f234cab7",
+      "deterministic": true,
+      "latent_contract_hash": "e1a8a7582dfd51d980ede5dfa9e7be74f5095453c9b43f65b32b183e709c1653",
+      "observed_clamp": true,
+      "raw_detail_h": null,
+      "raw_detail_v": null,
+      "seed": 1007,
+      "solver": "euler",
+      "stats_hash": "a94d954ddc6a9849a8b8121b79dd40e4d9b846dae5478645ff2accbaf42720c5",
+      "steps": 16
+    },
+    "steps8": {
+      "adapter_hash": "53b19bb5b8af6b11d7d30dbdcc9aec612d166d4c0a8cac4caa495d80f234cab7",
+      "deterministic": true,
+      "latent_contract_hash": "e1a8a7582dfd51d980ede5dfa9e7be74f5095453c9b43f65b32b183e709c1653",
+      "observed_clamp": true,
+      "raw_detail_h": null,
+      "raw_detail_v": null,
+      "seed": 1007,
+      "solver": "euler",
+      "stats_hash": "a94d954ddc6a9849a8b8121b79dd40e4d9b846dae5478645ff2accbaf42720c5",
+      "steps": 8
+    }
+  },
+  "gradients": {
+    "adapter": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 9
+    },
+    "atom_embedding": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 1
+    },
+    "block_embedding": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 1
+    },
+    "blocks": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 136
+    },
+    "component_embedding": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 1
+    },
+    "flow_time": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 4
+    },
+    "observed_embedding": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 1
+    },
+    "ratio_embedding": {
+      "finite": true,
+      "nonzero": true,
+      "parameters": 1
+    }
+  },
+  "losses": {
+    "final": {
+      "detail_h_loss": 3.836304187774658,
+      "detail_v_loss": 2.6751091480255127,
+      "grad_norm": 3.863096237182617,
+      "learning_rate": 0.0002,
+      "loss": 3.151710271835327,
+      "observation_fraction": 0.25,
+      "state_h_loss": 3.6337227821350098,
+      "state_v_loss": 2.461704730987549,
+      "step": 2,
+      "tau_max": 0.9460463523864746,
+      "tau_mean": 0.7783408164978027,
+      "tau_min": 0.6106353402137756,
+      "valid_elements": {
+        "detail_h": 7096,
+        "detail_v": 7096,
+        "state_h": 7096,
+        "state_v": 7096
+      }
+    },
+    "initial": {
+      "detail_h_loss": 4.47536039352417,
+      "detail_v_loss": 2.647371768951416,
+      "grad_norm": 5.2115397453308105,
+      "learning_rate": 0.0002,
+      "loss": 3.4807519912719727,
+      "observation_fraction": 0.25,
+      "state_h_loss": 4.173808574676514,
+      "state_v_loss": 2.626466989517212,
+      "step": 1,
+      "tau_max": 0.6843941807746887,
+      "tau_mean": 0.5892148613929749,
+      "tau_min": 0.4940355122089386,
+      "valid_elements": {
+        "detail_h": 7096,
+        "detail_v": 7096,
+        "state_h": 7096,
+        "state_v": 7096
+      }
+    }
+  },
+  "ratio": 4,
+  "resume": {
+    "after": 2,
+    "before": 1,
+    "checkpoint": "outputs/dit_state_detail_probe_v1/ratio4_state_detail/smoke_resume.pt"
+  },
+  "runtime": {
+    "end_to_end_samples_per_s": 0.19217505095893397,
+    "parameters": 8679680,
+    "peak_allocated_bytes": 2542023168,
+    "peak_reserved_bytes": 10861150208,
+    "trunk_tokens_per_s": 14339.102192753022,
+    "wall_time_s": 10.40717819519341
+  },
+  "schema_version": "pvb.dit.state_detail.smoke.v1",
+  "scientific_claim": false,
+  "status": "PASS",
+  "warnings": [
+    "Randomly initialized T0 shape smoke; not a trained codec or scientific DiT pilot.",
+    "The smoke does not rank R2 versus R4."
+  ]
+}

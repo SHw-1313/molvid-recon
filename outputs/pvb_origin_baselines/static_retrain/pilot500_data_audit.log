@@ -1,0 +1,47 @@
+  0%|          | 0/101556 [00:00<?, ?it/s]100%|██████████| 101556/101556 [00:00<00:00, 1014704.56it/s]
+  0%|          | 0/17484 [00:00<?, ?it/s]100%|██████████| 17484/17484 [00:00<00:00, 1111530.29it/s]
+  0%|          | 0/41910 [00:00<?, ?it/s]100%|██████████| 41910/41910 [00:00<00:00, 1088589.66it/s]
+  0%|          | 0/4740 [00:00<?, ?it/s]100%|██████████| 4740/4740 [00:00<00:00, 1433381.47it/s]
+{
+  "seed": 20260810,
+  "ubound_per_batch": 5000,
+  "max_batches": 500,
+  "rows": {
+    "atlas_train": {
+      "clips_and_pairs": 101556,
+      "dynamic_batches_before_max_batches": 42587,
+      "pilot_batches_selected": 500,
+      "pairs_selected_by_max_batches": 1115,
+      "pairs_over_5000_atoms": 3906,
+      "pairs_at_or_under_5000_atoms": 97650,
+      "max_atoms": 17002
+    },
+    "atlas_valid": {
+      "clips_and_pairs": 17484,
+      "dynamic_batches_before_max_batches": 7077,
+      "pilot_batches_selected": 500,
+      "pairs_selected_by_max_batches": 1202,
+      "pairs_over_5000_atoms": 558,
+      "pairs_at_or_under_5000_atoms": 16926,
+      "max_atoms": 8521
+    },
+    "misato_train": {
+      "clips_and_pairs": 41910,
+      "dynamic_batches_before_max_batches": 23734,
+      "pilot_batches_selected": 500,
+      "pairs_selected_by_max_batches": 748,
+      "pairs_over_5000_atoms": 5982,
+      "pairs_at_or_under_5000_atoms": 35928,
+      "max_atoms": 20561
+    },
+    "misato_valid": {
+      "clips_and_pairs": 4740,
+      "dynamic_batches_before_max_batches": 2581,
+      "pilot_batches_selected": 500,
+      "pairs_selected_by_max_batches": 707,
+      "pairs_over_5000_atoms": 1098,
+      "pairs_at_or_under_5000_atoms": 3642,
+      "max_atoms": 19013
+    }
+  }
+}

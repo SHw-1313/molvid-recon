@@ -1,0 +1,380 @@
+{
+  "candidate_metrics_path": "outputs/atlas_selected_trajectories/candidate_metrics.json",
+  "candidate_system_metrics": [
+    {
+      "atom_count": 887,
+      "chunk_high_pass_energy": 0.27412655666843944,
+      "chunk_high_pass_energy_replica_max": 0.3058460101992827,
+      "chunk_high_pass_energy_replica_min": 0.23925065210239643,
+      "clip_count_per_replica": 62,
+      "max_local_displacement": 17.43714844448398,
+      "max_local_displacement_replica_max": 19.139701242728,
+      "max_local_displacement_replica_min": 15.062251982652377,
+      "mean_displacement_from_clip_start": 1.1506797759743226,
+      "mean_displacement_from_clip_start_replica_max": 1.1868047159628647,
+      "mean_displacement_from_clip_start_replica_min": 1.078948507917686,
+      "median_frame_to_frame_aligned_rmsd": 0.7155410323329751,
+      "median_frame_to_frame_aligned_rmsd_replica_max": 0.743996789903886,
+      "median_frame_to_frame_aligned_rmsd_replica_min": 0.6863311495475425,
+      "replicas": [
+        1,
+        2,
+        3
+      ],
+      "rmsf_mean": 0.8806497476576097,
+      "rmsf_mean_replica_max": 0.912970673353814,
+      "rmsf_mean_replica_min": 0.836401149161356,
+      "system": "atlas_5e3e_A"
+    },
+    {
+      "atom_count": 1503,
+      "chunk_high_pass_energy": 0.1797445398042978,
+      "chunk_high_pass_energy_replica_max": 0.1851687034060961,
+      "chunk_high_pass_energy_replica_min": 0.17179350504054536,
+      "clip_count_per_replica": 62,
+      "max_local_displacement": 11.145949297641875,
+      "max_local_displacement_replica_max": 11.494587499318703,
+      "max_local_displacement_replica_min": 10.61528600745733,
+      "mean_displacement_from_clip_start": 0.9410544746675839,
+      "mean_displacement_from_clip_start_replica_max": 0.9568780572905976,
+      "mean_displacement_from_clip_start_replica_min": 0.916099728789427,
+      "median_frame_to_frame_aligned_rmsd": 0.6174961945071189,
+      "median_frame_to_frame_aligned_rmsd_replica_max": 0.6289743639965326,
+      "median_frame_to_frame_aligned_rmsd_replica_min": 0.606534784408207,
+      "replicas": [
+        1,
+        2,
+        3
+      ],
+      "rmsf_mean": 0.7435389136269236,
+      "rmsf_mean_replica_max": 0.7518580716511657,
+      "rmsf_mean_replica_min": 0.7238977231898586,
+      "system": "atlas_1v7r_A"
+    },
+    {
+      "atom_count": 2499,
+      "chunk_high_pass_energy": 0.2223391467256777,
+      "chunk_high_pass_energy_replica_max": 0.2403752170563241,
+      "chunk_high_pass_energy_replica_min": 0.21561905475047816,
+      "clip_count_per_replica": 62,
+      "max_local_displacement": 16.568273200838842,
+      "max_local_displacement_replica_max": 17.214889372250628,
+      "max_local_displacement_replica_min": 15.9811402356598,
+      "mean_displacement_from_clip_start": 1.0765901549096186,
+      "mean_displacement_from_clip_start_replica_max": 1.1199464949920734,
+      "mean_displacement_from_clip_start_replica_min": 1.0763664821627688,
+      "median_frame_to_frame_aligned_rmsd": 0.6784038339809213,
+      "median_frame_to_frame_aligned_rmsd_replica_max": 0.7048334967463777,
+      "median_frame_to_frame_aligned_rmsd_replica_min": 0.6715903896785332,
+      "replicas": [
+        1,
+        2,
+        3
+      ],
+      "rmsf_mean": 0.8358670017308678,
+      "rmsf_mean_replica_max": 0.8644327206006552,
+      "rmsf_mean_replica_min": 0.8238120569848891,
+      "system": "atlas_2wlt_A"
+    }
+  ],
+  "evaluation": {
+    "controls": {
+      "ratio1_no_temporal": {
+        "by_time_bucket": {
+          "dt_100ps": {
+            "latent_interval_ps": 100.0,
+            "latent_tokens": 74408.19512195123,
+            "loss": {
+              "acceleration": 0.6927033619182866,
+              "acceleration_raw": 9.168846668355799e-09,
+              "bond": 0.041507340876794446,
+              "coordinate": 0.58705910168043,
+              "local": 0.041507340876794446,
+              "total": 0.6983593963995213,
+              "velocity": 0.6836366028320499,
+              "velocity_raw": 3.219523036599773e-05
+            },
+            "metrics": {
+              "acceleration_rmse": 9.554808074205042e-05,
+              "all_frames": {
+                "bond_rmse": 0.2033541582574159,
+                "clash_rate": 5.999166381659562e-07,
+                "contact_error": 0.0002790308898533467,
+                "drmsd": 0.9810887140732274,
+                "rmsd": 1.3176358944456867,
+                "torsion_change": 0.0
+              },
+              "frame0": {
+                "bond_rmse": 0.24975112216248982,
+                "clash_rate": 7.826961669573991e-09,
+                "contact_error": 0.00022714115269680893,
+                "drmsd": 0.41408038666722163,
+                "rmsd": 0.4764611713412892,
+                "torsion_change": 0.0
+              },
+              "frequency_retention": 0.12282781684544028,
+              "future": {
+                "bond_rmse": 0.19987567201504325,
+                "clash_rate": 6.393892887883073e-07,
+                "contact_error": 0.0002824902066339103,
+                "drmsd": 1.0075377259496021,
+                "rmsd": 1.355226586727603,
+                "torsion_change": 0.0
+              },
+              "velocity_rmse": 0.005661390630067815
+            },
+            "native_delta_time_ps": 100.0,
+            "physical_clip_span_ps": 1500.0,
+            "sample_count": 117
+          }
+        },
+        "ratio": 1,
+        "runtime": {
+          "peak_gpu_bytes": 25830440448,
+          "samples_per_s": 0.6744807789419853,
+          "wall_time_s": 173.46676681214012
+        },
+        "sample_count": 117,
+        "temporal": false
+      },
+      "ratio1_temporal": {
+        "by_time_bucket": {
+          "dt_100ps": {
+            "latent_interval_ps": 100.0,
+            "latent_tokens": 74408.19512195123,
+            "loss": {
+              "acceleration": 0.370852975583658,
+              "acceleration_raw": 4.90873044109238e-09,
+              "bond": 0.03169982939413408,
+              "coordinate": 0.23806082693541922,
+              "local": 0.03169982939413408,
+              "total": 0.3004498201899412,
+              "velocity": 0.37506380895288977,
+              "velocity_raw": 1.7663281474464074e-05
+            },
+            "metrics": {
+              "acceleration_rmse": 6.982167913651106e-05,
+              "all_frames": {
+                "bond_rmse": 0.1773502204220373,
+                "clash_rate": 1.081792046078113e-07,
+                "contact_error": 3.342507130671548e-05,
+                "drmsd": 0.632326266794018,
+                "rmsd": 0.8389067494784677,
+                "torsion_change": 0.0
+              },
+              "frame0": {
+                "bond_rmse": 0.08517786053995274,
+                "clash_rate": 0.0,
+                "contact_error": 2.034715149010281e-05,
+                "drmsd": 0.12380458178128084,
+                "rmsd": 0.144681905182698,
+                "torsion_change": 0.0
+              },
+              "frequency_retention": 0.7074803724521543,
+              "future": {
+                "bond_rmse": 0.18183969462560978,
+                "clash_rate": 1.1539115245973446e-07,
+                "contact_error": 3.429693280362166e-05,
+                "drmsd": 0.6522729936709672,
+                "rmsd": 0.8656050842115424,
+                "torsion_change": 0.0
+              },
+              "velocity_rmse": 0.0041888677297183576
+            },
+            "native_delta_time_ps": 100.0,
+            "physical_clip_span_ps": 1500.0,
+            "sample_count": 117
+          }
+        },
+        "ratio": 1,
+        "runtime": {
+          "peak_gpu_bytes": 25830338048,
+          "samples_per_s": 0.6947054982487053,
+          "wall_time_s": 168.41668922291137
+        },
+        "sample_count": 117,
+        "temporal": true
+      },
+      "ratio4_temporal": {
+        "by_time_bucket": {
+          "dt_100ps": {
+            "latent_interval_ps": 400.0,
+            "latent_tokens": 18602.048780487807,
+            "loss": {
+              "acceleration": 0.821139337086096,
+              "acceleration_raw": 1.0868866998826312e-08,
+              "bond": 0.0368263194928082,
+              "coordinate": 0.38733374272904747,
+              "local": 0.0368263194928082,
+              "total": 0.5165867543802029,
+              "velocity": 0.8083078003511196,
+              "velocity_raw": 3.806650451357511e-05
+            },
+            "metrics": {
+              "acceleration_rmse": 0.00010405993691485572,
+              "all_frames": {
+                "bond_rmse": 0.19032327681412986,
+                "clash_rate": 4.522841500258393e-06,
+                "contact_error": 0.00023332234914272615,
+                "drmsd": 0.797754972707528,
+                "rmsd": 1.0707905767713726,
+                "torsion_change": 0.0
+              },
+              "frame0": {
+                "bond_rmse": 0.032943176453706764,
+                "clash_rate": 0.0,
+                "contact_error": 0.00011129081119689522,
+                "drmsd": 0.057341788276579014,
+                "rmsd": 0.067203670901387,
+                "torsion_change": 0.0
+              },
+              "frequency_retention": 0.32921709156617884,
+              "future": {
+                "bond_rmse": 0.19637905799763697,
+                "clash_rate": 4.8243642074184455e-06,
+                "contact_error": 0.0002414577883006664,
+                "drmsd": 0.8237840826434891,
+                "rmsd": 1.105770637110118,
+                "torsion_change": 0.0
+              },
+              "velocity_rmse": 0.006156576836622262
+            },
+            "native_delta_time_ps": 100.0,
+            "physical_clip_span_ps": 1500.0,
+            "sample_count": 117
+          }
+        },
+        "ratio": 4,
+        "runtime": {
+          "peak_gpu_bytes": 25830338048,
+          "samples_per_s": 0.6467399875465946,
+          "wall_time_s": 180.90732327196747
+        },
+        "sample_count": 117,
+        "temporal": true
+      }
+    },
+    "data": {
+      "max_batches": null,
+      "subset": {
+        "fraction": 1.0,
+        "full_records": 117,
+        "selected_records": 117
+      }
+    },
+    "markdown_path": "outputs/atlas_selected_trajectories/evaluation/codec_eval.md",
+    "plots_path": "outputs/atlas_selected_trajectories/evaluation/plots",
+    "report_path": "outputs/atlas_selected_trajectories/evaluation/codec_eval.json"
+  },
+  "manifest_path": "outputs/atlas_selected_trajectories/clip_store/manifest.json",
+  "schema_version": "pvb.atlas.selected.50epoch.v1",
+  "selection": {
+    "dataset": "ATLAS",
+    "replicas": [
+      1,
+      2,
+      3
+    ],
+    "split_policy": "temporal split within each replica; no cross-trajectory mixing",
+    "systems": [
+      "atlas_5e3e_A",
+      "atlas_1v7r_A",
+      "atlas_2wlt_A"
+    ],
+    "train_clips_per_trajectory": 49,
+    "train_window_range": [
+      0,
+      48
+    ],
+    "trajectory_count": 9,
+    "validation_clips_per_trajectory": 13,
+    "validation_window_range": [
+      49,
+      61
+    ]
+  },
+  "training": {
+    "ratio1_no_temporal": {
+      "batches_per_epoch": 144,
+      "checkpoint": "outputs/atlas_selected_trajectories/ratio1_no_temporal/codec_step_00007200.pt",
+      "epochs": 50,
+      "final_train_metrics": {
+        "acceleration": 0.6128517985343933,
+        "acceleration_raw": 8.111905813734666e-09,
+        "bond": 0.03659659996628761,
+        "bucket_dt_100ps_acceleration": 0.6128517985343933,
+        "bucket_dt_100ps_acceleration_raw": 8.111905813734666e-09,
+        "bucket_dt_100ps_velocity": 0.6241583228111267,
+        "bucket_dt_100ps_velocity_raw": 2.939415571745485e-05,
+        "coordinate": 0.4984307587146759,
+        "local": 0.03659659996628761,
+        "task_trajectory_total": 0.5988084673881531,
+        "total": 0.5988084673881531,
+        "velocity": 0.6241583228111267,
+        "velocity_raw": 2.939415571745485e-05
+      },
+      "log_every": 10,
+      "log_records": 720,
+      "normalization_elapsed_s": 5.59042318596039,
+      "steps": 7200,
+      "total_elapsed_s": 5139.022147853975,
+      "training_elapsed_s": 5133.431724668015
+    },
+    "ratio1_temporal": {
+      "batches_per_epoch": 144,
+      "checkpoint": "outputs/atlas_selected_trajectories/ratio1_temporal/codec_step_00007200.pt",
+      "epochs": 50,
+      "final_train_metrics": {
+        "acceleration": 0.3252197802066803,
+        "acceleration_raw": 4.3047148068353636e-09,
+        "bond": 0.02729291282594204,
+        "bucket_dt_100ps_acceleration": 0.3252197802066803,
+        "bucket_dt_100ps_acceleration_raw": 4.3047148068353636e-09,
+        "bucket_dt_100ps_velocity": 0.34384235739707947,
+        "bucket_dt_100ps_velocity_raw": 1.6192936527659185e-05,
+        "coordinate": 0.2157095968723297,
+        "local": 0.02729291282594204,
+        "task_trajectory_total": 0.27181339263916016,
+        "total": 0.27181339263916016,
+        "velocity": 0.34384235739707947,
+        "velocity_raw": 1.6192936527659185e-05
+      },
+      "log_every": 10,
+      "log_records": 720,
+      "normalization_elapsed_s": 5.648840988986194,
+      "steps": 7200,
+      "total_elapsed_s": 5760.706536722952,
+      "training_elapsed_s": 5755.057695733965
+    },
+    "ratio4_temporal": {
+      "batches_per_epoch": 144,
+      "checkpoint": "outputs/atlas_selected_trajectories/ratio4_temporal/codec_step_00007200.pt",
+      "epochs": 50,
+      "final_train_metrics": {
+        "acceleration": 0.7204025387763977,
+        "acceleration_raw": 9.535481737543705e-09,
+        "bond": 0.03132573887705803,
+        "bucket_dt_100ps_acceleration": 0.7204025387763977,
+        "bucket_dt_100ps_acceleration_raw": 9.535481737543705e-09,
+        "bucket_dt_100ps_velocity": 0.7244865298271179,
+        "bucket_dt_100ps_velocity_raw": 3.411902071093209e-05,
+        "coordinate": 0.33642497658729553,
+        "local": 0.03132573887705803,
+        "task_trajectory_total": 0.45115891098976135,
+        "total": 0.45115891098976135,
+        "velocity": 0.7244865298271179,
+        "velocity_raw": 3.411902071093209e-05
+      },
+      "log_every": 10,
+      "log_records": 720,
+      "normalization_elapsed_s": 5.914142661029473,
+      "steps": 7200,
+      "total_elapsed_s": 6138.181796469027,
+      "training_elapsed_s": 6132.267653807998
+    }
+  },
+  "validation": {
+    "full_pytest": "42 passed, 1 existing torch.load warning",
+    "loader_validation_coverage": "117/117 records, no missing sample IDs, 41 batches"
+  }
+}

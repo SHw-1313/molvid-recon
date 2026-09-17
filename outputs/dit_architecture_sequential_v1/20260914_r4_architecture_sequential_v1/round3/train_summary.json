@@ -1,0 +1,91 @@
+{
+  "added_future_atom_frame_tokens_per_arm": 142319624,
+  "arm_compute_seconds": {
+    "cross_block": 167.8643587557599,
+    "local": 172.03532609157264
+  },
+  "arm_compute_seconds_this_invocation": {
+    "cross_block": 167.8643587557599,
+    "local": 172.03532609157264
+  },
+  "base_budget_successful_updates_per_arm": 5000,
+  "checkpoints": {
+    "cross_block": {
+      "optimizer_state_owned": true,
+      "path": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round3/cross_block/checkpoint_final.pt",
+      "refiner_state_hash": "274195d299edbb2254f20ebf90e9ff54a1277fe4b74ec978dd8001b6010a8e0c",
+      "scaler_owned": true,
+      "sha256": "85aac79723b4d3f94ef7113358a1a80fc0d5408d582a144959715c0260f7150a"
+    },
+    "local": {
+      "optimizer_state_owned": true,
+      "path": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round3/local/checkpoint_final.pt",
+      "refiner_state_hash": "2676e7976517db73fcfba252781053cc7fbe4fb7a118e9b6b03cf4cfbfd34a8f",
+      "scaler_owned": true,
+      "sha256": "8465fe8298e23d9257e72e4fa05ba9a20ea2b55b967e9dc447c194a2e6d8793b"
+    }
+  },
+  "code": {
+    "files": {
+      "config/dit_architecture_sequential_v1.neibu.yaml": "af1f91f8e588ff1b3691a92e890e973770d189c423d5bd1071722c629dea62e5",
+      "config/dit_architecture_sequential_v1.yaml": "45c117c6e52904040bf5dd0be06afa77a95451861de13ba00a5deb45f6573de1",
+      "evaluation/dit_architecture_sequential_v1.py": "eabbdf4c09509d6dff522664ae14086cbf3d2cd76799c0d9487a49c4f3014195",
+      "module/dit_geometry_supervision.py": "483f1505b90d9d5b39414881919357bd6c6b294acb079b2e6bb52e5f3cd1f914",
+      "module/trajectory_temporal_refiner.py": "94aced8bb165ccf5e3d6307dedac4882eec879cd29ee026f2ad86ef56fdbc068",
+      "scripts/run_dit_architecture_round3.py": "9636a9d8c0e7ca3f5b295d15c23edc41d123061b743fcd5bbfe9fa61a848fb5f",
+      "scripts/run_dit_architecture_sequential_v1.py": "d8f3f4539f3a4c269738e87460ea079eb141b207b3232c2761919adf4fb489f7",
+      "tests/test_dit_architecture_round3_cuda.py": "3846d633c5d3e1b9a3ff45826a6643843a1a8b79b7029a18b44760bf80ba473f"
+    },
+    "head": "16e037abe1f7cfff71b6fd7d5cd38ff50afe4643",
+    "source_hash": "98885a77a50b221f731befa6fb279f5d1c1601633d5e5151dbb1fadbc3547ca3"
+  },
+  "codec_state_hash": "9a30e3838403cbd9f2cfa7344276cbdc7a8176d75ce5d4da028a3ea39ec390b9",
+  "common_extension_applied": false,
+  "config_hash": "8660bfdfbcb22f7a0ca174ff7cd988b5a8be43bb692bacce5748f7d7f89aa474",
+  "data_hash": "9daaf83fe5ee862634f7d1d3530e730adb4a8529ed37a2bc2fd330304ebfe184",
+  "extension_successful_updates_per_arm": 0,
+  "frozen_hashes_unchanged": true,
+  "gpu_hours": 2.774936478258783,
+  "gpu_hours_this_invocation": 2.774936478258783,
+  "initialization_hash": "d4bef3ad8600c6aa558528c7eeb4af42c0980d5b1dd9cc07accf7b5899d8710b",
+  "pair_cache": "streaming_no_cache",
+  "parent_adapter_state_hash": "5376158627b47177d4a6c09b87c3d31c174fb77377dea9695f9f294cd5120d9c",
+  "parent_checkpoint": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round2/candidate/checkpoint_final.pt",
+  "parent_checkpoint_sha256": "7fec9b339201765572ddadf0c64892fe9b7db7f59fdc8148b6f5c4036f514e34",
+  "parent_model_state_hash": "b6ed3d56b6c66370c65bf2c7c9ad1a56da505470813eb23d00c7a50c05bbe6c2",
+  "peak_memory_bytes": 60404111360,
+  "refiner_contracts": {
+    "cross_block": {
+      "allow_cross_block": true,
+      "block_frames": 4,
+      "channels": 128,
+      "coordinate_bias": false,
+      "cross_block_edges": "enabled",
+      "edges": "same_atom_adjacent_valid_frames_only",
+      "hidden": 64,
+      "output": "x_hat_plus_future_only_delta",
+      "schema": "pvb.dit.trajectory_temporal_refiner.v1",
+      "vector_projection": "bias_free_channel_only_zero_initialized"
+    },
+    "local": {
+      "allow_cross_block": false,
+      "block_frames": 4,
+      "channels": 128,
+      "coordinate_bias": false,
+      "cross_block_edges": "disabled",
+      "edges": "same_atom_adjacent_valid_frames_only",
+      "hidden": 64,
+      "output": "x_hat_plus_future_only_delta",
+      "schema": "pvb.dit.trajectory_temporal_refiner.v1",
+      "vector_projection": "bias_free_channel_only_zero_initialized"
+    }
+  },
+  "schema": "pvb.dit.architecture_sequential.v1.round3.training.v1",
+  "statistics_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+  "status": "PASS",
+  "successful_updates_per_arm": 5000,
+  "test_payload_opened": false,
+  "updates_this_invocation_per_arm": 5000,
+  "wall_seconds": 9989.77132173162,
+  "wall_seconds_this_invocation": 9989.77132173162
+}

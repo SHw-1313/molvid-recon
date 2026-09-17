@@ -1,0 +1,1461 @@
+{
+  "controls": {
+    "ratio1_no_temporal": {
+      "atom_frame_tokens_per_s": 55719.2041025082,
+      "checkpoint": "outputs/atlas_selected_trajectories/ratio1_no_temporal/codec_step_00007200.pt",
+      "median_step_s": 1.2735286001116037,
+      "parameter_count": 593992,
+      "parameter_names": [
+        "frame_encoder.spatial_encoder.atom_embedding.weight",
+        "frame_encoder.spatial_encoder.block_embedding.weight",
+        "frame_encoder.spatial_encoder.bond_embedding.weight",
+        "frame_encoder.spatial_encoder.distance_expansion.means",
+        "frame_encoder.spatial_encoder.distance_expansion.betas",
+        "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias",
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.vec_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.vec_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.bias",
+        "frame_encoder.spatial_encoder.out_norm.weight",
+        "frame_encoder.spatial_encoder.out_norm.bias",
+        "decoder.temporal_decoder.upsample.query.0.weight",
+        "decoder.temporal_decoder.upsample.query.0.bias",
+        "decoder.temporal_decoder.upsample.query.2.weight",
+        "decoder.temporal_decoder.upsample.query.2.bias",
+        "decoder.displacement.gate.weight",
+        "decoder.displacement.gate.bias",
+        "decoder.displacement.out.weight"
+      ],
+      "parameter_shapes": {
+        "decoder.displacement.gate.bias": [
+          128
+        ],
+        "decoder.displacement.gate.weight": [
+          128,
+          128
+        ],
+        "decoder.displacement.out.weight": [
+          1,
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.0.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.0.weight": [
+          128,
+          1
+        ],
+        "decoder.temporal_decoder.upsample.query.2.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.2.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.atom_embedding.weight": [
+          118,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.weight": [
+          384,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.weight": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.vec_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.weight": [
+          384,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.weight": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.vec_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.block_embedding.weight": [
+          138,
+          128
+        ],
+        "frame_encoder.spatial_encoder.bond_embedding.weight": [
+          2,
+          50
+        ],
+        "frame_encoder.spatial_encoder.distance_expansion.betas": [
+          50
+        ],
+        "frame_encoder.spatial_encoder.distance_expansion.means": [
+          50
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight": [
+          128,
+          256
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight": [
+          118,
+          128
+        ],
+        "frame_encoder.spatial_encoder.out_norm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.out_norm.weight": [
+          128
+        ]
+      },
+      "peak_memory_allocated_bytes": 52391928832,
+      "step_per_s": 0.7852198999789769,
+      "timed_step_s": [
+        1.2735286001116037,
+        1.2416667819488794,
+        1.4242322398349643
+      ],
+      "warmup_loss": {
+        "acceleration": 0.9794953465461731,
+        "acceleration_raw": 1.2964918916225088e-08,
+        "bond": 0.05336613953113556,
+        "bucket_dt_100ps_acceleration": 0.9794953465461731,
+        "bucket_dt_100ps_acceleration_raw": 1.2964918916225088e-08,
+        "bucket_dt_100ps_velocity": 1.055372953414917,
+        "bucket_dt_100ps_velocity_raw": 4.970180816599168e-05,
+        "coordinate": 1.6016334295272827,
+        "local": 0.05336613953113556,
+        "task_trajectory_total": 1.7668187618255615,
+        "total": 1.7668187618255615,
+        "velocity": 1.055372953414917,
+        "velocity_raw": 4.970180816599168e-05
+      }
+    },
+    "ratio1_temporal": {
+      "atom_frame_tokens_per_s": 46172.20196627611,
+      "checkpoint": "outputs/atlas_selected_trajectories/ratio1_temporal/codec_step_00007200.pt",
+      "median_step_s": 1.5368554450105876,
+      "parameter_count": 1974904,
+      "parameter_names": [
+        "frame_encoder.spatial_encoder.atom_embedding.weight",
+        "frame_encoder.spatial_encoder.block_embedding.weight",
+        "frame_encoder.spatial_encoder.bond_embedding.weight",
+        "frame_encoder.spatial_encoder.distance_expansion.means",
+        "frame_encoder.spatial_encoder.distance_expansion.betas",
+        "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias",
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.vec_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.vec_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.bias",
+        "frame_encoder.spatial_encoder.out_norm.weight",
+        "frame_encoder.spatial_encoder.out_norm.bias",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.bias",
+        "temporal_encoder.stage_blocks.0.0.attention.vector_norm.scale",
+        "temporal_encoder.stage_blocks.0.0.attention.q_proj.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.k_proj.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_value.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_out.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.vector_value.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.vector_out.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.bias",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn_v_norm.scale",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_in.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_out.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.bias",
+        "decoder.temporal_decoder.upsample.query.0.weight",
+        "decoder.temporal_decoder.upsample.query.0.bias",
+        "decoder.temporal_decoder.upsample.query.2.weight",
+        "decoder.temporal_decoder.upsample.query.2.bias",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.weight",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.bias",
+        "decoder.temporal_decoder.refinement.0.attention.vector_norm.scale",
+        "decoder.temporal_decoder.refinement.0.attention.q_proj.weight",
+        "decoder.temporal_decoder.refinement.0.attention.k_proj.weight",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_value.weight",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_out.weight",
+        "decoder.temporal_decoder.refinement.0.attention.vector_value.weight",
+        "decoder.temporal_decoder.refinement.0.attention.vector_out.weight",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.weight",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.bias",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.weight",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.bias",
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.weight",
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.bias",
+        "decoder.temporal_decoder.refinement.0.ffn_v_norm.scale",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.bias",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.bias",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_in.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_out.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.bias",
+        "decoder.displacement.gate.weight",
+        "decoder.displacement.gate.bias",
+        "decoder.displacement.out.weight"
+      ],
+      "parameter_shapes": {
+        "decoder.displacement.gate.bias": [
+          128
+        ],
+        "decoder.displacement.gate.weight": [
+          128,
+          128
+        ],
+        "decoder.displacement.out.weight": [
+          1,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.k_proj.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.q_proj.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.weight": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_out.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_value.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.bias": [
+          16
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.weight": [
+          16,
+          16
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.bias": [
+          8
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.weight": [
+          8,
+          16
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.vector_norm.scale": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.vector_out.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.vector_value.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.bias": [
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.weight": [
+          512,
+          256
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.weight": [
+          128,
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.bias": [
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.weight": [
+          512,
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_in.weight": [
+          512,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_out.weight": [
+          128,
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.weight": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn_v_norm.scale": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.0.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.0.weight": [
+          128,
+          1
+        ],
+        "decoder.temporal_decoder.upsample.query.2.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.2.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.atom_embedding.weight": [
+          118,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.weight": [
+          384,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.weight": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.vec_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.weight": [
+          384,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.weight": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.vec_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.block_embedding.weight": [
+          138,
+          128
+        ],
+        "frame_encoder.spatial_encoder.bond_embedding.weight": [
+          2,
+          50
+        ],
+        "frame_encoder.spatial_encoder.distance_expansion.betas": [
+          50
+        ],
+        "frame_encoder.spatial_encoder.distance_expansion.means": [
+          50
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight": [
+          128,
+          256
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight": [
+          118,
+          128
+        ],
+        "frame_encoder.spatial_encoder.out_norm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.out_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.k_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.q_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.bias": [
+          16
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.weight": [
+          16,
+          16
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.bias": [
+          8
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.weight": [
+          8,
+          16
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.vector_norm.scale": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.vector_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.vector_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.weight": [
+          512,
+          256
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.weight": [
+          512,
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_in.weight": [
+          512,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn_v_norm.scale": [
+          128
+        ]
+      },
+      "peak_memory_allocated_bytes": 52974906880,
+      "step_per_s": 0.6506792836284683,
+      "timed_step_s": [
+        1.5401932948734611,
+        1.375039312057197,
+        1.5368554450105876
+      ],
+      "warmup_loss": {
+        "acceleration": 0.49289196729660034,
+        "acceleration_raw": 6.524078166592062e-09,
+        "bond": 0.04434197023510933,
+        "bucket_dt_100ps_acceleration": 0.49289196729660034,
+        "bucket_dt_100ps_acceleration_raw": 6.524078166592062e-09,
+        "bucket_dt_100ps_velocity": 0.5418512225151062,
+        "bucket_dt_100ps_velocity_raw": 2.5517980247968808e-05,
+        "coordinate": 0.5384541749954224,
+        "local": 0.04434197023510933,
+        "task_trajectory_total": 0.6261522769927979,
+        "total": 0.6261522769927979,
+        "velocity": 0.5418512225151062,
+        "velocity_raw": 2.5517980247968808e-05
+      }
+    },
+    "ratio4_temporal": {
+      "atom_frame_tokens_per_s": 47133.337121479504,
+      "checkpoint": "outputs/atlas_selected_trajectories/ratio4_temporal/codec_step_00007200.pt",
+      "median_step_s": 1.50551614491269,
+      "parameter_count": 3356074,
+      "parameter_names": [
+        "frame_encoder.spatial_encoder.atom_embedding.weight",
+        "frame_encoder.spatial_encoder.block_embedding.weight",
+        "frame_encoder.spatial_encoder.bond_embedding.weight",
+        "frame_encoder.spatial_encoder.distance_expansion.means",
+        "frame_encoder.spatial_encoder.distance_expansion.betas",
+        "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias",
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight",
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.vec_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.vec_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.bias",
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.weight",
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.bias",
+        "frame_encoder.spatial_encoder.out_norm.weight",
+        "frame_encoder.spatial_encoder.out_norm.bias",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.bias",
+        "temporal_encoder.stage_blocks.0.0.attention.vector_norm.scale",
+        "temporal_encoder.stage_blocks.0.0.attention.q_proj.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.k_proj.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_value.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_out.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.vector_value.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.vector_out.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.bias",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.weight",
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn_v_norm.scale",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.bias",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_in.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_out.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.weight",
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.bias",
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_norm.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_norm.bias",
+        "temporal_encoder.stage_blocks.1.0.attention.vector_norm.scale",
+        "temporal_encoder.stage_blocks.1.0.attention.q_proj.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.k_proj.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_value.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_out.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.vector_value.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.vector_out.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.0.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.0.bias",
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.2.weight",
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.2.bias",
+        "temporal_encoder.stage_blocks.1.0.ffn_h_norm.weight",
+        "temporal_encoder.stage_blocks.1.0.ffn_h_norm.bias",
+        "temporal_encoder.stage_blocks.1.0.ffn_v_norm.scale",
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_in.weight",
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_in.bias",
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_out.weight",
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_out.bias",
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_in.weight",
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_out.weight",
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_gate.weight",
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_gate.bias",
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_norm.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_norm.bias",
+        "temporal_encoder.stage_blocks.2.0.attention.vector_norm.scale",
+        "temporal_encoder.stage_blocks.2.0.attention.q_proj.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.k_proj.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_value.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_out.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.vector_value.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.vector_out.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.0.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.0.bias",
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.2.weight",
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.2.bias",
+        "temporal_encoder.stage_blocks.2.0.ffn_h_norm.weight",
+        "temporal_encoder.stage_blocks.2.0.ffn_h_norm.bias",
+        "temporal_encoder.stage_blocks.2.0.ffn_v_norm.scale",
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_in.weight",
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_in.bias",
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_out.weight",
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_out.bias",
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_in.weight",
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_out.weight",
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_gate.weight",
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_gate.bias",
+        "temporal_encoder.downsamplers.0.gate.weight",
+        "temporal_encoder.downsamplers.0.gate.bias",
+        "temporal_encoder.downsamplers.1.gate.weight",
+        "temporal_encoder.downsamplers.1.gate.bias",
+        "decoder.temporal_decoder.upsample.query.0.weight",
+        "decoder.temporal_decoder.upsample.query.0.bias",
+        "decoder.temporal_decoder.upsample.query.2.weight",
+        "decoder.temporal_decoder.upsample.query.2.bias",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.weight",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.bias",
+        "decoder.temporal_decoder.refinement.0.attention.vector_norm.scale",
+        "decoder.temporal_decoder.refinement.0.attention.q_proj.weight",
+        "decoder.temporal_decoder.refinement.0.attention.k_proj.weight",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_value.weight",
+        "decoder.temporal_decoder.refinement.0.attention.scalar_out.weight",
+        "decoder.temporal_decoder.refinement.0.attention.vector_value.weight",
+        "decoder.temporal_decoder.refinement.0.attention.vector_out.weight",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.weight",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.bias",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.weight",
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.bias",
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.weight",
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.bias",
+        "decoder.temporal_decoder.refinement.0.ffn_v_norm.scale",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.bias",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.bias",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_in.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_out.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.weight",
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.bias",
+        "decoder.displacement.gate.weight",
+        "decoder.displacement.gate.bias",
+        "decoder.displacement.out.weight"
+      ],
+      "parameter_shapes": {
+        "decoder.displacement.gate.bias": [
+          128
+        ],
+        "decoder.displacement.gate.weight": [
+          128,
+          128
+        ],
+        "decoder.displacement.out.weight": [
+          1,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.k_proj.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.q_proj.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_norm.weight": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_out.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.scalar_value.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.bias": [
+          16
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.0.weight": [
+          16,
+          16
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.bias": [
+          8
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.time_bias.mlp.2.weight": [
+          8,
+          16
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.vector_norm.scale": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.vector_out.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.attention.vector_value.weight": [
+          128,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.bias": [
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_in.weight": [
+          512,
+          256
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.scalar_out.weight": [
+          128,
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.bias": [
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_gate.weight": [
+          512,
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_in.weight": [
+          512,
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn.vector_out.weight": [
+          128,
+          512
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn_h_norm.weight": [
+          128
+        ],
+        "decoder.temporal_decoder.refinement.0.ffn_v_norm.scale": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.0.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.0.weight": [
+          128,
+          1
+        ],
+        "decoder.temporal_decoder.upsample.query.2.bias": [
+          128
+        ],
+        "decoder.temporal_decoder.upsample.query.2.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.atom_embedding.weight": [
+          118,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dk_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.dv_proj.weight": [
+          384,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.k_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.layernorm.weight": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.o_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.q_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.v_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.0.vec_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dk_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.dv_proj.weight": [
+          384,
+          100
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.k_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.layernorm.weight": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.o_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.q_proj.weight": [
+          128,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.bias": [
+          384
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.v_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.attention_layers.1.vec_proj.weight": [
+          384,
+          128
+        ],
+        "frame_encoder.spatial_encoder.block_embedding.weight": [
+          138,
+          128
+        ],
+        "frame_encoder.spatial_encoder.bond_embedding.weight": [
+          2,
+          50
+        ],
+        "frame_encoder.spatial_encoder.distance_expansion.betas": [
+          50
+        ],
+        "frame_encoder.spatial_encoder.distance_expansion.means": [
+          50
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.combine.weight": [
+          128,
+          256
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.distance_proj.weight": [
+          128,
+          100
+        ],
+        "frame_encoder.spatial_encoder.neighbor_embedding.embedding.weight": [
+          118,
+          128
+        ],
+        "frame_encoder.spatial_encoder.out_norm.bias": [
+          128
+        ],
+        "frame_encoder.spatial_encoder.out_norm.weight": [
+          128
+        ],
+        "temporal_encoder.downsamplers.0.gate.bias": [
+          1
+        ],
+        "temporal_encoder.downsamplers.0.gate.weight": [
+          1,
+          128
+        ],
+        "temporal_encoder.downsamplers.1.gate.bias": [
+          1
+        ],
+        "temporal_encoder.downsamplers.1.gate.weight": [
+          1,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.k_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.q_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.scalar_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.bias": [
+          16
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.0.weight": [
+          16,
+          16
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.bias": [
+          8
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.time_bias.mlp.2.weight": [
+          8,
+          16
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.vector_norm.scale": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.vector_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.attention.vector_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_in.weight": [
+          512,
+          256
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.scalar_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_gate.weight": [
+          512,
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_in.weight": [
+          512,
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn.vector_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn_h_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.0.0.ffn_v_norm.scale": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.k_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.q_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.scalar_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.0.bias": [
+          16
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.0.weight": [
+          16,
+          16
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.2.bias": [
+          8
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.time_bias.mlp.2.weight": [
+          8,
+          16
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.vector_norm.scale": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.vector_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.attention.vector_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_in.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_in.weight": [
+          512,
+          256
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_out.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.scalar_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_gate.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_gate.weight": [
+          512,
+          512
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_in.weight": [
+          512,
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn.vector_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn_h_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn_h_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.1.0.ffn_v_norm.scale": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.k_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.q_proj.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.scalar_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.0.bias": [
+          16
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.0.weight": [
+          16,
+          16
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.2.bias": [
+          8
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.time_bias.mlp.2.weight": [
+          8,
+          16
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.vector_norm.scale": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.vector_out.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.attention.vector_value.weight": [
+          128,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_in.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_in.weight": [
+          512,
+          256
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_out.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.scalar_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_gate.bias": [
+          512
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_gate.weight": [
+          512,
+          512
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_in.weight": [
+          512,
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn.vector_out.weight": [
+          128,
+          512
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn_h_norm.bias": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn_h_norm.weight": [
+          128
+        ],
+        "temporal_encoder.stage_blocks.2.0.ffn_v_norm.scale": [
+          128
+        ]
+      },
+      "peak_memory_allocated_bytes": 55366072832,
+      "step_per_s": 0.6642240293331384,
+      "timed_step_s": [
+        1.607144535984844,
+        1.50551614491269,
+        1.3886372910346836
+      ],
+      "warmup_loss": {
+        "acceleration": 1.2738977670669556,
+        "acceleration_raw": 1.6861724461136873e-08,
+        "bond": 0.07193714380264282,
+        "bucket_dt_100ps_acceleration": 1.2738977670669556,
+        "bucket_dt_100ps_acceleration_raw": 1.6861724461136873e-08,
+        "bucket_dt_100ps_velocity": 1.3297836780548096,
+        "bucket_dt_100ps_velocity_raw": 6.262492388486862e-05,
+        "coordinate": 0.8014457821846008,
+        "local": 0.07193714380264282,
+        "task_trajectory_total": 1.0125064849853516,
+        "total": 1.0125064849853516,
+        "velocity": 1.3297836780548096,
+        "velocity_raw": 6.262492388486862e-05
+      }
+    }
+  },
+  "metadata": {
+    "cuda_device": "NVIDIA A100-SXM4-80GB",
+    "dataset_root": "outputs/atlas_selected_trajectories/clip_store/train",
+    "device": "cuda:0",
+    "fixed_sample_id": [
+      "atlas_5e3e_A_R1_w000000",
+      "atlas_5e3e_A_R1_w000001",
+      "atlas_5e3e_A_R1_w000002",
+      "atlas_5e3e_A_R1_w000003",
+      "atlas_5e3e_A_R1_w000004"
+    ],
+    "fixed_shape": {
+      "atoms": 4435,
+      "batch_size": 5,
+      "frames": 16,
+      "tokens": 70960,
+      "x": [
+        16,
+        4435,
+        3
+      ]
+    },
+    "git_branch": "fix/graph-runtime-v1",
+    "git_commit": "6459d3c0e823491b09295930bf6d5929a8f9961b",
+    "numpy": "2.4.6",
+    "python": "3.11.15 | packaged by conda-forge | (main, Jun 11 2026, 03:34:02) [GCC 14.3.0]",
+    "torch": "2.5.1+cu121",
+    "torch_cuda": "12.1"
+  }
+}

@@ -1,0 +1,98 @@
+schema_version: pvb.codec.config.v1
+time:
+  unit: ps
+  continuous_scale_ps: 100.0
+  buckets:
+  - id: static
+    center_ps: 0.0
+    tolerance_ps: 0.0
+    weight: 1.0
+  - id: dt_80ps
+    center_ps: 80.0
+    tolerance_ps: 0.5
+    weight: 1.0
+  - id: dt_100ps
+    center_ps: 100.0
+    tolerance_ps: 0.5
+    weight: 1.0
+  - id: dt_1ns
+    center_ps: 1000.0
+    tolerance_ps: 5.0
+    weight: 1.0
+  normalization:
+    min_count: 32
+    epsilon: 1.0e-06
+training:
+  experiment_stage: engineering_acceptance
+  device: auto
+  precision: bf16
+  lr: 0.0001
+  weight_decay: 1.0e-06
+  max_steps: 200
+  warmup_steps: 100
+  grad_clip: 1.0
+  save_dir: ckpt/codec_engineering
+  loss_weights:
+    coordinate: 1.0
+    local: 0.1
+    bond: 0.1
+    velocity: 0.1
+    acceleration: 0.05
+  loss_schedule:
+  - start_step: 0
+    weights:
+      coordinate: 1.0
+      local: 0.0
+      bond: 0.0
+      velocity: 0.0
+      acceleration: 0.0
+  - start_step: 100
+    weights:
+      coordinate: 1.0
+      local: 0.1
+      bond: 0.1
+      velocity: 0.1
+      acceleration: 0.05
+model:
+  hidden_channels: 128
+  spatial_layers: 2
+  temporal_layers: 1
+  temporal_ratio: 4
+  num_rbf: 50
+  num_heads: 8
+  cutoff_lower: 0.0
+  cutoff_upper: 5.0
+  max_num_neighbors: 32
+  neighbor_backend: cuda_radius
+  use_spatial_refiner: false
+  time_scale_ps: 100.0
+  bond_construction:
+    mode: topology
+  spatial_execution:
+    mode: halo_subgraph
+    max_core_atoms: 2000
+    halo_hops: auto
+    partition_method: spatial_morton
+    subgraph_node_budget: 24000
+data:
+  train_roots: []
+  valid_roots: []
+  max_tokens: 80000
+  num_workers: 8
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 2
+  non_blocking_transfer: true
+  trusted_store_fast_path: true
+  strict_record_validation: false
+  seed: 20260819
+  checkpoint: null
+  oversize_policy: partition
+  acceptance_sampling:
+    replacement: false
+    exact_epoch: true
+acceptance:
+  fixed_step_run: 200
+  tiny_epochs: 5
+  exact_epoch: true
+  run_long_training: false

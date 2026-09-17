@@ -1,0 +1,41 @@
+{
+  "dt_100ps": {
+    "bucket_id": "dt_100ps",
+    "count": 7748992,
+    "coordinate_mean": [
+      -0.0001798420853447169,
+      -0.00046427594497799873,
+      0.001271713525056839
+    ],
+    "coordinate_std": [
+      11.87568187713623,
+      11.043014526367188,
+      12.759124755859375
+    ],
+    "velocity_scale": 0.007640497703664035,
+    "acceleration_scale": 0.00012639912328185968,
+    "min_count": 32,
+    "epsilon": 1e-06,
+    "used_fallback": false
+  },
+  "dt_80ps": {
+    "bucket_id": "dt_80ps",
+    "count": 7581936,
+    "coordinate_mean": [
+      0.0035121000837534666,
+      -0.0017507029697299004,
+      -0.002756561618298292
+    ],
+    "coordinate_std": [
+      12.941267013549805,
+      12.823793411254883,
+      13.018692016601562
+    ],
+    "velocity_scale": 0.00835756294981068,
+    "acceleration_scale": 0.00017388710242663004,
+    "min_count": 32,
+    "epsilon": 1e-06,
+    "used_fallback": false
+  }
+}
+{"checkpoint": "outputs/g5/ratio4_temporal/codec_step_00001000.pt", "metrics": {"acceleration": 0.971598744392395, "acceleration_raw": 1.5522978458193393e-08, "bond": 0.031054535880684853, "bucket_dt_100ps_acceleration": 0.971598744392395, "bucket_dt_100ps_acceleration_raw": 1.5522978458193393e-08, "bucket_dt_100ps_velocity": 0.9720308780670166, "bucket_dt_100ps_velocity_raw": 5.674444400938228e-05, "coordinate": 1.3822892904281616, "local": 0.031054535880684853, "task_trajectory_total": 1.53428316116333, "total": 1.53428316116333, "velocity": 0.9720308780670166, "velocity_raw": 5.674444400938228e-05}, "step": 1000}

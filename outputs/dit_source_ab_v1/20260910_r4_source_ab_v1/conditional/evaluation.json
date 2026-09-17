@@ -1,0 +1,95 @@
+{
+  "arm": "conditional",
+  "checkpoint": "/tmp/molvid_dit_source_ab_v1/20260910_r4_source_ab_v1/conditional/checkpoint_step020000.pt",
+  "common_step": 20000,
+  "main_aggregate": {
+    "aggregation": "sample_equal_mean_then_system_equal_mean; contact_f1_is_macro",
+    "metric_path": [
+      "diagnostic_metrics",
+      "future"
+    ],
+    "sample_count": 52,
+    "sample_equal": {
+      "aligned_rmsd": 2.0776938387766766,
+      "bond_rmse": 0.7049312218917992,
+      "centroid_gauge_raw_rmsd": 2.0795298750779105,
+      "clash_rate": 6.947875266842647e-06,
+      "contact_error": 0.00448522074763856,
+      "contact_f1": 0.7379237494583338,
+      "contact_false_negative_rate": 0.2530275849249485,
+      "contact_false_positive_rate": 0.002360683640533442,
+      "contact_jaccard": 0.5847630840985573,
+      "contact_occupancy_mae": 0.00448522074763856,
+      "contact_precision": 0.7291518810919105,
+      "contact_recall": 0.7469724150750514,
+      "drmsd": 1.5596108290114061,
+      "rmsd": 2.0795298750779105,
+      "torsion_change": 0.0
+    },
+    "system_count": 1,
+    "system_equal": {
+      "aligned_rmsd": 2.0776938387766766,
+      "bond_rmse": 0.7049312218917992,
+      "centroid_gauge_raw_rmsd": 2.0795298750779105,
+      "clash_rate": 6.947875266842647e-06,
+      "contact_error": 0.00448522074763856,
+      "contact_f1": 0.7379237494583338,
+      "contact_false_negative_rate": 0.2530275849249485,
+      "contact_false_positive_rate": 0.002360683640533442,
+      "contact_jaccard": 0.5847630840985573,
+      "contact_occupancy_mae": 0.00448522074763856,
+      "contact_precision": 0.7291518810919105,
+      "contact_recall": 0.7469724150750514,
+      "drmsd": 1.5596108290114061,
+      "rmsd": 2.0795298750779105,
+      "torsion_change": 0.0
+    }
+  },
+  "main_rows": 52,
+  "schema": "pvb.dit.state_detail.source_ab.evaluation_arm.v1",
+  "subset_aggregate": {
+    "aggregation": "sample_equal_mean_then_system_equal_mean; contact_f1_is_macro",
+    "metric_path": [
+      "diagnostic_metrics",
+      "future"
+    ],
+    "sample_count": 128,
+    "sample_equal": {
+      "aligned_rmsd": 1.7898213620085799,
+      "bond_rmse": 0.6817459608419395,
+      "centroid_gauge_raw_rmsd": 1.7928475388443879,
+      "clash_rate": 6.4895622458038815e-06,
+      "contact_error": 0.0047689285986138065,
+      "contact_f1": 0.7466890839490241,
+      "contact_false_negative_rate": 0.24648123328243032,
+      "contact_false_positive_rate": 0.002488860422461722,
+      "contact_jaccard": 0.5958798393045361,
+      "contact_occupancy_mae": 0.0047689285986138065,
+      "contact_precision": 0.7401063299089737,
+      "contact_recall": 0.7535187667175696,
+      "drmsd": 1.3707190408951804,
+      "rmsd": 1.7928475388443879,
+      "torsion_change": 0.0
+    },
+    "system_count": 1,
+    "system_equal": {
+      "aligned_rmsd": 1.7898213620085799,
+      "bond_rmse": 0.6817459608419395,
+      "centroid_gauge_raw_rmsd": 1.7928475388443879,
+      "clash_rate": 6.4895622458038815e-06,
+      "contact_error": 0.0047689285986138065,
+      "contact_f1": 0.7466890839490241,
+      "contact_false_negative_rate": 0.24648123328243032,
+      "contact_false_positive_rate": 0.002488860422461722,
+      "contact_jaccard": 0.5958798393045361,
+      "contact_occupancy_mae": 0.0047689285986138065,
+      "contact_precision": 0.7401063299089737,
+      "contact_recall": 0.7535187667175696,
+      "drmsd": 1.3707190408951804,
+      "rmsd": 1.7928475388443879,
+      "torsion_change": 0.0
+    }
+  },
+  "subset_rows": 128,
+  "test_payload_opened": false
+}

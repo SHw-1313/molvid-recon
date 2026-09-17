@@ -1,0 +1,187 @@
+{
+  "controls": {
+    "ratio1_no_temporal": {
+      "by_time_bucket": {
+        "dt_100ps": {
+          "latent_interval_ps": 100.0,
+          "latent_tokens": 75148.30769230769,
+          "loss": {
+            "acceleration": 0.6917387613883386,
+            "acceleration_raw": 9.156078926381293e-09,
+            "bond": 0.041456460666198,
+            "coordinate": 0.5869029064973196,
+            "local": 0.041456460666198,
+            "total": 0.6980680028597513,
+            "velocity": 0.6828686992327372,
+            "velocity_raw": 3.2159066578083766e-05
+          },
+          "metrics": {
+            "acceleration_rmse": 9.547168824846288e-05,
+            "all_frames": {
+              "bond_rmse": 0.2032107231348587,
+              "clash_rate": 6.144820409085346e-07,
+              "contact_error": 0.0002872981205702019,
+              "drmsd": 0.9801555140727999,
+              "rmsd": 1.3171638275622735,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.24958424402324128,
+              "clash_rate": 8.228344319295735e-09,
+              "contact_error": 0.00023374132788143097,
+              "drmsd": 0.4143254142759948,
+              "rmsd": 0.4759775314472745,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.12313776234021553,
+            "future": {
+              "bond_rmse": 0.19973409527310218,
+              "clash_rate": 6.548989604518796e-07,
+              "contact_error": 0.0002908685728937435,
+              "drmsd": 1.006558787246972,
+              "rmsd": 1.3547468418035986,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.005657572652758477
+          },
+          "native_delta_time_ps": 100.0,
+          "physical_clip_span_ps": 1500.0,
+          "sample_count": 114
+        }
+      },
+      "ratio": 1,
+      "runtime": {
+        "peak_gpu_bytes": 25830440448,
+        "samples_per_s": 0.6757711721921136,
+        "wall_time_s": 168.6961573548615
+      },
+      "sample_count": 114,
+      "temporal": false
+    },
+    "ratio1_temporal": {
+      "by_time_bucket": {
+        "dt_100ps": {
+          "latent_interval_ps": 100.0,
+          "latent_tokens": 75148.30769230769,
+          "loss": {
+            "acceleration": 0.37010069764577425,
+            "acceleration_raw": 4.898773062414272e-09,
+            "bond": 0.03153939678882941,
+            "coordinate": 0.23754562743199178,
+            "local": 0.03153939678882941,
+            "total": 0.2998156608679356,
+            "velocity": 0.37457121717624176,
+            "velocity_raw": 1.764008326669379e-05
+          },
+          "metrics": {
+            "acceleration_rmse": 6.973921250644147e-05,
+            "all_frames": {
+              "bond_rmse": 0.17687650084243975,
+              "clash_rate": 1.1141263428635867e-07,
+              "contact_error": 3.320165960292051e-05,
+              "drmsd": 0.6317297557956554,
+              "rmsd": 0.8378594273026955,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.0848793388534688,
+              "clash_rate": 0.0,
+              "contact_error": 2.1200707733325358e-05,
+              "drmsd": 0.12322985577805923,
+              "rmsd": 0.14384567659232148,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.7081307035226089,
+            "future": {
+              "bond_rmse": 0.18135612710161786,
+              "clash_rate": 1.1884014410722371e-07,
+              "contact_error": 3.400172324920557e-05,
+              "drmsd": 0.6516634635469476,
+              "rmsd": 0.8645318845855428,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.004185418009142761
+          },
+          "native_delta_time_ps": 100.0,
+          "physical_clip_span_ps": 1500.0,
+          "sample_count": 114
+        }
+      },
+      "ratio": 1,
+      "runtime": {
+        "peak_gpu_bytes": 25830338048,
+        "samples_per_s": 0.700915272391104,
+        "wall_time_s": 162.6444799969904
+      },
+      "sample_count": 114,
+      "temporal": true
+    },
+    "ratio4_temporal": {
+      "by_time_bucket": {
+        "dt_100ps": {
+          "latent_interval_ps": 400.0,
+          "latent_tokens": 18787.076923076922,
+          "loss": {
+            "acceleration": 0.8210261601668137,
+            "acceleration_raw": 1.0867368953444593e-08,
+            "bond": 0.036763968280492686,
+            "coordinate": 0.3869617138153467,
+            "local": 0.036763968280492686,
+            "total": 0.5161628799560742,
+            "velocity": 0.8079706231753031,
+            "velocity_raw": 3.805062540497882e-05
+          },
+          "metrics": {
+            "acceleration_rmse": 0.00010404281256376133,
+            "all_frames": {
+              "bond_rmse": 0.19008125929688593,
+              "clash_rate": 4.654756282481032e-06,
+              "contact_error": 0.00023966223670868203,
+              "drmsd": 0.7970190543758787,
+              "rmsd": 1.0700815198302926,
+              "torsion_change": 0.0
+            },
+            "frame0": {
+              "bond_rmse": 0.032917328708834466,
+              "clash_rate": 0.0,
+              "contact_error": 0.00011415102525438086,
+              "drmsd": 0.05735192108397335,
+              "rmsd": 0.0673259812613563,
+              "torsion_change": 0.0
+            },
+            "frequency_retention": 0.3294874765934088,
+            "future": {
+              "bond_rmse": 0.19612908372253182,
+              "clash_rate": 4.965073300739347e-06,
+              "contact_error": 0.0002480296568067458,
+              "drmsd": 0.8230238319214944,
+              "rmsd": 1.1050377267082463,
+              "torsion_change": 0.0
+            },
+            "velocity_rmse": 0.006154626442616298
+          },
+          "native_delta_time_ps": 100.0,
+          "physical_clip_span_ps": 1500.0,
+          "sample_count": 114
+        }
+      },
+      "ratio": 4,
+      "runtime": {
+        "peak_gpu_bytes": 25830338048,
+        "samples_per_s": 0.655685526731074,
+        "wall_time_s": 173.8638346469961
+      },
+      "sample_count": 114,
+      "temporal": true
+    }
+  },
+  "evaluation_data": {
+    "max_batches": null,
+    "subset": {
+      "fraction": 1.0,
+      "full_records": 117,
+      "selected_records": 117
+    }
+  },
+  "schema_version": "pvb.codec.eval.v1"
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "pvb.dit.architecture_sequential.v1.round4.validation_recovery.v1",
+  "status": "PASS",
+  "failure_attempt": {
+    "archive": "attempt_001_validation_oom",
+    "failure": "CUDA OOM during the first full validation before either checkpoint was written",
+    "successful_updates_per_arm": 500,
+    "future_atom_frame_tokens_per_arm": 13900316,
+    "observed_train_history_interval_seconds": 3170,
+    "conservative_gpu_seconds_debit": 3600
+  },
+  "recovery": {
+    "selected_validation_clips_unchanged": 72,
+    "histories": [4, 8],
+    "validation_max_atom_frame_tokens": 56672,
+    "batching": "deterministic exact-coverage re-packing only",
+    "allocator_cache_cleared_before_each_arm": true,
+    "model_optimizer_data_loss_and_generation_contract_unchanged": true
+  },
+  "double_resident_validation": {
+    "control": {
+      "total": 0.7243899320020952,
+      "validation_batches": 46,
+      "peak_memory_bytes": 54730988544,
+      "seconds": 163.57158760447055
+    },
+    "candidate": {
+      "total": 0.7243899320020952,
+      "validation_batches": 46,
+      "peak_memory_bytes": 54730425856,
+      "seconds": 163.46002666838467
+    }
+  },
+  "test_payload_opened": false
+}

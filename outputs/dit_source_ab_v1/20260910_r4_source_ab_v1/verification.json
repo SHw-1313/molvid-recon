@@ -1,0 +1,78 @@
+{
+  "device": {
+    "amp": "bfloat16",
+    "cuda_runtime": "12.1",
+    "device_name": "NVIDIA A100-SXM4-80GB",
+    "device_uuid": "f0bea51c-913e-fe29-1cdd-4cde2adb3ff3",
+    "logical_index": 0,
+    "requested_device": "cuda:0",
+    "tf32": false,
+    "torch": "2.5.1+cu121",
+    "visible_devices": "5"
+  },
+  "rows": [
+    {
+      "decoded_shape": [
+        16,
+        4430,
+        3
+      ],
+      "finite": true,
+      "generation": {
+        "adapter_hash": "0a63d96d401a721e50825d4272294e15fb8c125d901b00da589b8f44403b0970",
+        "deterministic": true,
+        "latent_contract_hash": "f81f68702555bfbf1a9af1afa3fa7594f1d0f2f516fc31cfb5f2fdb515a2f07d",
+        "observed_clamp": true,
+        "observed_clamp_exact": true,
+        "observed_clamp_max_abs": 0.0,
+        "raw_detail_h": null,
+        "raw_detail_v": null,
+        "seed": 7004,
+        "solver": "euler",
+        "source_center": true,
+        "source_mode": "conditional",
+        "stats_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+        "steps": 8
+      },
+      "history_frames": 4,
+      "observed_clamp_exact": true,
+      "source_center_kind": "repeat_last_coordinate_encode",
+      "source_difference_max_abs": 4.76837158203125e-07,
+      "source_mode": "conditional",
+      "target_difference_plus_center_max_abs": 1.7152432292277808e-06
+    },
+    {
+      "decoded_shape": [
+        16,
+        4430,
+        3
+      ],
+      "finite": true,
+      "generation": {
+        "adapter_hash": "0a63d96d401a721e50825d4272294e15fb8c125d901b00da589b8f44403b0970",
+        "deterministic": true,
+        "latent_contract_hash": "f81f68702555bfbf1a9af1afa3fa7594f1d0f2f516fc31cfb5f2fdb515a2f07d",
+        "observed_clamp": true,
+        "observed_clamp_exact": true,
+        "observed_clamp_max_abs": 0.0,
+        "raw_detail_h": null,
+        "raw_detail_v": null,
+        "seed": 7008,
+        "solver": "euler",
+        "source_center": true,
+        "source_mode": "conditional",
+        "stats_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+        "steps": 8
+      },
+      "history_frames": 8,
+      "observed_clamp_exact": true,
+      "source_center_kind": "repeat_last_coordinate_encode",
+      "source_difference_max_abs": 4.76837158203125e-07,
+      "source_mode": "conditional",
+      "target_difference_plus_center_max_abs": 1.8297939732292434e-06
+    }
+  ],
+  "schema": "pvb.dit.state_detail.source_ab.verification.v1",
+  "status": "PASS",
+  "test_payload_opened": false
+}

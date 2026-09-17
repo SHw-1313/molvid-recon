@@ -1,0 +1,24 @@
+{
+  "artifacts": [
+    {
+      "bytes": 21697,
+      "path": "module/equiformer_v2/Jd.pt",
+      "purpose": "tracked binary/model asset; operator classification required",
+      "sha256": "b4059c45be246dcb6c49c545670b65c56550eb0c2e7a9c92b4b50a92d370dbe2"
+    }
+  ],
+  "max_bytes_default": 67108864,
+  "policy": {
+    "generated_checkpoint_path_policy": "outputs/** or checkpoint/codec_step filenames",
+    "generated_checkpoint_suffixes": [
+      ".pt",
+      ".pth",
+      ".ckpt"
+    ],
+    "max_bytes": 67108864,
+    "violations": []
+  },
+  "schema_version": "pvb.repository.tracked_artifact_inventory.v1",
+  "tracked_binary_bytes": 21697,
+  "tracked_binary_count": 1
+}

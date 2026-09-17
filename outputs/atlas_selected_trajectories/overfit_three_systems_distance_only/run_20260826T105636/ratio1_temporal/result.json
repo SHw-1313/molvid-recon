@@ -1,0 +1,163 @@
+{
+  "aggregate_final_total": 0.304934561252594,
+  "aggregate_initial_total": 1.6986656188964844,
+  "aggregate_relative_reduction": 0.8204858226007479,
+  "batch_count": 1,
+  "batch_sample_ids": [
+    "atlas_5e3e_A_R1_w000000",
+    "atlas_1v7r_A_R1_w000000",
+    "atlas_2wlt_A_R1_w000000"
+  ],
+  "bond_construction_mode": "distance_only",
+  "checkpoint": "/workspace/PVB/outputs/atlas_selected_trajectories/overfit_three_systems_distance_only/run_20260826T105636/ratio1_temporal/codec_step_00000500.pt",
+  "control": "ratio1_temporal",
+  "final_evaluation_elapsed_s": 1.5168006161693484,
+  "final_metrics": {
+    "aggregate": {
+      "acceleration": 0.4996778964996338,
+      "acceleration_raw": 7.286830250308185e-09,
+      "bond": 0.0819339007139206,
+      "bucket_dt_100ps_acceleration": 0.4996778964996338,
+      "bucket_dt_100ps_acceleration_raw": 7.286830250308185e-09,
+      "bucket_dt_100ps_velocity": 0.4823417365550995,
+      "bucket_dt_100ps_velocity_raw": 2.587223207228817e-05,
+      "coordinate": 0.21532973647117615,
+      "local": 0.0819339007139206,
+      "task_trajectory_total": 0.304934561252594,
+      "total": 0.304934561252594,
+      "velocity": 0.4823417365550995,
+      "velocity_raw": 2.587223207228817e-05
+    },
+    "per_system": {
+      "atlas_1v7r_A_R1_w000000": {
+        "acceleration": 0.44072893261909485,
+        "acceleration_raw": 6.4271743482891e-09,
+        "bond": 0.0750722587108612,
+        "bucket_dt_100ps_acceleration": 0.44072893261909485,
+        "bucket_dt_100ps_acceleration_raw": 6.4271743482891e-09,
+        "bucket_dt_100ps_velocity": 0.4173552989959717,
+        "bucket_dt_100ps_velocity_raw": 2.2386437194654718e-05,
+        "coordinate": 0.18253257870674133,
+        "local": 0.0750722587108612,
+        "task_trajectory_total": 0.26131898164749146,
+        "total": 0.26131898164749146,
+        "velocity": 0.4173552989959717,
+        "velocity_raw": 2.2386437194654718e-05
+      },
+      "atlas_2wlt_A_R1_w000000": {
+        "acceleration": 0.5096194744110107,
+        "acceleration_raw": 7.431809390112676e-09,
+        "bond": 0.08060788363218307,
+        "bucket_dt_100ps_acceleration": 0.5096194744110107,
+        "bucket_dt_100ps_acceleration_raw": 7.431809390112676e-09,
+        "bucket_dt_100ps_velocity": 0.48733556270599365,
+        "bucket_dt_100ps_velocity_raw": 2.614009463286493e-05,
+        "coordinate": 0.2145695686340332,
+        "local": 0.08060788363218307,
+        "task_trajectory_total": 0.3049056828022003,
+        "total": 0.3049056828022003,
+        "velocity": 0.48733556270599365,
+        "velocity_raw": 2.614009463286493e-05
+      },
+      "atlas_5e3e_A_R1_w000000": {
+        "acceleration": 0.5715563893318176,
+        "acceleration_raw": 8.33503843722383e-09,
+        "bond": 0.0972106009721756,
+        "bucket_dt_100ps_acceleration": 0.5715563893318176,
+        "bucket_dt_100ps_acceleration_raw": 8.33503843722383e-09,
+        "bucket_dt_100ps_velocity": 0.5783901214599609,
+        "bucket_dt_100ps_velocity_raw": 3.102415212197229e-05,
+        "coordinate": 0.2730453312397003,
+        "local": 0.0972106009721756,
+        "task_trajectory_total": 0.3789042830467224,
+        "total": 0.3789042830467224,
+        "velocity": 0.5783901214599609,
+        "velocity_raw": 3.102415212197229e-05
+      }
+    }
+  },
+  "fit_status": "loss_decreased",
+  "initial_evaluation_elapsed_s": 1.2288381268735975,
+  "initial_metrics": {
+    "aggregate": {
+      "acceleration": 1.0540235042572021,
+      "acceleration_raw": 1.5370883232890264e-08,
+      "bond": 0.14152392745018005,
+      "bucket_dt_100ps_acceleration": 1.0540235042572021,
+      "bucket_dt_100ps_acceleration_raw": 1.5370883232890264e-08,
+      "bucket_dt_100ps_velocity": 1.0457768440246582,
+      "bucket_dt_100ps_velocity_raw": 5.6094217143254355e-05,
+      "coordinate": 1.6986656188964844,
+      "local": 0.14152392745018005,
+      "task_trajectory_total": 1.6986656188964844,
+      "total": 1.6986656188964844,
+      "velocity": 1.0457768440246582,
+      "velocity_raw": 5.6094217143254355e-05
+    },
+    "per_system": {
+      "atlas_1v7r_A_R1_w000000": {
+        "acceleration": 0.9087468981742859,
+        "acceleration_raw": 1.3252305919309038e-08,
+        "bond": 0.14692071080207825,
+        "bucket_dt_100ps_acceleration": 0.9087468981742859,
+        "bucket_dt_100ps_acceleration_raw": 1.3252305919309038e-08,
+        "bucket_dt_100ps_velocity": 0.8579766154289246,
+        "bucket_dt_100ps_velocity_raw": 4.6020835725357756e-05,
+        "coordinate": 0.9355173110961914,
+        "local": 0.14692071080207825,
+        "task_trajectory_total": 0.9355173110961914,
+        "total": 0.9355173110961914,
+        "velocity": 0.8579766154289246,
+        "velocity_raw": 4.6020835725357756e-05
+      },
+      "atlas_2wlt_A_R1_w000000": {
+        "acceleration": 1.0187759399414062,
+        "acceleration_raw": 1.4856865071521952e-08,
+        "bond": 0.13695402443408966,
+        "bucket_dt_100ps_acceleration": 1.0187759399414062,
+        "bucket_dt_100ps_acceleration_raw": 1.4856865071521952e-08,
+        "bucket_dt_100ps_velocity": 0.9946472644805908,
+        "bucket_dt_100ps_velocity_raw": 5.335168680176139e-05,
+        "coordinate": 1.3586407899856567,
+        "local": 0.13695402443408966,
+        "task_trajectory_total": 1.3586407899856567,
+        "total": 1.3586407899856567,
+        "velocity": 0.9946472644805908,
+        "velocity_raw": 5.335168680176139e-05
+      },
+      "atlas_5e3e_A_R1_w000000": {
+        "acceleration": 1.3994961977005005,
+        "acceleration_raw": 2.0408929657378394e-08,
+        "bond": 0.14508679509162903,
+        "bucket_dt_100ps_acceleration": 1.3994961977005005,
+        "bucket_dt_100ps_acceleration_raw": 2.0408929657378394e-08,
+        "bucket_dt_100ps_velocity": 1.508049726486206,
+        "bucket_dt_100ps_velocity_raw": 8.08899785624817e-05,
+        "coordinate": 3.949775218963623,
+        "local": 0.14508679509162903,
+        "task_trajectory_total": 3.949775218963623,
+        "total": 3.949775218963623,
+        "velocity": 1.508049726486206,
+        "velocity_raw": 8.08899785624817e-05
+      }
+    }
+  },
+  "log": "/workspace/PVB/outputs/atlas_selected_trajectories/overfit_three_systems_distance_only/run_20260826T105636/ratio1_temporal/train_metrics.jsonl",
+  "loss_log": {
+    "first_logged_step": 10,
+    "first_logged_total": 1.5732280015945435,
+    "last_logged_epoch": 499,
+    "last_logged_step": 500,
+    "last_logged_total": 0.3046119213104248,
+    "minimum_logged_total": 0.3046119213104248,
+    "records": 50
+  },
+  "normalization_elapsed_s": 1.6905706299003214,
+  "peak_memory_bytes": 59023550976,
+  "precision": "fp32",
+  "steps": 500,
+  "temporal_layers": 1,
+  "temporal_ratio": 1,
+  "total_elapsed_s": 636.0980053129606,
+  "training_elapsed_s": 631.6617959400173
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "pvb.dit.state_detail.t1_pilot_budget.v1",
+  "created_at": "2026-09-08T12:03:27+08:00",
+  "branch": "exp/dit-state-detail-t1-pilot-v1",
+  "repair_commit": "28a499f4c03deb4647a6468a5c477bd8eda8d62f",
+  "seed": 20260907,
+  "candidates": [
+    "ratio2_state_detail",
+    "ratio4_state_detail"
+  ],
+  "overnight_window": {
+    "start": "2026-09-08T12:03:27+08:00",
+    "end": "2026-09-09T08:00:00+08:00",
+    "seconds": 71793,
+    "usable_fraction": 0.8,
+    "usable_seconds": 57434.4,
+    "end_time_assumption": "operator overnight cutoff at 08:00 local time"
+  },
+  "step_budget": 4500,
+  "step_quantum": 100,
+  "selection_rule": "S=min(5000, largest common 100-step budget fitting both candidates within 80% of the declared remaining overnight window)",
+  "profile_basis": {
+    "output_root": "outputs/dit_state_detail_pilot_v1/profiles_20260908_fix2",
+    "validation_interval": 100,
+    "statistics_seconds_reserved": 1800,
+    "generated_validation_seconds_reserved": 5400,
+    "ratio2_state_detail": {
+      "train_step_seconds_mean": 9.969244391846004,
+      "profile_wall_seconds_after_statistics": 2328.9523648791946,
+      "estimated_validation_checkpoint_seconds_per_interval": 111.701162169998,
+      "estimated_total_seconds": 57199.85322312693
+    },
+    "ratio4_state_detail": {
+      "train_step_seconds_mean": 5.008413683730177,
+      "profile_wall_seconds_after_statistics": 1198.268539188895,
+      "estimated_validation_checkpoint_seconds_per_interval": 65.528600814286,
+      "estimated_total_seconds": 32752.177214242976
+    },
+    "next_100_step_budget_estimate_seconds": {
+      "ratio2_state_detail": 58308.32374858842,
+      "ratio4_state_detail": 33303.8603037534
+    }
+  },
+  "matched_contract": {
+    "history_schedule": [
+      4,
+      8
+    ],
+    "max_tokens": 80000,
+    "train_clips_per_trajectory": 24,
+    "validation_systems": 8,
+    "validation_windows": [
+      0,
+      30,
+      61
+    ],
+    "test_opened": false,
+    "selection_metric": "validation RF loss only"
+  },
+  "status": "FROZEN_BEFORE_MATCHED_TRAINING"
+}

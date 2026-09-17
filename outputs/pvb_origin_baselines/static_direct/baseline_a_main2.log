@@ -1,0 +1,10 @@
+{"batches": 32, "by_bucket": {"dt_100ps": 20, "dt_80ps": 28}, "samples": 48, "status": "ready"}
+{"checkpoint": "/data1/repo/PVB/ckpt/pdbbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt", "checkpoint_sha256": "5d70374267e8302ed6082ddff8e8ef9a6d8de2a880b390c2e1dcefb687addd18", "device": "cuda:0", "model_class": "module.model.dyVAE", "model_k_neighbors": 32, "model_using_ode": false}
+{"atoms": 2466, "bucket": "dt_100ps", "direct_rmsd": 1.9115736369628165, "elapsed_s": 10.453628567047417, "rollout_future_rmsd": 3.8668895876411846, "sample": 1, "sample_id": "atlas_3bl9_A_R1_w000000", "total": 48}
+{"atoms": 3166, "bucket": "dt_80ps", "direct_rmsd": 1.298464019908526, "elapsed_s": 12.185855739982799, "rollout_future_rmsd": 1.981468414878874, "sample": 8, "sample_id": "misato_4U03_w000003", "total": 48}
+{"atoms": 2466, "bucket": "dt_100ps", "direct_rmsd": 2.234457908105884, "elapsed_s": 24.173130890005268, "rollout_future_rmsd": 3.6868501510856198, "sample": 16, "sample_id": "atlas_3bl9_A_R1_w000007", "total": 48}
+{"atoms": 3218, "bucket": "dt_80ps", "direct_rmsd": 1.3162944983978513, "elapsed_s": 34.1167060789885, "rollout_future_rmsd": 2.061699220507755, "sample": 24, "sample_id": "misato_4DCV_w000001", "total": 48}
+{"atoms": 2466, "bucket": "dt_100ps", "direct_rmsd": 2.066240560021965, "elapsed_s": 25.818323765066452, "rollout_future_rmsd": 3.729850166522708, "sample": 32, "sample_id": "atlas_3bl9_A_R1_w000014", "total": 48}
+{"atoms": 2334, "bucket": "dt_80ps", "direct_rmsd": 1.3061436276724372, "elapsed_s": 9.096638703951612, "rollout_future_rmsd": 1.6746406141160985, "sample": 40, "sample_id": "misato_5HJQ_w000005", "total": 48}
+{"atoms": 2466, "bucket": "dt_100ps", "direct_rmsd": 1.6914899069732743, "elapsed_s": 9.382861295947805, "rollout_future_rmsd": 2.611895776991441, "sample": 48, "sample_id": "atlas_3bl9_A_R1_w000019", "total": 48}
+{"by_bucket": {"dt_100ps": 20, "dt_80ps": 28}, "complete": true, "output": "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/baseline_a_metrics.json", "peak_gpu_bytes": 2914745344, "samples": 48}

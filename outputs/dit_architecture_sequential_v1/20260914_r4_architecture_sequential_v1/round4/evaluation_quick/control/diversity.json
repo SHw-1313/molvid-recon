@@ -1,0 +1,580 @@
+{
+  "rows": [
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6739642520745596,
+        "pairwise_raw_rmsd": 0.6834234197934469,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1by2_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1by2_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6557750105857849,
+        "pairwise_raw_rmsd": 0.6643462280432383,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1by2_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1by2_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6581754287083944,
+        "pairwise_raw_rmsd": 0.6618593434492747,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1dj0_B_R1_w000030",
+      "split": "train",
+      "system": "atlas_1dj0_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.645080695549647,
+        "pairwise_raw_rmsd": 0.6486978530883789,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1dj0_B_R1_w000030",
+      "split": "train",
+      "system": "atlas_1dj0_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.661785771449407,
+        "pairwise_raw_rmsd": 0.6735503971576691,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1fk5_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1fk5_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.64016921321551,
+        "pairwise_raw_rmsd": 0.6532480219999949,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1fk5_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1fk5_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6411374608675638,
+        "pairwise_raw_rmsd": 0.6471480627854665,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1h2e_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1h2e_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6331233978271484,
+        "pairwise_raw_rmsd": 0.6377453207969666,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1h2e_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1h2e_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.7232053875923157,
+        "pairwise_raw_rmsd": 0.7414577702681223,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1i2t_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1i2t_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6870601375897726,
+        "pairwise_raw_rmsd": 0.7056439816951752,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1i2t_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1i2t_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6513801912466685,
+        "pairwise_raw_rmsd": 0.6536559561888377,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1ka1_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1ka1_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6539011001586914,
+        "pairwise_raw_rmsd": 0.6564388871192932,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1ka1_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1ka1_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6857572992642721,
+        "pairwise_raw_rmsd": 0.6890038947264353,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1l5o_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1l5o_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6698173979918162,
+        "pairwise_raw_rmsd": 0.6721442937850952,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1l5o_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1l5o_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6595605711142222,
+        "pairwise_raw_rmsd": 0.6628665129343668,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_1nnh_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1nnh_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6468571921189626,
+        "pairwise_raw_rmsd": 0.6500185430049896,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_1nnh_A_R1_w000030",
+      "split": "train",
+      "system": "atlas_1nnh_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.7055967748165131,
+        "pairwise_raw_rmsd": 0.7140701413154602,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_2ejn_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_2ejn_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.698064535856247,
+        "pairwise_raw_rmsd": 0.7089312573273977,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_2ejn_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_2ejn_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6622382402420044,
+        "pairwise_raw_rmsd": 0.6694104174772898,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_3f0o_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3f0o_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.66435906291008,
+        "pairwise_raw_rmsd": 0.6680897970994314,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_3f0o_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3f0o_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6438225706418356,
+        "pairwise_raw_rmsd": 0.6464094916979471,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_3hdj_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3hdj_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6422978341579437,
+        "pairwise_raw_rmsd": 0.6456329524517059,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_3hdj_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3hdj_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6874768733978271,
+        "pairwise_raw_rmsd": 0.6951734721660614,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_3l4h_A_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3l4h_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.682416299978892,
+        "pairwise_raw_rmsd": 0.6893472373485565,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_3l4h_A_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3l4h_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6859571933746338,
+        "pairwise_raw_rmsd": 0.6893155972162882,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_3rv1_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3rv1_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6691888471444448,
+        "pairwise_raw_rmsd": 0.6731047034263611,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_3rv1_B_R1_w000030",
+      "split": "valid",
+      "system": "atlas_3rv1_B"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6914916336536407,
+        "pairwise_raw_rmsd": 0.6960979799429575,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_5ef9_A_R1_w000030",
+      "split": "valid",
+      "system": "atlas_5ef9_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.7035597761472067,
+        "pairwise_raw_rmsd": 0.7094758947690328,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_5ef9_A_R1_w000030",
+      "split": "valid",
+      "system": "atlas_5ef9_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.70849609375,
+        "pairwise_raw_rmsd": 0.7143373688062032,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_5ii7_A_R1_w000030",
+      "split": "valid",
+      "system": "atlas_5ii7_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.7181378901004791,
+        "pairwise_raw_rmsd": 0.7223917444547018,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_5ii7_A_R1_w000030",
+      "split": "valid",
+      "system": "atlas_5ii7_A"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          4,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.6587532262007395,
+        "pairwise_raw_rmsd": 0.6612848937511444,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 4,
+      "sample_id": "atlas_6xb3_H_R1_w000030",
+      "split": "valid",
+      "system": "atlas_6xb3_H"
+    },
+    {
+      "diversity": {
+        "draw_count": 4,
+        "future_interval": [
+          8,
+          16
+        ],
+        "pair_count": 6,
+        "pairwise_aligned_rmsd": 0.642703096071879,
+        "pairwise_raw_rmsd": 0.6451563537120819,
+        "primary_metric": "not_best_of_n; observed frames excluded",
+        "rmsd_definition": "sqrt(mean squared xyz over future valid atoms)"
+      },
+      "history_frames": 8,
+      "sample_id": "atlas_6xb3_H_R1_w000030",
+      "split": "valid",
+      "system": "atlas_6xb3_H"
+    }
+  ]
+}

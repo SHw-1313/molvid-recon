@@ -1,0 +1,316 @@
+{
+  "artifacts": {
+    "eval_metrics_csv": "/workspace/PVB/outputs/pvb_origin_baselines/summary/eval_metrics.csv",
+    "training_loss_csv": "/workspace/PVB/outputs/pvb_origin_baselines/summary/training_loss.csv",
+    "validation_loss_csv": "/workspace/PVB/outputs/pvb_origin_baselines/summary/validation_loss.csv"
+  },
+  "conditions": {
+    "A": {
+      "checkpoint": {
+        "input": "/data1/repo/PVB/ckpt/pdbbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt",
+        "resolution": "explicit_file",
+        "sha256": "5d70374267e8302ed6082ddff8e8ef9a6d8de2a880b390c2e1dcefb687addd18",
+        "topk_map": null
+      },
+      "checkpoint_sha256": null,
+      "initialization": "static",
+      "label": "A static pretrain / direct",
+      "metrics_report": "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/baseline_a_metrics.json",
+      "mode": "direct",
+      "short_label": "A static-direct",
+      "train_log": null,
+      "valid": null
+    },
+    "B": {
+      "checkpoint": "/data1/repo/PVB/ckpt/misato_from_author_pretrain/version_0/checkpoint/epoch1_step4.ckpt",
+      "checkpoint_sha256": "777a3695dd7af62aafb58547bb24ee303a7989663c434ba17ca8ba9a2ea1909e",
+      "initialization": "dynamic",
+      "label": "B dynamic pretrain / direct",
+      "metrics_report": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/baseline_b_metrics.json",
+      "mode": "direct",
+      "short_label": "B dynamic-direct",
+      "train_log": null,
+      "valid": null
+    },
+    "C": {
+      "checkpoint": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/checkpoints_pilot500/version_0/checkpoint/epoch0_step992.ckpt",
+      "checkpoint_sha256": "a7f5332152321f873224dd243697e5a191a0851cc5253af3161e269ac30d2954",
+      "initialization": "static",
+      "label": "C static pretrain / retrain",
+      "metrics_report": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/eval_raw/baseline_b_metrics.json",
+      "mode": "retrain",
+      "short_label": "C static-retrain",
+      "train_log": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/train_pilot500.log",
+      "valid": {
+        "batches_per_source": 500,
+        "max_batches_total": 1000,
+        "overall_loss_mean": 1.815241908967495,
+        "pair_bound": 5000,
+        "per_source": {
+          "atlas_dt_100ps": {
+            "atoms": 1955202,
+            "batches": 500,
+            "kl_loss_mean": 0.007281401073560119,
+            "loss_mean": 1.2502820516824722,
+            "pair_records": 1179,
+            "rec_drf_loss_mean": 0.6602722724080086,
+            "rec_vel_loss_mean": 0.5841846555173397,
+            "unique_clips": 1132
+          },
+          "misato_dt_80ps": {
+            "atoms": 1838671,
+            "batches": 500,
+            "kl_loss_mean": 0.023544711844995618,
+            "loss_mean": 2.380201766252518,
+            "pair_records": 685,
+            "rec_drf_loss_mean": 1.2949661129117012,
+            "rec_vel_loss_mean": 1.066399881720543,
+            "unique_clips": 628
+          }
+        },
+        "source_report": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/valid_eval/baseline_d_valid_metrics.json"
+      }
+    },
+    "D": {
+      "checkpoint": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/checkpoints/version_1/checkpoint/epoch0_step1000.ckpt",
+      "checkpoint_sha256": "fc29774b17745adb03db704f2d9f06d01b1ae285ada18c90c5ad126e0b17954e",
+      "initialization": "dynamic",
+      "label": "D dynamic pretrain / retrain",
+      "metrics_report": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/eval_raw/baseline_b_metrics.json",
+      "mode": "retrain",
+      "short_label": "D dynamic-retrain",
+      "train_log": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/baseline_d_train_gpu4_main.log",
+      "valid": {
+        "batches_per_source": 500,
+        "max_batches_total": 1000,
+        "overall_loss_mean": 1.3128217451274395,
+        "pair_bound": 5000,
+        "per_source": {
+          "atlas_dt_100ps": {
+            "atoms": 1955202,
+            "batches": 500,
+            "kl_loss_mean": 0.0022729349164292215,
+            "loss_mean": 0.8206688287854195,
+            "pair_records": 1179,
+            "rec_drf_loss_mean": 0.4518470739722252,
+            "rec_vel_loss_mean": 0.36700340794026853,
+            "unique_clips": 1132
+          },
+          "misato_dt_80ps": {
+            "atoms": 1838671,
+            "batches": 500,
+            "kl_loss_mean": 0.006450419659726322,
+            "loss_mean": 1.8049746614694595,
+            "pair_records": 685,
+            "rec_drf_loss_mean": 1.0289057489037514,
+            "rec_vel_loss_mean": 0.7709085751622915,
+            "unique_clips": 628
+          }
+        },
+        "source_report": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/valid_eval/baseline_d_valid_metrics.json"
+      }
+    }
+  },
+  "metrics": {
+    "A": {
+      "dt_100ps": {
+        "frequency_retention": 0.15959219858050347,
+        "future_acceleration_rmse": 0.00017954054348683773,
+        "future_bond_rmse": 0.08097046928727711,
+        "future_clash_rate": 0.0,
+        "future_contact_error": 8.427982502325903e-05,
+        "future_drmsd": 2.363111762082155,
+        "future_rmsd": 3.3227368979906613,
+        "future_velocity_rmse": 0.011230949696938134,
+        "one_step_bond_rmse": 0.07579149380934766,
+        "one_step_contact_error": 6.067303397685464e-05,
+        "one_step_drmsd": 1.401604499360749,
+        "one_step_rmsd": 1.9150911216714068
+      },
+      "dt_80ps": {
+        "frequency_retention": 0.5032290741801262,
+        "future_acceleration_rmse": 0.00019943629541744741,
+        "future_bond_rmse": 0.07971880882112495,
+        "future_clash_rate": 9.565198791757927e-10,
+        "future_contact_error": 0.00015003730420305925,
+        "future_drmsd": 1.404843001462369,
+        "future_rmsd": 1.846390154230727,
+        "future_velocity_rmse": 0.009699091557719128,
+        "one_step_bond_rmse": 0.07400287071363472,
+        "one_step_contact_error": 0.0001015300738345104,
+        "one_step_drmsd": 0.99783530496859,
+        "one_step_rmsd": 1.3046670829777327
+      }
+    },
+    "B": {
+      "dt_100ps": {
+        "frequency_retention": 0.13083770032972097,
+        "future_acceleration_rmse": 0.0001783619916284837,
+        "future_bond_rmse": 0.03916987164762002,
+        "future_clash_rate": 1.098552182554613e-09,
+        "future_contact_error": 7.434342078340705e-05,
+        "future_drmsd": 2.3130096575340833,
+        "future_rmsd": 3.27663668110158,
+        "future_velocity_rmse": 0.011143756820369156,
+        "one_step_bond_rmse": 0.037326745726699334,
+        "one_step_contact_error": 6.213960100467374e-05,
+        "one_step_drmsd": 1.3801643897711284,
+        "one_step_rmsd": 1.8922632989351271
+      },
+      "dt_80ps": {
+        "frequency_retention": 0.42177464280809673,
+        "future_acceleration_rmse": 0.00019732542280233867,
+        "future_bond_rmse": 0.04182429426612061,
+        "future_clash_rate": 4.148138086991691e-09,
+        "future_contact_error": 0.00015924351841282,
+        "future_drmsd": 1.336726969095237,
+        "future_rmsd": 1.7688955981587644,
+        "future_velocity_rmse": 0.009566242666322755,
+        "one_step_bond_rmse": 0.04056679178827966,
+        "one_step_contact_error": 9.086769559222116e-05,
+        "one_step_drmsd": 0.972280361977944,
+        "one_step_rmsd": 1.2747727574943404
+      }
+    },
+    "C": {
+      "dt_100ps": {
+        "frequency_retention": 0.49716954305768013,
+        "future_acceleration_rmse": 0.0001917074738210976,
+        "future_bond_rmse": 0.186917839741533,
+        "future_clash_rate": 8.206184549663931e-07,
+        "future_contact_error": 0.0019419249845668673,
+        "future_drmsd": 2.9266314191685,
+        "future_rmsd": 3.773854116116764,
+        "future_velocity_rmse": 0.012048644375831818,
+        "one_step_bond_rmse": 0.14730805847210424,
+        "one_step_contact_error": 0.0006914781464729458,
+        "one_step_drmsd": 1.5333433127984235,
+        "one_step_rmsd": 2.032921822974547
+      },
+      "dt_80ps": {
+        "frequency_retention": 1.437825573342187,
+        "future_acceleration_rmse": 0.00021873513638692978,
+        "future_bond_rmse": 0.15722864890085322,
+        "future_clash_rate": 1.99182523427258e-07,
+        "future_contact_error": 0.0019197779641087567,
+        "future_drmsd": 2.2705129722899136,
+        "future_rmsd": 2.5906848767111397,
+        "future_velocity_rmse": 0.010786784142918676,
+        "one_step_bond_rmse": 0.1335342420331141,
+        "one_step_contact_error": 0.0005928387389368643,
+        "one_step_drmsd": 1.132212866326364,
+        "one_step_rmsd": 1.435681682555332
+      }
+    },
+    "D": {
+      "dt_100ps": {
+        "frequency_retention": 0.6181399196386337,
+        "future_acceleration_rmse": 0.00019375589807346452,
+        "future_bond_rmse": 0.05208187599508677,
+        "future_clash_rate": 0.0,
+        "future_contact_error": 0.0004937190169584937,
+        "future_drmsd": 3.0326395291877,
+        "future_rmsd": 4.008357771880173,
+        "future_velocity_rmse": 0.01221930078171572,
+        "one_step_bond_rmse": 0.04670073548829843,
+        "one_step_contact_error": 5.6701767334743636e-05,
+        "one_step_drmsd": 1.4765133018904948,
+        "one_step_rmsd": 2.0126732620047942
+      },
+      "dt_80ps": {
+        "frequency_retention": 1.8812876854624068,
+        "future_acceleration_rmse": 0.00022739618621134852,
+        "future_bond_rmse": 0.055475171520671565,
+        "future_clash_rate": 6.851913829970207e-09,
+        "future_contact_error": 0.000271543776242262,
+        "future_drmsd": 2.2713677801927727,
+        "future_rmsd": 2.6786792236261046,
+        "future_velocity_rmse": 0.011259107001928347,
+        "one_step_bond_rmse": 0.050481978325545414,
+        "one_step_contact_error": 7.254795751318202e-05,
+        "one_step_drmsd": 1.089077301133715,
+        "one_step_rmsd": 1.4163423032382827
+      }
+    }
+  },
+  "pdb_included": false,
+  "policy": {
+    "max_batches": 32,
+    "max_tokens": 80000,
+    "rollout_frames": 16,
+    "sde_steps": 10,
+    "seed": 20260810,
+    "selected_by_bucket": {
+      "dt_100ps": 20,
+      "dt_80ps": 28
+    },
+    "selected_clips": 48,
+    "train_batches_per_source": 500,
+    "train_max_epoch": 1,
+    "train_pair_bound": 5000
+  },
+  "reference_commit": "c08e5e3cd49d45c6d748387e78224843bd356f50",
+  "reference_repo": "/data4/users/sihao/workspace/PVB_origin",
+  "schema_version": "pvb.origin.baselines.aggregate.v1",
+  "training_loss_records": 2000,
+  "validation": {
+    "C": {
+      "batches_per_source": 500,
+      "max_batches_total": 1000,
+      "overall_loss_mean": 1.815241908967495,
+      "pair_bound": 5000,
+      "per_source": {
+        "atlas_dt_100ps": {
+          "atoms": 1955202,
+          "batches": 500,
+          "kl_loss_mean": 0.007281401073560119,
+          "loss_mean": 1.2502820516824722,
+          "pair_records": 1179,
+          "rec_drf_loss_mean": 0.6602722724080086,
+          "rec_vel_loss_mean": 0.5841846555173397,
+          "unique_clips": 1132
+        },
+        "misato_dt_80ps": {
+          "atoms": 1838671,
+          "batches": 500,
+          "kl_loss_mean": 0.023544711844995618,
+          "loss_mean": 2.380201766252518,
+          "pair_records": 685,
+          "rec_drf_loss_mean": 1.2949661129117012,
+          "rec_vel_loss_mean": 1.066399881720543,
+          "unique_clips": 628
+        }
+      },
+      "source_report": "/workspace/PVB/outputs/pvb_origin_baselines/static_retrain/valid_eval/baseline_d_valid_metrics.json"
+    },
+    "D": {
+      "batches_per_source": 500,
+      "max_batches_total": 1000,
+      "overall_loss_mean": 1.3128217451274395,
+      "pair_bound": 5000,
+      "per_source": {
+        "atlas_dt_100ps": {
+          "atoms": 1955202,
+          "batches": 500,
+          "kl_loss_mean": 0.0022729349164292215,
+          "loss_mean": 0.8206688287854195,
+          "pair_records": 1179,
+          "rec_drf_loss_mean": 0.4518470739722252,
+          "rec_vel_loss_mean": 0.36700340794026853,
+          "unique_clips": 1132
+        },
+        "misato_dt_80ps": {
+          "atoms": 1838671,
+          "batches": 500,
+          "kl_loss_mean": 0.006450419659726322,
+          "loss_mean": 1.8049746614694595,
+          "pair_records": 685,
+          "rec_drf_loss_mean": 1.0289057489037514,
+          "rec_vel_loss_mean": 0.7709085751622915,
+          "unique_clips": 628
+        }
+      },
+      "source_report": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/valid_eval/baseline_d_valid_metrics.json"
+    }
+  }
+}

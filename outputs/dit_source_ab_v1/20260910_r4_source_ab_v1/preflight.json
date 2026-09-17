@@ -1,0 +1,21 @@
+{
+  "code_commit": "557a9042cb545750706e37040b26fc000e39b9dc",
+  "codec_checkpoint": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt",
+  "codec_checkpoint_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+  "codec_result": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/result.json",
+  "codec_result_sha256": "1259299fa1e23f9dfd4915ae95a7cc4fc9dd2f3f4d1683b4adda5d677a2b981c",
+  "manifest_content_sha256": "f8a764eb38e90c7485bf9799115d570bb868f34584ebbafab8c799fec03df4d2",
+  "manifest_root": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000",
+  "manifest_sha256": "88325925b339ef34a421d48b5439bfc869fb1003b9c59e3d7eeac45b62da3d2e",
+  "materialization_sha256": "41685082d85ff36ba442d09e23495c2f00110272f769f45c54e77207db3d85e8",
+  "old_dit_checkpoint": "/data4/users/sihao/workspace/molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500/ratio4_state_detail/seed20260907_S4500/best_validation.pt",
+  "old_dit_checkpoint_sha256": "bbd9c3710addecc05c0ecf41cd779b0ceaebcd4ed5f2e1bbd80e482e0b523992",
+  "run_id": "20260910_r4_source_ab_v1",
+  "schema": "pvb.dit.state_detail.source_ab.preflight.v1",
+  "statistics_file_sha256": "4d07bf53f317a6f2937a027695d2d70993674903d0fcefc1fa49e0482a529583",
+  "statistics_path": "/data4/users/sihao/workspace/molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500/ratio4_state_detail/shared/statistics.pt",
+  "test_payload_opened": false,
+  "test_sampling_opened": false,
+  "train_count": null,
+  "valid_count": 1488
+}

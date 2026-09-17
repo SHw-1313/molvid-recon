@@ -1,0 +1,17 @@
+{"selection": {"batches": 1, "by_bucket": {"dt_100ps": 2}, "samples": 2}}
+{"cuda": "12.1", "device": "cuda:0", "torch": "2.5.1+cu121"}
+{"checkpoint": "/data1/repo/PVB/ckpt/misato_from_author_pretrain/version_0/checkpoint/epoch1_step4.ckpt", "checkpoint_sha256": "777a3695dd7af62aafb58547bb24ee303a7989663c434ba17ca8ba9a2ea1909e", "model_class": "module.model.dyVAE", "model_k_neighbors": 32, "model_using_ode": false}
+Traceback (most recent call last):
+  File "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/run_baseline_b_v2.py", line 40, in <module>
+    raise SystemExit(runner.main())
+                     ^^^^^^^^^^^^^
+  File "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/run_baseline_b.py", line 564, in main
+    one_step = one_step_metrics(prediction[1:].unsqueeze(0), target[1:].unsqueeze(0), {**record, "delta_time_ps": np.asarray(record["delta_time_ps"])[0:1]})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/run_baseline_b_v2.py", line 26, in _fixed_one_step_metrics
+    "rmsd": runner._frame_rmsd(pred, target, mask, [0]),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/run_baseline_b.py", line 210, in _frame_rmsd
+    values.append((pred[frame, valid] - target[frame, valid]).square().sum(dim=-1).mean())
+                   ~~~~^^^^^^^^^^^^^^
+IndexError: The shape of the mask [2466] at index 0 does not match the shape of the indexed tensor [1, 2466, 3] at index 0

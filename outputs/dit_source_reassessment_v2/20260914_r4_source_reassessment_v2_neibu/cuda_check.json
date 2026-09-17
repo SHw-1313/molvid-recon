@@ -1,0 +1,125 @@
+{
+  "checks": [
+    {
+      "arm": "gaussian",
+      "checkpoint_sha256": "545a64f34ad6a2463a0a36e14a53c09f6c1e0fe6105ea6be9e30a34e84582c95",
+      "decoded_finite": true,
+      "decoded_shape": [
+        16,
+        1199,
+        3
+      ],
+      "history_frames": 4,
+      "noise_sha256": "05a973a5547d6d10f231c74cb5c5c2970811a3de21dee6433ca1d5430dd554d7",
+      "observed_clamp_exact": true,
+      "steps": 8
+    },
+    {
+      "arm": "conditional",
+      "checkpoint_sha256": "8a3f8803655406468b8d50ca5a316f4a7858be31366f74bc2d897ca96769b12c",
+      "decoded_finite": true,
+      "decoded_shape": [
+        16,
+        1199,
+        3
+      ],
+      "history_frames": 4,
+      "noise_sha256": "05a973a5547d6d10f231c74cb5c5c2970811a3de21dee6433ca1d5430dd554d7",
+      "observed_clamp_exact": true,
+      "steps": 8
+    },
+    {
+      "arm": "gaussian",
+      "checkpoint_sha256": "545a64f34ad6a2463a0a36e14a53c09f6c1e0fe6105ea6be9e30a34e84582c95",
+      "decoded_finite": true,
+      "decoded_shape": [
+        16,
+        1199,
+        3
+      ],
+      "history_frames": 8,
+      "noise_sha256": "59e740d58ab188aa0451de4f4de77b50d4e5ea13b54ee99de88065eec4d3899c",
+      "observed_clamp_exact": true,
+      "steps": 32
+    },
+    {
+      "arm": "conditional",
+      "checkpoint_sha256": "8a3f8803655406468b8d50ca5a316f4a7858be31366f74bc2d897ca96769b12c",
+      "decoded_finite": true,
+      "decoded_shape": [
+        16,
+        1199,
+        3
+      ],
+      "history_frames": 8,
+      "noise_sha256": "59e740d58ab188aa0451de4f4de77b50d4e5ea13b54ee99de88065eec4d3899c",
+      "observed_clamp_exact": true,
+      "steps": 16
+    }
+  ],
+  "clip": {
+    "replica": "R1",
+    "sample_id": "atlas_2ejn_B_R1_w000030",
+    "split": "",
+    "system": "atlas_2ejn_B",
+    "window": 30
+  },
+  "conditional_center": {
+    "H4": {
+      "center_kind": "repeat_last_coordinate_encode",
+      "construction": "observed_prefix_plus_repeated_last_observed_coordinate",
+      "history_frames": 4,
+      "uses_future_coordinates": false
+    },
+    "H8": {
+      "center_kind": "repeat_last_coordinate_encode",
+      "construction": "observed_prefix_plus_repeated_last_observed_coordinate",
+      "history_frames": 8,
+      "uses_future_coordinates": false
+    }
+  },
+  "device": {
+    "amp": "not used for sampling; frozen checkpoint/model semantics preserved",
+    "cuda_runtime": "12.1",
+    "device_name": "NVIDIA A100-SXM4-80GB",
+    "device_uuid": "65b7cbe8-a24e-f4c7-975e-7a4077cb3fe5",
+    "logical_index": 0,
+    "requested_device": "cuda:0",
+    "tf32": false,
+    "torch": "2.5.1+cu121",
+    "visible_devices": "0"
+  },
+  "fixed_noise": {
+    "H4_draw0": {
+      "noise_sha256": "05a973a5547d6d10f231c74cb5c5c2970811a3de21dee6433ca1d5430dd554d7",
+      "seed": 915898408
+    },
+    "H4_repeat": {
+      "noise_sha256": "05a973a5547d6d10f231c74cb5c5c2970811a3de21dee6433ca1d5430dd554d7",
+      "seed": 915898408
+    },
+    "H8_draw0": {
+      "noise_sha256": "59e740d58ab188aa0451de4f4de77b50d4e5ea13b54ee99de88065eec4d3899c",
+      "seed": 1073446724
+    },
+    "same_H4_hash_on_repeat": true
+  },
+  "schema": "pvb.dit.state_detail.source_reassessment.v2.cuda_check.v1",
+  "seed_contract": {
+    "excluded_fields": [
+      "arm",
+      "steps",
+      "batch_position",
+      "checkpoint_step"
+    ],
+    "key_fields": [
+      "sample_id",
+      "history_frames",
+      "draw_id"
+    ],
+    "master_seed": 20260914,
+    "schema": "sha256(v2 namespace | master | sample | H | draw)[:8] mod 2^31"
+  },
+  "status": "PASS",
+  "test_payload_opened": false
+}

@@ -1,0 +1,500 @@
+{
+  "argv": [
+    "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/run_baseline_a.py",
+    "--atlas-valid",
+    "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "--misato-valid",
+    "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+    "--checkpoint",
+    "/data1/repo/PVB/ckpt/pdbbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt",
+    "--output-dir",
+    "/workspace/PVB/outputs/pvb_origin_baselines/static_direct",
+    "--device",
+    "cuda:0",
+    "--seed",
+    "20260810",
+    "--max-tokens",
+    "80000",
+    "--max-batches",
+    "32",
+    "--rollout-frames",
+    "16",
+    "--sde-steps",
+    "10"
+  ],
+  "checkpoint": {
+    "input": "/data1/repo/PVB/ckpt/pdbbind_pretrain/version_1/checkpoint/epoch191_step113472.ckpt",
+    "resolution": "explicit_file",
+    "sha256": "5d70374267e8302ed6082ddff8e8ef9a6d8de2a880b390c2e1dcefb687addd18",
+    "topk_map": null
+  },
+  "command_context": {
+    "activation": "source /home/sihao/miniforge3/bin/activate torch-ito",
+    "launcher": "enter-container",
+    "working_directory": "/data4/users/sihao/workspace/PVB_origin"
+  },
+  "elapsed_s": 910.7752783669857,
+  "metrics": "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/baseline_a_metrics.json",
+  "schema_version": "pvb.baseline.static_direct.v1",
+  "selection": {
+    "batch_count": 32,
+    "policy": {
+      "batching_cost": "frames * atoms",
+      "max_batches": 32,
+      "max_tokens": 80000,
+      "replacement": false,
+      "shuffle": false
+    },
+    "sample_count": 48,
+    "sample_count_by_bucket": {
+      "dt_100ps": 20,
+      "dt_80ps": 28
+    },
+    "schema_version": "pvb.baseline.static_direct.v1.selection",
+    "seed": 20260810,
+    "selected_samples": [
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 0,
+        "sample_id": "atlas_3bl9_A_R1_w000000",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 1,
+        "sample_id": "atlas_3bl9_A_R1_w000001",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3166,
+        "effective_tokens": 50656,
+        "frames": 16,
+        "local_index": 0,
+        "sample_id": "misato_4U03_w000000",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3166,
+        "effective_tokens": 50656,
+        "frames": 16,
+        "local_index": 1,
+        "sample_id": "misato_4U03_w000001",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3166,
+        "effective_tokens": 50656,
+        "frames": 16,
+        "local_index": 2,
+        "sample_id": "misato_4U03_w000002",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 2,
+        "sample_id": "atlas_3bl9_A_R1_w000002",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 3,
+        "sample_id": "atlas_3bl9_A_R1_w000003",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3166,
+        "effective_tokens": 50656,
+        "frames": 16,
+        "local_index": 3,
+        "sample_id": "misato_4U03_w000003",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 4,
+        "sample_id": "atlas_3bl9_A_R1_w000004",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 5,
+        "sample_id": "atlas_3bl9_A_R1_w000005",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3166,
+        "effective_tokens": 50656,
+        "frames": 16,
+        "local_index": 4,
+        "sample_id": "misato_4U03_w000004",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3166,
+        "effective_tokens": 50656,
+        "frames": 16,
+        "local_index": 5,
+        "sample_id": "misato_4U03_w000005",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3150,
+        "effective_tokens": 50400,
+        "frames": 16,
+        "local_index": 6,
+        "sample_id": "misato_5ZU0_w000000",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3150,
+        "effective_tokens": 50400,
+        "frames": 16,
+        "local_index": 7,
+        "sample_id": "misato_5ZU0_w000001",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 6,
+        "sample_id": "atlas_3bl9_A_R1_w000006",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 7,
+        "sample_id": "atlas_3bl9_A_R1_w000007",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3150,
+        "effective_tokens": 50400,
+        "frames": 16,
+        "local_index": 8,
+        "sample_id": "misato_5ZU0_w000002",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3150,
+        "effective_tokens": 50400,
+        "frames": 16,
+        "local_index": 9,
+        "sample_id": "misato_5ZU0_w000003",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 8,
+        "sample_id": "atlas_3bl9_A_R1_w000008",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 9,
+        "sample_id": "atlas_3bl9_A_R1_w000009",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3150,
+        "effective_tokens": 50400,
+        "frames": 16,
+        "local_index": 10,
+        "sample_id": "misato_5ZU0_w000004",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3150,
+        "effective_tokens": 50400,
+        "frames": 16,
+        "local_index": 11,
+        "sample_id": "misato_5ZU0_w000005",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3218,
+        "effective_tokens": 51488,
+        "frames": 16,
+        "local_index": 12,
+        "sample_id": "misato_4DCV_w000000",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3218,
+        "effective_tokens": 51488,
+        "frames": 16,
+        "local_index": 13,
+        "sample_id": "misato_4DCV_w000001",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 10,
+        "sample_id": "atlas_3bl9_A_R1_w000010",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 11,
+        "sample_id": "atlas_3bl9_A_R1_w000011",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3218,
+        "effective_tokens": 51488,
+        "frames": 16,
+        "local_index": 14,
+        "sample_id": "misato_4DCV_w000002",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3218,
+        "effective_tokens": 51488,
+        "frames": 16,
+        "local_index": 15,
+        "sample_id": "misato_4DCV_w000003",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 3218,
+        "effective_tokens": 51488,
+        "frames": 16,
+        "local_index": 16,
+        "sample_id": "misato_4DCV_w000004",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 12,
+        "sample_id": "atlas_3bl9_A_R1_w000012",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 13,
+        "sample_id": "atlas_3bl9_A_R1_w000013",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 14,
+        "sample_id": "atlas_3bl9_A_R1_w000014",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 15,
+        "sample_id": "atlas_3bl9_A_R1_w000015",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 3218,
+        "effective_tokens": 51488,
+        "frames": 16,
+        "local_index": 17,
+        "sample_id": "misato_4DCV_w000005",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2334,
+        "effective_tokens": 37344,
+        "frames": 16,
+        "local_index": 18,
+        "sample_id": "misato_5HJQ_w000000",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2334,
+        "effective_tokens": 37344,
+        "frames": 16,
+        "local_index": 19,
+        "sample_id": "misato_5HJQ_w000001",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2334,
+        "effective_tokens": 37344,
+        "frames": 16,
+        "local_index": 20,
+        "sample_id": "misato_5HJQ_w000002",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2334,
+        "effective_tokens": 37344,
+        "frames": 16,
+        "local_index": 21,
+        "sample_id": "misato_5HJQ_w000003",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2334,
+        "effective_tokens": 37344,
+        "frames": 16,
+        "local_index": 22,
+        "sample_id": "misato_5HJQ_w000004",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2334,
+        "effective_tokens": 37344,
+        "frames": 16,
+        "local_index": 23,
+        "sample_id": "misato_5HJQ_w000005",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 1074,
+        "effective_tokens": 17184,
+        "frames": 16,
+        "local_index": 24,
+        "sample_id": "misato_4J8T_w000000",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 1074,
+        "effective_tokens": 17184,
+        "frames": 16,
+        "local_index": 25,
+        "sample_id": "misato_4J8T_w000001",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 1074,
+        "effective_tokens": 17184,
+        "frames": 16,
+        "local_index": 26,
+        "sample_id": "misato_4J8T_w000002",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 1074,
+        "effective_tokens": 17184,
+        "frames": 16,
+        "local_index": 27,
+        "sample_id": "misato_4J8T_w000003",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+        "time_bucket_id": "dt_80ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 16,
+        "sample_id": "atlas_3bl9_A_R1_w000016",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 17,
+        "sample_id": "atlas_3bl9_A_R1_w000017",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 18,
+        "sample_id": "atlas_3bl9_A_R1_w000018",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      },
+      {
+        "atoms": 2466,
+        "effective_tokens": 39456,
+        "frames": 16,
+        "local_index": 19,
+        "sample_id": "atlas_3bl9_A_R1_w000019",
+        "store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+        "time_bucket_id": "dt_100ps"
+      }
+    ],
+    "store_counts": {
+      "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid": 17484,
+      "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid": 4740
+    },
+    "store_order": [
+      "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+      "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid"
+    ]
+  },
+  "started_at_unix": 1787212521.858211,
+  "status": "complete"
+}

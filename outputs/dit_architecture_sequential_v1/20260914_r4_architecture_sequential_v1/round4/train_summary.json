@@ -1,0 +1,88 @@
+{
+  "added_future_atom_frame_tokens_per_arm": 142319624,
+  "added_successful_updates_per_arm": 5000,
+  "arm_compute_seconds": {
+    "candidate": 16200.59801031975,
+    "control": 16200.59801031975
+  },
+  "arm_compute_seconds_this_invocation": {
+    "candidate": 16200.59801031975,
+    "control": 16200.59801031975
+  },
+  "base_budget_successful_updates_per_arm": 5000,
+  "checkpoints": {
+    "candidate": {
+      "adapter_state_hash": "76c29521d914291845450a3d847ebbb1c081d056869c097f845823c43e9083c2",
+      "model_state_hash": "e994cc463c8269886e5d2ff498931e6f89b711e20266401bde29221452530575",
+      "optimizer_state_owned": true,
+      "path": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round4/candidate/checkpoint_final.pt",
+      "scaler_owned": true,
+      "sha256": "965641950429e63b6dc6b40849e36f0731f106518e5d2abe419611706c74abc8"
+    },
+    "control": {
+      "adapter_state_hash": "64ca538234e10f5247c773db60c2dc72a7c87ea054598a3c4a4513139c5f7999",
+      "model_state_hash": "4b46a643a475769ff2d5138f5425fb592333b9519aafd676ff0cda9107ac41cb",
+      "optimizer_state_owned": true,
+      "path": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round4/control/checkpoint_final.pt",
+      "scaler_owned": true,
+      "sha256": "994e69e653159db0a3af3101ea8f0cae690a754dcbd8d09ec897c2649d26f2e6"
+    }
+  },
+  "code": {
+    "files": {
+      "config/dit_architecture_sequential_v1.neibu.yaml": "a16263f2fc40f292a51333c65049bab87f87defa88f0010c752e0519f241356a",
+      "config/dit_architecture_sequential_v1.yaml": "45c117c6e52904040bf5dd0be06afa77a95451861de13ba00a5deb45f6573de1",
+      "evaluation/dit_architecture_sequential_v1.py": "eabbdf4c09509d6dff522664ae14086cbf3d2cd76799c0d9487a49c4f3014195",
+      "module/dit_geometry_supervision.py": "483f1505b90d9d5b39414881919357bd6c6b294acb079b2e6bb52e5f3cd1f914",
+      "module/dit_history_corruption.py": "a5d01810e582ed5c5a812f79a449587511e866f9aac7efb1b7d5adef880dbcbe",
+      "scripts/run_dit_architecture_round2.py": "0d7a5e574ab22bafc4170bb1e8dfb2aba3906dd2f83d69a9e5c984e8c402d492",
+      "scripts/run_dit_architecture_round4.py": "1f7088f6141efb4dfc8de3b665983ae30122cff6c9ba00dbe05d20ee0a32caa9",
+      "scripts/run_dit_architecture_sequential_v1.py": "301b6b448e9d704bab8ceed4aa0c7c71ce7568ce856e1c460305aca537d670ae",
+      "tests/test_dit_architecture_round4_cuda.py": "0edd1bc8be5010a60665d0a81de0a1bedfc0a6ce02f1515d79f3a36c7e401c1e"
+    },
+    "head": "16e037abe1f7cfff71b6fd7d5cd38ff50afe4643",
+    "source_hash": "b3ac2813a4de8e0a93af6fc75f521d6ac5c10a038c16b4db2d109286391ed416"
+  },
+  "codec_state_hash": "9a30e3838403cbd9f2cfa7344276cbdc7a8176d75ce5d4da028a3ea39ec390b9",
+  "common_extension_applied": false,
+  "config_hash": "4757ca6dba68019b2b66796f0d130245ec92a2d362cf9a1b6e2db6dbd66a98be",
+  "data_hash": "9daaf83fe5ee862634f7d1d3530e730adb4a8529ed37a2bc2fd330304ebfe184",
+  "extension_successful_updates_per_arm": 0,
+  "frozen_hashes_unchanged": true,
+  "geometry_supervision": {
+    "coordinate_units": "angstrom",
+    "enabled": true,
+    "future_target_clean": true,
+    "lambda_bond": 0.2303875588749564,
+    "objective": "rf_plus_future_endpoint_bond_mse",
+    "target_auxiliary_gradient_ratio": 0.1,
+    "tau_threshold": 0.75,
+    "topology": "registered_static_covalent_bonds_only"
+  },
+  "gpu_hours": 9.91288552649759,
+  "gpu_hours_this_invocation": 9.91288552649759,
+  "history_corruption_counts": {
+    "clean_samples": 4151,
+    "sigma_0_02_samples": 2028,
+    "sigma_0_05_samples": 2083
+  },
+  "initialization_hash": "b6ed3d56b6c66370c65bf2c7c9ad1a56da505470813eb23d00c7a50c05bbe6c2",
+  "online_corruption_cache": "disabled",
+  "parent_checkpoint": "/workspace/molvid-dit-architecture-sequential-v1/outputs/dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/round2/candidate/checkpoint_final.pt",
+  "parent_checkpoint_sha256": "7fec9b339201765572ddadf0c64892fe9b7db7f59fdc8148b6f5c4036f514e34",
+  "parent_model_state_hash": "b6ed3d56b6c66370c65bf2c7c9ad1a56da505470813eb23d00c7a50c05bbe6c2",
+  "parent_successful_updates": 14750,
+  "peak_memory_bytes": 60689576960,
+  "schema": "pvb.dit.architecture_sequential.v1.round4.training.v1",
+  "statistics_hash": "863c1894bac27c6fa121eaaa635961e44c37cc95c9f55b3fb371b4fb0bab778d",
+  "status": "PASS",
+  "successful_optimizer_updates": {
+    "candidate": 19750,
+    "control": 19750
+  },
+  "test_payload_opened": false,
+  "unique_variable": "clean observed history versus online independently corrupted observed history; clean future RF and bond targets",
+  "updates_this_invocation_per_arm": 5000,
+  "wall_seconds": 35686.38789539132,
+  "wall_seconds_this_invocation": 35686.38789539132
+}

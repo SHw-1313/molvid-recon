@@ -1,0 +1,43 @@
+schema_version: pvb.dit.state_detail.config.v1
+phase: R2/R4_state_detail_latent_dit_probe_v1
+output_root: outputs/dit_state_detail_probe_v1
+spatial_backbone: torchmd_et
+codec:
+  width: 128
+  frozen: true
+  modes:
+    - ratio2_state_detail
+    - ratio4_state_detail
+model:
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+  ffn_multiplier: 4
+  dropout: 0.0
+  spatial_backend: dense_block_attention_factorized_atom_temporal_v1
+  temporal_attention: bidirectional
+flow:
+  type: normalized_rectified_flow
+  tau_distribution: uniform_0_1
+  equal_field_weights: true
+  sampling_solver: euler
+  sampling_steps:
+    - 8
+    - 16
+observation:
+  history_frames:
+    - 0
+    - 4
+    - 8
+  reject_partial_blocks: true
+  clamp_observed: true
+  h2: false
+smoke:
+  max_optimizer_steps: 100
+  max_wall_time_minutes: 15
+  test_split: false
+  output_root: outputs/dit_state_detail_probe_v1
+pilot:
+  authorized: false
+  t1_test_access: false

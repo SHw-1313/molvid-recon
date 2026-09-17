@@ -1,0 +1,17 @@
+{
+  "source": "atlas",
+  "split": "train",
+  "input_root": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/train",
+  "output_root": "outputs/pvb_origin_baselines/static_retrain/smoke_pairs/atlas/train",
+  "input_records": 101556,
+  "records_written": 2,
+  "total_atoms": 1774,
+  "compressed_bytes": 101661,
+  "data_sha256": "90a47bfc1604f1325f7ca704ccc7cdf216d0cccab6f05e1fab5decc7f59fcf7a",
+  "frame_mapping": {
+    "x0": 0,
+    "x1": 1
+  },
+  "time_policy": "native clip interval; no interpolation",
+  "elapsed_s": 0.039582014083862305
+}

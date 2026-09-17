@@ -1,0 +1,51 @@
+schema: pvb.dit.state_detail.diagnostics.config.v1
+run_id: session_a_260909
+manifest_root: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000
+pilot_root: /data4/users/sihao/workspace/molvid-dit-state-detail-pilot-v1/outputs/dit_state_detail_pilot_v1/full_20260908_S4500
+output_root: outputs/dit_state_detail_diagnostics_v1
+master_seed: 20260907
+codec_width: 128
+model:
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+  ffn_multiplier: 4
+  dropout: 0.0
+candidates:
+  ratio2_state_detail:
+    best_checkpoint: ratio2_state_detail/seed20260907_S4500/best_validation.pt
+    statistics: ratio2_state_detail/shared/statistics.pt
+    codec_result: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio2_state_detail/result.json
+    codec_checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio2_state_detail/codec_best.pt
+  ratio4_state_detail:
+    best_checkpoint: ratio4_state_detail/seed20260907_S4500/best_validation.pt
+    statistics: ratio4_state_detail/shared/statistics.pt
+    codec_result: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/result.json
+    codec_checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+validation:
+  histories: [4, 8]
+  forecast_lengths: [4, 8]
+  windows: [0, 30, 61]
+  replicas: [R1, R2, R3]
+  systems: all_eight
+  sampling_steps: [16]
+  draws: [0]
+deep:
+  replica: R1
+  window: 30
+  sampling_steps: [8, 16]
+  draws: [0, 1, 2, 3]
+  rf_draws: [0, 1]
+  tau: [0.05, 0.25, 0.50, 0.75, 0.95]
+  perturbation_scales: [0.0, 0.01, 0.05, 0.10]
+  perturbation_draws: [0, 1]
+  train_reference: r1_w30_one_per_system
+protocol:
+  observed_interval: "[0,H)"
+  future_interval: "[H,16)"
+  boundary_interval: "[H-1,H)"
+  full_clip: diagnostic_only
+  test_split: forbidden
+  optimizer: forbidden
+  best_of_n: forbidden

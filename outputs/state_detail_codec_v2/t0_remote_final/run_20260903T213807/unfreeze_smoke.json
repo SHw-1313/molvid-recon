@@ -1,0 +1,23 @@
+{
+  "frame_encoder_frozen": false,
+  "frame_encoder_state_changed": true,
+  "metrics": {
+    "acceleration": 1.0050326585769653,
+    "acceleration_raw": 1.4656446722938199e-08,
+    "bond": 1.8157390356063843,
+    "bucket_dt_100ps_acceleration": 1.0050326585769653,
+    "bucket_dt_100ps_acceleration_raw": 1.4656446722938199e-08,
+    "bucket_dt_100ps_velocity": 1.0050469636917114,
+    "bucket_dt_100ps_velocity_raw": 5.390951264416799e-05,
+    "coordinate": 115.13190460205078,
+    "local": 1.8157390356063843,
+    "task_trajectory_total": 115.49504852294922,
+    "total": 115.49504852294922,
+    "velocity": 1.0050469636917114,
+    "velocity_raw": 5.390951264416799e-05
+  },
+  "nonzero_spatial_gradient_count": 41,
+  "spatial_gradient_norm_sum": 109.45351073767506,
+  "status": "passed",
+  "steps": 1
+}

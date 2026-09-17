@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/run_baseline_a.py", line 465, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/run_baseline_a.py", line 258, in main
+    checkpoint, resolution = resolve_checkpoint(args.checkpoint)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/outputs/pvb_origin_baselines/static_direct/run_baseline_a.py", line 88, in resolve_checkpoint
+    raise FileNotFoundError(f"checkpoint path is neither a file nor directory: {requested}")
+FileNotFoundError: checkpoint path is neither a file nor directory: /data1/repo/PVB/ckpt/pdbind_pretrain

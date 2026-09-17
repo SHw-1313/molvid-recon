@@ -1,0 +1,282 @@
+{
+  "schema": "pvb.dit.factorized_backend.v2.review_summary",
+  "status": "B_BACKEND_READY_FOR_REVIEW",
+  "worktree": "/data4/users/sihao/workspace/molvid-dit-factorized-backend-v2",
+  "branch": "perf/dit-factorized-backend-v2",
+  "base_commit": "a22f60c4ffd1f502ab300352a00eafe841b1f8d2",
+  "gpu": {
+    "physical_index": 5,
+    "uuid": "GPU-f0bea51c-913e-fe29-1cdd-4cde2adb3ff3",
+    "name": "NVIDIA A100-SXM4-80GB",
+    "visible_device": "cuda:0"
+  },
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "cuda": "12.1",
+    "tf32": false,
+    "equivalence": "FP32",
+    "profile": "BF16 autocast"
+  },
+  "contract": {
+    "reference_source_commit": "a22f60c4ffd1f502ab300352a00eafe841b1f8d2",
+    "model": {
+      "codec_width": 128,
+      "scalar_width": 256,
+      "vector_width": 128,
+      "depth": 4,
+      "heads": 8,
+      "ffn_multiplier": 4,
+      "dropout": 0,
+      "parameter_count": 11173120
+    },
+    "reference_attention": "reference_einsum_softmax",
+    "optimized_attention": "matmul_softmax_shared_weights_v2",
+    "semantic_contract_unchanged": true,
+    "layout_key": "(sample_id, block_id)",
+    "duplicate_encode_removed": true,
+    "cache_invalidation": "metadata object identity plus tensor versions"
+  },
+  "data": {
+    "split": "train",
+    "manifest_root": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000",
+    "data_hash": "9daaf83fe5ee862634f7d1d3530e730adb4a8529ed37a2bc2fd330304ebfe184",
+    "manifest_content_sha256": "f8a764eb38e90c7485bf9799115d570bb868f34584ebbafab8c799fec03df4d2"
+  },
+  "tests": {
+    "cuda_command_exit_code": 0,
+    "cuda_backend_tests": "4 passed",
+    "regression_command_exit_code": 0,
+    "affected_regression": "15 passed",
+    "bf16_tolerance": {
+      "atol": 0.02,
+      "rtol": 0.05
+    },
+    "fp32_tolerance": {
+      "atol": 0.00002,
+      "rtol": 0.0002
+    }
+  },
+  "parity": [
+    {
+      "candidate": "ratio2_state_detail",
+      "case": "r2_median",
+      "forward_max_abs": 0.00002765655517578125,
+      "forward_relative_l2": 5.010114705328306e-7,
+      "gradient_max_abs": 8.061761036515236e-9,
+      "adamw_update_max_abs": 0.000011619646102190018,
+      "adaln_gate_max_abs": 0.1456134170293808
+    },
+    {
+      "candidate": "ratio4_state_detail",
+      "case": "r4_median",
+      "forward_max_abs": 0.000012814998626708984,
+      "forward_relative_l2": 4.6886529503353813e-7,
+      "gradient_max_abs": 4.5227352529764175e-8,
+      "adamw_update_max_abs": 0.000015280907973647118,
+      "adaln_gate_max_abs": 0.12206380069255829
+    }
+  ],
+  "smoke": [
+    {
+      "candidate": "ratio2_state_detail",
+      "case": "r2_median",
+      "decoded_x_hat_shape": [
+        16,
+        4194,
+        3
+      ],
+      "finite": true,
+      "observed_clamp_exact": true,
+      "observed_clamp_max_abs": 0,
+      "steps": 8
+    },
+    {
+      "candidate": "ratio4_state_detail",
+      "case": "r4_median",
+      "decoded_x_hat_shape": [
+        16,
+        4194,
+        3
+      ],
+      "finite": true,
+      "observed_clamp_exact": true,
+      "observed_clamp_max_abs": 0,
+      "steps": 8
+    }
+  ],
+  "profile": {
+    "warmup_steps": 5,
+    "measured_steps": 20,
+    "optimizer_steps": 200,
+    "rows": [
+      {
+        "case": "r4_small",
+        "backend": "reference",
+        "N": 3869,
+        "B": 3,
+        "M": 264,
+        "total_ms": [
+          7460.295,
+          7750.838
+        ],
+        "forward_ms": 1536.715,
+        "backward_ms": 5823.078,
+        "optimizer_ms": 4.714,
+        "end_to_end_ms": 8845.446,
+        "atom_frame_tokens_per_s": 8289.4,
+        "latent_atom_time_tokens_per_s": 2072.3,
+        "allocated_mib": 3879.2,
+        "reserved_mib": 22042
+      },
+      {
+        "case": "r4_small",
+        "backend": "factorized_v2",
+        "N": 3869,
+        "B": 3,
+        "M": 264,
+        "total_ms": [
+          99.694,
+          109.899
+        ],
+        "forward_ms": 36.828,
+        "backward_ms": 52.354,
+        "optimizer_ms": 3.763,
+        "end_to_end_ms": 1484.845,
+        "atom_frame_tokens_per_s": 628030,
+        "latent_atom_time_tokens_per_s": 157007.5,
+        "allocated_mib": 4084.6,
+        "reserved_mib": 22042
+      },
+      {
+        "case": "r4_median",
+        "backend": "reference",
+        "N": 4194,
+        "B": 2,
+        "M": 264,
+        "total_ms": [
+          7651.425,
+          8812.048
+        ],
+        "forward_ms": 1695.456,
+        "backward_ms": 6013.066,
+        "optimizer_ms": 3.992,
+        "end_to_end_ms": 8399.571,
+        "atom_frame_tokens_per_s": 8411.7,
+        "latent_atom_time_tokens_per_s": 2102.9,
+        "allocated_mib": 4219.9,
+        "reserved_mib": 24398
+      },
+      {
+        "case": "r4_median",
+        "backend": "factorized_v2",
+        "N": 4194,
+        "B": 2,
+        "M": 264,
+        "total_ms": [
+          108.187,
+          120.23
+        ],
+        "forward_ms": 40.91,
+        "backward_ms": 55.21,
+        "optimizer_ms": 4.372,
+        "end_to_end_ms": 856.333,
+        "atom_frame_tokens_per_s": 627570.9,
+        "latent_atom_time_tokens_per_s": 156892.7,
+        "allocated_mib": 4295.3,
+        "reserved_mib": 24398
+      },
+      {
+        "case": "r4_large",
+        "backend": "reference",
+        "N": 4430,
+        "B": 5,
+        "M": 119,
+        "total_ms": [
+          8700.242,
+          8986.433
+        ],
+        "forward_ms": 1857.145,
+        "backward_ms": 6751.05,
+        "optimizer_ms": 3.954,
+        "end_to_end_ms": 9543.484,
+        "atom_frame_tokens_per_s": 8058.2,
+        "latent_atom_time_tokens_per_s": 2014.6,
+        "allocated_mib": 4369.8,
+        "reserved_mib": 24782
+      },
+      {
+        "case": "r4_large",
+        "backend": "factorized_v2",
+        "N": 4430,
+        "B": 5,
+        "M": 119,
+        "total_ms": [
+          85.913,
+          98.148
+        ],
+        "forward_ms": 32.526,
+        "backward_ms": 48.472,
+        "optimizer_ms": 3.388,
+        "end_to_end_ms": 929.156,
+        "atom_frame_tokens_per_s": 807879,
+        "latent_atom_time_tokens_per_s": 201969.7,
+        "allocated_mib": 4460,
+        "reserved_mib": 24782
+      },
+      {
+        "case": "r2_median",
+        "backend": "reference",
+        "N": 4194,
+        "B": 2,
+        "M": 264,
+        "total_ms": [
+          15104.832,
+          15431.843
+        ],
+        "forward_ms": 3043.854,
+        "backward_ms": 11922.27,
+        "optimizer_ms": 3.867,
+        "end_to_end_ms": 15898.53,
+        "atom_frame_tokens_per_s": 4415.3,
+        "latent_atom_time_tokens_per_s": 2207.7,
+        "allocated_mib": 8287.2,
+        "reserved_mib": 24452
+      },
+      {
+        "case": "r2_median",
+        "backend": "factorized_v2",
+        "N": 4194,
+        "B": 2,
+        "M": 264,
+        "total_ms": [
+          106.267,
+          111.296
+        ],
+        "forward_ms": 41.698,
+        "backward_ms": 63.6,
+        "optimizer_ms": 0.862,
+        "end_to_end_ms": 899.965,
+        "atom_frame_tokens_per_s": 623726.4,
+        "latent_atom_time_tokens_per_s": 311863.2,
+        "allocated_mib": 8437.7,
+        "reserved_mib": 24452
+      }
+    ]
+  },
+  "commands": {
+    "preflight": "CUDA_VISIBLE_DEVICES=5 PYTHONPATH=. python scripts/profile_dit_backend.py --config config/dit_backend_profile_v2.yaml --stage preflight --device cuda:0 --output-root /tmp/molvid_dit_factorized_backend_v2",
+    "equivalence": "CUDA_VISIBLE_DEVICES=5 PYTHONPATH=. python scripts/profile_dit_backend.py --config config/dit_backend_profile_v2.yaml --stage equivalence --device cuda:0 --output-root /tmp/molvid_dit_factorized_backend_v2",
+    "smoke": "CUDA_VISIBLE_DEVICES=5 PYTHONPATH=. python scripts/profile_dit_backend.py --config config/dit_backend_profile_v2.yaml --stage smoke --device cuda:0 --output-root /tmp/molvid_dit_factorized_backend_v2",
+    "profile": "CUDA_VISIBLE_DEVICES=5 PYTHONPATH=. python scripts/profile_dit_backend.py --config config/dit_backend_profile_v2.yaml --stage profile --device cuda:0 --output-root /tmp/molvid_dit_factorized_backend_v2"
+  },
+  "artifacts": {
+    "committed": [
+      "evidence/dit_factorized_backend_v2/20260909_backend_v2/SUMMARY.json",
+      "evidence/dit_factorized_backend_v2/20260909_backend_v2/SUMMARY.md"
+    ],
+    "raw_runtime_output": "/tmp/molvid_dit_factorized_backend_v2/20260909_backend_v2",
+    "no_checkpoints_written": true,
+    "no_conditional_prior": true,
+    "no_formal_scientific_training": true
+  }
+}

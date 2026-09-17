@@ -1,0 +1,72 @@
+{
+  "actual": {
+    "batch_count": 32,
+    "rollout_frames": 16,
+    "rollout_transitions": 15,
+    "sample_count": 48,
+    "sample_count_by_bucket": {
+      "dt_100ps": 20,
+      "dt_80ps": 28
+    },
+    "sde_steps": 10
+  },
+  "baseline": "B",
+  "blockers": [
+    "PVB_origin's legacy gzip-JSON MMAPDataset cannot consume the preferred npz-v1 clip stores; an output-only read adapter is used.",
+    "No ATLAS/MISATO original-format migrated stores were found under /data5/PVB; the only original-format candidate was a PDB store and is excluded."
+  ],
+  "checkpoint": "/data1/repo/PVB/ckpt/misato_from_author_pretrain/version_0/checkpoint/epoch1_step4.ckpt",
+  "command_arguments": [
+    "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/run_baseline_b_full.py",
+    "--atlas-valid",
+    "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "--misato-valid",
+    "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid",
+    "--checkpoint",
+    "/data1/repo/PVB/ckpt/misato_from_author_pretrain/version_0/checkpoint/epoch1_step4.ckpt",
+    "--output-dir",
+    "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct",
+    "--device",
+    "cuda:0",
+    "--seed",
+    "20260810",
+    "--max-tokens",
+    "80000",
+    "--max-batches",
+    "32",
+    "--rollout-frames",
+    "16",
+    "--sde-steps",
+    "10"
+  ],
+  "cuda_visible_devices": "7",
+  "cwd_expected": "/workspace/PVB_origin",
+  "data_roots": {
+    "atlas_valid": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/atlas/dt_100ps/valid",
+    "fallback_search_root": "/data5/PVB",
+    "fallback_used": false,
+    "misato_valid": "/data4/users/sihao/data/pvb_cross_dataset_20260810/clips/misato/dt_80ps/valid"
+  },
+  "environment": "torch-ito",
+  "finished_unix_s": 1787211690.9108837,
+  "launcher": "enter-container",
+  "requested": {
+    "max_batches": 32,
+    "max_tokens": 80000,
+    "pdb_included": false,
+    "replacement": false,
+    "rollout_frames": 16,
+    "rollout_transitions": 15,
+    "sde_steps": 10,
+    "seed": 20260810,
+    "shuffle": false
+  },
+  "result_csv": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/baseline_b_per_sample.csv",
+  "result_json": "/workspace/PVB/outputs/pvb_origin_baselines/dynamic_direct/baseline_b_metrics.json",
+  "schema_version": "pvb.baseline.dynamic_direct.manifest.v1",
+  "source_root": "/workspace/PVB_origin",
+  "source_untouched": true,
+  "started_unix_s": 1787211171.7027676,
+  "status": "completed",
+  "truncated": false
+}

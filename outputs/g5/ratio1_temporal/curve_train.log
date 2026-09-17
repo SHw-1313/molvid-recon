@@ -1,0 +1,42 @@
+nohup: ignoring input
+{
+  "dt_100ps": {
+    "bucket_id": "dt_100ps",
+    "count": 7748992,
+    "coordinate_mean": [
+      -0.0001798420853447169,
+      -0.00046427594497799873,
+      0.001271713525056839
+    ],
+    "coordinate_std": [
+      11.87568187713623,
+      11.043014526367188,
+      12.759124755859375
+    ],
+    "velocity_scale": 0.007640497703664035,
+    "acceleration_scale": 0.00012639912328185968,
+    "min_count": 32,
+    "epsilon": 1e-06,
+    "used_fallback": false
+  },
+  "dt_80ps": {
+    "bucket_id": "dt_80ps",
+    "count": 7581936,
+    "coordinate_mean": [
+      0.0035121000837534666,
+      -0.0017507029697299004,
+      -0.002756561618298292
+    ],
+    "coordinate_std": [
+      12.941267013549805,
+      12.823793411254883,
+      13.018692016601562
+    ],
+    "velocity_scale": 0.00835756294981068,
+    "acceleration_scale": 0.00017388710242663004,
+    "min_count": 32,
+    "epsilon": 1e-06,
+    "used_fallback": false
+  }
+}
+{"checkpoint": "outputs/g5_logged/ratio1_temporal/codec_step_00001000.pt", "log": "outputs/g5/ratio1_temporal/train_metrics.jsonl", "metrics": {"acceleration": 0.49301576614379883, "acceleration_raw": 7.87678366975797e-09, "bond": 0.04771723598241806, "bucket_dt_100ps_acceleration": 0.49301576614379883, "bucket_dt_100ps_acceleration_raw": 7.87678366975797e-09, "bucket_dt_100ps_velocity": 0.5037689805030823, "bucket_dt_100ps_velocity_raw": 2.9408623959170654e-05, "coordinate": 1.2717961072921753, "local": 0.04771723598241806, "task_trajectory_total": 1.3563672304153442, "total": 1.3563672304153442, "velocity": 0.5037689805030823, "velocity_raw": 2.9408623959170654e-05}, "step": 1000}

@@ -1,0 +1,696 @@
+{
+  "final_valid": [
+    {
+      "dataset_index": 0,
+      "replica": "R1",
+      "sample_id": "atlas_2ejn_B_R1_w000000",
+      "system": "atlas_2ejn_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 30,
+      "replica": "R1",
+      "sample_id": "atlas_2ejn_B_R1_w000030",
+      "system": "atlas_2ejn_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 61,
+      "replica": "R1",
+      "sample_id": "atlas_2ejn_B_R1_w000061",
+      "system": "atlas_2ejn_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 62,
+      "replica": "R2",
+      "sample_id": "atlas_2ejn_B_R2_w000000",
+      "system": "atlas_2ejn_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 92,
+      "replica": "R2",
+      "sample_id": "atlas_2ejn_B_R2_w000030",
+      "system": "atlas_2ejn_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 123,
+      "replica": "R2",
+      "sample_id": "atlas_2ejn_B_R2_w000061",
+      "system": "atlas_2ejn_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 124,
+      "replica": "R3",
+      "sample_id": "atlas_2ejn_B_R3_w000000",
+      "system": "atlas_2ejn_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 154,
+      "replica": "R3",
+      "sample_id": "atlas_2ejn_B_R3_w000030",
+      "system": "atlas_2ejn_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 185,
+      "replica": "R3",
+      "sample_id": "atlas_2ejn_B_R3_w000061",
+      "system": "atlas_2ejn_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 186,
+      "replica": "R1",
+      "sample_id": "atlas_3f0o_B_R1_w000000",
+      "system": "atlas_3f0o_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 216,
+      "replica": "R1",
+      "sample_id": "atlas_3f0o_B_R1_w000030",
+      "system": "atlas_3f0o_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 247,
+      "replica": "R1",
+      "sample_id": "atlas_3f0o_B_R1_w000061",
+      "system": "atlas_3f0o_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 248,
+      "replica": "R2",
+      "sample_id": "atlas_3f0o_B_R2_w000000",
+      "system": "atlas_3f0o_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 278,
+      "replica": "R2",
+      "sample_id": "atlas_3f0o_B_R2_w000030",
+      "system": "atlas_3f0o_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 309,
+      "replica": "R2",
+      "sample_id": "atlas_3f0o_B_R2_w000061",
+      "system": "atlas_3f0o_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 310,
+      "replica": "R3",
+      "sample_id": "atlas_3f0o_B_R3_w000000",
+      "system": "atlas_3f0o_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 340,
+      "replica": "R3",
+      "sample_id": "atlas_3f0o_B_R3_w000030",
+      "system": "atlas_3f0o_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 371,
+      "replica": "R3",
+      "sample_id": "atlas_3f0o_B_R3_w000061",
+      "system": "atlas_3f0o_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 372,
+      "replica": "R1",
+      "sample_id": "atlas_3hdj_B_R1_w000000",
+      "system": "atlas_3hdj_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 402,
+      "replica": "R1",
+      "sample_id": "atlas_3hdj_B_R1_w000030",
+      "system": "atlas_3hdj_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 433,
+      "replica": "R1",
+      "sample_id": "atlas_3hdj_B_R1_w000061",
+      "system": "atlas_3hdj_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 434,
+      "replica": "R2",
+      "sample_id": "atlas_3hdj_B_R2_w000000",
+      "system": "atlas_3hdj_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 464,
+      "replica": "R2",
+      "sample_id": "atlas_3hdj_B_R2_w000030",
+      "system": "atlas_3hdj_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 495,
+      "replica": "R2",
+      "sample_id": "atlas_3hdj_B_R2_w000061",
+      "system": "atlas_3hdj_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 496,
+      "replica": "R3",
+      "sample_id": "atlas_3hdj_B_R3_w000000",
+      "system": "atlas_3hdj_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 526,
+      "replica": "R3",
+      "sample_id": "atlas_3hdj_B_R3_w000030",
+      "system": "atlas_3hdj_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 557,
+      "replica": "R3",
+      "sample_id": "atlas_3hdj_B_R3_w000061",
+      "system": "atlas_3hdj_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 558,
+      "replica": "R1",
+      "sample_id": "atlas_3l4h_A_R1_w000000",
+      "system": "atlas_3l4h_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 588,
+      "replica": "R1",
+      "sample_id": "atlas_3l4h_A_R1_w000030",
+      "system": "atlas_3l4h_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 619,
+      "replica": "R1",
+      "sample_id": "atlas_3l4h_A_R1_w000061",
+      "system": "atlas_3l4h_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 620,
+      "replica": "R2",
+      "sample_id": "atlas_3l4h_A_R2_w000000",
+      "system": "atlas_3l4h_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 650,
+      "replica": "R2",
+      "sample_id": "atlas_3l4h_A_R2_w000030",
+      "system": "atlas_3l4h_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 681,
+      "replica": "R2",
+      "sample_id": "atlas_3l4h_A_R2_w000061",
+      "system": "atlas_3l4h_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 682,
+      "replica": "R3",
+      "sample_id": "atlas_3l4h_A_R3_w000000",
+      "system": "atlas_3l4h_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 712,
+      "replica": "R3",
+      "sample_id": "atlas_3l4h_A_R3_w000030",
+      "system": "atlas_3l4h_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 743,
+      "replica": "R3",
+      "sample_id": "atlas_3l4h_A_R3_w000061",
+      "system": "atlas_3l4h_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 744,
+      "replica": "R1",
+      "sample_id": "atlas_3rv1_B_R1_w000000",
+      "system": "atlas_3rv1_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 774,
+      "replica": "R1",
+      "sample_id": "atlas_3rv1_B_R1_w000030",
+      "system": "atlas_3rv1_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 805,
+      "replica": "R1",
+      "sample_id": "atlas_3rv1_B_R1_w000061",
+      "system": "atlas_3rv1_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 806,
+      "replica": "R2",
+      "sample_id": "atlas_3rv1_B_R2_w000000",
+      "system": "atlas_3rv1_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 836,
+      "replica": "R2",
+      "sample_id": "atlas_3rv1_B_R2_w000030",
+      "system": "atlas_3rv1_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 867,
+      "replica": "R2",
+      "sample_id": "atlas_3rv1_B_R2_w000061",
+      "system": "atlas_3rv1_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 868,
+      "replica": "R3",
+      "sample_id": "atlas_3rv1_B_R3_w000000",
+      "system": "atlas_3rv1_B",
+      "window": 0
+    },
+    {
+      "dataset_index": 898,
+      "replica": "R3",
+      "sample_id": "atlas_3rv1_B_R3_w000030",
+      "system": "atlas_3rv1_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 929,
+      "replica": "R3",
+      "sample_id": "atlas_3rv1_B_R3_w000061",
+      "system": "atlas_3rv1_B",
+      "window": 61
+    },
+    {
+      "dataset_index": 930,
+      "replica": "R1",
+      "sample_id": "atlas_5ef9_A_R1_w000000",
+      "system": "atlas_5ef9_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 960,
+      "replica": "R1",
+      "sample_id": "atlas_5ef9_A_R1_w000030",
+      "system": "atlas_5ef9_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 991,
+      "replica": "R1",
+      "sample_id": "atlas_5ef9_A_R1_w000061",
+      "system": "atlas_5ef9_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 992,
+      "replica": "R2",
+      "sample_id": "atlas_5ef9_A_R2_w000000",
+      "system": "atlas_5ef9_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 1022,
+      "replica": "R2",
+      "sample_id": "atlas_5ef9_A_R2_w000030",
+      "system": "atlas_5ef9_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1053,
+      "replica": "R2",
+      "sample_id": "atlas_5ef9_A_R2_w000061",
+      "system": "atlas_5ef9_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 1054,
+      "replica": "R3",
+      "sample_id": "atlas_5ef9_A_R3_w000000",
+      "system": "atlas_5ef9_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 1084,
+      "replica": "R3",
+      "sample_id": "atlas_5ef9_A_R3_w000030",
+      "system": "atlas_5ef9_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1115,
+      "replica": "R3",
+      "sample_id": "atlas_5ef9_A_R3_w000061",
+      "system": "atlas_5ef9_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 1116,
+      "replica": "R1",
+      "sample_id": "atlas_5ii7_A_R1_w000000",
+      "system": "atlas_5ii7_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 1146,
+      "replica": "R1",
+      "sample_id": "atlas_5ii7_A_R1_w000030",
+      "system": "atlas_5ii7_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1177,
+      "replica": "R1",
+      "sample_id": "atlas_5ii7_A_R1_w000061",
+      "system": "atlas_5ii7_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 1178,
+      "replica": "R2",
+      "sample_id": "atlas_5ii7_A_R2_w000000",
+      "system": "atlas_5ii7_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 1208,
+      "replica": "R2",
+      "sample_id": "atlas_5ii7_A_R2_w000030",
+      "system": "atlas_5ii7_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1239,
+      "replica": "R2",
+      "sample_id": "atlas_5ii7_A_R2_w000061",
+      "system": "atlas_5ii7_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 1240,
+      "replica": "R3",
+      "sample_id": "atlas_5ii7_A_R3_w000000",
+      "system": "atlas_5ii7_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 1270,
+      "replica": "R3",
+      "sample_id": "atlas_5ii7_A_R3_w000030",
+      "system": "atlas_5ii7_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1301,
+      "replica": "R3",
+      "sample_id": "atlas_5ii7_A_R3_w000061",
+      "system": "atlas_5ii7_A",
+      "window": 61
+    },
+    {
+      "dataset_index": 1302,
+      "replica": "R1",
+      "sample_id": "atlas_6xb3_H_R1_w000000",
+      "system": "atlas_6xb3_H",
+      "window": 0
+    },
+    {
+      "dataset_index": 1332,
+      "replica": "R1",
+      "sample_id": "atlas_6xb3_H_R1_w000030",
+      "system": "atlas_6xb3_H",
+      "window": 30
+    },
+    {
+      "dataset_index": 1363,
+      "replica": "R1",
+      "sample_id": "atlas_6xb3_H_R1_w000061",
+      "system": "atlas_6xb3_H",
+      "window": 61
+    },
+    {
+      "dataset_index": 1364,
+      "replica": "R2",
+      "sample_id": "atlas_6xb3_H_R2_w000000",
+      "system": "atlas_6xb3_H",
+      "window": 0
+    },
+    {
+      "dataset_index": 1394,
+      "replica": "R2",
+      "sample_id": "atlas_6xb3_H_R2_w000030",
+      "system": "atlas_6xb3_H",
+      "window": 30
+    },
+    {
+      "dataset_index": 1425,
+      "replica": "R2",
+      "sample_id": "atlas_6xb3_H_R2_w000061",
+      "system": "atlas_6xb3_H",
+      "window": 61
+    },
+    {
+      "dataset_index": 1426,
+      "replica": "R3",
+      "sample_id": "atlas_6xb3_H_R3_w000000",
+      "system": "atlas_6xb3_H",
+      "window": 0
+    },
+    {
+      "dataset_index": 1456,
+      "replica": "R3",
+      "sample_id": "atlas_6xb3_H_R3_w000030",
+      "system": "atlas_6xb3_H",
+      "window": 30
+    },
+    {
+      "dataset_index": 1487,
+      "replica": "R3",
+      "sample_id": "atlas_6xb3_H_R3_w000061",
+      "system": "atlas_6xb3_H",
+      "window": 61
+    }
+  ],
+  "quality_independent": true,
+  "quick_train": [
+    {
+      "dataset_index": 30,
+      "replica": "R1",
+      "sample_id": "atlas_1by2_A_R1_w000030",
+      "system": "atlas_1by2_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 216,
+      "replica": "R1",
+      "sample_id": "atlas_1dj0_B_R1_w000030",
+      "system": "atlas_1dj0_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 402,
+      "replica": "R1",
+      "sample_id": "atlas_1fk5_A_R1_w000030",
+      "system": "atlas_1fk5_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 588,
+      "replica": "R1",
+      "sample_id": "atlas_1h2e_A_R1_w000030",
+      "system": "atlas_1h2e_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 774,
+      "replica": "R1",
+      "sample_id": "atlas_1i2t_A_R1_w000030",
+      "system": "atlas_1i2t_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 960,
+      "replica": "R1",
+      "sample_id": "atlas_1ka1_A_R1_w000030",
+      "system": "atlas_1ka1_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1146,
+      "replica": "R1",
+      "sample_id": "atlas_1l5o_A_R1_w000030",
+      "system": "atlas_1l5o_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1332,
+      "replica": "R1",
+      "sample_id": "atlas_1nnh_A_R1_w000030",
+      "system": "atlas_1nnh_A",
+      "window": 30
+    }
+  ],
+  "quick_valid": [
+    {
+      "dataset_index": 30,
+      "replica": "R1",
+      "sample_id": "atlas_2ejn_B_R1_w000030",
+      "system": "atlas_2ejn_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 216,
+      "replica": "R1",
+      "sample_id": "atlas_3f0o_B_R1_w000030",
+      "system": "atlas_3f0o_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 402,
+      "replica": "R1",
+      "sample_id": "atlas_3hdj_B_R1_w000030",
+      "system": "atlas_3hdj_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 588,
+      "replica": "R1",
+      "sample_id": "atlas_3l4h_A_R1_w000030",
+      "system": "atlas_3l4h_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 774,
+      "replica": "R1",
+      "sample_id": "atlas_3rv1_B_R1_w000030",
+      "system": "atlas_3rv1_B",
+      "window": 30
+    },
+    {
+      "dataset_index": 960,
+      "replica": "R1",
+      "sample_id": "atlas_5ef9_A_R1_w000030",
+      "system": "atlas_5ef9_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1146,
+      "replica": "R1",
+      "sample_id": "atlas_5ii7_A_R1_w000030",
+      "system": "atlas_5ii7_A",
+      "window": 30
+    },
+    {
+      "dataset_index": 1332,
+      "replica": "R1",
+      "sample_id": "atlas_6xb3_H_R1_w000030",
+      "system": "atlas_6xb3_H",
+      "window": 30
+    }
+  ],
+  "schema": "pvb.dit.architecture_sequential.v1.selection.v1",
+  "smoke": [
+    {
+      "dataset_index": 147,
+      "replica": "R1",
+      "sample_id": "atlas_1v7r_A_R1_w000000",
+      "system": "atlas_1v7r_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 196,
+      "replica": "R2",
+      "sample_id": "atlas_1v7r_A_R2_w000000",
+      "system": "atlas_1v7r_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 245,
+      "replica": "R3",
+      "sample_id": "atlas_1v7r_A_R3_w000000",
+      "system": "atlas_1v7r_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 294,
+      "replica": "R1",
+      "sample_id": "atlas_2wlt_A_R1_w000000",
+      "system": "atlas_2wlt_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 343,
+      "replica": "R2",
+      "sample_id": "atlas_2wlt_A_R2_w000000",
+      "system": "atlas_2wlt_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 392,
+      "replica": "R3",
+      "sample_id": "atlas_2wlt_A_R3_w000000",
+      "system": "atlas_2wlt_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 0,
+      "replica": "R1",
+      "sample_id": "atlas_5e3e_A_R1_w000000",
+      "system": "atlas_5e3e_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 49,
+      "replica": "R2",
+      "sample_id": "atlas_5e3e_A_R2_w000000",
+      "system": "atlas_5e3e_A",
+      "window": 0
+    },
+    {
+      "dataset_index": 98,
+      "replica": "R3",
+      "sample_id": "atlas_5e3e_A_R3_w000000",
+      "system": "atlas_5e3e_A",
+      "window": 0
+    }
+  ],
+  "smoke_root": "/workspace/molvid-dit-architecture-sequential-v1/outputs/atlas_selected_trajectories/clip_store",
+  "test_payload_opened": false,
+  "train_index_sha256": "29afb10ba5310aec73ad0de475e8aad01a9f60550edd311c30d6fed4e970a8d4",
+  "valid_index_sha256": "81769f7311dcd432e00f81e83930e4d8f35523c5d3a9ff81764634f77cbd6a51",
+  "validation_schedule_hash": "a3bb28953e1933b059f86753f2c09909b2e49508a79840e705032265b743c299"
+}

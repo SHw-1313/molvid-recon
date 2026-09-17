@@ -1,0 +1,201 @@
+{
+  "candidate": "ratio4_state_detail",
+  "codec": {
+    "checkpoint_path": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt",
+    "checkpoint_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+    "codec_state_hash": "9a30e3838403cbd9f2cfa7344276cbdc7a8176d75ce5d4da028a3ea39ec390b9",
+    "frame_encoder_source_hash": "e2ec7e6c1ed37c5b3bd6272f33b1ff48e4d697092de16f9925ef6fdd20a2414a",
+    "frame_encoder_state_hash": "c8e3fe219b4fc100774a03c74150dc8d2b8d12299d334f59102d44be2e2c377f",
+    "model_contract_hash": "da5be3afc2973292d1f18ce5405eefba8e7b7ca4cdaa2b1c1b4d9220cb2340a4",
+    "result_path": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/result.json",
+    "result_sha256": "1259299fa1e23f9dfd4915ae95a7cc4fc9dd2f3f4d1683b4adda5d677a2b981c"
+  },
+  "completed_steps": 200,
+  "data_hash": "9daaf83fe5ee862634f7d1d3530e730adb4a8529ed37a2bc2fd330304ebfe184",
+  "generated_validation": null,
+  "manifest_content_sha256": "f8a764eb38e90c7485bf9799115d570bb868f34584ebbafab8c799fec03df4d2",
+  "manifest_root": "/data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000",
+  "materialization_sha256": "5b622ae6d0ac2a6b498f3a9388bd2053dbb29cc8aca83eecf5723987c94d49c7",
+  "profile": true,
+  "ratio": 4,
+  "resume_check": {
+    "checkpoint": "outputs/dit_state_detail_pilot_v1/profiles_20260908_fix2/ratio4_state_detail/profile_200_seed20260907/latest.pt",
+    "history_frames": 4,
+    "loaded_step": 200,
+    "resume_loss": 1.2291306257247925,
+    "resumed_step": 201,
+    "schedule_cursor_after_step": {
+      "batch_index": 201,
+      "epoch": 0
+    }
+  },
+  "runtime": {
+    "actual_device": "cuda:0",
+    "autocast_dtype": "torch.bfloat16",
+    "cuda_device_index": 0,
+    "cuda_device_name": "NVIDIA A100-SXM4-80GB",
+    "cuda_visible_devices": "7",
+    "optimizer_step_seconds_mean": 4.691751987158787,
+    "peak_allocated_bytes": 26356072960,
+    "peak_reserved_bytes": 84477476864,
+    "requested_device": "cuda:0",
+    "train_step_seconds_mean": 5.008413683730177,
+    "train_steps_per_s": 0.19966401802001663,
+    "wall_time_s": 1198.2685391888954
+  },
+  "schema": "pvb.dit.state_detail.t1_pilot.v1",
+  "seed": 20260907,
+  "statistics": {
+    "hash": "34733304618c1ffdd009bc6d78d3a8d83ea11b4d0625919d79dbfee8a1aee993",
+    "path": "outputs/dit_state_detail_pilot_v1/profiles_20260908_fix2/ratio4_state_detail/shared/statistics.pt",
+    "provenance": {
+      "adapter_contract_hash": "0a63d96d401a721e50825d4272294e15fb8c125d901b00da589b8f44403b0970",
+      "codec_candidate": "ratio4_state_detail",
+      "codec_checkpoint_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+      "codec_state_hash": "9a30e3838403cbd9f2cfa7344276cbdc7a8176d75ce5d4da028a3ea39ec390b9",
+      "data_hash": "9daaf83fe5ee862634f7d1d3530e730adb4a8529ed37a2bc2fd330304ebfe184",
+      "manifest_content_sha256": "f8a764eb38e90c7485bf9799115d570bb868f34584ebbafab8c799fec03df4d2",
+      "materialization_sha256": "5b622ae6d0ac2a6b498f3a9388bd2053dbb29cc8aca83eecf5723987c94d49c7",
+      "schema": "pvb.dit.state_detail.t1_train_statistics.v1",
+      "source_split": "train",
+      "statistics_status": "production_t1_train_only",
+      "stats_schedule_hash": "5bde1b3c9491d8e661cd9007f6902dd5a6ea46a9fde6feb9cffed7b88040375c",
+      "train_clips_per_trajectory": 62
+    },
+    "schedule_hash": "5bde1b3c9491d8e661cd9007f6902dd5a6ea46a9fde6feb9cffed7b88040375c"
+  },
+  "status": "PASS",
+  "target_steps": 200,
+  "test_opened": false,
+  "train_index_sha256": "29afb10ba5310aec73ad0de475e8aad01a9f60550edd311c30d6fed4e970a8d4",
+  "training_schedule": {
+    "clips_per_trajectory": 24,
+    "cursor": {
+      "batch_index": 200,
+      "epoch": 0
+    },
+    "history_schedule": [
+      4,
+      8
+    ],
+    "max_tokens": 80000,
+    "schedule_hash": "d84de1c784484ab63bd41cf6c08633d2440a4de332d82c60627099043a9a54db",
+    "seed": 20260907
+  },
+  "valid_index_sha256": "81769f7311dcd432e00f81e83930e4d8f35523c5d3a9ff81764634f77cbd6a51",
+  "validation": {
+    "history": [
+      {
+        "batch_count": 52,
+        "fields": {
+          "detail_h": 4.26319532438772,
+          "detail_v": 3.0482446036414013,
+          "state_h": 4.466127143551774,
+          "state_v": 2.7946382910276206
+        },
+        "history_frames": [
+          4,
+          8
+        ],
+        "protocol": {
+          "future_interval": "[H,16)",
+          "history_schedule": [
+            4,
+            8
+          ],
+          "observed_interval": "[0,H)"
+        },
+        "sample_count": 144,
+        "step": 0,
+        "total": 3.6430513406521285,
+        "valid_elements": {
+          "detail_h": 72230400,
+          "detail_v": 216691200,
+          "state_h": 72230400,
+          "state_v": 216691200
+        }
+      },
+      {
+        "batch_count": 52,
+        "fields": {
+          "detail_h": 1.8366113291506265,
+          "detail_v": 1.5437325872308962,
+          "state_h": 1.2315845484664292,
+          "state_v": 1.3011858031045413
+        },
+        "history_frames": [
+          4,
+          8
+        ],
+        "protocol": {
+          "future_interval": "[H,16)",
+          "history_schedule": [
+            4,
+            8
+          ],
+          "observed_interval": "[0,H)"
+        },
+        "sample_count": 144,
+        "step": 100,
+        "total": 1.4782785669881233,
+        "valid_elements": {
+          "detail_h": 72230400,
+          "detail_v": 216691200,
+          "state_h": 72230400,
+          "state_v": 216691200
+        }
+      },
+      {
+        "batch_count": 52,
+        "fields": {
+          "detail_h": 1.7173912032396683,
+          "detail_v": 1.3817699231105178,
+          "state_h": 0.9930706185519684,
+          "state_v": 1.1419314058283723
+        },
+        "history_frames": [
+          4,
+          8
+        ],
+        "protocol": {
+          "future_interval": "[H,16)",
+          "history_schedule": [
+            4,
+            8
+          ],
+          "observed_interval": "[0,H)"
+        },
+        "sample_count": 144,
+        "step": 200,
+        "total": 1.3085407876826318,
+        "valid_elements": {
+          "detail_h": 72230400,
+          "detail_v": 216691200,
+          "state_h": 72230400,
+          "state_v": 216691200
+        }
+      }
+    ],
+    "sample_count": 72,
+    "schedule_hash": "a3bb28953e1933b059f86753f2c09909b2e49508a79840e705032265b743c299",
+    "systems": [
+      "atlas_2ejn_B",
+      "atlas_3f0o_B",
+      "atlas_3hdj_B",
+      "atlas_3l4h_A",
+      "atlas_3rv1_B",
+      "atlas_5ef9_A",
+      "atlas_5ii7_A",
+      "atlas_6xb3_H"
+    ],
+    "windows": [
+      0,
+      30,
+      61
+    ]
+  },
+  "warnings": [
+    "Real T1 pilot execution evidence only; no test split access.",
+    "R2/R4 are not ranked by smoke/profile losses."
+  ]
+}

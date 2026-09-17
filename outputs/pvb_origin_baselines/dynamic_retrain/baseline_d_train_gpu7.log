@@ -1,0 +1,139 @@
+  0%|          | 0/1523340 [00:00<?, ?it/s]  4%|▍         | 58452/1523340 [00:00<00:02, 584456.46it/s]  8%|▊         | 119015/1523340 [00:00<00:02, 596880.29it/s] 12%|█▏        | 180411/1523340 [00:00<00:02, 604652.77it/s] 16%|█▌        | 240877/1523340 [00:00<00:03, 324665.54it/s] 20%|█▉        | 298798/1523340 [00:00<00:03, 383798.31it/s] 23%|██▎       | 357802/1523340 [00:00<00:02, 435193.98it/s] 27%|██▋       | 417556/1523340 [00:00<00:02, 477808.22it/s] 31%|███▏      | 479401/1523340 [00:01<00:02, 516158.37it/s] 36%|███▌      | 540889/1523340 [00:01<00:01, 543831.26it/s] 39%|███▉      | 599335/1523340 [00:01<00:02, 340128.38it/s] 43%|████▎     | 652409/1523340 [00:01<00:02, 378261.70it/s] 46%|████▋     | 704894/1523340 [00:01<00:01, 410846.12it/s] 50%|█████     | 765191/1523340 [00:01<00:01, 457151.91it/s] 54%|█████▍    | 828027/1523340 [00:01<00:01, 501001.34it/s] 58%|█████▊    | 888262/1523340 [00:01<00:01, 528146.12it/s] 62%|██████▏   | 945400/1523340 [00:02<00:01, 297036.48it/s] 66%|██████▌   | 1004341/1523340 [00:02<00:01, 349251.23it/s] 70%|██████▉   | 1059942/1523340 [00:02<00:01, 391276.00it/s] 73%|███████▎  | 1112683/1523340 [00:02<00:00, 421907.48it/s] 77%|███████▋  | 1171912/1523340 [00:02<00:00, 463352.55it/s] 81%|████████  | 1234433/1523340 [00:02<00:00, 505091.10it/s] 85%|████████▌ | 1297286/1523340 [00:02<00:00, 538317.65it/s] 89%|████████▉ | 1358268/1523340 [00:03<00:00, 557907.38it/s] 93%|█████████▎| 1417347/1523340 [00:03<00:00, 319419.69it/s] 96%|█████████▋| 1469310/1523340 [00:03<00:00, 356649.22it/s]100%|█████████▉| 1523142/1523340 [00:03<00:00, 394779.23it/s]100%|██████████| 1523340/1523340 [00:03<00:00, 421997.03it/s]
+  0%|          | 0/628650 [00:00<?, ?it/s]  8%|▊         | 51811/628650 [00:00<00:01, 518089.50it/s] 20%|█▉        | 125111/628650 [00:00<00:00, 644489.47it/s] 32%|███▏      | 199602/628650 [00:00<00:00, 690309.81it/s] 44%|████▎     | 274542/628650 [00:00<00:00, 713627.16it/s] 55%|█████▌    | 345905/628650 [00:00<00:00, 702189.13it/s] 66%|██████▌   | 416156/628650 [00:00<00:00, 318167.18it/s] 78%|███████▊  | 489781/628650 [00:01<00:00, 392909.88it/s] 90%|████████▉ | 563622/628650 [00:01<00:00, 463194.07it/s]100%|██████████| 628650/628650 [00:01<00:00, 503155.32it/s]
+  0%|          | 0/262260 [00:00<?, ?it/s] 31%|███       | 80786/262260 [00:00<00:00, 807833.81it/s] 65%|██████▍   | 169443/262260 [00:00<00:00, 854132.30it/s] 97%|█████████▋| 254857/262260 [00:00<00:00, 845765.71it/s]100%|██████████| 262260/262260 [00:00<00:00, 843448.86it/s]
+  0%|          | 0/71100 [00:00<?, ?it/s]100%|██████████| 71100/71100 [00:00<00:00, 922623.60it/s]
+wandb: Tracking run with wandb version 0.28.1
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in /workspace/PVB/outputs/pvb_origin_baselines/dynamic_retrain/wandb/wandb/offline-run-20260820_161435-rupgf4gx
+wandb: View this run in the terminal with `wandb leet`
+/workspace/PVB_origin/train.py:142: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model = torch.load(args.model.ckpt, map_location='cpu')
+2026-08-20 16:14:37::INFO::training on [0]
+2026-08-20 16:14:37::INFO::epoch0 starts
+  0%|          | 0/1000 [00:00<?, ?it/s]2026-08-20 16:14:38::WARN::CUDA out of memory, skip batch
+  0%|          | 1/1000 [00:00<12:55,  1.29it/s]2026-08-20 16:14:38::WARN::CUDA out of memory, skip batch
+  0%|          | 2/1000 [00:00<06:30,  2.55it/s]2026-08-20 16:14:38::WARN::CUDA out of memory, skip batch
+  0%|          | 3/1000 [00:00<04:17,  3.87it/s]2026-08-20 16:14:39::WARN::CUDA out of memory, skip batch
+  0%|          | 4/1000 [00:01<03:59,  4.16it/s]2026-08-20 16:14:39::WARN::CUDA out of memory, skip batch
+  0%|          | 5/1000 [00:01<05:07,  3.24it/s]2026-08-20 16:14:39::WARN::CUDA out of memory, skip batch
+  1%|          | 6/1000 [00:01<04:39,  3.55it/s]2026-08-20 16:14:39::WARN::CUDA out of memory, skip batch
+2026-08-20 16:14:40::WARN::CUDA out of memory, skip batch
+  1%|          | 8/1000 [00:02<03:29,  4.74it/s]2026-08-20 16:14:40::WARN::CUDA out of memory, skip batch
+  1%|          | 9/1000 [00:02<03:25,  4.81it/s]2026-08-20 16:14:40::WARN::CUDA out of memory, skip batch
+  1%|          | 10/1000 [00:02<03:03,  5.41it/s]2026-08-20 16:14:40::WARN::CUDA out of memory, skip batch
+  1%|          | 11/1000 [00:02<02:43,  6.04it/s]2026-08-20 16:14:40::WARN::CUDA out of memory, skip batch
+  1%|          | 12/1000 [00:02<02:57,  5.58it/s]2026-08-20 16:14:40::WARN::CUDA out of memory, skip batch
+  1%|▏         | 13/1000 [00:03<03:39,  4.51it/s]2026-08-20 16:14:41::WARN::CUDA out of memory, skip batch
+  1%|▏         | 14/1000 [00:03<03:31,  4.67it/s]2026-08-20 16:14:41::WARN::CUDA out of memory, skip batch
+  2%|▏         | 15/1000 [00:03<04:20,  3.78it/s]2026-08-20 16:14:41::WARN::CUDA out of memory, skip batch
+  2%|▏         | 16/1000 [00:03<04:03,  4.04it/s]2026-08-20 16:14:42::WARN::CUDA out of memory, skip batch
+  2%|▏         | 17/1000 [00:04<04:16,  3.84it/s]2026-08-20 16:14:42::WARN::CUDA out of memory, skip batch
+  2%|▏         | 18/1000 [00:04<04:07,  3.97it/s]2026-08-20 16:14:42::WARN::CUDA out of memory, skip batch
+  2%|▏         | 19/1000 [00:04<04:07,  3.96it/s]2026-08-20 16:14:42::WARN::CUDA out of memory, skip batch
+2026-08-20 16:14:42::WARN::CUDA out of memory, skip batch
+  2%|▏         | 21/1000 [00:04<03:15,  5.00it/s]2026-08-20 16:14:42::WARN::CUDA out of memory, skip batch
+  2%|▏         | 22/1000 [00:05<03:08,  5.18it/s]2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+  2%|▏         | 23/1000 [00:05<03:09,  5.16it/s]2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+  2%|▏         | 24/1000 [00:05<02:53,  5.62it/s]2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+  2%|▎         | 25/1000 [00:05<03:09,  5.14it/s]2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+  3%|▎         | 26/1000 [00:05<03:19,  4.88it/s]2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+  3%|▎         | 28/1000 [00:06<02:13,  7.29it/s]2026-08-20 16:14:43::WARN::CUDA out of memory, skip batch
+2026-08-20 16:14:44::WARN::CUDA out of memory, skip batch
+  3%|▎         | 30/1000 [00:06<01:42,  9.49it/s]2026-08-20 16:14:44::WARN::CUDA out of memory, skip batch
+  3%|▎         | 30/1000 [00:08<01:42,  9.49it/s, loss=0.647, version=0]  3%|▎         | 32/1000 [00:08<07:42,  2.09it/s, loss=0.647, version=0]  3%|▎         | 32/1000 [00:09<07:42,  2.09it/s, loss=0.729, version=0]  3%|▎         | 33/1000 [00:09<09:35,  1.68it/s, loss=0.729, version=0]  3%|▎         | 33/1000 [00:10<09:35,  1.68it/s, loss=5.92, version=0]   3%|▎         | 34/1000 [00:10<09:46,  1.65it/s, loss=5.92, version=0]2026-08-20 16:14:48::WARN::CUDA out of memory, skip batch
+  4%|▎         | 35/1000 [00:11<10:57,  1.47it/s, loss=5.92, version=0]  4%|▎         | 35/1000 [00:11<10:57,  1.47it/s, loss=1.14, version=0]  4%|▎         | 36/1000 [00:11<11:11,  1.44it/s, loss=1.14, version=0]  4%|▎         | 36/1000 [00:12<11:11,  1.44it/s, loss=0.599, version=0]  4%|▎         | 37/1000 [00:12<10:46,  1.49it/s, loss=0.599, version=0]  4%|▎         | 37/1000 [00:12<10:46,  1.49it/s, loss=0.451, version=0]  4%|▍         | 38/1000 [00:12<10:22,  1.55it/s, loss=0.451, version=0]2026-08-20 16:14:51::WARN::CUDA out of memory, skip batch
+  4%|▍         | 39/1000 [00:13<08:55,  1.79it/s, loss=0.451, version=0]  4%|▍         | 39/1000 [00:13<08:55,  1.79it/s, loss=1.38, version=0]   4%|▍         | 40/1000 [00:13<09:20,  1.71it/s, loss=1.38, version=0]  4%|▍         | 40/1000 [00:14<09:20,  1.71it/s, loss=0.384, version=0]  4%|▍         | 41/1000 [00:14<09:47,  1.63it/s, loss=0.384, version=0]  4%|▍         | 41/1000 [00:15<09:47,  1.63it/s, loss=0.747, version=0]  4%|▍         | 42/1000 [00:15<09:41,  1.65it/s, loss=0.747, version=0]  4%|▍         | 42/1000 [00:15<09:41,  1.65it/s, loss=0.766, version=0]  4%|▍         | 43/1000 [00:15<10:18,  1.55it/s, loss=0.766, version=0]  4%|▍         | 43/1000 [00:16<10:18,  1.55it/s, loss=4.3, version=0]    4%|▍         | 44/1000 [00:16<10:16,  1.55it/s, loss=4.3, version=0]  4%|▍         | 44/1000 [00:16<10:16,  1.55it/s, loss=1.78, version=0]  4%|▍         | 45/1000 [00:16<08:27,  1.88it/s, loss=1.78, version=0]2026-08-20 16:14:55::WARN::CUDA out of memory, skip batch
+  5%|▍         | 46/1000 [00:17<07:47,  2.04it/s, loss=1.78, version=0]  5%|▍         | 46/1000 [00:17<07:47,  2.04it/s, loss=3.31, version=0]  5%|▍         | 47/1000 [00:17<07:50,  2.03it/s, loss=3.31, version=0]  5%|▍         | 47/1000 [00:18<07:50,  2.03it/s, loss=1.12, version=0]  5%|▍         | 48/1000 [00:18<08:30,  1.87it/s, loss=1.12, version=0]  5%|▍         | 48/1000 [00:19<08:30,  1.87it/s, loss=0.684, version=0]  5%|▍         | 49/1000 [00:19<12:19,  1.29it/s, loss=0.684, version=0]  5%|▍         | 49/1000 [00:20<12:19,  1.29it/s, loss=0.682, version=0]  5%|▌         | 50/1000 [00:20<11:42,  1.35it/s, loss=0.682, version=0]2026-08-20 16:14:59::WARN::CUDA out of memory, skip batch
+  5%|▌         | 51/1000 [00:22<15:58,  1.01s/it, loss=0.682, version=0]2026-08-20 16:15:00::WARN::CUDA out of memory, skip batch
+  5%|▌         | 52/1000 [00:22<12:19,  1.28it/s, loss=0.682, version=0]  5%|▌         | 52/1000 [00:22<12:19,  1.28it/s, loss=1.6, version=0]    5%|▌         | 53/1000 [00:22<11:08,  1.42it/s, loss=1.6, version=0]2026-08-20 16:15:01::WARN::CUDA out of memory, skip batch
+  5%|▌         | 54/1000 [00:24<13:22,  1.18it/s, loss=1.6, version=0]2026-08-20 16:15:02::WARN::CUDA out of memory, skip batch
+  6%|▌         | 55/1000 [00:24<11:01,  1.43it/s, loss=1.6, version=0]2026-08-20 16:15:02::WARN::CUDA out of memory, skip batch
+  6%|▌         | 56/1000 [00:24<09:04,  1.73it/s, loss=1.6, version=0]  6%|▌         | 56/1000 [00:25<09:04,  1.73it/s, loss=0.611, version=0]  6%|▌         | 57/1000 [00:25<08:14,  1.91it/s, loss=0.611, version=0]2026-08-20 16:15:03::WARN::CUDA out of memory, skip batch
+  6%|▌         | 58/1000 [00:25<07:26,  2.11it/s, loss=0.611, version=0]  6%|▌         | 58/1000 [00:26<07:26,  2.11it/s, loss=20.5, version=0]   6%|▌         | 59/1000 [00:26<10:10,  1.54it/s, loss=20.5, version=0]  6%|▌         | 59/1000 [00:26<10:10,  1.54it/s, loss=0.976, version=0]  6%|▌         | 60/1000 [00:26<09:17,  1.68it/s, loss=0.976, version=0]  6%|▌         | 60/1000 [00:27<09:17,  1.68it/s, loss=1.82, version=0]   6%|▌         | 61/1000 [00:27<09:24,  1.66it/s, loss=1.82, version=0]  6%|▌         | 61/1000 [00:28<09:24,  1.66it/s, loss=0.631, version=0]  6%|▌         | 62/1000 [00:28<09:43,  1.61it/s, loss=0.631, version=0]  6%|▌         | 62/1000 [00:28<09:43,  1.61it/s, loss=0.722, version=0]  6%|▋         | 63/1000 [00:28<07:58,  1.96it/s, loss=0.722, version=0]  6%|▋         | 63/1000 [00:29<07:58,  1.96it/s, loss=0.601, version=0]  6%|▋         | 64/1000 [00:29<08:27,  1.84it/s, loss=0.601, version=0]  6%|▋         | 64/1000 [00:29<08:27,  1.84it/s, loss=0.441, version=0]  6%|▋         | 65/1000 [00:29<07:13,  2.16it/s, loss=0.441, version=0]  6%|▋         | 65/1000 [00:29<07:13,  2.16it/s, loss=1.53, version=0]   7%|▋         | 66/1000 [00:29<06:44,  2.31it/s, loss=1.53, version=0]  7%|▋         | 66/1000 [00:30<06:44,  2.31it/s, loss=1.25, version=0]  7%|▋         | 67/1000 [00:30<06:42,  2.32it/s, loss=1.25, version=0]2026-08-20 16:15:08::WARN::CUDA out of memory, skip batch
+  7%|▋         | 68/1000 [00:30<07:35,  2.04it/s, loss=1.25, version=0]2026-08-20 16:15:09::WARN::CUDA out of memory, skip batch
+  7%|▋         | 69/1000 [00:31<06:57,  2.23it/s, loss=1.25, version=0]  7%|▋         | 69/1000 [00:31<06:57,  2.23it/s, loss=0.646, version=0]  7%|▋         | 70/1000 [00:31<07:33,  2.05it/s, loss=0.646, version=0]  7%|▋         | 70/1000 [00:32<07:33,  2.05it/s, loss=0.717, version=0]  7%|▋         | 71/1000 [00:32<07:54,  1.96it/s, loss=0.717, version=0]2026-08-20 16:15:10::WARN::CUDA out of memory, skip batch
+  7%|▋         | 72/1000 [00:32<07:39,  2.02it/s, loss=0.717, version=0]2026-08-20 16:15:10::WARN::CUDA out of memory, skip batch
+  7%|▋         | 73/1000 [00:33<06:44,  2.29it/s, loss=0.717, version=0]  7%|▋         | 73/1000 [00:33<06:44,  2.29it/s, loss=0.766, version=0]  7%|▋         | 74/1000 [00:33<07:39,  2.01it/s, loss=0.766, version=0]  7%|▋         | 74/1000 [00:35<07:39,  2.01it/s, loss=0.975, version=0]  8%|▊         | 75/1000 [00:35<11:40,  1.32it/s, loss=0.975, version=0]  8%|▊         | 75/1000 [00:36<11:40,  1.32it/s, loss=0.56, version=0]   8%|▊         | 76/1000 [00:36<15:04,  1.02it/s, loss=0.56, version=0]  8%|▊         | 76/1000 [00:37<15:04,  1.02it/s, loss=0.704, version=0]  8%|▊         | 77/1000 [00:37<12:58,  1.19it/s, loss=0.704, version=0]  8%|▊         | 77/1000 [00:37<12:58,  1.19it/s, loss=1, version=0]      8%|▊         | 78/1000 [00:37<11:51,  1.30it/s, loss=1, version=0]  8%|▊         | 78/1000 [00:38<11:51,  1.30it/s, loss=1.04, version=0]  8%|▊         | 79/1000 [00:38<10:52,  1.41it/s, loss=1.04, version=0]  8%|▊         | 79/1000 [00:38<10:52,  1.41it/s, loss=0.629, version=0]  8%|▊         | 80/1000 [00:38<11:06,  1.38it/s, loss=0.629, version=0]2026-08-20 16:15:18::WARN::CUDA out of memory, skip batch
+  8%|▊         | 81/1000 [00:40<13:17,  1.15it/s, loss=0.629, version=0]2026-08-20 16:15:18::WARN::CUDA out of memory, skip batch
+  8%|▊         | 82/1000 [00:40<10:14,  1.49it/s, loss=0.629, version=0]2026-08-20 16:15:18::WARN::CUDA out of memory, skip batch
+  8%|▊         | 83/1000 [00:40<09:11,  1.66it/s, loss=0.629, version=0]2026-08-20 16:15:19::WARN::CUDA out of memory, skip batch
+  8%|▊         | 84/1000 [00:41<08:19,  1.83it/s, loss=0.629, version=0]2026-08-20 16:15:19::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:19::WARN::CUDA out of memory, skip batch
+  9%|▊         | 86/1000 [00:41<06:28,  2.35it/s, loss=0.629, version=0]  9%|▊         | 86/1000 [00:42<06:28,  2.35it/s, loss=0.486, version=0]  9%|▊         | 87/1000 [00:42<06:43,  2.26it/s, loss=0.486, version=0]2026-08-20 16:15:20::WARN::CUDA out of memory, skip batch
+  9%|▉         | 88/1000 [00:42<06:32,  2.32it/s, loss=0.486, version=0]2026-08-20 16:15:20::WARN::CUDA out of memory, skip batch
+  9%|▉         | 89/1000 [00:42<05:15,  2.88it/s, loss=0.486, version=0]2026-08-20 16:15:21::WARN::CUDA out of memory, skip batch
+  9%|▉         | 90/1000 [00:43<05:53,  2.57it/s, loss=0.486, version=0]2026-08-20 16:15:22::WARN::CUDA out of memory, skip batch
+  9%|▉         | 91/1000 [00:44<09:20,  1.62it/s, loss=0.486, version=0]2026-08-20 16:15:22::WARN::CUDA out of memory, skip batch
+  9%|▉         | 92/1000 [00:44<08:09,  1.86it/s, loss=0.486, version=0]2026-08-20 16:15:23::WARN::CUDA out of memory, skip batch
+  9%|▉         | 93/1000 [00:45<07:18,  2.07it/s, loss=0.486, version=0]2026-08-20 16:15:23::WARN::CUDA out of memory, skip batch
+  9%|▉         | 94/1000 [00:45<06:36,  2.28it/s, loss=0.486, version=0]2026-08-20 16:15:23::WARN::CUDA out of memory, skip batch
+ 10%|▉         | 95/1000 [00:45<06:18,  2.39it/s, loss=0.486, version=0]2026-08-20 16:15:24::WARN::CUDA out of memory, skip batch
+ 10%|▉         | 96/1000 [00:47<09:24,  1.60it/s, loss=0.486, version=0]2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+ 10%|▉         | 97/1000 [00:47<08:43,  1.73it/s, loss=0.486, version=0]2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+ 10%|▉         | 99/1000 [00:47<05:04,  2.95it/s, loss=0.486, version=0]2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+ 10%|█         | 102/1000 [00:47<03:04,  4.87it/s, loss=0.486, version=0]2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+ 10%|█         | 103/1000 [00:47<02:51,  5.23it/s, loss=0.486, version=0]2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:25::WARN::CUDA out of memory, skip batch
+ 10%|█         | 105/1000 [00:48<02:12,  6.75it/s, loss=0.486, version=0]2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+ 11%|█         | 107/1000 [00:48<01:51,  7.98it/s, loss=0.486, version=0]2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+ 11%|█         | 109/1000 [00:48<01:46,  8.33it/s, loss=0.486, version=0]2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+ 11%|█         | 111/1000 [00:48<01:33,  9.52it/s, loss=0.486, version=0]2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+ 11%|█▏        | 113/1000 [00:48<01:22, 10.74it/s, loss=0.486, version=0]2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+ 12%|█▏        | 115/1000 [00:48<01:27, 10.15it/s, loss=0.486, version=0]2026-08-20 16:15:26::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+ 12%|█▏        | 117/1000 [00:49<01:22, 10.72it/s, loss=0.486, version=0]2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+ 12%|█▏        | 119/1000 [00:49<01:20, 10.97it/s, loss=0.486, version=0]2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+ 12%|█▏        | 121/1000 [00:49<01:22, 10.69it/s, loss=0.486, version=0]2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+ 12%|█▏        | 123/1000 [00:49<01:15, 11.66it/s, loss=0.486, version=0]2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+ 13%|█▎        | 126/1000 [00:49<00:59, 14.63it/s, loss=0.486, version=0]2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+ 13%|█▎        | 128/1000 [00:50<01:11, 12.21it/s, loss=0.486, version=0]2026-08-20 16:15:27::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+ 13%|█▎        | 130/1000 [00:50<01:08, 12.74it/s, loss=0.486, version=0]2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+ 13%|█▎        | 134/1000 [00:50<00:47, 18.24it/s, loss=0.486, version=0]2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+ 14%|█▍        | 138/1000 [00:50<00:41, 20.58it/s, loss=0.486, version=0]2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+ 14%|█▍        | 141/1000 [00:50<00:56, 15.17it/s, loss=0.486, version=0]2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+ 14%|█▍        | 144/1000 [00:50<00:49, 17.22it/s, loss=0.486, version=0]2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:28::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+ 15%|█▍        | 147/1000 [00:51<01:00, 14.08it/s, loss=0.486, version=0]2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+ 15%|█▌        | 150/1000 [00:51<00:52, 16.07it/s, loss=0.486, version=0]2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+ 15%|█▌        | 152/1000 [00:51<00:56, 14.93it/s, loss=0.486, version=0]2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+ 15%|█▌        | 154/1000 [00:51<01:04, 13.02it/s, loss=0.486, version=0]2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+ 16%|█▌        | 158/1000 [00:51<00:52, 16.05it/s, loss=0.486, version=0]2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:29::WARN::CUDA out of memory, skip batch
+ 16%|█▌        | 160/1000 [00:52<01:04, 13.09it/s, loss=0.486, version=0]2026-08-20 16:15:30::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:30::WARN::CUDA out of memory, skip batch
+ 16%|█▌        | 162/1000 [00:52<01:04, 12.92it/s, loss=0.486, version=0]2026-08-20 16:15:30::WARN::CUDA out of memory, skip batch
+2026-08-20 16:15:30::WARN::CUDA out of memory, skip batch

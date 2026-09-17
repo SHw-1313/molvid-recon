@@ -1,0 +1,45 @@
+{"batches_per_epoch": 8313, "requested_epochs": 50, "requested_steps": 415650, "train_subset": {"fraction": 0.25, "full_records": 101556, "selected_records": 25389}, "valid_subset": {"fraction": 0.25, "full_records": 17484, "selected_records": 4371}}
+{
+  "normalization_elapsed_s": 9.46837121900171,
+  "normalization_stats": {
+    "dt_100ps": {
+      "bucket_id": "dt_100ps",
+      "count": 15968992,
+      "coordinate_mean": [
+        0.0008719529141671956,
+        -0.0003244104445911944,
+        0.0004219132533762604
+      ],
+      "coordinate_std": [
+        12.551047325134277,
+        11.401163101196289,
+        13.165477752685547
+      ],
+      "velocity_scale": 0.007826798232749647,
+      "acceleration_scale": 0.00012928837370819872,
+      "min_count": 32,
+      "epsilon": 1e-06,
+      "used_fallback": false
+    }
+  }
+}
+Traceback (most recent call last):
+  File "/workspace/PVB/train_codec.py", line 210, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/PVB/train_codec.py", line 187, in main
+    metrics = trainer.run(
+              ^^^^^^^^^^^^
+  File "/workspace/PVB/trainer/codec_trainer.py", line 466, in run
+    last = self.optimizer_step(batch)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/PVB/trainer/codec_trainer.py", line 418, in optimizer_step
+    total.backward()
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/_tensor.py", line 581, in backward
+    torch.autograd.backward(
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/autograd/__init__.py", line 347, in backward
+    _engine_run_backward(
+  File "/home/sihao/miniforge3/envs/torch-ito/lib/python3.11/site-packages/torch/autograd/graph.py", line 825, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
