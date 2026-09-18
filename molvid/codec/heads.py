@@ -41,4 +41,3 @@ class CoordinateVectorStem(nn.Module):
         if centered_coordinates.ndim != 3 or centered_coordinates.shape[-1] != 3:
             raise ValueError("centered coordinates must have shape [T, N, 3]")
         return self.projection(centered_coordinates.unsqueeze(-1))
-

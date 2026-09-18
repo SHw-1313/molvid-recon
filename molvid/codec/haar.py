@@ -378,4 +378,3 @@ def haar_inverse(
     if output_frames is not None:
         result = result[: int(output_frames)]
     return result
-

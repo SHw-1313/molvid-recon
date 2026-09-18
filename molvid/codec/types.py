@@ -187,4 +187,3 @@ class CodecOutput:
     @property
     def coordinates(self) -> Tensor:
         return self.x_hat
-
