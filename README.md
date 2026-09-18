@@ -1,3 +1,23 @@
+# Molvid (flat-package refactor)
+
+The current trajectory codec and latent DiT code lives in the root `molvid/` package. It keeps separate codec and DiT training, observed-prefix generation, short rollout, and codec-oracle versus generated evaluation. The refactor is not yet a production cutover: the original runners below remain available until full-checkpoint and real-validation comparisons pass.
+
+Run Python commands in the existing `enter-container` shell after `conda activate torch-ito`. Fill in checkpoint, SHA-256, data and output paths before using the sample/evaluation templates:
+
+```bash
+python -m molvid.cli.preprocess --help
+python -m molvid.cli.train_codec --config configs/codec_train.yaml --dry-run
+python -m molvid.cli.train_dit --config configs/dit_train.yaml --dry-run
+python -m molvid.cli.sample --config configs/sample.yaml
+python -m molvid.cli.evaluate --config configs/evaluate.yaml
+```
+
+Sampling requires a new-format DiT checkpoint, an approved codec checkpoint, a frozen validation manifest, and an NPZ containing only observed `x=[H,N,3]`. The evaluation command keeps the held-out future in the scorer, not the generator. See [migration status](docs/migration.md) for exact numerical checks, missing real-system checks, and the retirement gate.
+
+---
+
+The original paper repository documentation below is historical; its commands, dependencies and model names are not the current `molvid/` API.
+
 # Unified Biomolecular Trajectory Generation via Pretrained Variational Bridge
 
 ![workflow](./media/workflow.png)

@@ -14,7 +14,7 @@ from .flow.source import build_observed_center
 from .latent.adapter import StateDetailLatentAdapter
 from .latent.conditioning import build_observation_condition
 from .latent.statistics import LatentStatistics
-from .training.batches import encode_batch
+from .training.batches import prepare_batch_then_to_device
 
 
 def _block_positions(x: Tensor, block_id: Tensor) -> Tensor:
@@ -86,8 +86,16 @@ def sample_clip(
     if codec.training:
         raise ValueError("generation requires an eval-mode codec")
     scaffold = _observed_scaffold(template, prefix_coordinates, history_frames)
-    packed, coordinate = encode_batch(
-        codec, adapter, scaffold, device=device, codec_hash=codec_hash, data_hash=data_hash
+    coordinate = prepare_batch_then_to_device(codec, scaffold, device)
+    # The historical rollout recomputed block centers on the model device.
+    # CPU and CUDA reductions differ by a few ULPs on multi-atom blocks.
+    coordinate = replace(
+        coordinate, bpos=_block_positions(coordinate.x, coordinate.block_id)
+    )
+    latent = codec.encode(coordinate)
+    packed = adapter.from_codec_latent(
+        latent, codec_hash=codec_hash, data_hash=data_hash,
+        origin_from_latent=True, loss_mask=coordinate.loss_mask,
     )
     observation = build_observation_condition(
         packed,

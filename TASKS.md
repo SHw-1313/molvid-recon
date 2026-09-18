@@ -24,6 +24,9 @@
 - [x] P4d3: DiT train CLI with real codec and synthetic frozen manifest; exact resumed/uninterrupted two-step CUDA gate; local checkpoint.
 - [x] P4d4: SHA-checked DiT inference loader, observed-only sample/evaluate CLI, 106-test combined CUDA gate; local checkpoint.
 - [x] P4d5: versioned sample/evaluate YAML, config path relocation and targeted 10-test gate; local checkpoint.
+- [ ] P4d tools/benchmarks/protocol relocation: still pending; do not claim the full target tree is complete.
+- [x] P5a: package-outside import, target-runtime-file and legacy reachability audit; 109 retained tests passed.
+- [ ] P5b: real full-weight CUDA zero-tolerance generation gate fails at an independently allocated linear layer; old cutover/retirement withheld.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.
