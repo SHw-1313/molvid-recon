@@ -15,7 +15,8 @@ direction. Historical 116/116 predates the move and is not a new pass. A
 read-only SHA-256 audit matched all 388 archived source files after the move;
 all 19 curated source links resolve, and no retained test/runtime/tool imports
 the old root packages. `git diff --check` passes outside the byte-preserved
-legacy CRLF README. Real-artifact production-cutover gaps remain open.
+legacy CRLF README. Real-artifact production-cutover gaps remain open. Next:
+only resume those gates if the operator requests production cutover.
 
 ## P2a — spatial encoder sub-checkpoint (2026-09-18)
 
