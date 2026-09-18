@@ -1,5 +1,14 @@
 # Migration record
 
+## P2a — spatial encoder sub-checkpoint (2026-09-18)
+
+Status: spatial-only extraction complete; P2 codec, weight/optimizer migration and full P2 gate remain pending. No legacy entrypoint or file was switched or removed.
+
+- Added `molvid/spatial/{ops,torchmd,encoder}.py` and package marker. `FrameEncoder` uses the P1 graph boundary and the same TorchMD call/constructor order, with no old bridge/cross-attention, ViSNet or checkpoint-loading branch. The unused old `OptimizedDistance` object had no parameters/buffers and consumed no RNG; its removal was checked against the active TorchMD state dictionary.
+- Fixed-seed old/new TorchMD initialization: all 27 state keys, tensor bytes and subsequent CPU RNG state matched exactly. New `FrameEncoder` state names are the direct `spatial_encoder.* → backbone.*` map. In `enter-container` / `torch-ito` on CUDA GPU 5, `tests/test_codec.py` passed (1 test): identical graph edges and weights, frame scalar/vector tensors, coordinate gradient and every parameter gradient with `rtol=atol=0` under `CUBLAS_WORKSPACE_CONFIG=:4096:8` and PyTorch deterministic algorithms.
+- Without deterministic algorithms, the unchanged old model differed from itself on a repeated vector forward by up to `1.1920928955078125e-07` due to CUDA reduction order; this was diagnosed rather than widening the test tolerance. Exact-zero parity passed after deterministic execution was enabled for the test.
+- `not_run`: full Haar/codec latent, decoded coordinate, loss, checkpoint weight/optimizer and resume parity. Next: split state/detail primitives and compose `TrajectoryCodec`; migrate the checkpoint strictly and run the complete P2 gate before P3.
+
 ## P0 — 2026-09-18
 
 Status: P0 source audit and fixed-input CUDA oracle complete. No production code was changed or retired. P1 may start; its own checks remain mandatory before P2.
