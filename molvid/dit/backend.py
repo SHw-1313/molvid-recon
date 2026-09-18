@@ -323,8 +323,13 @@ def _block_spatial(
             context_v = context_v[0].to(dtype=v_out.dtype)
             for local, global_index in enumerate(block_indices):
                 atom_indices = groups[global_index]
-                h_out[time_index, atom_indices] = context_h[local]
-                v_out[time_index, atom_indices] = context_v[local]
+                # Explicit broadcast avoids a CUDA advanced-index assignment assert.
+                h_out[time_index, atom_indices] = context_h[local].expand(
+                    atom_indices.numel(), -1
+                )
+                v_out[time_index, atom_indices] = context_v[local].expand(
+                    atom_indices.numel(), -1, -1
+                )
     return h_out, v_out
 
 

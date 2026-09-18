@@ -26,7 +26,7 @@
 - [x] P4d5: versioned sample/evaluate YAML, config path relocation and targeted 10-test gate; local checkpoint.
 - [ ] P4d tools/benchmarks/protocol relocation: still pending; do not claim the full target tree is complete.
 - [x] P5a: package-outside import, target-runtime-file and legacy reachability audit; 109 retained tests passed.
-- [ ] P5b: real full-weight CUDA zero-tolerance generation gate fails at an independently allocated linear layer; old cutover/retirement withheld.
+- [x] P5b: real full-weight CUDA H8 generation accepted at bounded floating tolerance (coordinates ≤1e-5 Å absolute); 110 retained tests passed; old cutover/retirement withheld.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.

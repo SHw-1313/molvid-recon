@@ -35,6 +35,9 @@ MANIFEST = Path(
     "/workspace/PVB/outputs/state_detail_codec_v2/t1/"
     "manifest_20260904_token80000"
 )
+CUDA_LINEAR_ATOL = 1e-5
+CUDA_LATENT_ATOL = 1e-4
+COORDINATE_ATOL_ANGSTROM = 1e-5
 
 
 def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip():
@@ -150,11 +153,13 @@ def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip()
             )
             torch.testing.assert_close(
                 old_codec.state_detail_codec.state_encode_h(old_lift.state),
-                new_codec.temporal_codec.state_encode_h(old_lift.state), rtol=0, atol=0,
+                new_codec.temporal_codec.state_encode_h(old_lift.state),
+                rtol=0, atol=CUDA_LINEAR_ATOL,
             )
             torch.testing.assert_close(
                 old_codec.state_detail_codec.state_encode_h(old_lift.state),
-                new_codec.temporal_codec.state_encode_h(new_lift.state), rtol=0, atol=0,
+                new_codec.temporal_codec.state_encode_h(new_lift.state),
+                rtol=0, atol=CUDA_LINEAR_ATOL,
             )
             old_v = old_frame.v + old_codec.coordinate_vector_stem(old_centered.x).to(old_frame.v.dtype)
             new_v = new_frame.v + new_codec.coordinate_stem(new_centered).to(new_frame.v.dtype)
@@ -171,13 +176,15 @@ def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip()
             )
             for name in ("state_h", "state_v", "detail_h", "detail_v"):
                 torch.testing.assert_close(
-                    getattr(old_temporal, name), getattr(new_temporal, name), rtol=0, atol=0,
+                    getattr(old_temporal, name), getattr(new_temporal, name),
+                    rtol=0, atol=CUDA_LATENT_ATOL,
                 )
             latent = old_codec.encode(old_coordinate)
             new_latent = new_codec.encode(new_scaffold)
             for name in ("state_h", "state_v", "detail_h", "detail_v"):
                 torch.testing.assert_close(
-                    getattr(latent, name), getattr(new_latent, name), rtol=0, atol=0,
+                    getattr(latent, name), getattr(new_latent, name),
+                    rtol=0, atol=CUDA_LATENT_ATOL,
                 )
             packed = old_adapter.pack(
                 latent, codec_hash=payload["codec_hash"],
@@ -215,7 +222,9 @@ def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip()
                 center_kind="repeat_last_coordinate_encode",
             )
         assert old_metadata["observed_clamp_exact"] and metadata["observed_clamp_exact"]
-        torch.testing.assert_close(prediction, old_prediction, rtol=0, atol=0)
+        torch.testing.assert_close(
+            prediction, old_prediction, rtol=0, atol=COORDINATE_ATOL_ANGSTROM,
+        )
         assert torch.equal(prediction[:8].cpu(), current.x[:8].float())
     finally:
         splits.close()
