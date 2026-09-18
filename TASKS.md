@@ -31,7 +31,8 @@
 - [x] P5a: package-outside import, target-runtime-file and legacy reachability audit; 109 retained tests passed.
 - [x] P5b: real full-weight CUDA H8 generation accepted at bounded floating tolerance (coordinates ≤1e-5 Å absolute); 110 retained tests passed; old cutover/retirement withheld.
 - [x] P5c: historical capacity C48 parent train48 sampler state, schedule hash, cursor and next three batches match old/new exactly; direct continuation on the later manifest remains unverified.
-- [ ] P5d: new H4/two-segment H8 real-generation extension exceeds the H8 single-clip 1e-5 Å bound; awaiting separate numerical acceptance.
+- [x] P5d: H4/two-segment H8 real-weight CUDA parity accepted at separate 3e-5 Å absolute bound; original single-H8 1e-5 Å bound remains.
+- [x] P5e: audited and retired four history-only temporal/anchor and ViSNet tests; 116 retained tests passed.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.

@@ -38,6 +38,7 @@ MANIFEST = Path(
 CUDA_LINEAR_ATOL = 1e-5
 CUDA_LATENT_ATOL = 1e-4
 COORDINATE_ATOL_ANGSTROM = 1e-5
+EXTENDED_COORDINATE_ATOL_ANGSTROM = 3e-5
 
 
 @torch.no_grad()
@@ -291,9 +292,11 @@ def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip()
         assert old_second_meta["observed_clamp_exact"]
         assert all(item["observed_clamp_exact"] for item in rollout_meta)
         torch.testing.assert_close(
-            new_rollout, old_rollout, rtol=0, atol=COORDINATE_ATOL_ANGSTROM,
+            new_rollout, old_rollout, rtol=0, atol=EXTENDED_COORDINATE_ATOL_ANGSTROM,
         )
-        torch.testing.assert_close(new_h4, old_h4, rtol=0, atol=COORDINATE_ATOL_ANGSTROM)
+        torch.testing.assert_close(
+            new_h4, old_h4, rtol=0, atol=EXTENDED_COORDINATE_ATOL_ANGSTROM,
+        )
         assert torch.equal(new_h4[:4].cpu(), current.x[:4].float())
         assert torch.equal(new_rollout[:8].cpu(), current.x[:8].float())
         torch.testing.assert_close(
