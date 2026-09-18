@@ -205,3 +205,61 @@ def test_codec_run_restores_mid_epoch_cursor_and_next_batch(tmp_path):
     for parameter_id, values in expected_optimizer["state"].items():
         for name, value in values.items():
             torch.testing.assert_close(value, resumed.optimizer.state_dict()["state"][parameter_id][name], rtol=0, atol=0)
+
+def test_prepared_dit_batch_separates_clean_target_and_observed_source(deterministic_cuda):
+    from dataclasses import replace
+
+    from molvid.latent.adapter import StateDetailLatentAdapter
+    from molvid.latent.statistics import LatentStatistics
+    from molvid.training.batches import encode_batch, prepare_dit_batch
+
+    record = _record()
+    record["x"] = np.tile(record["x"], (4, 1, 1))
+    record["bpos"] = record["x"].copy()
+    record["time_ps"] = np.arange(16, dtype=np.float32) * 100.0
+    record["delta_time_ps"] = np.full(15, 100.0, dtype=np.float32)
+    batch = collate_clip_records([record])
+    codec = TrajectoryCodec(
+        hidden_channels=8, spatial_layers=1, temporal_codec_mode="ratio4_state_detail",
+        num_rbf=8, num_heads=2, coordinate_stem="centered_vector",
+    ).cuda().eval()
+    for parameter in codec.parameters():
+        parameter.requires_grad_(False)
+    adapter = StateDetailLatentAdapter(codec_width=8, scalar_width=8, vector_width=4, ratio=4).cuda()
+    clean, coordinate = encode_batch(
+        codec, adapter, batch, device=torch.device("cuda"), codec_hash="codec", data_hash="data"
+    )
+    zeros = torch.zeros(8, device="cuda")
+    ones = torch.ones(8, device="cuda")
+    statistics = LatentStatistics(
+        ratio=4, mode="ratio4_state_detail", width=8,
+        state_h_mean=zeros, state_h_std=ones, detail_h_mean=zeros,
+        detail_h_std=ones, state_v_rms=ones, detail_v_rms=ones,
+        provenance={"split": "train"},
+    )
+    epsilon = torch.randn(coordinate.x.shape, device="cuda", generator=torch.Generator(device="cuda").manual_seed(71))
+    kwargs = dict(
+        device=torch.device("cuda"), statistics=statistics, history_frames=8,
+        sigmas_angstrom=torch.tensor([0.02], device="cuda"), epsilon=epsilon,
+        source_mode="conditional", center_kind="repeat_last_coordinate_encode",
+        codec_hash="codec", data_hash="data",
+    )
+    first = prepare_dit_batch(codec, adapter, batch, **kwargs)
+    torch.testing.assert_close(first.target_view.x, coordinate.x, rtol=0, atol=0)
+    torch.testing.assert_close(first.corruption.target.fields.state_h, clean.state_h, rtol=0, atol=0)
+    assert not torch.equal(first.corruption.views.condition_view.x[:8], coordinate.x[:8])
+    torch.testing.assert_close(first.corruption.views.condition_view.x[8:], coordinate.x[8:], rtol=0, atol=0)
+    assert first.source_center is not None
+    changed_x = batch.x.clone()
+    changed_x[8:] += 10000.0
+    changed = replace(batch, x=changed_x)
+    second = prepare_dit_batch(codec, adapter, changed, **kwargs)
+    for name in first.source_center.names():
+        torch.testing.assert_close(
+            getattr(first.source_center, name), getattr(second.source_center, name), rtol=0, atol=0
+        )
+    observed_atoms = first.observed.observed_mask.index_select(0, first.observed.abid).transpose(0, 1)
+    for name in first.observed.fields.names():
+        a = getattr(first.observed, name)
+        b = getattr(second.observed, name)
+        torch.testing.assert_close(a[observed_atoms], b[observed_atoms], rtol=0, atol=0)
