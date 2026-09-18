@@ -1,5 +1,22 @@
 # Migration record
 
+## Layout cleanup after result archive (2026-09-18)
+
+The prior archive left historical source and outputs in the root. In response
+to the operator, the old packages, runners, configs, phase notes and all 490
+tracked output files were moved intact under `old/`; the curated results remain
+in `results_archive/`. Seventeen old-dependent test modules plus their helper
+were archived, leaving eight flat-only tests. No old package is a current
+entrypoint and no `src/` or `molvid/models/` was created. New default run output
+paths use ignored `runs/`. The two untracked design files were preserved.
+
+No Python/CUDA tests were rerun in this organization-only batch, per user
+direction. Historical 116/116 predates the move and is not a new pass. A
+read-only SHA-256 audit matched all 388 archived source files after the move;
+all 19 curated source links resolve, and no retained test/runtime/tool imports
+the old root packages. `git diff --check` passes outside the byte-preserved
+legacy CRLF README. Real-artifact production-cutover gaps remain open.
+
 ## P2a — spatial encoder sub-checkpoint (2026-09-18)
 
 Status: spatial-only extraction complete; P2 codec, weight/optimizer migration and full P2 gate remain pending. No legacy entrypoint or file was switched or removed.

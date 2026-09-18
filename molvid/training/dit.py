@@ -47,7 +47,7 @@ class DiTTrainConfig:
     max_steps: int = 100
     seed: int = 0
     amp: bool = False
-    output_root: str = "outputs/dit_state_detail_probe_v1"
+    output_root: str = "runs/molvid_dit"
     data_hash: str = ""
     codec_hash: str = ""
     stats_hash: str = ""

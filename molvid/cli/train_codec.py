@@ -117,7 +117,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             metrics = trainer.evaluate_batch(next(iter(train_loader)))
             print(json.dumps({"dry_run": True, "metrics": metrics}, sort_keys=True))
             return 0
-        save_dir = Path(training.get("save_dir", "outputs/molvid_codec"))
+        save_dir = Path(training.get("save_dir", "runs/molvid_codec"))
         log_path = save_dir / "train_metrics.jsonl"
         metrics = trainer.run(max_steps=config.max_steps, log_path=log_path, log_every=args.log_every)
         checkpoint = trainer.save_checkpoint(save_dir / f"codec_step_{trainer.step:08d}.pt")

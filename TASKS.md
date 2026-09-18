@@ -1,4 +1,6 @@
-# Refactor tasks
+# Refactor tasks — current layout follow-up (2026-09-18)
+- [x] Move old root packages, runners, configs, phase docs, tests and output files into `old/`; fix result source links; preserve untracked design files.
+- [ ] Production cutover evidence: later-manifest optimizer/data continuation, real old-runner metric comparison, artifact export and warm matched profile.
 
 - [x] P0: identify the selected HEAD, source symbols, active paths, artifact identities and historical numerical context.
 - [x] P0: run fixed tiny old-path CUDA forward/loss/gradient/update/resume reference in `enter-container` / `torch-ito`.

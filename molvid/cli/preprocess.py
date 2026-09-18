@@ -261,7 +261,7 @@ def main(argv: list[str] | None = None) -> None:
         source_version=(
             "ATLAS archive README: 100 ns trajectories saved every 10 ps"
             if args.source == "atlas"
-            else "MISATO Zenodo record 7711953; native dt supplied by agents/HANDOFF.md"
+            else "MISATO Zenodo record 7711953; native dt supplied by old/agents/HANDOFF.md"
         ),
         timestamp_provenance=(
             "ATLAS_XTC_time_ps" if args.source == "atlas" else "MISATO_Handoff_verified_native_dt_ps"

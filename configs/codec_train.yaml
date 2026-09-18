@@ -18,7 +18,7 @@ training:
   max_steps: 1000
   warmup_steps: 100
   grad_clip: 1.0
-  save_dir: outputs/molvid_codec
+  save_dir: runs/molvid_codec
   loss_schedule:
     - start_step: 0
       weights: {coordinate: 1.0, local: 0.0, bond: 0.0, velocity: 0.0, acceleration: 0.0}

@@ -1,7 +1,7 @@
 """Build a read-only, source-linked digest of historical experiment results.
 
 Run only inside enter-container / torch-ito. This script never opens clip payloads
-or checkpoints and never alters outputs/. It refuses to overwrite an archive.
+or checkpoints and never alters old/outputs/. It refuses to overwrite an archive.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from collections.abc import Mapping
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "outputs"
+SOURCE = ROOT / "old" / "outputs"
 DESTINATION = ROOT / "results_archive"
 INCLUDED_SUFFIXES = {".json", ".jsonl", ".csv", ".tsv", ".md", ".yaml", ".png", ".svg", ".pdf"}
 EXCLUDED_PARTS = {"clip_store", "neibu_clip_store", "pair_stores", "test"}
@@ -364,12 +364,12 @@ def _write_archive(root: Path) -> tuple[int, int, int]:
         "先看 [关键实验结论](KEY_RESULTS.md)，再按实验组进入具体运行。关键表按",
         "生成时间—数据设置—模型设置—训练设置—结果组织。时间取自路径中的运行标识，",
         "不是 Git 检出后的文件 mtime；未记录的时间不推断。所有数值来自列出的原始结果文件，",
-        "未重训、未打开 test clip、未改动 outputs/。不同运行或 quick/final 评估不混作同一结论。", "",
+        "未重训、未打开 test clip、未改动 old/outputs/ 中的文件内容。不同运行或 quick/final 评估不混作同一结论。", "",
         "逐 epoch/step loss 见 figures/ 中的曲线；最终或单次 checkpoint 指标仅保留在",
         "[evaluation_metrics.csv](evaluation_metrics.csv)，按 scope 区分 final/quick/未注明，不为其造图。", "",
         "原始 JSON/JSONL/CSV/已有图片被语义化命名后装入 [raw_results.tar.gz](raw_results.tar.gz)。",
         "[raw_manifest.csv](raw_manifest.csv) 记录原路径、新名称、SHA-256、大小与运行标识。",
-        "训练数据、checkpoint、日志和 test split 不在包内；原始 outputs/ 原封不动保留。", "",
+        "训练数据、checkpoint、日志和 test split 不在包内；原始输出按原目录结构保存在 old/outputs/。", "",
         "| 实验组 | 生成时间（路径） | 运行数 | 图数 |",
         "| --- | --- | ---: | ---: |",
     ]

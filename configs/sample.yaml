@@ -10,4 +10,4 @@ history: 8
 steps: 8
 seed: 20260918
 device: cuda
-output: ../outputs/molvid/sample.npz
+output: ../runs/molvid/sample.npz

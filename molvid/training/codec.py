@@ -74,7 +74,7 @@ def validate_codec_config(config: Mapping[str, Any]) -> tuple[TimeBucketSpec, ..
 
 @dataclass
 class CodecTrainConfig:
-    """Validated runtime subset of ``config/codec.yaml``."""
+    """Validated runtime subset of ``configs/codec_train.yaml``."""
 
     lr: float = 1e-4
     weight_decay: float = 0.0

@@ -9,4 +9,4 @@ history: 8
 steps: 8
 seed: 20260918
 device: cuda
-output_root: ../outputs/molvid/evaluation
+output_root: ../runs/molvid/evaluation

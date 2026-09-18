@@ -37,7 +37,7 @@ training:
   weight_decay: 0.01
   grad_clip: 1.0
   amp: false
-  output_root: outputs/molvid_dit
+  output_root: runs/molvid_dit
   geometry:
     lambda_bond: 0.0
     tau_threshold: 0.75

@@ -10,21 +10,5 @@
 *.bin
 *.pdf
 
-# Generated model checkpoints and binary experiment artifacts under outputs.
-/outputs/**/*.pt
-
-# Repair-phase generated evidence is external and must not enter Git.
-/outputs/state_detail_codec_v2/repair/
-# T1 manifests, logs, reports, plots, and external worker artifacts are
-# reproducibility outputs, not source-controlled model code.
-/outputs/state_detail_codec_v2/t1/
-/outputs/**/*.pth
-/outputs/**/*.ckpt
-/outputs/**/*.safetensors
-/outputs/**/*.pkl
-/outputs/**/*.pickle
-# Architecture-sequential compact numerical artifacts remain external.
-/outputs/dit_architecture_sequential_v1/**/*.npz
-/outputs/dit_architecture_sequential_v1/**/*.png
-# Generation rows are large evaluation outputs; keep them local and out of Git.
-/outputs/dit_architecture_sequential_v1/**/generation_rows.jsonl
+/runs/
+/old/outputs/
