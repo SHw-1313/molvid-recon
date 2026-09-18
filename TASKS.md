@@ -16,6 +16,7 @@
 - [x] P4b1: clean/noisy DiT batch separation and frozen future-bond decode gradients; local checkpoint.
 - [x] P4b2: DiT trainer, strict historical 166-moment conversion and new-format resume; 82 combined tests; local checkpoint.
 - [ ] P4a–P4d: losses/training, generation/evaluation, CLI/tools; check one step, resume and frozen gradients after each substep.
+- [x] P4c1: observed-prefix sample and short autoregressive rollout; 3 deterministic CUDA tests; local checkpoint.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.
