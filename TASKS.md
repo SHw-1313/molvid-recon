@@ -21,6 +21,7 @@
 - [x] P4c3: latent/evaluation runner/report, observed-only scoring isolation; 5 tests; P4c local checkpoint.
 - [x] P4d1: preprocess CLI and source-manifest helper; exact selection/manifest parity; local checkpoint.
 - [x] P4d2: current codec train CLI, dry run and SHA-checked resumed second CUDA step; local checkpoint.
+- [x] P4d3: DiT train CLI with real codec and synthetic frozen manifest; exact resumed/uninterrupted two-step CUDA gate; local checkpoint.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.

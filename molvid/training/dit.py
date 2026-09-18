@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from contextlib import nullcontext
 import hashlib
+import math
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional
 
@@ -72,7 +73,7 @@ class DiTTrainConfig:
             raise ValueError("max_steps must be positive")
         if not self.observation_mixture or any(value not in (0, 4, 8) for value in self.observation_mixture):
             raise ValueError("observation mixture must contain only H=0,4,8")
-        if len(self.history_probabilities) != 3 or any(value < 0 for value in self.history_probabilities) or abs(sum(self.history_probabilities) - 1.0) > 1e-8:
+        if len(self.history_probabilities) != 3 or any(not math.isfinite(value) or value < 0 for value in self.history_probabilities) or abs(sum(self.history_probabilities) - 1.0) > 1e-8:
             raise ValueError("history corruption probabilities must be nonnegative and sum to one")
         if self.source_mode not in ("gaussian", "conditional"):
             raise ValueError("source_mode must be gaussian or conditional")

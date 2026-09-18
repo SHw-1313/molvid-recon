@@ -1,0 +1,43 @@
+schema: molvid.dit.train.v1
+manifest_root: /path/to/frozen_manifest
+
+codec:
+  checkpoint: /path/to/approved_codec.pt
+  sha256: replace_with_approved_sha256
+
+statistics:
+  path: /path/to/train_statistics.pt
+  sha256: replace_with_statistics_file_sha256
+  statistics_hash: replace_with_statistics_contract_hash
+
+model:
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+  ffn_multiplier: 4
+  dropout: 0.0
+  execution_backend: factorized_v2
+  ffn_norm_source: post_adaln
+
+source:
+  mode: conditional
+  center_kind: repeat_last_coordinate_encode
+
+training:
+  deterministic: true
+  device: cuda
+  seed: 20260914
+  max_steps: 4500
+  max_tokens: 80000
+  clips_per_trajectory: 24
+  history_order: [4, 8]
+  history_probabilities: [0.5, 0.25, 0.25]
+  learning_rate: 2.0e-4
+  weight_decay: 0.01
+  grad_clip: 1.0
+  amp: false
+  output_root: outputs/molvid_dit
+  geometry:
+    lambda_bond: 0.0
+    tau_threshold: 0.75

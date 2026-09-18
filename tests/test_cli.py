@@ -79,3 +79,111 @@ def test_codec_cli_one_step_and_new_format_resume(tmp_path: Path):
     payload = torch.load(second, map_location="cpu", weights_only=False)
     assert payload["schema_version"] == "molvid.training.checkpoint.v1"
     assert payload["step"] == 2
+
+
+def test_dit_cli_real_codec_short_resume_matches_uninterrupted(tmp_path: Path):
+    import numpy as np
+    import torch
+    import yaml
+    from molvid.checkpoints import load_codec_artifact
+    from molvid.cli.train_dit import main as train_dit_main
+    from molvid.data.batch import collate_clip_records
+    from molvid.data.manifest import build_manifest, load_datasets
+    from molvid.data.store import ClipMMapWriter
+    from molvid.latent.adapter import StateDetailLatentAdapter
+    from molvid.latent.statistics import LatentStatistics
+    from molvid.runtime import atomic_write_json, canonical_hash, sha256_file
+    from molvid.training.batches import encode_batch
+    from test_migration import APPROVED, APPROVED_SHA, _record
+
+    assert torch.cuda.is_available(), "P4d DiT CLI gate requires CUDA"
+    record = _record()
+    t = np.arange(16, dtype=np.float32)[:, None, None]
+    base = np.asarray(record["x"][0:1])
+    record["x"] = base + 0.03 * np.sin(0.4 * t + np.arange(4, dtype=np.float32)[None, :, None])
+    record["bpos"] = record["x"].copy()
+    record["time_ps"] = np.arange(16, dtype=np.float32) * 100
+    record["delta_time_ps"] = np.full(15, 100, dtype=np.float32)
+    split_ids = {
+        "train": ["atlas_train_R1_w000000"],
+        "valid": ["atlas_valid_R1_w000000"],
+        "test": ["atlas_test_R1_w000000"],
+    }
+    manifest = build_manifest(
+        {
+            split: {"selected_systems": [f"atlas_{split}"], "sample_ids": ids}
+            for split, ids in split_ids.items()
+        },
+        source_root=tmp_path, frames_per_clip=16, time_bucket_id="dt_100ps", max_tokens=64,
+    )
+    atomic_write_json(tmp_path / "manifest.json", manifest)
+    materialized = {"materialized": True, "splits": {}}
+    for split in ("train", "valid"):
+        root = tmp_path / "clip_store" / split
+        with ClipMMapWriter(root) as writer:
+            writer.append({**record, "sample_id": split_ids[split][0]})
+        materialized["splits"][split] = {
+            "count": 1, "index_sha256": sha256_file(root / "index.txt"),
+        }
+    materialized["splits"]["test"] = {"count": 1}
+    materialized["materialization_sha256"] = canonical_hash(materialized)
+    atomic_write_json(tmp_path / "materialization.json", materialized)
+    splits = load_datasets(tmp_path)
+    data_hash = splits.data_hash
+    splits.close()
+
+    artifact = load_codec_artifact(APPROVED, expected_sha256=APPROVED_SHA, device="cuda")
+    codec = artifact.model.eval()
+    adapter = StateDetailLatentAdapter(
+        codec_width=128, scalar_width=8, vector_width=4, ratio=4,
+    ).cuda()
+    packed, _ = encode_batch(
+        codec, adapter, collate_clip_records([record]),
+        device=torch.device("cuda"), codec_hash="test", data_hash=data_hash,
+    )
+    statistics = LatentStatistics.fit(
+        [packed], ratio=4,
+        provenance={"data_hash": data_hash, "codec_checkpoint_sha256": APPROVED_SHA},
+    )
+    stats_path = tmp_path / "statistics.pt"
+    torch.save(statistics.state_dict(), stats_path)
+    config = yaml.safe_load(Path("config/molvid_dit.yaml").read_text(encoding="utf-8"))
+    config["manifest_root"] = str(tmp_path)
+    config["codec"] = {"checkpoint": APPROVED, "sha256": APPROVED_SHA}
+    config["statistics"] = {
+        "path": str(stats_path), "sha256": sha256_file(stats_path),
+        "statistics_hash": statistics.hash,
+    }
+    config["model"].update({"scalar_width": 8, "vector_width": 4, "depth": 1, "heads": 2, "ffn_multiplier": 2})
+    config["training"].update({
+        "max_steps": 1, "max_tokens": 64, "clips_per_trajectory": None,
+        "history_order": [8], "history_probabilities": [0.0, 1.0, 0.0],
+        "output_root": str(tmp_path / "resumed"),
+    })
+    config_file = tmp_path / "dit.yaml"
+    config_file.write_text(yaml.safe_dump(config), encoding="utf-8")
+    assert train_dit_main(["--config", str(config_file), "--dry-run"]) == 0
+    assert train_dit_main(["--config", str(config_file)]) == 0
+    first = tmp_path / "resumed" / "dit_step_00000001.pt"
+    assert first.exists()
+    assert train_dit_main([
+        "--config", str(config_file), "--max-steps", "2",
+        "--resume", str(first), "--resume-sha256", sha256_file(first),
+    ]) == 0
+    resumed = torch.load(tmp_path / "resumed" / "dit_step_00000002.pt", map_location="cpu", weights_only=False)
+    config["training"]["max_steps"] = 2
+    config["training"]["output_root"] = str(tmp_path / "continuous")
+    config_file.write_text(yaml.safe_dump(config), encoding="utf-8")
+    assert train_dit_main(["--config", str(config_file)]) == 0
+    continuous = torch.load(tmp_path / "continuous" / "dit_step_00000002.pt", map_location="cpu", weights_only=False)
+    assert resumed["step"] == continuous["step"] == 2
+    for name in continuous["model_state"]:
+        torch.testing.assert_close(
+            resumed["model_state"][name], continuous["model_state"][name], rtol=0, atol=0,
+        )
+    for index, slot in continuous["optimizer_state"]["state"].items():
+        for name, value in slot.items():
+            torch.testing.assert_close(
+                resumed["optimizer_state"]["state"][index][name], value, rtol=0, atol=0,
+            )
+    assert not (tmp_path / "clip_store" / "test").exists()
