@@ -222,3 +222,140 @@ def test_new_checkpoint_resume_preserves_rng_optimizer_scheduler_and_cursor(tmp_
     for parameter_id, state in expected_optimizer["state"].items():
         for name, value in state.items():
             torch.testing.assert_close(actual_optimizer["state"][parameter_id][name], value, rtol=0, atol=0)
+
+HISTORICAL_DIT = (
+    "/workspace/molvid-dit-architecture-sequential-v1/outputs/"
+    "dit_architecture_sequential_v1/20260914_r4_architecture_sequential_v1/"
+    "baseline/checkpoint_final.pt"
+)
+HISTORICAL_DIT_SHA = "808eb51e5c597629ebbd7270697af91affbc82a812cadd165eae984cba900240"
+
+
+def test_historical_dit_weights_moments_and_next_cuda_update_match_old():
+    from dataclasses import fields
+
+    from dit_test_utils import make_batch
+    from module.latent_rectified_flow import RectifiedFlowObjective as OldFlow
+    from module.molecular_dit import MolecularDiT as OldDiT
+    from module.state_detail_latent_adapter import (
+        LatentStatistics as OldStatistics,
+        StateDetailLatentAdapter as OldAdapter,
+    )
+    from molvid.checkpoints import load_dit_artifact
+    from molvid.flow.objective import RectifiedFlowObjective
+    from molvid.geometry.types import StaticTopologyMetadata
+    from molvid.latent.types import LatentBatch, LatentFields
+
+    assert torch.cuda.is_available(), "historical DiT migration requires CUDA"
+    previous = torch.are_deterministic_algorithms_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        artifact = load_dit_artifact(
+            HISTORICAL_DIT, expected_sha256=HISTORICAL_DIT_SHA, device="cuda"
+        )
+        assert (
+            artifact["weight_count"],
+            artifact["optimizer_parameter_count"],
+            artifact["optimizer_moment_count"],
+        ) == (166, 166, 166)
+        payload = artifact["payload"]
+        config = payload["config"]
+        metadata = config["metadata"]
+        old_adapter = OldAdapter(
+            codec_width=config["codec_width"], scalar_width=config["scalar_width"],
+            vector_width=config["vector_width"], ratio=config["ratio"],
+        ).cuda()
+        old_model = OldDiT(
+            adapter=old_adapter,
+            scalar_width=config["scalar_width"], vector_width=config["vector_width"],
+            depth=config["depth"], heads=config["heads"],
+            ffn_multiplier=config["ffn_multiplier"], dropout=config["dropout"],
+            execution_backend=metadata["execution_backend"],
+            ffn_norm_source=metadata["ffn_norm_source"],
+        ).cuda()
+        old_model.load_state_dict(payload["model_state"], strict=True)
+        old_optimizer = torch.optim.AdamW(
+            old_model.parameters(), lr=config["learning_rate"], weight_decay=config["weight_decay"]
+        )
+        old_optimizer.load_state_dict(payload["optimizer_state"])
+        new_model = artifact["model"]
+        new_optimizer = artifact["optimizer"]
+        for name, value in old_model.state_dict().items():
+            torch.testing.assert_close(value, new_model.state_dict()[name], rtol=0, atol=0)
+        assert old_optimizer.state_dict()["param_groups"] == new_optimizer.state_dict()["param_groups"]
+        for parameter_id, slot in old_optimizer.state_dict()["state"].items():
+            for name, value in slot.items():
+                torch.testing.assert_close(
+                    value, new_optimizer.state_dict()["state"][parameter_id][name], rtol=0, atol=0
+                )
+        old_batch = make_batch(4, width=128, seed=11).to("cuda")
+        observed = torch.zeros_like(old_batch.token_mask)
+        observed[:, :2] = True
+        old_batch = old_batch.with_observation(observed)
+        values = {field.name: getattr(old_batch, field.name) for field in fields(old_batch)}
+        values["fields"] = LatentFields(**old_batch.fields.as_dict())
+        values["topology"] = StaticTopologyMetadata(
+            **{field.name: getattr(old_batch.topology, field.name) for field in fields(old_batch.topology)}
+        )
+        new_batch = LatentBatch(**values)
+        old_stats = OldStatistics.from_state_dict(payload["statistics_state"]).to("cuda")
+        new_stats = artifact["statistics"]
+        old_batch = old_stats.normalize(old_batch)
+        new_batch = new_stats.normalize(new_batch)
+        center_old = old_batch.fields.map(torch.zeros_like)
+        center_new = new_batch.fields.map(torch.zeros_like)
+        old_generator = torch.Generator(device="cuda").manual_seed(77)
+        new_generator = torch.Generator(device="cuda").manual_seed(77)
+        old_sample = OldFlow().sample(
+            old_batch, generator=old_generator, source_center=center_old, source_mode="conditional"
+        )
+        new_sample = RectifiedFlowObjective().sample(
+            new_batch, generator=new_generator, source_center=center_new, source_mode="conditional"
+        )
+        torch.testing.assert_close(old_sample.tau, new_sample.tau, rtol=0, atol=0)
+        assert torch.equal(old_generator.get_state(), new_generator.get_state())
+        for field_name in old_sample.target.names():
+            for component in ("noise", "source", "interpolated", "target"):
+                torch.testing.assert_close(
+                    getattr(getattr(old_sample, component), field_name),
+                    getattr(getattr(new_sample, component), field_name), rtol=0, atol=0
+                )
+        old_optimizer.zero_grad(set_to_none=True)
+        new_optimizer.zero_grad(set_to_none=True)
+        old_prediction = old_model(old_batch.with_fields(old_sample.interpolated), old_sample.tau)
+        new_prediction = new_model(new_batch.with_fields(new_sample.interpolated), new_sample.tau)
+        for name in old_prediction.names():
+            torch.testing.assert_close(getattr(old_prediction, name), getattr(new_prediction, name), rtol=0, atol=0)
+        old_loss = OldFlow().loss(old_prediction, old_sample.target, old_batch).total
+        new_loss = RectifiedFlowObjective().loss(new_prediction, new_sample.target, new_batch).total
+        torch.testing.assert_close(old_loss, new_loss, rtol=0, atol=0)
+        old_loss.backward()
+        new_loss.backward()
+        for (_, first), (_, second) in zip(old_model.named_parameters(), new_model.named_parameters()):
+            assert (first.grad is None) == (second.grad is None)
+            if first.grad is not None:
+                torch.testing.assert_close(first.grad, second.grad, rtol=0, atol=0)
+        old_norm = torch.nn.utils.clip_grad_norm_(old_model.parameters(), config["grad_clip"])
+        new_norm = torch.nn.utils.clip_grad_norm_(new_model.parameters(), config["grad_clip"])
+        torch.testing.assert_close(old_norm, new_norm, rtol=0, atol=0)
+        for (_, first), (_, second) in zip(old_model.named_parameters(), new_model.named_parameters()):
+            if first.grad is not None:
+                torch.testing.assert_close(first.grad, second.grad, rtol=0, atol=0)
+        old_optimizer.step()
+        new_optimizer.step()
+        for name, value in old_model.state_dict().items():
+            torch.testing.assert_close(value, new_model.state_dict()[name], rtol=0, atol=0)
+        for parameter_id, slot in old_optimizer.state_dict()["state"].items():
+            for name, value in slot.items():
+                torch.testing.assert_close(
+                    value, new_optimizer.state_dict()["state"][parameter_id][name], rtol=0, atol=0
+                )
+    finally:
+        torch.use_deterministic_algorithms(previous)
+
+
+def test_historical_dit_wrong_hash_fails_before_loading():
+    from molvid.checkpoints import load_dit_artifact
+
+    with pytest.raises(ValueError, match="SHA-256"):
+        load_dit_artifact(HISTORICAL_DIT, expected_sha256="0" * 64)

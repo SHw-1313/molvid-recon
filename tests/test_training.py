@@ -263,3 +263,114 @@ def test_prepared_dit_batch_separates_clean_target_and_observed_source(determini
         a = getattr(first.observed, name)
         b = getattr(second.observed, name)
         torch.testing.assert_close(a[observed_atoms], b[observed_atoms], rtol=0, atol=0)
+
+def _dit_batch(ratio=4):
+    from dataclasses import fields
+
+    from dit_test_utils import make_batch
+    from molvid.geometry.types import StaticTopologyMetadata
+    from molvid.latent.types import LatentBatch, LatentFields
+
+    old = make_batch(ratio, width=4).to("cuda")
+    observed = torch.zeros_like(old.token_mask)
+    observed[:, :2] = True
+    old = old.with_observation(observed)
+    values = {field.name: getattr(old, field.name) for field in fields(old)}
+    values["fields"] = LatentFields(**old.fields.as_dict())
+    values["topology"] = StaticTopologyMetadata(
+        **{field.name: getattr(old.topology, field.name) for field in fields(old.topology)}
+    )
+    return old, LatentBatch(**values)
+
+
+def _dit_trainers():
+    from module.molecular_dit import MolecularDiT as OldDiT
+    from module.state_detail_latent_adapter import StateDetailLatentAdapter as OldAdapter
+    from trainer.dit_trainer import DiTTrainConfig as OldConfig, DiTTrainer as OldTrainer
+    from molvid.dit.model import MolecularDiT
+    from molvid.latent.adapter import StateDetailLatentAdapter
+    from molvid.training.dit import DiTTrainConfig, DiTTrainer
+
+    kwargs = dict(
+        scalar_width=8, vector_width=4, depth=1, heads=2, ffn_multiplier=2,
+        execution_backend="factorized_v2",
+    )
+    torch.manual_seed(902)
+    old_model = OldDiT(adapter=OldAdapter(codec_width=4, scalar_width=8, vector_width=4, ratio=4), **kwargs).cuda()
+    torch.manual_seed(902)
+    new_model = MolecularDiT(adapter=StateDetailLatentAdapter(codec_width=4, scalar_width=8, vector_width=4, ratio=4), **kwargs).cuda()
+    common = dict(
+        ratio=4, mode="ratio4_state_detail", codec_width=4, scalar_width=8,
+        vector_width=4, depth=1, heads=2, ffn_multiplier=2,
+        learning_rate=2e-4, weight_decay=0.01, grad_clip=1.0,
+        max_steps=2, seed=713, source_mode="gaussian",
+        data_hash="fixed-data", codec_hash="fixed-codec",
+    )
+    old = OldTrainer(old_model, old_model.adapter, config=OldConfig(**common))
+    new = DiTTrainer(new_model, new_model.adapter, config=DiTTrainConfig(**common))
+    return old, new
+
+
+def test_dit_trainer_fixed_generator_one_step_matches_old(deterministic_cuda):
+    old_batch, new_batch = _dit_batch()
+    old, new = _dit_trainers()
+    old_generator = torch.Generator(device="cuda").manual_seed(77)
+    new_generator = torch.Generator(device="cuda").manual_seed(77)
+    old_row = old.train_step(old_batch, generator=old_generator)
+    new_row = new.train_step(new_batch, generator=new_generator)
+    assert old_row == new_row
+    assert torch.equal(old_generator.get_state(), new_generator.get_state())
+    assert old.step == new.step == 1
+    for name, value in old.model.state_dict().items():
+        torch.testing.assert_close(value, new.model.state_dict()[name], rtol=0, atol=0)
+    _equal_optimizer(old.optimizer, new.optimizer)
+
+
+def test_new_dit_checkpoint_restores_generator_rng_and_next_update(tmp_path, deterministic_cuda):
+    from molvid.training.dit import DiTTrainConfig, DiTTrainer
+    from molvid.dit.model import MolecularDiT
+    from molvid.latent.adapter import StateDetailLatentAdapter
+
+    _, batch = _dit_batch()
+    _, trainer = _dit_trainers()
+    generator = torch.Generator(device="cuda").manual_seed(77)
+    trainer.train_step(batch, generator=generator)
+    path = trainer.save_checkpoint(
+        tmp_path / "dit_step1.pt", cursor={"epoch": 0, "batch_index": 1}, generator=generator
+    )
+    expected_random = (
+        random.random(), float(np.random.rand()), torch.randn(2),
+        torch.randn(2, device="cuda"),
+    )
+    expected_row = trainer.train_step(batch, generator=generator)
+    expected_model = copy.deepcopy(trainer.model.state_dict())
+    expected_optimizer = copy.deepcopy(trainer.optimizer.state_dict())
+
+    adapter = StateDetailLatentAdapter(codec_width=4, scalar_width=8, vector_width=4, ratio=4).cuda()
+    model = MolecularDiT(
+        adapter=adapter, scalar_width=8, vector_width=4, depth=1, heads=2,
+        ffn_multiplier=2, execution_backend="factorized_v2",
+    ).cuda()
+    resumed = DiTTrainer(model, adapter, config=DiTTrainConfig(**{
+        key: value for key, value in trainer.config.__dict__.items() if key != "history_probabilities"
+    }))
+    resumed_generator = torch.Generator(device="cuda").manual_seed(1)
+    loaded = resumed.load_checkpoint(path, generator=resumed_generator)
+    assert loaded["cursor"] == {"epoch": 0, "batch_index": 1}
+    actual_random = (
+        random.random(), float(np.random.rand()), torch.randn(2),
+        torch.randn(2, device="cuda"),
+    )
+    for expected, actual in zip(expected_random, actual_random):
+        if isinstance(expected, torch.Tensor):
+            torch.testing.assert_close(expected, actual, rtol=0, atol=0)
+        else:
+            assert expected == actual
+    actual_row = resumed.train_step(batch, generator=resumed_generator)
+    assert expected_row == actual_row
+    for name, value in expected_model.items():
+        torch.testing.assert_close(value, resumed.model.state_dict()[name], rtol=0, atol=0)
+    assert expected_optimizer["param_groups"] == resumed.optimizer.state_dict()["param_groups"]
+    for parameter_id, slot in expected_optimizer["state"].items():
+        for name, value in slot.items():
+            torch.testing.assert_close(value, resumed.optimizer.state_dict()["state"][parameter_id][name], rtol=0, atol=0)

@@ -274,6 +274,140 @@ def load_codec_artifact(
     )
 
 
+def load_dit_artifact(
+    path: str | Path,
+    *,
+    expected_sha256: str,
+    device: str | torch.device = "cpu",
+) -> dict[str, Any]:
+    """Strictly inspect and transfer one verified historical DiT state.
+
+    This is an explicit artifact-conversion boundary, not a runtime fallback
+    for the new training checkpoint format.
+    """
+
+    import copy
+    from .dit.model import MolecularDiT
+    from .latent.adapter import StateDetailLatentAdapter
+    from .latent.statistics import LatentStatistics
+    from .latent.types import contract_hash
+
+    actual_sha256 = sha256_file(path)
+    if actual_sha256 != expected_sha256:
+        raise ValueError("DiT checkpoint SHA-256 differs from the approved source")
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(payload, Mapping) or payload.get("schema") != "pvb.dit.state_detail.checkpoint.v2":
+        raise ValueError("unsupported historical DiT checkpoint schema")
+    required = {
+        "step", "successful_optimizer_updates", "config", "model_contract",
+        "model_contract_hash", "adapter_contract", "adapter_contract_hash",
+        "model_state", "optimizer_state", "statistics_state", "statistics_hash",
+        "codec_hash", "data_hash", "source_contract", "frozen_hashes",
+        "scheduler_state", "scaler_state", "rng_state", "sequential",
+    }
+    if required - set(payload):
+        raise ValueError(f"historical DiT checkpoint missing fields: {sorted(required - set(payload))}")
+    config = payload["config"]
+    if not isinstance(config, Mapping) or not isinstance(config.get("metadata"), Mapping):
+        raise ValueError("historical DiT config is incomplete")
+    if int(payload["step"]) < 1 or int(payload["step"]) != int(payload["successful_optimizer_updates"]):
+        raise ValueError("historical DiT update count differs from step")
+    if payload["scheduler_state"] is not None or not isinstance(payload["scaler_state"], Mapping):
+        raise ValueError("historical DiT scheduler/scaler contract differs")
+    if not isinstance(payload["rng_state"], Mapping) or set(payload["rng_state"]) != {"python", "numpy", "torch", "cuda"}:
+        raise ValueError("historical DiT RNG state is incomplete")
+    sequential = payload["sequential"]
+    if not isinstance(sequential, Mapping) or not isinstance(sequential.get("cursor"), Mapping) or not isinstance(sequential.get("training_generator_state"), Tensor):
+        raise ValueError("historical DiT sequential cursor/generator is incomplete")
+    statistics = LatentStatistics.from_state_dict(payload["statistics_state"])
+    if statistics.hash != payload["statistics_hash"] or statistics.hash != config["stats_hash"]:
+        raise ValueError("historical DiT statistics hash differs")
+    if config["data_hash"] != payload["data_hash"] or config["codec_hash"] != payload["codec_hash"]:
+        raise ValueError("historical DiT data/codec provenance differs")
+    source = payload["source_contract"]
+    if not isinstance(source, Mapping) or source.get("source_mode") != config["source_mode"] or source.get("normalization_hash") != statistics.hash:
+        raise ValueError("historical DiT source contract differs")
+    metadata = config["metadata"]
+    adapter = StateDetailLatentAdapter(
+        codec_width=int(config["codec_width"]),
+        scalar_width=int(config["scalar_width"]),
+        vector_width=int(config["vector_width"]),
+        ratio=int(config["ratio"]),
+        mode=str(config["mode"]),
+    )
+    model = MolecularDiT(
+        adapter=adapter,
+        scalar_width=int(config["scalar_width"]),
+        vector_width=int(config["vector_width"]),
+        depth=int(config["depth"]),
+        heads=int(config["heads"]),
+        ffn_multiplier=int(config["ffn_multiplier"]),
+        dropout=float(config["dropout"]),
+        execution_backend=str(metadata["execution_backend"]),
+        ffn_norm_source=str(metadata["ffn_norm_source"]),
+    )
+    if model.contract() != payload["model_contract"] or contract_hash(model.contract()) != payload["model_contract_hash"]:
+        raise ValueError("historical DiT model contract differs")
+    if adapter.contract() != payload["adapter_contract"] or contract_hash(adapter.contract()) != payload["adapter_contract_hash"]:
+        raise ValueError("historical DiT adapter contract differs")
+    state = payload["model_state"]
+    expected = model.state_dict()
+    if not isinstance(state, Mapping) or list(state) != list(expected):
+        raise ValueError("historical DiT model keys/order differ")
+    for name, value in state.items():
+        if not isinstance(value, Tensor) or value.shape != expected[name].shape or value.dtype != expected[name].dtype:
+            raise ValueError(f"historical DiT model shape/dtype differs at {name!r}")
+    saved_optimizer = payload["optimizer_state"]
+    if not isinstance(saved_optimizer, Mapping):
+        raise ValueError("historical DiT optimizer is incomplete")
+    groups = saved_optimizer.get("param_groups")
+    slots = saved_optimizer.get("state")
+    parameters = list(model.parameters())
+    if not isinstance(groups, list) or len(groups) != 1 or not isinstance(slots, Mapping):
+        raise ValueError("historical DiT optimizer group/state is incomplete")
+    ids = groups[0].get("params")
+    if not isinstance(ids, list) or ids != list(range(len(parameters))) or set(slots) != set(ids):
+        raise ValueError("historical DiT optimizer parameter IDs/moments are incomplete")
+    if float(groups[0].get("lr", -1)) != float(config["learning_rate"]) or float(groups[0].get("weight_decay", -1)) != float(config["weight_decay"]):
+        raise ValueError("historical DiT optimizer hyperparameters disagree")
+    for index, parameter in enumerate(parameters):
+        slot = slots[index]
+        if not isinstance(slot, Mapping) or set(slot) != {"step", "exp_avg", "exp_avg_sq"}:
+            raise ValueError(f"historical DiT AdamW moments are incomplete at {index}")
+        if not isinstance(slot["step"], Tensor) or slot["step"].numel() != 1 or int(slot["step"].item()) != int(payload["step"]):
+            raise ValueError(f"historical DiT optimizer step differs at {index}")
+        for name in ("exp_avg", "exp_avg_sq"):
+            value = slot[name]
+            if not isinstance(value, Tensor) or value.shape != parameter.shape or value.dtype != parameter.dtype:
+                raise ValueError(f"historical DiT {name} shape/dtype differs at {index}")
+    selected_device = torch.device(device)
+    if selected_device.type == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("requested CUDA DiT artifact device is unavailable")
+    model.to(selected_device)
+    model.load_state_dict(state, strict=True)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=float(config["learning_rate"]), weight_decay=float(config["weight_decay"]))
+    optimizer.load_state_dict(copy.deepcopy(saved_optimizer))
+    for name, value in state.items():
+        if not torch.equal(model.state_dict()[name].detach().cpu(), value):
+            raise RuntimeError(f"historical DiT weight changed while loading {name!r}")
+    loaded = optimizer.state_dict()
+    if loaded["param_groups"] != groups:
+        raise RuntimeError("historical DiT optimizer group changed while loading")
+    for index, slot in slots.items():
+        for name, value in slot.items():
+            if not torch.equal(loaded["state"][index][name].detach().cpu(), value):
+                raise RuntimeError(f"historical DiT optimizer moment changed at {index}")
+    return {
+        "model": model,
+        "optimizer": optimizer,
+        "statistics": statistics.to(device=selected_device),
+        "payload": payload,
+        "source_sha256": actual_sha256,
+        "weight_count": len(state),
+        "optimizer_parameter_count": len(ids),
+        "optimizer_moment_count": len(slots),
+    }
+
 def capture_rng_state() -> dict[str, Any]:
     """Capture all process RNG streams used by codec and DiT training."""
 

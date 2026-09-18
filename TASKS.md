@@ -14,6 +14,7 @@
 - [x] P4a1: reconstruction losses and time-bucket normalization; 4 CUDA parity tests; local checkpoint.
 - [x] P4a: codec one-step/frozen behavior, strict new-format RNG/optimizer/cursor resume and rejection rollback; 76 combined tests; local checkpoint.
 - [x] P4b1: clean/noisy DiT batch separation and frozen future-bond decode gradients; local checkpoint.
+- [x] P4b2: DiT trainer, strict historical 166-moment conversion and new-format resume; 82 combined tests; local checkpoint.
 - [ ] P4a–P4d: losses/training, generation/evaluation, CLI/tools; check one step, resume and frozen gradients after each substep.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
