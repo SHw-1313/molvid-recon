@@ -27,7 +27,7 @@ from molvid.data.batch import collate_clip_records
 from molvid.data.manifest import load_datasets
 from molvid.geometry.coordinates import center_coordinates
 from molvid.geometry.types import StaticTopologyMetadata
-from molvid.generation import _block_positions, _observed_scaffold, sample_clip
+from molvid.generation import _block_positions, _observed_scaffold, rollout, sample_clip
 from test_migration import APPROVED, APPROVED_SHA, HISTORICAL_DIT, HISTORICAL_DIT_SHA
 
 
@@ -38,6 +38,44 @@ MANIFEST = Path(
 CUDA_LINEAR_ATOL = 1e-5
 CUDA_LATENT_ATOL = 1e-4
 COORDINATE_ATOL_ANGSTROM = 1e-5
+
+
+@torch.no_grad()
+def _old_sample(
+    old_codec, old_model, old_adapter, old_stats, template, prefix, *,
+    history_frames, seed, codec_hash, data_hash,
+):
+    coordinate = template.to("cuda")
+    prefix = prefix.to("cuda")
+    scaffold = torch.cat((
+        prefix, prefix[-1:].expand(16 - history_frames, -1, -1)
+    ), dim=0)
+    coordinate = replace(
+        coordinate, x=scaffold,
+        bpos=_block_positions_cuda(scaffold, coordinate.block_id),
+    )
+    latent = old_codec.encode(coordinate)
+    packed = old_adapter.pack(
+        latent, codec_hash=codec_hash, data_hash=data_hash,
+        origin_from_latent=True, loss_mask=coordinate.loss_mask,
+    )
+    observed = _observed_batch(
+        packed, coordinate, adapter=old_adapter, history_frames=history_frames
+    )
+    center, _ = old_observed_center(
+        "repeat_last_coordinate_encode", codec_model=old_codec,
+        coordinate_batch=coordinate, target_batch=observed,
+        adapter=old_adapter, statistics=old_stats,
+        history_frames=history_frames, codec_hash=codec_hash,
+        data_hash=data_hash,
+    )
+    noise, _ = make_fixed_noise(old_stats.normalize(observed), seed=seed)
+    generated, metadata = generate_fixed_noise_latent(
+        old_model, old_adapter, observed, old_stats, noise=noise,
+        steps=8, source_center=center, source_mode="conditional",
+    )
+    decoded = old_codec.decode(generated).x_hat.float()
+    return torch.cat((prefix.float(), decoded[history_frames:]), dim=0), metadata
 
 
 def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip():
@@ -221,7 +259,43 @@ def test_full_historical_dit_and_codec_match_new_generation_on_real_valid_clip()
                 source_mode="conditional",
                 center_kind="repeat_last_coordinate_encode",
             )
+            old_h4, old_h4_meta = _old_sample(
+                old_codec, old_model, old_adapter, old_stats, original,
+                current.x[:4], history_frames=4, seed=seed + 2,
+                codec_hash=payload["codec_hash"], data_hash=splits.data_hash,
+            )
+            new_h4, new_h4_meta = sample_clip(
+                new_codec, new_model, new_model.adapter, new_stats,
+                template=current, prefix_coordinates=current.x[:4],
+                history_frames=4, steps=8, seed=seed + 2,
+                codec_hash=payload["codec_hash"], data_hash=splits.data_hash,
+                source_mode="conditional",
+                center_kind="repeat_last_coordinate_encode",
+            )
+            old_second, old_second_meta = _old_sample(
+                old_codec, old_model, old_adapter, old_stats, original,
+                old_prediction[8:], history_frames=8, seed=seed + 1,
+                codec_hash=payload["codec_hash"], data_hash=splits.data_hash,
+            )
+            old_rollout = torch.cat((old_prediction, old_second[8:]), dim=0)
+            new_rollout, rollout_meta = rollout(
+                new_codec, new_model, new_model.adapter, new_stats,
+                template=current, prefix_coordinates=current.x[:8],
+                seeds=(seed, seed + 1), steps=8,
+                codec_hash=payload["codec_hash"], data_hash=splits.data_hash,
+                source_mode="conditional",
+                center_kind="repeat_last_coordinate_encode",
+            )
         assert old_metadata["observed_clamp_exact"] and metadata["observed_clamp_exact"]
+        assert old_h4_meta["observed_clamp_exact"] and new_h4_meta["observed_clamp_exact"]
+        assert old_second_meta["observed_clamp_exact"]
+        assert all(item["observed_clamp_exact"] for item in rollout_meta)
+        torch.testing.assert_close(
+            new_rollout, old_rollout, rtol=0, atol=COORDINATE_ATOL_ANGSTROM,
+        )
+        torch.testing.assert_close(new_h4, old_h4, rtol=0, atol=COORDINATE_ATOL_ANGSTROM)
+        assert torch.equal(new_h4[:4].cpu(), current.x[:4].float())
+        assert torch.equal(new_rollout[:8].cpu(), current.x[:8].float())
         torch.testing.assert_close(
             prediction, old_prediction, rtol=0, atol=COORDINATE_ATOL_ANGSTROM,
         )
