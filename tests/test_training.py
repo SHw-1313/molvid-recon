@@ -58,7 +58,10 @@ def _configs():
     )
     old = OldTrainConfig(**common, bucket_specs=(OldTimeBucketSpec("dt_100ps", 100.0, 1.0),))
     new = CodecTrainConfig(**common, bucket_specs=(TimeBucketSpec("dt_100ps", 100.0, 1.0),))
-    assert old.as_dict() == new.as_dict()
+    old_contract = old.as_dict()
+    assert new.as_dict()["schema_version"] == "molvid.codec.config.v1"
+    old_contract["schema_version"] = "molvid.codec.config.v1"
+    assert old_contract == new.as_dict()
     return old, new
 
 

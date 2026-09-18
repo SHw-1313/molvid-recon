@@ -29,7 +29,7 @@ from ..losses.reconstruction import (
 )
 from .batches import prepare_batch_then_to_device
 
-CODEC_CONFIG_SCHEMA = "pvb.codec.config.v1"
+CODEC_CONFIG_SCHEMA = "molvid.codec.config.v1"
 
 
 def validate_codec_config(config: Mapping[str, Any]) -> tuple[TimeBucketSpec, ...]:
