@@ -245,3 +245,10 @@ Status: `tools/inspect_dataset.py` is usable for a verified frozen manifest. It 
 
 - `enter-container` / `torch-ito`: `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q --tb=short --color=no -p no:cacheprovider tests/test_inspect_dataset.py tests/test_manifest.py tests/test_imports.py` → 6 passed. `python -m tools.inspect_dataset --manifest-root /workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000 --max-clips 1` succeeded: train 8,928 available clips, valid 1,488, one scanned per split, 100 ps interval; both marked partial. The test payload stayed sealed.
 - Next: model inspection, explicit artifact migration/export, short profile and experiment protocol tools. Full dataset scan was `not_run`; no performance claim, old entrypoint switch or deletion.
+
+## P4d7 checkpoint — real model inspection (2026-09-18)
+
+Status: `tools/inspect_model.py` reports the actual module tree, per-module owned parameter counts, frozen names/counts and one validation forward shape. The DiT probe constructs a repeated-observed-prefix scaffold; it does not supply true future coordinates as a condition.
+
+- In `enter-container` / `torch-ito` with deterministic CUDA, `python -m pytest -q --tb=short --color=no -p no:cacheprovider tests/test_inspect_model.py` → 2 passed (including the real approved codec and migrated full-weight historical DiT on a 910-atom validation clip). A direct `python -m tools.inspect_model --kind codec` run on the approved checkpoint and validation index 0 succeeded: 856,136 parameters; 16×1,199×3 coordinate/reconstruction shapes and 4×1,199×128 scalar latent shape. The sealed test payload stayed unopened.
+- Still `not_run`: the `--kind dit` CLI branch against a persistent new-format DiT checkpoint, full dataset scan, artifact export, short profile and protocol tools. Next: implement and verify explicit artifact migration, then benchmarks/protocol; do not switch old runners or delete source files on the basis of inspection alone.

@@ -25,7 +25,8 @@
 - [x] P4d4: SHA-checked DiT inference loader, observed-only sample/evaluate CLI, 106-test combined CUDA gate; local checkpoint.
 - [x] P4d5: versioned sample/evaluate YAML, config path relocation and targeted 10-test gate; local checkpoint.
 - [x] P4d6: read-only frozen train/valid dataset inspector; partial scans are explicit; 6 targeted tests and one real-manifest smoke passed.
-- [ ] P4d remaining tools/benchmarks/protocol relocation: still pending; do not claim the full target tree is complete.
+- [x] P4d7: verified codec/DiT model inspector with real forward shapes, frozen parameter counts and observed-only DiT shape probe.
+- [ ] P4d remaining artifact migration/benchmarks/protocol relocation: still pending; do not claim the full target tree is complete.
 - [x] P5a: package-outside import, target-runtime-file and legacy reachability audit; 109 retained tests passed.
 - [x] P5b: real full-weight CUDA H8 generation accepted at bounded floating tolerance (coordinates ≤1e-5 Å absolute); 110 retained tests passed; old cutover/retirement withheld.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
