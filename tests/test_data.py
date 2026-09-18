@@ -6,6 +6,7 @@ import json
 import numpy as np
 import pytest
 
+from molvid.data.chemistry import BLOCK_TYPE, NUM_ATOM_TYPE, NUM_BLOCK_TYPE, parse_static_molecule
 from molvid.data.batch import (
     ClipValidationError,
     canonical_time_fields,
@@ -169,3 +170,20 @@ def test_static_dataset_wraps_existing_mmap_store(tmp_path):
     batch = dataset.collate_fn([clip])
     assert tuple(batch.x.shape) == (1, 3, 3)
     assert batch.task.tolist() == [0]
+
+def test_static_chemistry_vocab_and_bond_order_are_preserved():
+    from rdkit import Chem
+
+    assert NUM_ATOM_TYPE == 118
+    assert NUM_BLOCK_TYPE == 138
+    assert BLOCK_TYPE[118] == ("G", "GLY")
+    parsed = parse_static_molecule(Chem.MolFromSmiles("CCO"))
+    assert parsed is not None
+    atype, btype, atom_index, block_index, bonds = parsed
+    assert atype.tolist() == [5, 5, 7]
+    assert btype.tolist() == [5, 5, 7]
+    assert atom_index.tolist() == [0, 1, 2]
+    assert block_index.tolist() == [0, 1, 2]
+    assert set(map(tuple, bonds.T.tolist())) == {
+        (0, 1), (1, 0), (1, 2), (2, 1)
+    }

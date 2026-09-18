@@ -10,33 +10,14 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 import torch
 
+from ..geometry.topology import stable_topology_id
+
 
 SCHEMA_VERSION = "pvb.clip.v1"
 STATIC_TIME_BUCKET_ID = "static"
 STATIC_TASK = 0
 TRAJECTORY_TASK = 1
 TASK_NAMES = {STATIC_TASK: "static", TRAJECTORY_TASK: "trajectory"}
-
-
-def stable_topology_id(record: Mapping[str, Any], *, require_stable: bool = False) -> str:
-    """Derive the stable graph-topology identifier stored in a clip batch."""
-
-    explicit = record.get("topology_id")
-    if explicit not in (None, ""):
-        return str(explicit)
-    system = record.get("system_id")
-    fingerprint = record.get("topology_fingerprint")
-    if system not in (None, "") and fingerprint not in (None, ""):
-        return f"{system}::{fingerprint}"
-    if system not in (None, ""):
-        return str(system)
-    if fingerprint not in (None, ""):
-        return str(fingerprint)
-    if require_stable:
-        raise ClipValidationError(
-            "a stable topology_id/system_id/topology_fingerprint is required"
-        )
-    return str(record.get("sample_id", ""))
 
 
 class ClipValidationError(ValueError):
