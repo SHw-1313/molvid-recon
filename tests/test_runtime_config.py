@@ -7,7 +7,7 @@ import random
 import numpy as np
 import torch
 
-from molvid.config import load_config, resolve_config, validate_config
+from molvid.config import cli_config_argv, load_config, resolve_config, validate_config
 from molvid.runtime import (
     append_metrics,
     atomic_write_json,
@@ -35,6 +35,27 @@ def test_config_paths_are_explicit_and_source_mapping_is_unchanged(tmp_path):
     assert loaded["data"]["train_roots"] == ["clips/train"]
     assert resolved["data"]["train_roots"] == [str(tmp_path / "clips/train")]
     assert resolved["output_root"] == str(tmp_path / "runs/example")
+
+
+def test_cli_config_arguments_validate_schema_and_resolve_paths(tmp_path):
+    path = tmp_path / "sample.yaml"
+    path.write_text(
+        "schema: molvid.sample.v1\ncheckpoint: weights/model.pt\n"
+        "valid_index: 2\nrollout_seed: [7, 11]\n", encoding="utf-8",
+    )
+    flags = cli_config_argv(
+        path, schema="molvid.sample.v1",
+        allowed_fields=("checkpoint", "valid_index", "rollout_seed"),
+        path_fields=("checkpoint",),
+    )
+    assert flags == [
+        "--checkpoint", str(tmp_path / "weights/model.pt"),
+        "--valid-index", "2", "--rollout-seed", "7", "--rollout-seed", "11",
+    ]
+    path.write_text("schema: molvid.sample.v1\nunsupported: true\n", encoding="utf-8")
+    import pytest
+    with pytest.raises(ValueError, match="unknown CLI configuration fields"):
+        cli_config_argv(path, schema="molvid.sample.v1", allowed_fields=())
 
 
 def test_seed_order_matches_existing_training_sequence():

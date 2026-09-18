@@ -23,6 +23,7 @@
 - [x] P4d2: current codec train CLI, dry run and SHA-checked resumed second CUDA step; local checkpoint.
 - [x] P4d3: DiT train CLI with real codec and synthetic frozen manifest; exact resumed/uninterrupted two-step CUDA gate; local checkpoint.
 - [x] P4d4: SHA-checked DiT inference loader, observed-only sample/evaluate CLI, 106-test combined CUDA gate; local checkpoint.
+- [x] P4d5: versioned sample/evaluate YAML, config path relocation and targeted 10-test gate; local checkpoint.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.

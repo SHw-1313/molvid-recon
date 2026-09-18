@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -10,6 +11,7 @@ import numpy as np
 import torch
 
 from ..checkpoints import load_dit_inference
+from ..config import cli_config_argv
 from ..data.batch import collate_clip_records
 from ..data.io import write_trajectory
 from ..data.manifest import load_datasets
@@ -19,6 +21,7 @@ from ..runtime import atomic_write_json, configure_device
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--checkpoint-sha256", required=True)
     parser.add_argument("--codec", type=Path, required=True)
@@ -46,7 +49,20 @@ def _prefix(path: Path, *, history: int, atoms: int) -> np.ndarray:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+    words = list(argv) if argv is not None else sys.argv[1:]
+    preliminary = argparse.ArgumentParser(add_help=False)
+    preliminary.add_argument("--config", type=Path)
+    config_path = preliminary.parse_known_args(words)[0].config
+    defaults = cli_config_argv(
+        config_path, schema="molvid.sample.v1",
+        allowed_fields=(
+            "checkpoint", "checkpoint_sha256", "codec", "codec_sha256",
+            "manifest_root", "valid_index", "prefix", "history", "steps",
+            "seed", "rollout_seed", "device", "output",
+        ),
+        path_fields=("checkpoint", "codec", "manifest_root", "prefix", "output"),
+    ) if config_path is not None else []
+    args = _parser().parse_args([*defaults, *words])
     device = configure_device(args.device, deterministic=True)
     loaded = load_dit_inference(
         args.checkpoint, expected_sha256=args.checkpoint_sha256,

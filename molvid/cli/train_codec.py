@@ -22,7 +22,7 @@ from ..training.codec import CodecTrainConfig
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=Path("config/molvid_codec.yaml"))
+    parser.add_argument("--config", type=Path, default=Path("configs/codec_train.yaml"))
     parser.add_argument("--device", default=None)
     parser.add_argument("--train-root", action="append")
     parser.add_argument("--valid-root", action="append")

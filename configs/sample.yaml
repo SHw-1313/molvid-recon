@@ -1,0 +1,13 @@
+schema: molvid.sample.v1
+checkpoint: /path/to/new_format_dit_checkpoint.pt
+checkpoint_sha256: replace_with_sha256
+codec: /path/to/approved_codec.pt
+codec_sha256: replace_with_sha256
+manifest_root: /path/to/frozen_manifest
+valid_index: 0
+prefix: /path/to/observed_prefix_only.npz
+history: 8
+steps: 8
+seed: 20260918
+device: cuda
+output: ../outputs/molvid/sample.npz

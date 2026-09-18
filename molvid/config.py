@@ -71,3 +71,38 @@ def resolve_config(
         else:
             raise ValueError(f"configuration path {dotted!r} must be a string or string list")
     return resolved
+
+
+def cli_config_argv(
+    path: str | Path, *, schema: str, allowed_fields: Sequence[str],
+    path_fields: Sequence[str] = (),
+) -> list[str]:
+    """Translate a versioned CLI YAML into ordinary validated argparse options."""
+
+    raw = load_config(path, schema=schema)
+    unexpected = set(raw) - set(allowed_fields) - {"schema", "schema_version"}
+    if unexpected:
+        raise ValueError(f"unknown CLI configuration fields: {sorted(unexpected)}")
+    resolved = resolve_config(
+        raw, project_root=Path(path).resolve().parent,
+        path_fields=[name for name in path_fields if name in raw],
+    )
+    arguments: list[str] = []
+    for name in allowed_fields:
+        value = resolved.get(name)
+        if value is None:
+            continue
+        flag = "--" + name.replace("_", "-")
+        if isinstance(value, bool):
+            if value:
+                arguments.append(flag)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, (list, dict, bool)):
+                    raise ValueError(f"CLI configuration field {name!r} has invalid values")
+                arguments.extend((flag, str(item)))
+        elif isinstance(value, (str, int, float)):
+            arguments.extend((flag, str(value)))
+        else:
+            raise ValueError(f"CLI configuration field {name!r} has invalid type")
+    return arguments

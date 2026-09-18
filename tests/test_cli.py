@@ -53,7 +53,7 @@ def test_codec_cli_one_step_and_new_format_resume(tmp_path: Path):
     store = tmp_path / "train"
     with ClipMMapWriter(store) as writer:
         writer.append(_record())
-    source = Path("config/molvid_codec.yaml")
+    source = Path("configs/codec_train.yaml")
     config = yaml.safe_load(source.read_text(encoding="utf-8"))
     config["model"].update({
         "hidden_channels": 8, "spatial_layers": 1, "num_rbf": 8,
@@ -147,7 +147,7 @@ def test_dit_cli_real_codec_short_resume_matches_uninterrupted(tmp_path: Path):
     )
     stats_path = tmp_path / "statistics.pt"
     torch.save(statistics.state_dict(), stats_path)
-    config = yaml.safe_load(Path("config/molvid_dit.yaml").read_text(encoding="utf-8"))
+    config = yaml.safe_load(Path("configs/dit_train.yaml").read_text(encoding="utf-8"))
     config["manifest_root"] = str(tmp_path)
     config["codec"] = {"checkpoint": APPROVED, "sha256": APPROVED_SHA}
     config["statistics"] = {
@@ -229,16 +229,33 @@ def test_dit_cli_real_codec_short_resume_matches_uninterrupted(tmp_path: Path):
         _prefix(invalid_prefix, history=8, atoms=4)
 
     rollout_output = tmp_path / "rollout.npz"
-    assert sample_main([*inference_args, "--prefix", str(prefix_path), "--history", "8",
-                        "--steps", "8", "--rollout-seed", "23",
-                        "--output", str(rollout_output)]) == 0
+    sample_config = tmp_path / "sample.yaml"
+    sample_config.write_text(yaml.safe_dump({
+        "schema": "molvid.sample.v1",
+        "checkpoint": str(checkpoint.relative_to(tmp_path)),
+        "checkpoint_sha256": sha256_file(checkpoint),
+        "codec": APPROVED, "codec_sha256": APPROVED_SHA,
+        "manifest_root": ".", "valid_index": 0,
+        "prefix": "prefix.npz", "history": 8, "steps": 8,
+        "rollout_seed": [23], "device": "cuda", "output": "rollout.npz",
+    }), encoding="utf-8")
+    assert sample_main(["--config", str(sample_config)]) == 0
     with np.load(rollout_output, allow_pickle=False) as generated:
         assert generated["x"].shape == (16, 4, 3)
         np.testing.assert_array_equal(generated["x"][:8], record["x"][:8])
 
     report_root = tmp_path / "evaluation"
-    assert evaluate_main([*inference_args, "--history", "8", "--steps", "8",
-                          "--seed", "19", "--output-root", str(report_root)]) == 0
+    evaluate_config = tmp_path / "evaluate.yaml"
+    evaluate_config.write_text(yaml.safe_dump({
+        "schema": "molvid.evaluate.v1",
+        "checkpoint": str(checkpoint.relative_to(tmp_path)),
+        "checkpoint_sha256": sha256_file(checkpoint),
+        "codec": APPROVED, "codec_sha256": APPROVED_SHA,
+        "manifest_root": ".", "valid_index": 0,
+        "history": 8, "steps": 8, "seed": 2, "device": "cuda",
+        "output_root": "evaluation",
+    }), encoding="utf-8")
+    assert evaluate_main(["--config", str(evaluate_config), "--seed", "19"]) == 0
     report = json.loads((report_root / "metrics.json").read_text(encoding="utf-8"))
     assert report["schema_version"] == "molvid.dit.evaluation.v1"
     assert report["generation"]["conditioning"] == "observed_prefix_only"
