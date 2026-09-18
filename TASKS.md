@@ -8,6 +8,7 @@
 - [x] P2: spatial encoder, codec and weight/optimizer migration; 15 P2 tests, 46 combined tests; local checkpoint.
 - [x] P2a: TorchMD/frame encoder extraction with exact deterministic CUDA forward and gradient parity; local checkpoint.
 - [ ] P3: latent, condition, DiT and flow; run parity and future-isolation checks and checkpoint.
+- [x] P3a: latent/conditioning extraction, 10 old/new and future-mutation tests; local checkpoint.
 - [ ] P4a–P4d: losses/training, generation/evaluation, CLI/tools; check one step, resume and frozen gradients after each substep.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
