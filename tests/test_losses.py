@@ -19,7 +19,35 @@ from molvid.losses.reconstruction import (
     fit_time_bucket_normalization,
     velocity_loss,
 )
-from test_codec_training import _record
+def _record(*, task: str = "trajectory", times: torch.Tensor | None = None):
+    """Small physical-time loss fixture independent of archived legacy tests."""
+
+    if times is None:
+        times = torch.arange(4, dtype=torch.float32) * 100.0
+    atoms = 2
+    x = torch.zeros(times.numel(), atoms, 3)
+    x[:, :, 0] = times[:, None] ** 2
+    x[:, 1, 1] = 1.0
+    return {
+        "schema_version": "pvb.clip.v1",
+        "sample_id": "codec",
+        "task": task,
+        "time_bucket_id": "static" if task == "static" else "dt_100ps",
+        "time_ps": times.numpy(),
+        "delta_time_ps": torch.diff(times).numpy(),
+        "x": x.numpy(),
+        "bpos": x.numpy(),
+        "atype": torch.ones(atoms, dtype=torch.long).numpy(),
+        "btype": torch.zeros(atoms, dtype=torch.long).numpy(),
+        "block_id": torch.zeros(atoms, dtype=torch.long).numpy(),
+        "component_id": torch.zeros(atoms, dtype=torch.long).numpy(),
+        "atom_source_index": torch.arange(atoms, dtype=torch.long).numpy(),
+        "atom_identity": [f"codec:{index}" for index in range(atoms)],
+        "edge_mask": torch.zeros(atoms, dtype=torch.long).numpy(),
+        "loss_mask": torch.ones(atoms, dtype=torch.bool).numpy(),
+        "align_mask": torch.tensor([True, False]).numpy(),
+        "bond_index": torch.tensor([[0], [1]], dtype=torch.long).numpy(),
+    }
 
 
 @pytest.mark.parametrize("task", ["trajectory", "static"])
