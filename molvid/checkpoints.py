@@ -622,3 +622,102 @@ def load_training_checkpoint(
             restore_rng_state(old_rng)
         raise
     return dict(payload)
+
+
+def load_dit_inference(
+    path: str | Path,
+    *,
+    expected_sha256: str,
+    codec_path: str | Path,
+    codec_sha256: str,
+    device: str | torch.device,
+) -> dict[str, Any]:
+    """Validate and open a new-format DiT checkpoint for observed-only sampling.
+
+    The full optimizer, frozen-module and statistics contracts are checked
+    through the same trainer loader used for continuation. Model construction
+    leaves the caller's Python/NumPy/Torch/CUDA RNG streams unchanged.
+    """
+
+    from .dit.model import MolecularDiT
+    from .latent.adapter import StateDetailLatentAdapter
+    from .latent.statistics import LatentStatistics
+    from .training.dit import DiTTrainConfig, DiTTrainer, module_state_hash
+
+    if sha256_file(path) != expected_sha256:
+        raise ValueError("DiT inference checkpoint SHA-256 differs")
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(payload, Mapping) or payload.get("schema_version") != _NEW_SCHEMA:
+        raise ValueError("DiT inference requires a new-format training checkpoint")
+    contracts = payload.get("contracts")
+    extra = payload.get("extra_state")
+    if not isinstance(contracts, Mapping) or contracts.get("trainer") != "molvid.dit":
+        raise ValueError("checkpoint is not a Molvid DiT training artifact")
+    if not isinstance(extra, Mapping) or not isinstance(extra.get("statistics_state"), Mapping):
+        raise ValueError("DiT inference checkpoint lacks statistics")
+    configuration = contracts.get("config")
+    if not isinstance(configuration, Mapping) or not isinstance(configuration.get("metadata"), Mapping):
+        raise ValueError("DiT inference checkpoint lacks a model configuration")
+    metadata = configuration["metadata"]
+    if metadata.get("codec_checkpoint_sha256") != codec_sha256:
+        raise ValueError("codec checkpoint identity differs from the DiT checkpoint")
+    selected_device = torch.device(device)
+    prior_rng = capture_rng_state()
+    try:
+        codec_artifact = load_codec_artifact(
+            codec_path, expected_sha256=codec_sha256, device=selected_device
+        )
+        codec = codec_artifact.model.eval()
+        for parameter in codec.parameters():
+            parameter.requires_grad_(False)
+        statistics = LatentStatistics.from_state_dict(extra["statistics_state"]).to(device=selected_device)
+        if statistics.hash != configuration.get("stats_hash"):
+            raise ValueError("DiT inference statistics hash differs")
+        if statistics.provenance.get("codec_checkpoint_sha256") != codec_sha256:
+            raise ValueError("DiT inference statistics belong to another codec")
+        if statistics.provenance.get("data_hash") != configuration.get("data_hash"):
+            raise ValueError("DiT inference statistics belong to another dataset")
+        if statistics.width != codec.temporal_codec.channels or statistics.ratio != codec.temporal_ratio:
+            raise ValueError("codec and DiT inference statistics disagree")
+        config_values = dict(configuration)
+        config_values["observation_mixture"] = tuple(config_values["observation_mixture"])
+        config_values["history_probabilities"] = tuple(config_values["history_probabilities"])
+        config = DiTTrainConfig(**config_values)
+        adapter = StateDetailLatentAdapter(
+            codec_width=config.codec_width,
+            scalar_width=config.scalar_width,
+            vector_width=config.vector_width,
+            ratio=config.ratio,
+            mode=config.mode,
+        )
+        model = MolecularDiT(
+            adapter=adapter, scalar_width=config.scalar_width,
+            vector_width=config.vector_width, depth=config.depth,
+            heads=config.heads, ffn_multiplier=config.ffn_multiplier,
+            dropout=config.dropout,
+            execution_backend=str(metadata["execution_backend"]),
+            ffn_norm_source=str(metadata["ffn_norm_source"]),
+        ).to(selected_device)
+        trainer = DiTTrainer(
+            model, adapter, config=config, statistics=statistics,
+            codec=codec, frame_encoder=codec.frame_encoder,
+        )
+        loaded = trainer.load_checkpoint(path, expected_sha256=expected_sha256)
+        if module_state_hash(codec) != config.codec_hash:
+            raise ValueError("DiT inference codec weight hash differs")
+        codec.eval()
+        model.eval()
+        return {
+            "codec": codec,
+            "model": model,
+            "adapter": adapter,
+            "statistics": statistics,
+            "data_hash": config.data_hash,
+            "codec_hash": config.codec_hash,
+            "step": trainer.step,
+            "cursor": loaded["cursor"],
+            "source_mode": config.source_mode,
+            "center_kind": config.center_kind,
+        }
+    finally:
+        restore_rng_state(prior_rng)

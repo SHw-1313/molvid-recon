@@ -153,6 +153,8 @@ def evaluate_rollout(
     steps: int,
     codec_hash: str,
     data_hash: str,
+    source_mode: str = "conditional",
+    center_kind: str = "repeat_last_coordinate_encode",
 ) -> dict[str, Any]:
     """Evaluate generated-prefix continuation against held-out reference windows."""
 
@@ -163,6 +165,7 @@ def evaluate_rollout(
         template=track.template,
         prefix_coordinates=track.reference_coordinates[:8],
         seeds=seeds, steps=steps, codec_hash=codec_hash, data_hash=data_hash,
+        source_mode=source_mode, center_kind=center_kind,
     )
     reference = track.reference_coordinates.to(prediction)
     rows = []

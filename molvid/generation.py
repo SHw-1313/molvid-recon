@@ -147,6 +147,8 @@ def rollout(
     steps: int,
     codec_hash: str,
     data_hash: str,
+    source_mode: str = "conditional",
+    center_kind: str = "repeat_last_coordinate_encode",
 ) -> tuple[Tensor, list[dict[str, Any]]]:
     """Continue 8-frame segments using only the previous generated segment."""
 
@@ -161,6 +163,7 @@ def rollout(
             codec, model, adapter, statistics, template=template,
             prefix_coordinates=pieces[-1], history_frames=8, steps=steps,
             seed=int(seed), codec_hash=codec_hash, data_hash=data_hash,
+            source_mode=source_mode, center_kind=center_kind,
         )
         pieces.append(clip[8:])
         metadata.append({**info, "segment": segment})

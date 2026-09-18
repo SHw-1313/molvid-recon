@@ -191,6 +191,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "codec_checkpoint_sha256": artifact.report.source_sha256,
                 "deterministic": bool(training.get("deterministic", True)),
                 "geometry": dict(geometry),
+                "execution_backend": str(model_config.get("execution_backend", "factorized_v2")),
+                "ffn_norm_source": str(model_config.get("ffn_norm_source", "post_adaln")),
             },
         )
         trainer = DiTTrainer(

@@ -186,4 +186,62 @@ def test_dit_cli_real_codec_short_resume_matches_uninterrupted(tmp_path: Path):
             torch.testing.assert_close(
                 resumed["optimizer_state"]["state"][index][name], value, rtol=0, atol=0,
             )
+    from molvid.checkpoints import load_dit_inference
+
+    torch.manual_seed(991)
+    cpu_rng = torch.get_rng_state().clone()
+    cuda_rng = torch.cuda.get_rng_state().clone()
+    inference = load_dit_inference(
+        tmp_path / "resumed" / "dit_step_00000002.pt",
+        expected_sha256=sha256_file(tmp_path / "resumed" / "dit_step_00000002.pt"),
+        codec_path=APPROVED, codec_sha256=APPROVED_SHA, device="cuda",
+    )
+    assert inference["step"] == 2
+    assert torch.equal(torch.get_rng_state(), cpu_rng) and torch.equal(torch.cuda.get_rng_state(), cuda_rng)
+    assert not (tmp_path / "clip_store" / "test").exists()
+
+    from molvid.cli.sample import _prefix, main as sample_main
+    from molvid.cli.evaluate import main as evaluate_main
+    import json
+
+    prefix_path = tmp_path / "prefix.npz"
+    np.savez(prefix_path, x=record["x"][:8])
+    checkpoint = tmp_path / "resumed" / "dit_step_00000002.pt"
+    inference_args = [
+        "--checkpoint", str(checkpoint), "--checkpoint-sha256", sha256_file(checkpoint),
+        "--codec", APPROVED, "--codec-sha256", APPROVED_SHA,
+        "--manifest-root", str(tmp_path), "--valid-index", "0", "--device", "cuda",
+    ]
+    output = tmp_path / "sample.npz"
+    assert sample_main([*inference_args, "--prefix", str(prefix_path), "--history", "8",
+                        "--steps", "8", "--seed", "19", "--output", str(output)]) == 0
+    with np.load(output, allow_pickle=False) as generated:
+        assert generated["x"].shape == (16, 4, 3)
+        np.testing.assert_array_equal(generated["x"][:8], record["x"][:8])
+        assert np.isfinite(generated["x"]).all()
+    metadata = json.loads(output.with_suffix(".json").read_text(encoding="utf-8"))
+    assert metadata["future_condition"] == "observed_prefix_only"
+    assert metadata["generation"]["conditioning"] == "observed_prefix_only"
+    assert metadata["generation"]["source_mode"] == inference["source_mode"]
+    invalid_prefix = tmp_path / "invalid_prefix.npz"
+    np.savez(invalid_prefix, x=record["x"][:8], future=record["x"][8:])
+    with pytest.raises(ValueError, match="only x"):
+        _prefix(invalid_prefix, history=8, atoms=4)
+
+    rollout_output = tmp_path / "rollout.npz"
+    assert sample_main([*inference_args, "--prefix", str(prefix_path), "--history", "8",
+                        "--steps", "8", "--rollout-seed", "23",
+                        "--output", str(rollout_output)]) == 0
+    with np.load(rollout_output, allow_pickle=False) as generated:
+        assert generated["x"].shape == (16, 4, 3)
+        np.testing.assert_array_equal(generated["x"][:8], record["x"][:8])
+
+    report_root = tmp_path / "evaluation"
+    assert evaluate_main([*inference_args, "--history", "8", "--steps", "8",
+                          "--seed", "19", "--output-root", str(report_root)]) == 0
+    report = json.loads((report_root / "metrics.json").read_text(encoding="utf-8"))
+    assert report["schema_version"] == "molvid.dit.evaluation.v1"
+    assert report["generation"]["conditioning"] == "observed_prefix_only"
+    assert "codec_oracle" in report and "generated_result" in report
+    assert report["by_time_bucket"]["dt_100ps"]["system_count"] == 1
     assert not (tmp_path / "clip_store" / "test").exists()
