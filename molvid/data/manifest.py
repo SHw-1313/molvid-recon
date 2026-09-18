@@ -6,13 +6,15 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 import re
-from typing import Any, Mapping, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from torch.utils.data import Subset
 
 from ..runtime import canonical_hash, sha256_file
+from .batch import SCHEMA_VERSION
+from .preprocess import ClipPreprocessConfig
 from .sampling import TaskAwareClipBatchSampler
-from .store import ClipMMapDataset
+from .store import ClipMMapDataset, STORAGE_FORMAT, source_inventory_hash
 
 
 _SAMPLE_ID = re.compile(r"^(?P<system>.+)_(?P<replica>R[0-9]+)_w(?P<window>[0-9]+)$")
@@ -233,3 +235,60 @@ def make_validation_plan(
         windows=expected_windows,
         schedule_hash=schedule_hash,
     )
+
+
+def source_inventory(paths: Iterable[Path], root: Path) -> list[dict[str, Any]]:
+    """Capture source path, size and modification time for preprocess evidence."""
+
+    entries = []
+    for path in sorted(set(paths)):
+        stat = path.stat()
+        entries.append({
+            "path": str(path.relative_to(root)),
+            "size": int(stat.st_size),
+            "mtime_ns": int(stat.st_mtime_ns),
+        })
+    return entries
+
+
+def write_split_manifest(
+    output_path: str | Path,
+    *,
+    source: str,
+    raw_root: str | Path,
+    config: ClipPreprocessConfig,
+    source_version: str,
+    timestamp_provenance: str,
+    topology_policy: str,
+    split_policy: str,
+    systems: Sequence[str],
+    inventory: Sequence[Mapping[str, Any]],
+    counts: Mapping[str, int],
+) -> dict[str, Any]:
+    """Write the same physical-time and source-inventory contract as preprocessing."""
+
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "storage_format": STORAGE_FORMAT,
+        "source": source,
+        "raw_root": str(Path(raw_root).resolve()),
+        "source_version": source_version,
+        "source_inventory_sha256": source_inventory_hash(inventory),
+        "coordinate_unit": "angstrom",
+        "timestamp_provenance": timestamp_provenance,
+        "native_delta_time_ps": (
+            config.atlas_native_dt_ps if source == "atlas" else config.misato_native_dt_ps
+        ),
+        "clip_len": config.clip_len,
+        "window_stride": config.window_stride,
+        "source_stride": config.source_stride,
+        "topology_policy": topology_policy,
+        "split_policy": split_policy,
+        "systems": list(systems),
+        "inventory": list(inventory),
+        "counts": dict(counts),
+    }
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return manifest

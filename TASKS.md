@@ -19,6 +19,7 @@
 - [x] P4c1: observed-prefix sample and short autoregressive rollout; 3 deterministic CUDA tests; local checkpoint.
 - [x] P4c2: geometry/motion metric parity, corrected RMSF reader; 15 targeted generation/metric tests; local checkpoint.
 - [x] P4c3: latent/evaluation runner/report, observed-only scoring isolation; 5 tests; P4c local checkpoint.
+- [x] P4d1: preprocess CLI and source-manifest helper; exact selection/manifest parity; local checkpoint.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.
