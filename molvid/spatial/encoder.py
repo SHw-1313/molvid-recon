@@ -31,6 +31,18 @@ class FrameEncoderOutput:
     def vector(self) -> Tensor:
         return self.v
 
+    @property
+    def backend_used(self) -> str:
+        return self.graph.backend_used
+
+    @property
+    def graph_mode(self) -> str:
+        return self.graph.graph_mode
+
+    @property
+    def spatial_backbone(self) -> str:
+        return self.graph.spatial_backbone
+
     def __iter__(self):
         yield self.h
         yield self.v

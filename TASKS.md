@@ -5,7 +5,7 @@
 - [x] P1: flat package, data and geometry; 31 targeted tests plus real artifact/graph parity; local checkpoint.
 - [x] P1a: data contract, storage and sampling sub-checkpoint (18 new-path tests); full P1 remains open.
 - [x] P1b: geometry, chemistry and equivariant operators sub-checkpoint (24 combined tests); full P1 remains open.
-- [ ] P2: spatial encoder, codec and weight/optimizer migration; run parity checks and checkpoint.
+- [x] P2: spatial encoder, codec and weight/optimizer migration; 15 P2 tests, 46 combined tests; local checkpoint.
 - [x] P2a: TorchMD/frame encoder extraction with exact deterministic CUDA forward and gradient parity; local checkpoint.
 - [ ] P3: latent, condition, DiT and flow; run parity and future-isolation checks and checkpoint.
 - [ ] P4a–P4d: losses/training, generation/evaluation, CLI/tools; check one step, resume and frozen gradients after each substep.
