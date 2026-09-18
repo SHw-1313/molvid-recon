@@ -11,6 +11,7 @@
 - [x] P3a: latent/conditioning extraction, 10 old/new and future-mutation tests; local checkpoint.
 - [x] P3b: DiT reference/factorized extraction, 6 CUDA parity tests and 62-test combined regression; local checkpoint.
 - [x] P3c: flow/source/sampling extraction, 6 old/new and inference-isolation tests; local checkpoint.
+- [x] P4a1: reconstruction losses and time-bucket normalization; 4 CUDA parity tests; local checkpoint.
 - [ ] P4a–P4d: losses/training, generation/evaluation, CLI/tools; check one step, resume and frozen gradients after each substep.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
 
