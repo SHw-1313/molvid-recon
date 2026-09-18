@@ -88,6 +88,7 @@ class TrajectoryCodec(nn.Module):
         )
         # Construct after the temporal banks: this is the old effective RNG order.
         self.coordinate_head = EquivariantCoordinateHead(hidden_channels)
+        self._distance_reference_contract: dict[str, Any] | None = None
 
     def prepare_batch(self, batch: ClipBatch) -> None:
         self.frame_encoder.prepare_batch(batch)
@@ -95,7 +96,16 @@ class TrajectoryCodec(nn.Module):
     def prepare_distance_bonds(
         self, references: Mapping[str, Mapping[str, Any]], *, device: torch.device
     ) -> list[dict[str, Any]]:
-        return self.frame_encoder.prepare_distance_bonds(references, device=device)
+        manifest = self.frame_encoder.prepare_distance_bonds(references, device=device)
+        self._distance_reference_contract = {
+            "schema_version": "molvid.codec.distance_reference.v1",
+            "policy": "canonical_reference",
+            "references": sorted(manifest, key=lambda item: str(item["topology_id"])),
+        }
+        return manifest
+
+    def distance_reference_contract(self) -> dict[str, Any] | None:
+        return self._distance_reference_contract
 
     def encode(self, batch: ClipBatch) -> StateDetailLatent | MatchedPoolingLatent:
         centered, origin = center_coordinates(

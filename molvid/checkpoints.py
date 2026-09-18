@@ -419,12 +419,46 @@ def load_training_checkpoint(
         if not isinstance(value, Tensor) or value.shape != target.shape or value.dtype != target.dtype:
             raise ValueError(f"training model shape/dtype mismatch at {name!r}")
     saved_optimizer = payload["optimizer_state"]
-    if not isinstance(saved_optimizer, Mapping) or not isinstance(saved_optimizer.get("param_groups"), list):
+    if not isinstance(saved_optimizer, Mapping):
         raise ValueError("training optimizer state is incomplete")
-    if [len(group["params"]) for group in saved_optimizer["param_groups"]] != [
-        len(group["params"]) for group in optimizer.param_groups
-    ]:
-        raise ValueError("training optimizer group sizes differ")
+    saved_groups = saved_optimizer.get("param_groups")
+    saved_slots = saved_optimizer.get("state")
+    if not isinstance(saved_groups, list) or not isinstance(saved_slots, Mapping):
+        raise ValueError("training optimizer state is incomplete")
+    if len(saved_groups) != len(optimizer.param_groups):
+        raise ValueError("training optimizer group count differs")
+    parameters_by_id: dict[int, nn.Parameter] = {}
+    amsgrad_by_id: dict[int, bool] = {}
+    for saved_group, current_group in zip(saved_groups, optimizer.param_groups):
+        ids = saved_group.get("params") if isinstance(saved_group, Mapping) else None
+        parameters = current_group["params"]
+        if not isinstance(ids, list) or len(ids) != len(parameters):
+            raise ValueError("training optimizer group sizes differ")
+        for key in ("weight_decay", "betas", "eps", "amsgrad", "maximize", "foreach", "capturable", "differentiable", "fused"):
+            if key in current_group and saved_group.get(key) != current_group[key]:
+                raise ValueError(f"training optimizer hyperparameter {key!r} differs")
+        for parameter_id, parameter in zip(ids, parameters):
+            if not isinstance(parameter_id, int) or parameter_id in parameters_by_id:
+                raise ValueError("training optimizer parameter IDs are invalid")
+            parameters_by_id[parameter_id] = parameter
+            amsgrad_by_id[parameter_id] = bool(saved_group.get("amsgrad", False))
+    if set(saved_slots) - set(parameters_by_id):
+        raise ValueError("training optimizer moments refer to unknown parameters")
+    if isinstance(optimizer, torch.optim.AdamW):
+        for parameter_id, slot in saved_slots.items():
+            parameter = parameters_by_id[parameter_id]
+            required = {"step", "exp_avg", "exp_avg_sq"}
+            if amsgrad_by_id[parameter_id]:
+                required.add("max_exp_avg_sq")
+            if not parameter.requires_grad or not isinstance(slot, Mapping) or set(slot) != required:
+                raise ValueError("training AdamW moments are incomplete or belong to frozen parameters")
+            step_value = slot["step"]
+            if not isinstance(step_value, Tensor) or step_value.numel() != 1:
+                raise ValueError("training AdamW step is invalid")
+            for name in required - {"step"}:
+                value = slot[name]
+                if not isinstance(value, Tensor) or value.shape != parameter.shape or value.dtype != parameter.dtype:
+                    raise ValueError(f"training AdamW moment {name!r} shape/dtype differs")
     if (payload["scheduler_state"] is None) != (scheduler is None):
         raise ValueError("training scheduler presence differs")
     if (payload["scaler_state"] is None) != (scaler is None):
