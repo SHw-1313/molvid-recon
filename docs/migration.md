@@ -1,22 +1,19 @@
 # Migration record
 
-## Layout cleanup after result archive (2026-09-18)
+## Archive history purge (2026-09-20)
 
-The prior archive left historical source and outputs in the root. In response
-to the operator, the old packages, runners, configs, phase notes and all 490
-tracked output files were moved intact under `old/`; the curated results remain
-in `results_archive/`. Seventeen old-dependent test modules plus their helper
-were archived, leaving eight flat-only tests. No old package is a current
-entrypoint and no `src/` or `molvid/models/` was created. New default run output
-paths use ignored `runs/`. The two untracked design files were preserved.
+At operator request, `git-filter-repo` rewrote all 34 commits and removed the
+root archive directory from every local Git reference. The directory contained
+838 tracked files and no untracked files. No nested archive directory existed.
+The active tree retains eight flat-only tests and `results_archive/`; no `src/`
+or `molvid/models/` was created. The two untracked design files were preserved.
 
-No Python/CUDA tests were rerun in this organization-only batch, per user
-direction. Historical 116/116 predates the move and is not a new pass. A
-read-only SHA-256 audit matched all 388 archived source files after the move;
-all 19 curated source links resolve, and no retained test/runtime/tool imports
-the old root packages. `git diff --check` passes outside the byte-preserved
-legacy CRLF README. Real-artifact production-cutover gaps remain open. Next:
-only resume those gates if the operator requests production cutover.
+No Python/CUDA tests were rerun in this history-only batch. Historical 116/116
+predates the purge and is not a new pass. Before rewriting, all 388 bundled raw
+result files passed their SHA-256 audit. After rewriting, `rev-list --objects
+--all` reports zero archive-directory paths. A complete pre-rewrite recovery
+bundle exists outside the repository in `/tmp`; it is not a Git reference.
+Real-artifact production-cutover gaps remain open.
 
 ## P2a — spatial encoder sub-checkpoint (2026-09-18)
 
@@ -298,7 +295,7 @@ Status: the expanded real-weight CUDA numerical gate is accepted at its separate
 
 Status: the previously verified flat-package core suite is retained; historical experiment tests and result files are organized for reading. This batch did not rerun pytest, by user request, and did not switch production entrypoints.
 
-- Kept 24 current `tests/test_*.py` modules plus `dit_test_utils.py`. Moved 25 legacy test modules and one reference helper to `old/tests/`; restored four previously removed temporal/anchor/ViSNet test files there from the pre-retirement Git commit, giving 30 archived Python files. The sole active dependency on a legacy test fixture was copied locally into `tests/test_losses.py` before its source moved. Historical round runners still name the former test paths, so they are not claimed runnable in this checkout; use their fixed historical commit. The 116-pass result predates this fixture relocation and must not be represented as a fresh pass of the current tree.
+- This intermediate batch initially archived legacy/parity tests while retaining flat-package coverage. The archive was subsequently purged from all Git history on 2026-09-20. The 116-pass result predates both operations and must not be represented as a fresh pass of the current tree.
 - `tools/archive_results.py` ran through `enter-container` / `torch-ito`. `results_archive/README.md` indexes 15 experiment families; `KEY_RESULTS.md` gives source-linked time/data/model/training/result summaries, separating quick from final evaluations. Training histories are plotted; one-off checkpoint evaluations remain numeric in `evaluation_metrics.csv` (4,192 scalar rows with scope). A pilot summary says `completed_steps=4100` while its last validation row is at step 4500; the curated report flags this conflict rather than resolving it by guesswork.
 - The archive packages 388 JSON/JSONL/CSV/TSV/Markdown/YAML/original image files as semantically renamed members of `raw_results.tar.gz`, with original→member names and SHA-256 in `raw_manifest.csv`. It carries 43 original figures and 55 newly drawn loss curves. Every tar member was reopened and hash-checked against the source. `outputs/` was not changed; checkpoints, logs, clip stores and sealed test data were excluded. Run-path dates are labeled as inferred, not file creation timestamps.
 - Remaining P4d/P5 production cutover and historical optimizer/data continuation are still unverified. The user has explicitly stopped further test migration and numerical testing for this archive task. Do not imply that the archived legacy runners or full production switch passed a new gate.

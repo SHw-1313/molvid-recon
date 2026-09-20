@@ -20,8 +20,7 @@ future coordinates belong to evaluation. Full production cutover still depends
 on the missing real-artifact checks in [`docs/migration.md`](docs/migration.md).
 
 - [`results_archive/`](results_archive/) — curated historical tables, figures
-  and hash-indexed raw results.
-- [`old/`](old/) — historical source, runners, tests, phase notes and untouched
-  experiment outputs. These are archived evidence, not active entrypoints.
+  and a hash-indexed raw-result bundle. Superseded source and full experiment
+  outputs were purged from Git history after this bundle was verified.
 - [`TASKS.md`](TASKS.md) and [`HANDOFF.md`](HANDOFF.md) — outstanding gates and
   handoff status.

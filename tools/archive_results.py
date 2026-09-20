@@ -1,11 +1,12 @@
-"""Build a read-only, source-linked digest of historical experiment results.
+"""Build a read-only digest from an explicitly supplied result directory.
 
 Run only inside enter-container / torch-ito. This script never opens clip payloads
-or checkpoints and never alters old/outputs/. It refuses to overwrite an archive.
+or checkpoints and never alters the supplied source. It refuses to overwrite an archive.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
@@ -20,8 +21,8 @@ from collections.abc import Mapping
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "old" / "outputs"
-DESTINATION = ROOT / "results_archive"
+SOURCE: Path
+DESTINATION: Path
 INCLUDED_SUFFIXES = {".json", ".jsonl", ".csv", ".tsv", ".md", ".yaml", ".png", ".svg", ".pdf"}
 EXCLUDED_PARTS = {"clip_store", "neibu_clip_store", "pair_stores", "test"}
 PLOT_SUFFIXES = {".png", ".svg", ".pdf"}
@@ -78,6 +79,11 @@ def _digest(path: Path) -> str:
 
 def _safe(value: str) -> str:
     return re.sub(r"[^a-zA-Z0-9._-]+", "_", value).strip("_")
+
+
+def _source_label(path: Path) -> str:
+    root_name = _safe(SOURCE.name) or "source"
+    return str(Path("historical") / root_name / path.relative_to(SOURCE))
 
 
 def _archive_name(path: Path) -> str:
@@ -298,7 +304,7 @@ def _write_archive(root: Path) -> tuple[int, int, int]:
             used_names.add(member)
             bundle.add(path, arcname=member, recursive=False)
             manifest_rows.append({
-                "source": str(path.relative_to(ROOT)), "archive_member": member,
+                "source": _source_label(path), "archive_member": member,
                 "sha256": _digest(path), "bytes": path.stat().st_size,
                 "run": _run_key(path), "path_date": _date(path),
             })
@@ -346,7 +352,7 @@ def _write_archive(root: Path) -> tuple[int, int, int]:
                 if key_path[-1] in METRIC_NAMES and isinstance(value, (int, float)) and not isinstance(value, bool):
                     metric_rows.append({
                         "run": _run_key(path), "scope": scope,
-                        "source": str(path.relative_to(ROOT)),
+                        "source": _source_label(path),
                         "metric_path": ".".join(key_path), "value": value,
                     })
     with (root / "evaluation_metrics.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -364,12 +370,12 @@ def _write_archive(root: Path) -> tuple[int, int, int]:
         "先看 [关键实验结论](KEY_RESULTS.md)，再按实验组进入具体运行。关键表按",
         "生成时间—数据设置—模型设置—训练设置—结果组织。时间取自路径中的运行标识，",
         "不是 Git 检出后的文件 mtime；未记录的时间不推断。所有数值来自列出的原始结果文件，",
-        "未重训、未打开 test clip、未改动 old/outputs/ 中的文件内容。不同运行或 quick/final 评估不混作同一结论。", "",
+        "未重训、未打开 test clip、未改动所提供的源文件。不同运行或 quick/final 评估不混作同一结论。", "",
         "逐 epoch/step loss 见 figures/ 中的曲线；最终或单次 checkpoint 指标仅保留在",
         "[evaluation_metrics.csv](evaluation_metrics.csv)，按 scope 区分 final/quick/未注明，不为其造图。", "",
         "原始 JSON/JSONL/CSV/已有图片被语义化命名后装入 [raw_results.tar.gz](raw_results.tar.gz)。",
         "[raw_manifest.csv](raw_manifest.csv) 记录原路径、新名称、SHA-256、大小与运行标识。",
-        "训练数据、checkpoint、日志和 test split 不在包内；原始输出按原目录结构保存在 old/outputs/。", "",
+        "训练数据、checkpoint、日志和 test split 不在包内；原始结果文件保存在 raw_results.tar.gz。", "",
         "| 实验组 | 生成时间（路径） | 运行数 | 图数 |",
         "| --- | --- | ---: | ---: |",
     ]
@@ -420,10 +426,22 @@ def _write_archive(root: Path) -> tuple[int, int, int]:
     return len(files), generated, len(metric_rows)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    global SOURCE, DESTINATION
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--source", type=Path, required=True, help="read-only historical result directory",
+    )
+    parser.add_argument("--destination", type=Path, default=ROOT / "results_archive")
+    args = parser.parse_args(argv)
+    SOURCE = args.source.resolve()
+    DESTINATION = args.destination.resolve()
+    if not SOURCE.is_dir():
+        raise NotADirectoryError(SOURCE)
     if DESTINATION.exists():
         raise FileExistsError("refusing to overwrite existing results_archive")
-    with tempfile.TemporaryDirectory(prefix="results_archive_", dir=ROOT) as temporary:
+    DESTINATION.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="results_archive_", dir=DESTINATION.parent) as temporary:
         temporary_root = Path(temporary)
         counts = _write_archive(temporary_root)
         temporary_root.rename(DESTINATION)

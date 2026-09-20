@@ -1,5 +1,5 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
-- [x] Move old root packages, runners, configs, phase docs, tests and output files into `old/`; fix result source links; preserve untracked design files.
+- [x] Purge the archive directory from every local Git commit; keep the curated result bundle and preserve untracked design files.
 - [ ] Production cutover evidence: later-manifest optimizer/data continuation, real old-runner metric comparison, artifact export and warm matched profile.
 
 - [x] P0: identify the selected HEAD, source symbols, active paths, artifact identities and historical numerical context.
@@ -36,7 +36,7 @@
 - [x] P5d: H4/two-segment H8 real-weight CUDA parity accepted at separate 3e-5 Å absolute bound; original single-H8 1e-5 Å bound remains.
 - [x] P5e: audited and retired four history-only temporal/anchor and ViSNet tests; 116 retained tests passed.
 - [ ] P5: whole-chain checks, import isolation and verified retirement only.
-- [x] User-directed archive: 24 core test modules retained; 30 historical Python test/reference files moved or restored under `old/tests/`. No pytest rerun in this batch.
+- [x] User-directed cleanup: eight flat-only test modules retained; archived legacy/parity tests were subsequently purged from Git history. No pytest rerun in this batch.
 - [x] Results archive: 15-family source-linked digest, 388-file hash-verified raw bundle, 43 original + 55 new figures, scoped evaluation CSV; original outputs unchanged.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.
