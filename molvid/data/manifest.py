@@ -102,7 +102,7 @@ def build_manifest(
     return manifest
 
 
-def load_datasets(manifest_root: str | Path) -> DatasetSplits:
+def load_datasets(manifest_root: str | Path, *, train_view: str = "train") -> DatasetSplits:
     """Open only train and validation payloads from a verified frozen manifest."""
 
     root = Path(manifest_root).resolve()
@@ -123,6 +123,49 @@ def load_datasets(manifest_root: str | Path) -> DatasetSplits:
     if manifest.get("test_sampling", {}).get("opened") is not False:
         raise RuntimeError("test split must remain sealed")
     splits = manifest["source_splits"]
+    if not all(isinstance(splits[split], Mapping) for split in ("train", "valid", "test")):
+        views = manifest.get("views")
+        materialized_views = materialization.get("views")
+        if not isinstance(views, Mapping) or not isinstance(materialized_views, Mapping):
+            raise RuntimeError("capacity manifest lacks materialized views")
+        if train_view not in views or "valid" not in views:
+            raise RuntimeError(f"requested train view {train_view!r} is unavailable")
+        selected = {"train": train_view, "valid": "valid"}
+        stores: dict[str, ClipMMapDataset] = {}
+        try:
+            for split, view_name in selected.items():
+                view = views[view_name]
+                materialized_view = materialized_views[view_name]
+                expected = tuple(str(value) for value in view["sample_ids"])
+                store_root = root / str(materialized_view["relative_root"])
+                store = ClipMMapDataset(store_root)
+                stores[split] = store
+                actual = tuple(str(row[0]) for row in store._index)
+                if actual != expected:
+                    raise RuntimeError(f"{split} view index differs from frozen manifest")
+                index_hash = sha256_file(store_root / "index.txt")
+                if materialized_view.get("index_sha256") not in (None, index_hash):
+                    raise RuntimeError(f"{split} view index SHA256 differs from materialization")
+            contract = {
+                "schema": "molvid.data.capacity_views.v1",
+                "manifest_content_sha256": manifest["manifest_content_sha256"],
+                "materialization_sha256": materialization["materialization_sha256"],
+                "train_view": train_view,
+                "train": materialized_views[train_view],
+                "valid": materialized_views["valid"],
+                "test_opened": False,
+            }
+            return DatasetSplits(
+                manifest_root=root, manifest=manifest, materialization=materialization,
+                train=stores["train"], valid=stores["valid"],
+                data_hash=canonical_hash(contract),
+                train_index_hash=sha256_file(root / str(materialized_views[train_view]["relative_root"]) / "index.txt"),
+                valid_index_hash=sha256_file(root / str(materialized_views["valid"]["relative_root"]) / "index.txt"),
+            )
+        except Exception:
+            for store in stores.values():
+                store.close()
+            raise
     check_split_overlap(splits)
     for split in ("train", "valid", "test"):
         expected = tuple(str(value) for value in splits[split]["sample_ids"])

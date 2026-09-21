@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import torch
 from torch import Tensor, nn
 
 from ..latent.adapter import StateDetailLatentAdapter
 from ..latent.statistics import LatentStatistics
-from ..latent.types import LatentBatch, LatentFields, contract_hash
+from ..latent.types import FrameLatentBatch, LatentBatch, LatentFields, ObservedContext, QuerySpec, contract_hash
+from .source import repeat_last_frame_center, sample_frame_source
 from .source import FIELD_NAMES, _mask_fields, sample_isotropic_noise, sample_source
+
+if TYPE_CHECKING:
+    from ..model import FrameJointModel
 
 
 def apply_observation_clamp(
@@ -130,3 +134,54 @@ def generate_state_detail_latent(
     metadata["raw_detail_v"] = None
     metadata["latent_contract_hash"] = sampled.hash
     return adapter.make_generated_latent(sampled, sampled.fields), metadata
+
+
+@torch.no_grad()
+def euler_sample_frames(
+    model: "FrameJointModel",
+    *,
+    context: ObservedContext,
+    query: QuerySpec,
+    steps: int = 16,
+    seed: int,
+) -> tuple[FrameLatentBatch, dict[str, Any]]:
+    """Jointly update every future frame at each Euler flow step."""
+
+    if int(steps) < 1:
+        raise ValueError("Euler steps must be positive")
+    normalized_observed = model.normalize(context.latent)
+    center = repeat_last_frame_center(normalized_observed, query)
+    current, _ = sample_frame_source(
+        center, generator=_make_generator(context.latent.h.device, seed)
+    )
+    was_training = model.training
+    model.eval()
+    for step in range(int(steps)):
+        flow_time = torch.full(
+            (context.latent.batch_size,),
+            float(step) / float(steps),
+            device=current.h.device,
+            dtype=current.h.dtype,
+        )
+        output = model(
+            context=context,
+            query=query,
+            noisy_future=current,
+            flow_time=flow_time,
+        )
+        velocity = output.velocity
+        current = current.with_features(
+            current.h + velocity.h / float(steps),
+            current.v + velocity.v / float(steps),
+        )
+    physical = model.inverse(current)
+    if was_training:
+        model.train()
+    return physical, {
+        "solver": "euler",
+        "steps": int(steps),
+        "seed": int(seed),
+        "joint_query_update": True,
+        "statistics_hash": model.statistics_hash,
+        "future_fields": ["h", "v"],
+    }

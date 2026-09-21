@@ -316,7 +316,10 @@ class ClipMMapDataset(torch.utils.data.Dataset):
             record = dict(metadata)
             for key in NPZ_ARRAY_KEYS:
                 record[key] = np.array(archive[key], copy=True)
-        record["sample_id"] = record.get("sample_id", sample_id)
+        # The frozen index is authoritative when a store is assembled from
+        # multiple time-bucket segments; payload metadata may retain the
+        # source segment's original identifier.
+        record["sample_id"] = sample_id
         return record
 
     def close(self) -> None:

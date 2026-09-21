@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, fields, is_dataclass, replace
-from typing import Any, Mapping
+from typing import Any, Mapping, Protocol
 
 import torch
 from torch import Tensor, nn
@@ -11,10 +11,18 @@ from torch import Tensor, nn
 from ..data.batch import ClipBatch
 
 from ..flow.source import build_observed_center
+from ..flow.source import repeat_last_frame_center
 from ..latent.adapter import StateDetailLatentAdapter
 from ..latent.conditioning import HistoryConditionedLatents, combine_clean_target_with_condition, make_history_corruption_views
 from ..latent.statistics import LatentStatistics
-from ..latent.types import LatentBatch, LatentFields
+from ..latent.types import (
+    FrameLatentBatch,
+    LatentBatch,
+    LatentFields,
+    ObservedContext,
+    QuerySpec,
+)
+from ..codec.frame import FrozenFrameTeacher, slice_clip_frames
 
 
 def _to_device(value: Any, device: torch.device, *, non_blocking: bool = False) -> Any:
@@ -72,6 +80,71 @@ class PreparedDiTBatch:
     observed: LatentBatch
     source_center: LatentFields | None
     corruption: HistoryConditionedLatents
+
+
+@dataclass(frozen=True)
+class PreparedFrameJointBatch:
+    """Separated observed condition, query clock, and frozen future targets."""
+
+    coordinate_batch: ClipBatch
+    observed_context: ObservedContext
+    query: QuerySpec
+    target_future: FrameLatentBatch
+    normalized_target: FrameLatentBatch
+    source_center: FrameLatentBatch
+    target_coordinates: Tensor
+
+
+class FrameLatentNormalizer(Protocol):
+    """Minimal normalization boundary used during Frame Joint preparation."""
+
+    def normalize(self, latent: FrameLatentBatch) -> FrameLatentBatch: ...
+
+
+@torch.no_grad()
+def prepare_frame_joint_batch(
+    teacher: FrozenFrameTeacher,
+    batch: ClipBatch,
+    *,
+    device: torch.device,
+    normalizer: FrameLatentNormalizer,
+    history_frames: int,
+) -> PreparedFrameJointBatch:
+    """Encode a clip once while exposing only observed tensors to the model.
+
+    The teacher call is intentionally the only no-grad region.  The trainable
+    history encoder is invoked later by ``FrameJointModel.forward``.
+    """
+
+    history = int(history_frames)
+    if history < 1 or history >= batch.frames:
+        raise ValueError("history_frames must leave at least one future frame")
+    coordinate = prepare_batch_then_to_device(teacher, batch, device)
+    full_latent, origin = teacher(coordinate)
+    observed_latent = full_latent.slice_frames(0, history)
+    target_future = full_latent.slice_frames(history, full_latent.frames)
+    observed = ObservedContext(
+        latent=observed_latent,
+        coordinates=coordinate.x[:history],
+        sample_origin=origin,
+        loss_mask=coordinate.loss_mask.to(dtype=torch.bool),
+    )
+    query = QuerySpec(
+        time_ps=target_future.time_ps,
+        frame_mask=target_future.frame_mask,
+    )
+    normalized_target = normalizer.normalize(target_future)
+    normalized_observed = normalizer.normalize(observed_latent)
+    source_center = repeat_last_frame_center(normalized_observed, query)
+    return PreparedFrameJointBatch(
+        coordinate_batch=coordinate,
+        observed_context=observed,
+        query=query,
+        target_future=target_future,
+        normalized_target=normalized_target,
+        source_center=source_center,
+        target_coordinates=coordinate.x[history:],
+    )
 
 
 @torch.no_grad()

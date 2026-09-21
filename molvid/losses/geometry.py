@@ -22,6 +22,7 @@ class FutureBondLoss:
     """One physical-unit loss and its applicability accounting."""
 
     loss: Tensor
+    applicable_count: Tensor
     eligible_samples: int
     applicable_samples: int
     valid_pair_frames: int
@@ -96,6 +97,7 @@ def future_bond_distance_loss(
     if bonds.numel() == 0:
         return FutureBondLoss(
             loss=_traceable_zero(prediction),
+            applicable_count=prediction.new_zeros((), dtype=torch.long),
             eligible_samples=int(eligible_samples.sum().item()),
             applicable_samples=0,
             valid_pair_frames=0,
@@ -134,6 +136,7 @@ def future_bond_distance_loss(
         loss = (sums[applicable] / counts[applicable]).mean()
     return FutureBondLoss(
         loss=loss,
+        applicable_count=applicable.sum(),
         eligible_samples=int(eligible_samples.sum().item()),
         applicable_samples=int(applicable.sum().item()),
         valid_pair_frames=int(pair_mask.sum().item()),
@@ -189,6 +192,7 @@ class FutureBondAuxiliary:
         if not bool(torch.any(eligible)):
             return FutureBondLoss(
                 loss=_traceable_zero(prediction.state_h),
+                applicable_count=prediction.state_h.new_zeros((), dtype=torch.long),
                 eligible_samples=0,
                 applicable_samples=0,
                 valid_pair_frames=0,

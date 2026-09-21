@@ -9,6 +9,7 @@
 *.old
 *.bin
 *.pdf
+*.tar.gz
 
 /runs/
 /old/

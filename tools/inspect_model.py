@@ -11,13 +11,21 @@ from typing import Any, Sequence
 import torch
 from torch import nn
 
-from molvid.checkpoints import load_codec_artifact, load_dit_inference
+from molvid.checkpoints import (
+    load_codec_artifact,
+    load_dit_inference,
+    load_frame_joint_inference,
+)
 from molvid.data.batch import ClipBatch, collate_clip_records
 from molvid.data.manifest import load_datasets
+from molvid.data.store import ClipMMapDataset
+from molvid.flow.objective import FrameRectifiedFlowObjective
 from molvid.generation import _block_positions, _observed_scaffold
 from molvid.latent.conditioning import build_observation_condition
-from molvid.runtime import configure_device
-from molvid.training.batches import prepare_batch_then_to_device
+from molvid.runtime import atomic_write_json, configure_device
+from molvid.training.batches import prepare_batch_then_to_device, prepare_frame_joint_batch
+from molvid.training.dit import module_state_hash
+from molvid.training.joint import JointLossConfig, frame_joint_loss
 
 
 def model_summary(model: nn.Module) -> dict[str, Any]:
@@ -97,26 +105,115 @@ def inspect_dit_forward(
     }
 
 
+def inspect_frame_joint_forward(
+    model: nn.Module,
+    template: ClipBatch,
+    *,
+    device: torch.device,
+    history_frames: int,
+    loss_config: JointLossConfig,
+) -> dict[str, Any]:
+    prepared = prepare_frame_joint_batch(
+        model.target_teacher,
+        template,
+        device=device,
+        normalizer=model,
+        history_frames=history_frames,
+    )
+    objective = FrameRectifiedFlowObjective()
+    sample = objective.sample(
+        prepared.normalized_target,
+        prepared.source_center,
+        generator=torch.Generator(device=device).manual_seed(0),
+        flow_time=torch.full(
+            (prepared.normalized_target.batch_size,), 0.95, device=device
+        ),
+    )
+    model.zero_grad(set_to_none=True)
+    output = model(
+        sample.interpolated,
+        context=prepared.observed_context,
+        query=prepared.query,
+        flow_time=sample.flow_time,
+        clean_future=prepared.target_future,
+        decode_generated=True,
+        decode_clean=True,
+        decode_near=True,
+    )
+    losses = frame_joint_loss(
+        output,
+        objective.loss(output.velocity, sample.target_velocity),
+        prepared,
+        sample.flow_time,
+        stage="joint",
+        config=loss_config,
+    )
+    losses.total.backward()
+    gradients = {}
+    for name in ("history_encoder", "dit", "decoder", "target_teacher"):
+        module = getattr(model, name)
+        values = list(module.named_parameters())
+        gradients[name] = {
+            "trainable": sum(parameter.numel() for _, parameter in values if parameter.requires_grad),
+            "gradient_nonzero_tensors": sum(
+                parameter.grad is not None and bool(torch.any(parameter.grad != 0))
+                for _, parameter in values
+                if parameter.requires_grad
+            ),
+            "gradient_missing": [
+                parameter_name
+                for parameter_name, parameter in values
+                if parameter.requires_grad and parameter.grad is None
+            ],
+        }
+    return {
+        "observed_h": list(prepared.observed_context.latent.h.shape),
+        "observed_v": list(prepared.observed_context.latent.v.shape),
+        "future_target_h": list(prepared.target_future.h.shape),
+        "future_target_v": list(prepared.target_future.v.shape),
+        "velocity_h": list(output.velocity.h.shape),
+        "velocity_v": list(output.velocity.v.shape),
+        "generated_coordinates": list(output.generated.coordinates.shape),
+        "history_memory_h": list(output.history_memory.h.shape),
+        "history_memory_v": list(output.history_memory.v.shape),
+        "physical_time_shape": list(prepared.query.time_ps.shape),
+        "flow_time_shape": list(sample.flow_time.shape),
+        "future_condition": "observed_prefix_topology_and_query_time_only",
+        "loss": float(losses.total.detach()),
+        "gradient_destinations": gradients,
+        "teacher_state_hash": module_state_hash(model.target_teacher),
+    }
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--kind", choices=("codec", "dit"), required=True)
+    parser.add_argument("--kind", choices=("codec", "dit", "frame_joint"), required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--checkpoint-sha256", required=True)
     parser.add_argument("--codec", type=Path)
     parser.add_argument("--codec-sha256")
-    parser.add_argument("--manifest-root", type=Path, required=True)
+    parser.add_argument("--manifest-root", type=Path)
+    parser.add_argument("--store", type=Path)
     parser.add_argument("--valid-index", type=int, required=True)
     parser.add_argument("--history", type=int, choices=(4, 8), default=8)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
-    if args.kind == "dit" and (args.codec is None or not args.codec_sha256):
-        parser.error("DiT inspection requires --codec and --codec-sha256")
+    if args.kind in {"dit", "frame_joint"} and (args.codec is None or not args.codec_sha256):
+        parser.error("DiT/Frame Joint inspection requires --codec and --codec-sha256")
+    if (args.manifest_root is None) == (args.store is None):
+        parser.error("provide exactly one of --manifest-root or --store")
+    if args.kind in {"codec", "dit"} and args.manifest_root is None:
+        parser.error("codec/DiT inspection requires --manifest-root")
     device = configure_device(args.device, deterministic=True)
-    splits = load_datasets(args.manifest_root)
+    splits = load_datasets(args.manifest_root) if args.manifest_root is not None else None
+    store = ClipMMapDataset(args.store) if args.store is not None else None
     try:
-        if args.valid_index < 0 or args.valid_index >= len(splits.valid):
+        dataset = splits.valid if splits is not None else store
+        assert dataset is not None
+        if args.valid_index < 0 or args.valid_index >= len(dataset):
             raise IndexError("validation clip index is out of range")
-        template = collate_clip_records([splits.valid[args.valid_index]])
+        template = collate_clip_records([dataset[args.valid_index]])
         if args.kind == "codec":
             artifact = load_codec_artifact(
                 args.checkpoint, expected_sha256=args.checkpoint_sha256, device=device
@@ -124,7 +221,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             model = artifact.model.eval()
             forward = inspect_codec_forward(model, template, device)
             identity = artifact.report.source_sha256
-        else:
+        elif args.kind == "dit":
+            assert splits is not None
             loaded = load_dit_inference(
                 args.checkpoint, expected_sha256=args.checkpoint_sha256,
                 codec_path=args.codec, codec_sha256=args.codec_sha256, device=device,
@@ -138,15 +236,50 @@ def main(argv: Sequence[str] | None = None) -> int:
                 data_hash=loaded["data_hash"], history_frames=args.history,
             )
             identity = args.checkpoint_sha256
-        print(json.dumps({
+        else:
+            loaded = load_frame_joint_inference(
+                args.checkpoint,
+                expected_sha256=args.checkpoint_sha256,
+                codec_path=args.codec,
+                codec_sha256=args.codec_sha256,
+                device=device,
+            )
+            model = loaded["model"]
+            forward = inspect_frame_joint_forward(
+                model,
+                template,
+                device=device,
+                history_frames=args.history,
+                loss_config=JointLossConfig.resolve(
+                    loaded["payload"]["contracts"]["loss"]
+                ),
+            )
+            identity = args.checkpoint_sha256
+        result = {
             "schema_version": "molvid.model.inspection.v1",
             "kind": args.kind, "checkpoint_sha256": identity,
             "sample_id": template.sample_id[0],
+            "device": str(device),
+            "dtype": str(next(model.parameters()).dtype),
             "model": model_summary(model), "forward_shapes": forward,
-        }, sort_keys=True))
+        }
+        if args.output is not None:
+            atomic_write_json(args.output, result)
+            print(json.dumps({
+                "output": str(args.output),
+                "kind": args.kind,
+                "total_parameters": result["model"]["total_parameters"],
+                "trainable_parameters": result["model"]["trainable_parameters"],
+                "forward_shapes": forward,
+            }, sort_keys=True))
+        else:
+            print(json.dumps(result, sort_keys=True))
         return 0
     finally:
-        splits.close()
+        if splits is not None:
+            splits.close()
+        if store is not None:
+            store.close()
 
 
 if __name__ == "__main__":

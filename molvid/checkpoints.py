@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -48,6 +49,53 @@ class CodecArtifact:
     config: Mapping[str, Any]
     model_contract: Mapping[str, Any]
     optimizer_contract: Mapping[str, Any]
+
+
+def _module_tensor_hash(module: nn.Module) -> str:
+    digest = hashlib.sha256()
+    for name, value in sorted(module.state_dict().items()):
+        digest.update(name.encode("utf-8"))
+        digest.update(str(value.dtype).encode("ascii"))
+        digest.update(str(tuple(value.shape)).encode("ascii"))
+        digest.update(value.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()
+
+
+def frame_target_provenance(
+    artifact: CodecArtifact,
+    *,
+    source_path: str | Path,
+    code_commit: str,
+    cuda_check: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Describe the exact Haar-preceding modules used by Frame Joint v1."""
+
+    constructor = artifact.model_contract.get("constructor")
+    if not isinstance(constructor, Mapping):
+        raise ValueError("codec artifact lacks its verified constructor contract")
+    return {
+        "schema_version": "molvid.frame_joint.target_encoder_provenance.v1",
+        "source_path": str(Path(source_path).resolve()),
+        "source_sha256": artifact.report.source_sha256,
+        "source_schema": artifact.report.source_schema,
+        "artifact_step": int(artifact.step),
+        "artifact_epoch": int(artifact.epoch),
+        "historical_final_result_step": 45844,
+        "extracted_modules": ["frame_encoder", "coordinate_stem"],
+        "name_mappings": [
+            {"source_prefix": source, "target_prefix": target}
+            for source, target in _KEY_PREFIXES
+            if source.startswith("frame_encoder") or source.startswith("coordinate_vector_stem")
+        ],
+        "frame_encoder_state_sha256": _module_tensor_hash(artifact.model.frame_encoder),
+        "coordinate_stem_state_sha256": _module_tensor_hash(artifact.model.coordinate_stem),
+        "constructor": dict(constructor),
+        "coordinate_convention": "one frame-zero loss-mask centroid per sample; same origin for all frames",
+        "feature_boundary": "frame_encoder_plus_coordinate_stem_before_haar",
+        "frozen": True,
+        "code_commit": str(code_commit),
+        "cuda_check": dict(cuda_check or {}),
+    }
 
 
 def _mapped_key(name: str) -> str:
@@ -622,6 +670,73 @@ def load_training_checkpoint(
             restore_rng_state(old_rng)
         raise
     return dict(payload)
+
+
+def load_frame_joint_inference(
+    path: str | Path,
+    *,
+    expected_sha256: str,
+    codec_path: str | Path,
+    codec_sha256: str,
+    device: str | torch.device = "cuda",
+) -> dict[str, Any]:
+    """Strictly reconstruct a Frame Joint model for sampling/evaluation."""
+
+    if sha256_file(path) != expected_sha256:
+        raise ValueError("Frame Joint checkpoint SHA-256 mismatch")
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    if not isinstance(payload, Mapping) or payload.get("schema_version") != _NEW_SCHEMA:
+        raise ValueError("unsupported Frame Joint checkpoint schema")
+    contracts = payload.get("contracts")
+    extra = payload.get("extra_state")
+    if not isinstance(contracts, Mapping) or contracts.get("trainer") != "molvid.frame_joint.v1":
+        raise ValueError("checkpoint is not a Frame Joint v1 artifact")
+    if not isinstance(extra, Mapping) or not isinstance(extra.get("statistics_state"), Mapping):
+        raise ValueError("Frame Joint checkpoint lacks latent statistics")
+    from .latent.statistics import FrameLatentStatistics
+    from .model import FrameJointModel
+
+    statistics = FrameLatentStatistics.from_state_dict(extra["statistics_state"])
+    if statistics.hash != contracts.get("statistics_hash"):
+        raise ValueError("Frame Joint statistics differ from checkpoint contract")
+    if str(contracts.get("teacher_artifact_sha256")) != str(codec_sha256):
+        raise ValueError("Frame Joint target codec identity differs")
+    artifact = load_codec_artifact(
+        codec_path,
+        expected_sha256=codec_sha256,
+        device=device,
+    )
+    model_contract = contracts.get("model")
+    dit_contract = model_contract.get("dit") if isinstance(model_contract, Mapping) else None
+    if not isinstance(dit_contract, Mapping):
+        raise ValueError("Frame Joint checkpoint lacks its model constructor contract")
+    model = FrameJointModel.from_codec(
+        artifact.model,
+        statistics.to(device=device),
+        scalar_width=int(dit_contract["scalar_width"]),
+        vector_width=int(dit_contract["vector_width"]),
+        depth=int(dit_contract["depth"]),
+        heads=int(dit_contract["heads"]),
+    ).to(device)
+    if dict(model.contract()) != dict(model_contract):
+        raise ValueError("reconstructed Frame Joint model contract differs")
+    state = payload.get("model_state")
+    expected = model.state_dict()
+    if not isinstance(state, Mapping) or list(state) != list(expected):
+        raise ValueError("Frame Joint model state keys/order differ")
+    for name, value in state.items():
+        target = expected[name]
+        if not isinstance(value, Tensor) or value.shape != target.shape or value.dtype != target.dtype:
+            raise ValueError(f"Frame Joint state shape/dtype differs at {name!r}")
+    model.load_state_dict(state, strict=True)
+    model.eval()
+    return {
+        "model": model,
+        "statistics": model.statistics,
+        "codec_artifact": artifact,
+        "payload": payload,
+        "source_sha256": expected_sha256,
+    }
 
 
 def load_dit_inference(

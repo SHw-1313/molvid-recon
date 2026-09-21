@@ -8,7 +8,7 @@ from typing import Mapping, Optional
 import torch
 from torch import Tensor, nn
 
-from ..latent.types import LatentBatch, LatentFields
+from ..latent.types import FrameLatentBatch, LatentBatch, LatentFields
 from .sampling import apply_observation_clamp
 from .source import FIELD_NAMES, _mask_fields, sample_isotropic_noise, sample_source
 
@@ -192,3 +192,91 @@ def endpoint_from_velocity(
         )
         values.append(current + one_minus_tau * prediction)
     return LatentFields(*values)
+
+
+@dataclass(frozen=True)
+class FrameFlowLoss:
+    total: Tensor
+    h: Tensor
+    v: Tensor
+    applicable_samples: Tensor
+
+
+@dataclass(frozen=True)
+class FrameFlowSample:
+    flow_time: Tensor
+    source: FrameLatentBatch
+    noise: FrameLatentBatch
+    interpolated: FrameLatentBatch
+    target_velocity: FrameLatentBatch
+
+
+def _sample_equal_frame_mse(prediction: Tensor, target: Tensor, batch: FrameLatentBatch) -> tuple[Tensor, Tensor]:
+    if prediction.shape != target.shape or prediction.shape[:2] != batch.h.shape[:2]:
+        raise ValueError("frame flow prediction/target axes disagree")
+    mask = batch.atom_frame_mask()
+    error = (prediction - target).float().square().flatten(start_dim=2).mean(dim=-1)
+    sample = batch.abid.unsqueeze(0).expand(batch.frames, -1)
+    sums = error.new_zeros((batch.batch_size,))
+    counts = error.new_zeros((batch.batch_size,))
+    sums.scatter_add_(0, sample[mask], error[mask])
+    counts.scatter_add_(0, sample[mask], torch.ones_like(error[mask]))
+    applicable = counts > 0
+    if not bool(torch.any(applicable)):
+        return prediction.sum() * 0.0, applicable
+    return (sums[applicable] / counts[applicable]).mean(), applicable
+
+
+def frame_endpoint_from_velocity(
+    interpolated: FrameLatentBatch,
+    velocity: FrameLatentBatch,
+    flow_time: Tensor,
+) -> FrameLatentBatch:
+    if interpolated.h.shape != velocity.h.shape or interpolated.v.shape != velocity.v.shape:
+        raise ValueError("frame endpoint inputs disagree")
+    one_minus = 1.0 - broadcast_sample_time(flow_time, interpolated.h, sample_ids=interpolated.abid)
+    one_minus_v = 1.0 - broadcast_sample_time(flow_time, interpolated.v, sample_ids=interpolated.abid)
+    return interpolated.with_features(
+        interpolated.h + one_minus * velocity.h,
+        interpolated.v + one_minus_v * velocity.v,
+    )
+
+
+class FrameRectifiedFlowObjective(nn.Module):
+    """Two-field per-frame RF objective with equal sample weighting."""
+
+    def sample(
+        self,
+        target: FrameLatentBatch,
+        source_center: FrameLatentBatch,
+        *,
+        generator: Optional[torch.Generator] = None,
+        flow_time: Tensor | None = None,
+    ) -> FrameFlowSample:
+        from .source import sample_frame_source
+
+        if target.h.shape != source_center.h.shape or target.v.shape != source_center.v.shape:
+            raise ValueError("frame flow target and source center shapes differ")
+        if flow_time is None:
+            flow_time = torch.rand(
+                (target.batch_size,), device=target.h.device, dtype=target.h.dtype, generator=generator
+            )
+        else:
+            flow_time = torch.as_tensor(flow_time, device=target.h.device, dtype=target.h.dtype).reshape(-1)
+            if flow_time.shape != (target.batch_size,) or not torch.isfinite(flow_time).all():
+                raise ValueError("flow_time override must contain one finite value per sample")
+            if torch.any(flow_time < 0) or torch.any(flow_time > 1):
+                raise ValueError("flow_time override must lie in [0,1]")
+        source, noise = sample_frame_source(source_center, generator=generator)
+        h = rectified_flow_interpolate(target.h, source.h, flow_time, sample_ids=target.abid)
+        v = rectified_flow_interpolate(target.v, source.v, flow_time, sample_ids=target.abid)
+        interpolated = target.with_features(h, v)
+        velocity = target.with_features(target.h - source.h, target.v - source.v)
+        return FrameFlowSample(flow_time, source, noise, interpolated, velocity)
+
+    def loss(self, prediction: FrameLatentBatch, target: FrameLatentBatch) -> FrameFlowLoss:
+        h, applicable_h = _sample_equal_frame_mse(prediction.h, target.h, target)
+        v, applicable_v = _sample_equal_frame_mse(prediction.v, target.v, target)
+        if not torch.equal(applicable_h, applicable_v):
+            raise RuntimeError("scalar/vector frame flow applicability differs")
+        return FrameFlowLoss(total=0.5 * h + 0.5 * v, h=h, v=v, applicable_samples=applicable_h)

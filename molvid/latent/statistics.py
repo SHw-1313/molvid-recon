@@ -8,7 +8,15 @@ from typing import Any, Iterable, Mapping, Optional
 import torch
 from torch import Tensor
 
-from .types import DIT_STATS_SCHEMA, SUPPORTED_RATIOS, LatentBatch, LatentFields, contract_hash, tensor_hash
+from .types import (
+    DIT_STATS_SCHEMA,
+    SUPPORTED_RATIOS,
+    FrameLatentBatch,
+    LatentBatch,
+    LatentFields,
+    contract_hash,
+    tensor_hash,
+)
 
 @dataclass(frozen=True)
 class LatentStatistics:
@@ -231,4 +239,134 @@ class LatentStatistics:
             detail_h_std=self.detail_h_std.to(*args, **kwargs),
             state_v_rms=self.state_v_rms.to(*args, **kwargs),
             detail_v_rms=self.detail_v_rms.to(*args, **kwargs),
+        )
+
+
+@dataclass(frozen=True)
+class FrameLatentStatistics:
+    """Train-split statistics for per-frame h/v; incompatible with R2/R4 stats."""
+
+    h_mean: Tensor
+    h_std: Tensor
+    v_rms: Tensor
+    provenance: Mapping[str, Any]
+    schema_version: str = "molvid.frame_joint.stats.v1"
+
+    def __post_init__(self) -> None:
+        if self.schema_version != "molvid.frame_joint.stats.v1":
+            raise ValueError("unsupported frame latent statistics schema")
+        if self.h_mean.ndim != 1 or self.h_std.shape != self.h_mean.shape or self.v_rms.shape != self.h_mean.shape:
+            raise ValueError("frame latent statistics must have shape [C]")
+        if any(not torch.isfinite(value).all() for value in (self.h_mean, self.h_std, self.v_rms)):
+            raise ValueError("frame latent statistics contain NaN or Inf")
+        if torch.any(self.h_std <= 0) or torch.any(self.v_rms <= 0):
+            raise ValueError("frame latent statistics scales must be positive")
+
+    @property
+    def width(self) -> int:
+        return int(self.h_mean.numel())
+
+    @classmethod
+    def fit(
+        cls,
+        batches: Iterable[FrameLatentBatch],
+        *,
+        provenance: Mapping[str, Any],
+        epsilon: float = 1.0e-6,
+    ) -> "FrameLatentStatistics":
+        h_sum = h_square = v_square = None
+        scalar_count = vector_count = 0.0
+        seen = 0
+        for batch in batches:
+            mask = batch.atom_frame_mask()
+            h = batch.h.float()
+            v = batch.v.float()
+            h_mask = mask.to(dtype=h.dtype).unsqueeze(-1)
+            v_mask = h_mask.unsqueeze(-1)
+            if h_sum is None:
+                h_sum = torch.zeros(batch.width, device=h.device)
+                h_square = torch.zeros_like(h_sum)
+                v_square = torch.zeros_like(h_sum)
+            if batch.width != int(h_sum.numel()):
+                raise ValueError("statistics batches have different frame widths")
+            h_sum += (h * h_mask).sum(dim=(0, 1))
+            h_square += (h.square() * h_mask).sum(dim=(0, 1))
+            v_square += (v.square() * v_mask).sum(dim=(0, 1, 2))
+            scalar_count += float(mask.sum())
+            vector_count += float(mask.sum()) * 3.0
+            seen += 1
+        if not seen or h_sum is None or scalar_count <= 0 or vector_count <= 0:
+            raise ValueError("at least one valid training frame batch is required")
+        mean = h_sum / scalar_count
+        variance = (h_square / scalar_count - mean.square()).clamp_min(0.0)
+        return cls(
+            h_mean=mean,
+            h_std=variance.sqrt().clamp_min(float(epsilon)),
+            v_rms=(v_square / vector_count).sqrt().clamp_min(float(epsilon)),
+            provenance=dict(provenance),
+        )
+
+    def _broadcast(self, value: Tensor, target: Tensor) -> Tensor:
+        return value.to(device=target.device, dtype=target.dtype).reshape((1,) * (target.ndim - 1) + (self.width,))
+
+    def normalize(self, batch: FrameLatentBatch) -> FrameLatentBatch:
+        if batch.width != self.width:
+            raise ValueError("frame statistics width differs from latent")
+        h = (batch.h - self._broadcast(self.h_mean, batch.h)) / self._broadcast(self.h_std, batch.h)
+        v = batch.v / self._broadcast(self.v_rms, batch.v)
+        return batch.with_features(h, v, statistics_hash=self.hash)
+
+    def inverse(self, batch: FrameLatentBatch) -> FrameLatentBatch:
+        if batch.width != self.width:
+            raise ValueError("frame statistics width differs from latent")
+        h = batch.h * self._broadcast(self.h_std, batch.h) + self._broadcast(self.h_mean, batch.h)
+        v = batch.v * self._broadcast(self.v_rms, batch.v)
+        return batch.with_features(h, v, statistics_hash=self.hash)
+
+    def contract(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "width": self.width,
+            "h_mean_hash": tensor_hash(self.h_mean),
+            "h_std_hash": tensor_hash(self.h_std),
+            "v_rms_hash": tensor_hash(self.v_rms),
+            "vector_mean_subtraction": False,
+            "vector_xyz_shared_scale": True,
+            "fit_scope": "training_split_global",
+            "provenance": dict(self.provenance),
+        }
+
+    @property
+    def hash(self) -> str:
+        return contract_hash(self.contract())
+
+    def state_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "h_mean": self.h_mean.detach().cpu(),
+            "h_std": self.h_std.detach().cpu(),
+            "v_rms": self.v_rms.detach().cpu(),
+            "provenance": dict(self.provenance),
+            "statistics_hash": self.hash,
+        }
+
+    @classmethod
+    def from_state_dict(cls, state: Mapping[str, Any]) -> "FrameLatentStatistics":
+        value = cls(
+            h_mean=torch.as_tensor(state["h_mean"]).detach().clone(),
+            h_std=torch.as_tensor(state["h_std"]).detach().clone(),
+            v_rms=torch.as_tensor(state["v_rms"]).detach().clone(),
+            provenance=dict(state["provenance"]),
+            schema_version=str(state.get("schema_version", "")),
+        )
+        if state.get("statistics_hash") not in (None, value.hash):
+            raise ValueError("frame statistics hash differs from its tensors/provenance")
+        return value
+
+    def to(self, *args, **kwargs) -> "FrameLatentStatistics":
+        return replace(
+            self,
+            h_mean=self.h_mean.to(*args, **kwargs),
+            h_std=self.h_std.to(*args, **kwargs),
+            v_rms=self.v_rms.to(*args, **kwargs),
         )

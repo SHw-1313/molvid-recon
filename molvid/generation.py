@@ -10,10 +10,14 @@ from torch import Tensor, nn
 
 from .data.batch import ClipBatch
 from .flow.sampling import generate_state_detail_latent
+from .flow.sampling import euler_sample_frames
 from .flow.source import build_observed_center
 from .latent.adapter import StateDetailLatentAdapter
 from .latent.conditioning import build_observation_condition
 from .latent.statistics import LatentStatistics
+from .latent.types import QuerySpec
+from .model import FrameJointModel
+from .codec.frame import slice_clip_frames
 from .training.batches import prepare_batch_then_to_device
 
 
@@ -176,3 +180,77 @@ def rollout(
         pieces.append(clip[8:])
         metadata.append({**info, "segment": segment})
     return torch.cat(pieces, dim=0), metadata
+
+
+def _observed_frame_batch(
+    template: ClipBatch,
+    prefix_coordinates: Tensor,
+    history_frames: int,
+) -> ClipBatch:
+    """Build a true observed-only batch without touching template future x."""
+
+    history = int(history_frames)
+    if history < 1 or history >= template.frames:
+        raise ValueError("history_frames must leave at least one query frame")
+    prefix = torch.as_tensor(prefix_coordinates, device=template.x.device, dtype=template.x.dtype)
+    if prefix.shape != (history, template.atom_count, 3) or not bool(torch.isfinite(prefix).all()):
+        raise ValueError("prefix_coordinates must be finite with shape [H,N,3]")
+    observed = slice_clip_frames(template, 0, history)
+    return replace(
+        observed,
+        x=prefix,
+        bpos=_block_positions(prefix, observed.block_id),
+    )
+
+
+@torch.no_grad()
+def sample_frame_joint(
+    model: FrameJointModel,
+    *,
+    template: ClipBatch,
+    prefix_coordinates: Tensor,
+    history_frames: int,
+    query_frames: int | None = None,
+    steps: int = 16,
+    seed: int = 0,
+) -> tuple[Tensor, dict[str, Any]]:
+    """Generate Q frames from observed coordinates, topology, and query times.
+
+    The full template contributes static topology plus ``time_ps/frame_mask``;
+    its future coordinate and block-position arrays are never read.
+    """
+
+    if not isinstance(model, FrameJointModel):
+        raise TypeError("sample_frame_joint requires a FrameJointModel")
+    history = int(history_frames)
+    query_count = template.frames - history if query_frames is None else int(query_frames)
+    if query_count < 1 or history + query_count > template.frames:
+        raise ValueError("query_frames exceeds the template clock")
+    device = next(model.parameters()).device
+    observed_cpu = _observed_frame_batch(template, prefix_coordinates, history)
+    model.target_teacher.prepare_batch(observed_cpu)
+    observed = observed_cpu.to(device)
+    context = model.target_teacher.observed_context(observed)
+    query = QuerySpec(
+        time_ps=template.time_ps[:, history:history + query_count].to(device),
+        frame_mask=template.frame_mask[:, history:history + query_count].to(device),
+    )
+    future, metadata = euler_sample_frames(
+        model,
+        context=context,
+        query=query,
+        steps=steps,
+        seed=seed,
+    )
+    decoded = model.decoder(context, future, query).coordinates.float()
+    if decoded.shape != (query_count, template.atom_count, 3) or not bool(torch.isfinite(decoded).all()):
+        raise RuntimeError("Frame Joint decoder produced invalid coordinates")
+    prefix = observed.x.float()
+    prediction = torch.cat((prefix, decoded), dim=0)
+    return prediction, {
+        **metadata,
+        "history_frames": history,
+        "query_frames": query_count,
+        "conditioning": "observed_coordinates_topology_query_time_only",
+        "coordinate_prefix_clamp_exact": bool(torch.equal(prediction[:history], prefix)),
+    }

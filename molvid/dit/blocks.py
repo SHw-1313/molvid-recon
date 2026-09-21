@@ -38,6 +38,9 @@ class ScalarVectorAttention(nn.Module):
         h: Tensor,
         v: Tensor,
         key_mask: Tensor,
+        *,
+        query_mask: Tensor | None = None,
+        pair_bias: Tensor | None = None,
     ) -> tuple[Tensor, Tensor]:
         if h.ndim != 3 or v.ndim != 4 or v.shape[:2] != h.shape[:2] or v.shape[2] != 3:
             raise ValueError("attention expects [B,L,Dh] and [B,L,3,Dv]")
@@ -45,6 +48,10 @@ class ScalarVectorAttention(nn.Module):
         q = self.q(h).reshape(batch, length, self.heads, self.scalar_head).transpose(1, 2)
         k = self.k(h).reshape(batch, length, self.heads, self.scalar_head).transpose(1, 2)
         logits = torch.matmul(q, k.transpose(-1, -2)) / math.sqrt(self.scalar_head)
+        if pair_bias is not None:
+            if pair_bias.shape != logits.shape:
+                raise ValueError("attention pair_bias must have shape [B,heads,L,L]")
+            logits = logits + pair_bias
         valid = key_mask.to(dtype=torch.bool).reshape(batch, 1, 1, length)
         logits = logits.masked_fill(~valid, torch.finfo(logits.dtype).min)
         weights = self.dropout(torch.softmax(logits, dim=-1))
@@ -61,7 +68,71 @@ class ScalarVectorAttention(nn.Module):
         vector_mixed = vector_mixed.permute(0, 2, 3, 1, 4).reshape(
             batch, length, 3, self.vector_width
         )
-        return self.scalar_out(scalar_mixed), self.vector_out(vector_mixed)
+        scalar_output = self.scalar_out(scalar_mixed)
+        vector_output = self.vector_out(vector_mixed)
+        if query_mask is not None:
+            if query_mask.shape != h.shape[:2]:
+                raise ValueError("attention query_mask must have shape [B,L]")
+            query = query_mask.to(dtype=scalar_output.dtype).unsqueeze(-1)
+            scalar_output = scalar_output * query
+            vector_output = vector_output * query.unsqueeze(-1)
+        return scalar_output, vector_output
+
+
+class ScalarVectorCrossAttention(nn.Module):
+    """Scalar q/k cross-attention with shared weights for vector values."""
+
+    def __init__(self, scalar_width: int, vector_width: int, heads: int, dropout: float) -> None:
+        super().__init__()
+        if scalar_width % heads or vector_width % heads:
+            raise ValueError("scalar and vector widths must be divisible by heads")
+        self.scalar_width = int(scalar_width)
+        self.vector_width = int(vector_width)
+        self.heads = int(heads)
+        self.scalar_head = scalar_width // heads
+        self.vector_head = vector_width // heads
+        self.q = nn.Linear(scalar_width, scalar_width)
+        self.k = nn.Linear(scalar_width, scalar_width)
+        self.scalar_value = nn.Linear(scalar_width, scalar_width)
+        self.scalar_out = nn.Linear(scalar_width, scalar_width)
+        self.vector_value = AxisPreservingLinear(vector_width, vector_width)
+        self.vector_out = AxisPreservingLinear(vector_width, vector_width)
+        self.dropout = nn.Dropout(float(dropout))
+
+    def forward(
+        self,
+        query_h: Tensor,
+        query_v: Tensor,
+        memory_h: Tensor,
+        memory_v: Tensor,
+        *,
+        key_mask: Tensor,
+        query_mask: Tensor,
+        pair_bias: Tensor | None = None,
+    ) -> tuple[Tensor, Tensor]:
+        if query_h.ndim != 3 or query_v.shape != (*query_h.shape[:2], 3, self.vector_width):
+            raise ValueError("cross-attention query expects [B,Q,Dh] and [B,Q,3,Dv]")
+        if memory_h.ndim != 3 or memory_v.shape != (*memory_h.shape[:2], 3, self.vector_width):
+            raise ValueError("cross-attention memory expects [B,M,Dh] and [B,M,3,Dv]")
+        batch, queries = query_h.shape[:2]
+        memory = int(memory_h.shape[1])
+        if key_mask.shape != (batch, memory) or query_mask.shape != (batch, queries):
+            raise ValueError("cross-attention masks disagree with query/memory axes")
+        q = self.q(query_h).reshape(batch, queries, self.heads, self.scalar_head).transpose(1, 2)
+        k = self.k(memory_h).reshape(batch, memory, self.heads, self.scalar_head).transpose(1, 2)
+        logits = torch.matmul(q, k.transpose(-1, -2)) / math.sqrt(self.scalar_head)
+        if pair_bias is not None:
+            if pair_bias.shape != logits.shape:
+                raise ValueError("cross-attention pair_bias must have shape [B,heads,Q,M]")
+            logits = logits + pair_bias
+        logits = logits.masked_fill(~key_mask[:, None, None, :], torch.finfo(logits.dtype).min)
+        weights = self.dropout(torch.softmax(logits, dim=-1))
+        scalar_value = self.scalar_value(memory_h).reshape(batch, memory, self.heads, self.scalar_head).permute(0, 2, 1, 3)
+        scalar = torch.matmul(weights, scalar_value).transpose(1, 2).reshape(batch, queries, self.scalar_width)
+        vector_value = self.vector_value(memory_v).reshape(batch, memory, 3, self.heads, self.vector_head).permute(0, 3, 1, 2, 4)
+        vector = torch.einsum("bhqm,bhmrc->bhqrc", weights, vector_value).permute(0, 2, 3, 1, 4).reshape(batch, queries, 3, self.vector_width)
+        query = query_mask.to(dtype=scalar.dtype).unsqueeze(-1)
+        return self.scalar_out(scalar) * query, self.vector_out(vector) * query.unsqueeze(-1)
 
 
 class AdaLNZero(nn.Module):
@@ -149,3 +220,20 @@ class FactorizedDiTBlock(nn.Module):
         block_samples: list[int],
     ) -> tuple[Tensor, Tensor]:
         return reference_block_forward(self, h, v, condition, batch, block_groups, block_samples)
+
+
+class FrameDiTBlock(nn.Module):
+    """History cross-attention, spatial groups, future time, then equivariant FFN."""
+
+    def __init__(self, scalar_width: int, vector_width: int, heads: int, ffn_multiplier: int, dropout: float) -> None:
+        super().__init__()
+        self.history = ScalarVectorCrossAttention(scalar_width, vector_width, heads, dropout)
+        self.spatial = ScalarVectorAttention(scalar_width, vector_width, heads, dropout)
+        self.temporal = ScalarVectorAttention(scalar_width, vector_width, heads, dropout)
+        self.ffn = ScalarVectorFFN(scalar_width, vector_width, ffn_multiplier)
+        self.history_adaln = AdaLNZero(scalar_width, vector_width)
+        self.spatial_adaln = AdaLNZero(scalar_width, vector_width)
+        self.temporal_adaln = AdaLNZero(scalar_width, vector_width)
+        self.ffn_adaln = AdaLNZero(scalar_width, vector_width)
+        self.history_time_bias = nn.Linear(4, heads, bias=False)
+        self.temporal_time_bias = nn.Linear(4, heads, bias=False)

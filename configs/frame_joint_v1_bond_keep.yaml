@@ -1,0 +1,36 @@
+schema: molvid.frame_joint.train.v1
+
+data:
+  manifest_root: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000
+
+codec:
+  checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+  sha256: ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df
+
+statistics:
+  path: runs/frame_joint_v1_48/frame_statistics.pt
+  sha256: ""
+  statistics_hash: ""
+
+model: {scalar_width: 256, vector_width: 128, depth: 4, heads: 8}
+
+loss:
+  inherit_parent: true
+
+training:
+  device: cuda
+  deterministic: false
+  precision: bf16
+  seed: 20260920
+  max_atom_frames_per_gpu: 40000
+  clips_per_trajectory: 24
+  history_order: [4, 8]
+  weight_decay: 0.01
+  grad_clip: 1.0
+  output_root: runs/frame_joint_v1_48_bond_keep
+  # 2716 global batches/epoch on the frozen 48-system manifest: 1358
+  # synchronized updates/epoch on two GPUs, for five effective epochs.
+  stages:
+    - name: continuation
+      updates: 6790
+      learning_rates: {history_encoder: 0.000025, dit: 0.00005, decoder: 0.0000125}

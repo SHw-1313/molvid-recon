@@ -16,6 +16,7 @@ from .types import (
     SUPPORTED_RATIOS,
     LatentBatch,
     LatentFields,
+    FrameLatentBatch,
 )
 
 class StateDetailLatentAdapter(nn.Module):
@@ -163,3 +164,44 @@ class StateDetailLatentAdapter(nn.Module):
             coefficient_order=("D01",) if batch.ratio == 2 else ("Dmid", "D01", "D23"),
             width=batch.width,
         )
+
+
+class FrameLatentAdapter(nn.Module):
+    """Direct two-field projection for per-frame future flow latents."""
+
+    def __init__(self, codec_width: int = 128, scalar_width: int = 256, vector_width: int = 128) -> None:
+        super().__init__()
+        self.codec_width = int(codec_width)
+        self.scalar_width = int(scalar_width)
+        self.vector_width = int(vector_width)
+        if min(self.codec_width, self.scalar_width, self.vector_width) < 1:
+            raise ValueError("all frame adapter widths must be positive")
+        self.scalar_in = nn.Linear(self.codec_width, self.scalar_width)
+        self.vector_in = AxisPreservingLinear(self.codec_width, self.vector_width)
+        self.scalar_out = nn.Linear(self.scalar_width, self.codec_width)
+        self.vector_out = AxisPreservingLinear(self.vector_width, self.codec_width)
+        nn.init.zeros_(self.scalar_out.weight)
+        nn.init.zeros_(self.scalar_out.bias)
+        nn.init.zeros_(self.vector_out.weight)
+
+    def project_inputs(self, batch: FrameLatentBatch) -> tuple[Tensor, Tensor]:
+        if batch.width != self.codec_width:
+            raise ValueError("frame latent width does not match adapter")
+        return self.scalar_in(batch.h), self.vector_in(batch.v)
+
+    def project_outputs(self, template: FrameLatentBatch, h: Tensor, v: Tensor) -> FrameLatentBatch:
+        if h.shape[:2] != template.h.shape[:2] or v.shape[:3] != template.v.shape[:3]:
+            raise ValueError("FrameDiT output axes do not match the query latent")
+        return template.with_features(self.scalar_out(h), self.vector_out(v))
+
+    def contract(self) -> dict[str, Any]:
+        return {
+            "schema_version": "molvid.frame_joint.adapter.v1",
+            "future_fields": ["h", "v"],
+            "codec_width": self.codec_width,
+            "scalar_width": self.scalar_width,
+            "vector_width": self.vector_width,
+            "vector_maps": "bias_free_channel_only",
+            "state_detail_fields": False,
+            "inverse_haar": False,
+        }

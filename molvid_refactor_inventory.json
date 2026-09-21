@@ -1,0 +1,1845 @@
+{
+  "meta": {
+    "repository": "SHw-1313/molvid",
+    "branch": "exp/dit-architecture-sequential-v1",
+    "commit": "d8f674aad692c8426cf9240d07b3384f7a043888",
+    "status": "proposed design; updated artifact paths validated; repository unchanged; numerical parity not executed",
+    "runtime_files_excluding_init": 50,
+    "scope": "保持当前 TorchMD + state/detail codec + DiT/rectified-flow 路径；保留现有 codec 对照、静态数据、conditional/gaussian source、future-bond 与 history corruption 选项。",
+    "inventory_schema_version": 2,
+    "revision": "v2-flat-20260918",
+    "revised_on": "2026-09-18",
+    "layout": "flat",
+    "package_root": "molvid",
+    "import_root": "molvid",
+    "baseline_note": "commit remains the previous design audit baseline; this revision edits design artifacts only and does not verify the current remote HEAD.",
+    "runtime_class_count": 74,
+    "revision_scope": "Remove src/ and models/ wrapper levels; preserve every previous runtime file, class, target function, scientific scope and rename. Add bounded execution and migration checks; no architecture change.",
+    "source_artifact_sha256": {
+      "molvid_refactor_layout.md": "789b302c93e7b84b27f719b27ff693d67bfaf02499c8fc2788b5504d59ebf29e",
+      "molvid_refactor_inventory.json": "1c95ad5725353d67f67b4d3cf82318a1414ae9f5f23ab2f366c0f6f2ee982ffb"
+    }
+  },
+  "files": [
+    {
+      "path": "molvid/config.py",
+      "classes": [],
+      "public_functions": [
+        "load_config",
+        "resolve_config",
+        "validate_config"
+      ],
+      "source": [
+        "现有 YAML 读取、配置校验逻辑"
+      ],
+      "role": "读配置、解析路径、校验结构；阶段预算放 experiments/architecture_20260914/protocol.py。",
+      "import_module": "molvid.config",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/runtime.py",
+      "classes": [],
+      "public_functions": [
+        "configure_device",
+        "seed_all",
+        "autocast_context",
+        "sha256_file",
+        "canonical_hash",
+        "atomic_write_json",
+        "append_metrics"
+      ],
+      "source": [
+        "各 runner 的 CUDA/RNG/日志/哈希函数"
+      ],
+      "role": "运行环境与结果写入；不定义模型或实验选择规则。",
+      "import_module": "molvid.runtime",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/checkpoints.py",
+      "classes": [
+        "CheckpointLoadReport",
+        "CodecArtifact"
+      ],
+      "public_functions": [
+        "load_codec_artifact",
+        "save_training_checkpoint",
+        "load_training_checkpoint",
+        "capture_rng_state",
+        "restore_rng_state"
+      ],
+      "source": [
+        "module/multiframe_codec.py",
+        "trainer/codec_trainer.py",
+        "trainer/dit_trainer.py",
+        "scripts/run_state_detail_dit_pilot.py"
+      ],
+      "role": "CodecArtifact 替代 FrozenCodec；保留权重、optimizer、scheduler、scaler、RNG、sampler 游标与来源核查。",
+      "import_module": "molvid.checkpoints",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/data/batch.py",
+      "classes": [
+        "ClipBatch",
+        "ClipValidationError"
+      ],
+      "public_functions": [
+        "validate_clip_record",
+        "collate_clip_records",
+        "canonical_time_fields"
+      ],
+      "source": [
+        "data/clip_dataset.py"
+      ],
+      "role": "数据字段、单位、mask、collate；不负责磁盘文件。",
+      "import_module": "molvid.data.batch",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/data/store.py",
+      "classes": [
+        "BlockStore",
+        "ClipMMapDataset",
+        "ClipMMapWriter",
+        "StaticClipDataset"
+      ],
+      "public_functions": [
+        "static_record_to_clip"
+      ],
+      "source": [
+        "data/mmap_dataset.py",
+        "data/clip_dataset.py"
+      ],
+      "role": "BlockStore 由 MMAPDataset 的存储读取能力迁入；保留已有静态数据和 clip store，不保留 x0/x1 训练工作流。",
+      "import_module": "molvid.data.store",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/data/sampling.py",
+      "classes": [
+        "ClipItemSpec",
+        "ClipSpecTable",
+        "TaskAwareClipBatchSampler",
+        "TrajectoryCappedBatchSampler"
+      ],
+      "public_functions": [
+        "make_clip_dataloader",
+        "get_clip_specs"
+      ],
+      "source": [
+        "data/clip_batching.py",
+        "scripts/run_state_detail_codec_v2_t1.py"
+      ],
+      "role": "统一 T*N 预算、静动态分组、每轨迹采样上限及已有分布式切分。",
+      "import_module": "molvid.data.sampling",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/data/io.py",
+      "classes": [],
+      "public_functions": [
+        "read_topology",
+        "read_trajectory",
+        "read_static_records",
+        "write_trajectory"
+      ],
+      "source": [
+        "data/trajectory_clips.py",
+        "现有静态数据读取与推理输出函数"
+      ],
+      "role": "原始 PDB/轨迹/HDF5/静态记录的读写，及生成结果导出；外部格式库局部导入。",
+      "import_module": "molvid.data.io",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/data/preprocess.py",
+      "classes": [
+        "ClipPreprocessConfig",
+        "SourceDataError"
+      ],
+      "public_functions": [
+        "preprocess_atlas",
+        "preprocess_misato",
+        "preprocess_static",
+        "iterate_windows"
+      ],
+      "source": [
+        "data/trajectory_clips.py",
+        "scripts/preprocess_trajectory_clips.py",
+        "现有 ANI1x/PCQM4Mv2/PDB/PDBBind 静态预处理逻辑"
+      ],
+      "role": "原始数据转 clip；保留原子顺序、物理时间及静态 T=1 语义。函数名为迁移后的目标接口。",
+      "import_module": "molvid.data.preprocess",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/data/manifest.py",
+      "classes": [
+        "DatasetSplits",
+        "ValidationPlan"
+      ],
+      "public_functions": [
+        "build_manifest",
+        "load_datasets",
+        "make_validation_plan",
+        "check_split_overlap"
+      ],
+      "source": [
+        "scripts/run_state_detail_dit_pilot.py",
+        "scripts/build_state_detail_codec_v2_t1_manifest.py"
+      ],
+      "role": "DatasetSplits 替代 PilotData；样本身份与划分独立于某次 64-system 实验。",
+      "import_module": "molvid.data.manifest",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/data/chemistry.py",
+      "classes": [],
+      "public_functions": [
+        "get_block_from_top",
+        "get_block_from_complex",
+        "parse_static_molecule"
+      ],
+      "source": [
+        "utils/bio_utils.py",
+        "静态源预处理函数"
+      ],
+      "role": "保留原子、残基、block 类型词表和化学解析；不改变现有类型编号。",
+      "import_module": "molvid.data.chemistry",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/geometry/types.py",
+      "classes": [
+        "StaticTopologyMetadata",
+        "FrameNodeBatch",
+        "FrameGraphBatch"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_codec_v2.py",
+        "module/multiframe_codec.py"
+      ],
+      "role": "坐标无关的拓扑元数据及逐帧图数据结构。",
+      "import_module": "molvid.geometry.types",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/geometry/frames.py",
+      "classes": [],
+      "public_functions": [
+        "pack_frame_nodes",
+        "build_frame_graph",
+        "unpack_frame_features"
+      ],
+      "source": [
+        "module/multiframe_codec.py"
+      ],
+      "role": "从 FrameEncoder 抽取打包、跨帧隔离建图与特征恢复。",
+      "import_module": "molvid.geometry.frames",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/geometry/neighbors.py",
+      "classes": [
+        "NeighborList",
+        "CudaRadiusNeighborList"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/neighbor_graph.py"
+      ],
+      "role": "真实 CUDA 邻居搜索和可微 FP32 几何；dense 参考实现迁到测试。",
+      "import_module": "molvid.geometry.neighbors",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/geometry/topology.py",
+      "classes": [
+        "TopologyEntry",
+        "BoundedTopologyCache",
+        "DistanceOnlyBondCache"
+      ],
+      "public_functions": [
+        "build_canonical_reference_index",
+        "stable_topology_id"
+      ],
+      "source": [
+        "module/topology_cache.py",
+        "module/bond_sources.py"
+      ],
+      "role": "缓存静态拓扑和 distance-only 参考图，合并重复 topology-id 函数。",
+      "import_module": "molvid.geometry.topology",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/geometry/coordinates.py",
+      "classes": [],
+      "public_functions": [
+        "compute_masked_centroid_origin",
+        "center_coordinates",
+        "restore_origin",
+        "kabsch_align",
+        "align_and_center"
+      ],
+      "source": [
+        "module/state_detail_codec_v2.py",
+        "data/trajectory_clips.py",
+        "utils/geometry.py"
+      ],
+      "role": "原点、旋转、对齐、恢复；保持现有对齐策略与公式。",
+      "import_module": "molvid.geometry.coordinates",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/spatial/encoder.py",
+      "classes": [
+        "FrameEncoder",
+        "FrameEncoderOutput"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/multiframe_codec.py"
+      ],
+      "role": "PVBFrameEncoder 改为 FrameEncoder；只组装骨干、图缓存和多帧编码，不加载 checkpoint。",
+      "import_module": "molvid.spatial.encoder",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/spatial/torchmd.py",
+      "classes": [
+        "TorchMDEncoder",
+        "EquivariantMultiHeadAttention"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/torchmd_et.py"
+      ],
+      "role": "TorchMD_VQ_ET 的当前空间编码路径迁为 TorchMDEncoder；去掉旧桥 decoder 专用路径。",
+      "import_module": "molvid.spatial.torchmd",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/spatial/ops.py",
+      "classes": [
+        "NeighborEmbedding",
+        "CosineCutoff",
+        "GaussianSmearing",
+        "ExpNormalSmearing",
+        "ShiftedSoftplus"
+      ],
+      "public_functions": [
+        "scatter"
+      ],
+      "source": [
+        "utils/torchmd_utils.py"
+      ],
+      "role": "保留骨干用到的 RBF、cutoff、邻居嵌入、激活映射和 scatter；外部图路径不用内部 OptimizedDistance。",
+      "import_module": "molvid.spatial.ops",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/equivariant.py",
+      "classes": [
+        "AxisPreservingLinear",
+        "SO3ChannelNorm"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_latent_adapter.py",
+        "module/molecular_dit.py"
+      ],
+      "role": "这里只迁 DiT 的 SO3ChannelNorm，不把旧 TorchMD SO3LayerNorm 当作同一种归一化。",
+      "import_module": "molvid.equivariant",
+      "phase": "P1"
+    },
+    {
+      "path": "molvid/codec/model.py",
+      "classes": [
+        "TrajectoryCodec"
+      ],
+      "public_functions": [
+        "build_codec"
+      ],
+      "source": [
+        "trainer/codec_trainer.py::PVBCodecModel"
+      ],
+      "role": "总装 frame encoder、coordinate stem、temporal codec、coordinate head；方法 encode/decode/forward/prepare_batch。",
+      "import_module": "molvid.codec.model",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/codec/types.py",
+      "classes": [
+        "StateDetailLatent",
+        "MatchedPoolingLatent",
+        "CodecOutput"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_codec_v2.py"
+      ],
+      "role": "CodecOutput 替代 StateDetailDecoderOutput；不定义神经网络。",
+      "import_module": "molvid.codec.types",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/codec/haar.py",
+      "classes": [
+        "HaarCoefficients"
+      ],
+      "public_functions": [
+        "haar_lift",
+        "haar_inverse"
+      ],
+      "source": [
+        "module/state_detail_codec_v2.py"
+      ],
+      "role": "HaarCoefficients 替代数据类 HaarLift；固定系数和有效性 mask，不新增小波网络。",
+      "import_module": "molvid.codec.haar",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/codec/state_detail.py",
+      "classes": [
+        "StateDetailCodec",
+        "MatchedPoolingCodec"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_codec_v2.py"
+      ],
+      "role": "移除 V2 和重复别名；只编码/解码时间特征，坐标 head 迁到总装。保留现有 codec 对照。",
+      "import_module": "molvid.codec.state_detail",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/codec/heads.py",
+      "classes": [
+        "CoordinateVectorStem",
+        "EquivariantCoordinateHead"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_codec_v2.py"
+      ],
+      "role": "分别由 CenteredCoordinateVectorStem 和 _EquivariantCoordinateHead 改名；计算不变。",
+      "import_module": "molvid.codec.heads",
+      "phase": "P2"
+    },
+    {
+      "path": "molvid/dit/model.py",
+      "classes": [
+        "MolecularDiT"
+      ],
+      "public_functions": [
+        "build_dit"
+      ],
+      "source": [
+        "module/molecular_dit.py"
+      ],
+      "role": "DiT 总装、条件 embedding、forward；保留 adapter 为唯一共享对象。",
+      "import_module": "molvid.dit.model",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/dit/blocks.py",
+      "classes": [
+        "FactorizedDiTBlock",
+        "ScalarVectorAttention",
+        "AdaLNZero",
+        "ScalarVectorFFN"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/molecular_dit.py"
+      ],
+      "role": "DiT 的参数层和块计算；不拆成一类一文件。",
+      "import_module": "molvid.dit.blocks",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/dit/backend.py",
+      "classes": [
+        "FactorizedLayout"
+      ],
+      "public_functions": [
+        "build_factorized_layout",
+        "factorized_block_forward",
+        "reference_block_forward"
+      ],
+      "source": [
+        "module/dit_backend_v2.py",
+        "module/molecular_dit.py"
+      ],
+      "role": "保留向量化 CUDA 与原数值参考路径；v2 不再写入文件名。",
+      "import_module": "molvid.dit.backend",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/latent/types.py",
+      "classes": [
+        "LatentFields",
+        "LatentBatch"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_latent_adapter.py"
+      ],
+      "role": "分别替代 LatentFieldSet 和 DiTLatentBatch；只承载字段、mask 和基本结构操作。",
+      "import_module": "molvid.latent.types",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/latent/adapter.py",
+      "classes": [
+        "StateDetailLatentAdapter"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_latent_adapter.py"
+      ],
+      "role": "目标方法为 from_codec_latent/project_inputs/project_outputs/make_generated_latent，由既有转换逻辑提取；不负责统计、哈希、观测噪声。",
+      "import_module": "molvid.latent.adapter",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/latent/statistics.py",
+      "classes": [
+        "LatentStatistics"
+      ],
+      "public_functions": [],
+      "source": [
+        "module/state_detail_latent_adapter.py"
+      ],
+      "role": "fit、normalize、inverse_normalize、state_dict；训练集统计和原有向量缩放语义不变。",
+      "import_module": "molvid.latent.statistics",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/latent/conditioning.py",
+      "classes": [
+        "ObservationCondition",
+        "HistoryCorruptionViews",
+        "HistoryConditionedLatents"
+      ],
+      "public_functions": [
+        "build_observation_condition",
+        "frame_prefix_observation_mask",
+        "sample_history_sigmas",
+        "make_history_corruption_views",
+        "combine_clean_target_with_condition"
+      ],
+      "source": [
+        "module/state_detail_latent_adapter.py",
+        "module/dit_history_corruption.py"
+      ],
+      "role": "观测条件与在线历史噪声；保留干净 target / 加噪 condition / origin 关系。固定 Round4 概率迁到配置。",
+      "import_module": "molvid.latent.conditioning",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/flow/objective.py",
+      "classes": [
+        "FlowSample",
+        "FlowLoss",
+        "RectifiedFlowObjective"
+      ],
+      "public_functions": [
+        "rectified_flow_interpolate",
+        "rectified_flow_velocity",
+        "four_field_loss",
+        "endpoint_from_velocity"
+      ],
+      "source": [
+        "module/latent_rectified_flow.py",
+        "module/dit_geometry_supervision.py"
+      ],
+      "role": "flow 数学与目标；endpoint 公式不再藏在 Round2 辅助损失文件中。",
+      "import_module": "molvid.flow.objective",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/flow/source.py",
+      "classes": [],
+      "public_functions": [
+        "build_observed_center",
+        "repeat_last_coordinate_template",
+        "sample_source"
+      ],
+      "source": [
+        "module/latent_flow_source.py"
+      ],
+      "role": "高斯或条件源构造；不含整套旧 bridge matcher。",
+      "import_module": "molvid.flow.source",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/flow/sampling.py",
+      "classes": [],
+      "public_functions": [
+        "euler_sample",
+        "apply_observation_clamp",
+        "generate_state_detail_latent"
+      ],
+      "source": [
+        "module/latent_rectified_flow.py"
+      ],
+      "role": "latent 数值积分和观测钳制；不计算 RMSD、不写报告。",
+      "import_module": "molvid.flow.sampling",
+      "phase": "P3"
+    },
+    {
+      "path": "molvid/generation.py",
+      "classes": [],
+      "public_functions": [
+        "sample_clip",
+        "rollout"
+      ],
+      "source": [
+        "scripts/run_dit_architecture_round4.py",
+        "evaluation/dit_reassessment.py",
+        "现有生成函数"
+      ],
+      "role": "坐标条件→latent 采样→解码，以及滚动续写；接口不接收真实未来坐标。",
+      "import_module": "molvid.generation",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/training/codec.py",
+      "classes": [
+        "CodecTrainConfig",
+        "CodecTrainer"
+      ],
+      "public_functions": [
+        "train_codec"
+      ],
+      "source": [
+        "trainer/codec_trainer.py",
+        "train_codec.py"
+      ],
+      "role": "codec 的优化和训练调度；模型总装、loss、保存分别迁出。",
+      "import_module": "molvid.training.codec",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/training/dit.py",
+      "classes": [
+        "DiTTrainConfig",
+        "DiTTrainer"
+      ],
+      "public_functions": [
+        "train_dit"
+      ],
+      "source": [
+        "trainer/dit_trainer.py",
+        "各 DiT runner"
+      ],
+      "role": "DiT 的优化和训练调度；冻结参数与几何损失对输入的梯度路径分开处理。",
+      "import_module": "molvid.training.dit",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/training/batches.py",
+      "classes": [
+        "PreparedDiTBatch"
+      ],
+      "public_functions": [
+        "prepare_batch_then_to_device",
+        "encode_batch",
+        "prepare_dit_batch"
+      ],
+      "source": [
+        "trainer/codec_trainer.py",
+        "scripts/run_state_detail_dit_pilot.py",
+        "scripts/run_dit_architecture_round4.py"
+      ],
+      "role": "PreparedDiTBatch 替代 PreparedRound4Batch；清楚组织真值、观测、源中心和噪声视图。",
+      "import_module": "molvid.training.batches",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/losses/reconstruction.py",
+      "classes": [
+        "CodecLossWeights",
+        "BucketNormalization",
+        "TimeBucketSpec"
+      ],
+      "public_functions": [
+        "compute_codec_losses",
+        "masked_coordinate_loss",
+        "bond_length_loss",
+        "local_contact_distance_loss",
+        "velocity_loss",
+        "acceleration_loss",
+        "fit_time_bucket_normalization"
+      ],
+      "source": [
+        "trainer/codec_losses.py",
+        "trainer/codec_trainer.py"
+      ],
+      "role": "codec 重建目标和按物理时间分桶的损失归一化。",
+      "import_module": "molvid.losses.reconstruction",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/losses/geometry.py",
+      "classes": [
+        "FutureBondLoss",
+        "FutureBondAuxiliary"
+      ],
+      "public_functions": [
+        "future_bond_distance_loss"
+      ],
+      "source": [
+        "module/dit_geometry_supervision.py"
+      ],
+      "role": "保留已有 future-bond 辅助监督；不添加新几何约束。",
+      "import_module": "molvid.losses.geometry",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/evaluation/geometry.py",
+      "classes": [],
+      "public_functions": [
+        "coordinate_errors",
+        "bond_errors",
+        "contact_scores",
+        "clash_statistics"
+      ],
+      "source": [
+        "evaluation/codec_evaluation.py",
+        "evaluation/dit_reassessment.py",
+        "utils/geometry.py"
+      ],
+      "role": "迁移现有坐标/键/接触/碰撞指标；不同对齐或归约定义保留明确命名，不强行合并。",
+      "import_module": "molvid.evaluation.geometry",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/evaluation/motion.py",
+      "classes": [
+        "MotionMetricError",
+        "RMSFRead"
+      ],
+      "public_functions": [
+        "rmsf",
+        "velocity_metrics",
+        "acceleration_metrics",
+        "fft_retention",
+        "read_rmsf_value"
+      ],
+      "source": [
+        "evaluation/motion_metrics.py",
+        "evaluation/codec_evaluation.py",
+        "evaluation/dit_reassessment.py"
+      ],
+      "role": "计算与读取运动指标；保留零值、缺失、冲突、分母不足的区别。",
+      "import_module": "molvid.evaluation.motion",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/evaluation/latent.py",
+      "classes": [],
+      "public_functions": [
+        "latent_field_errors",
+        "oracle_vs_generated"
+      ],
+      "source": [
+        "evaluation/dit_diagnostics.py",
+        "evaluation/dit_evaluation.py"
+      ],
+      "role": "四字段误差、oracle reconstruction 与生成误差分离。",
+      "import_module": "molvid.evaluation.latent",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/evaluation/runner.py",
+      "classes": [
+        "EvalConfig",
+        "RolloutTrack"
+      ],
+      "public_functions": [
+        "evaluate_codec",
+        "evaluate_generation",
+        "evaluate_rollout"
+      ],
+      "source": [
+        "evaluation/codec_evaluation.py",
+        "evaluation/dit_evaluation.py",
+        "scripts/run_dit_architecture_round4.py"
+      ],
+      "role": "EvalConfig 是从现有评估参数抽取的数据类；RolloutTrack 为评测参考轨迹，不进入 generation 条件。",
+      "import_module": "molvid.evaluation.runner",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/evaluation/report.py",
+      "classes": [],
+      "public_functions": [
+        "aggregate_by_system",
+        "aggregate_by_time_bucket",
+        "compare_runs",
+        "write_report",
+        "plot_report"
+      ],
+      "source": [
+        "evaluation/dit_reassessment.py",
+        "evaluation/dit_reassessment_interpretation.py",
+        "scripts/plot_codec_results.py"
+      ],
+      "role": "结果聚合与展示；各轮 KEEP/REJECT 规则留在实验 protocol。",
+      "import_module": "molvid.evaluation.report",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/cli/preprocess.py",
+      "classes": [],
+      "public_functions": [
+        "main"
+      ],
+      "source": [
+        "相应旧入口和实验 runner"
+      ],
+      "role": "仅 argparse、配置解析和调用公共流程，不定义模型和训练循环。",
+      "import_module": "molvid.cli.preprocess",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/cli/train_codec.py",
+      "classes": [],
+      "public_functions": [
+        "main"
+      ],
+      "source": [
+        "相应旧入口和实验 runner"
+      ],
+      "role": "仅 argparse、配置解析和调用公共流程，不定义模型和训练循环。",
+      "import_module": "molvid.cli.train_codec",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/cli/train_dit.py",
+      "classes": [],
+      "public_functions": [
+        "main"
+      ],
+      "source": [
+        "相应旧入口和实验 runner"
+      ],
+      "role": "仅 argparse、配置解析和调用公共流程，不定义模型和训练循环。",
+      "import_module": "molvid.cli.train_dit",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/cli/sample.py",
+      "classes": [],
+      "public_functions": [
+        "main"
+      ],
+      "source": [
+        "相应旧入口和实验 runner"
+      ],
+      "role": "仅 argparse、配置解析和调用公共流程，不定义模型和训练循环。",
+      "import_module": "molvid.cli.sample",
+      "phase": "P4"
+    },
+    {
+      "path": "molvid/cli/evaluate.py",
+      "classes": [],
+      "public_functions": [
+        "main"
+      ],
+      "source": [
+        "相应旧入口和实验 runner"
+      ],
+      "role": "仅 argparse、配置解析和调用公共流程，不定义模型和训练循环。",
+      "import_module": "molvid.cli.evaluate",
+      "phase": "P4"
+    }
+  ],
+  "extra_python_files": [
+    {
+      "path": "tests/conftest.py",
+      "classes": [],
+      "role": "共享真实小模型、tiny clip、固定噪声 fixtures"
+    },
+    {
+      "path": "tests/reference.py",
+      "classes": [
+        "DenseReferenceNeighborList"
+      ],
+      "role": "从现有 dense_test 提取的仅测试邻居参考；不作为 CUDA fallback"
+    },
+    {
+      "path": "tests/test_data.py",
+      "classes": [],
+      "role": "record/时间单位/静态 T=1、store、采样调度、split 隔离"
+    },
+    {
+      "path": "tests/test_geometry.py",
+      "classes": [],
+      "role": "跨帧跨样本边、原子顺序、缓存、CUDA 邻居与参考结果"
+    },
+    {
+      "path": "tests/test_codec.py",
+      "classes": [],
+      "role": "Haar 往返、静态零运动、encode/decode、codec 对照"
+    },
+    {
+      "path": "tests/test_latent.py",
+      "classes": [],
+      "role": "四字段形状、adapter 往返、train-only 统计、归一化往返"
+    },
+    {
+      "path": "tests/test_conditioning.py",
+      "classes": [],
+      "role": "改变真实未来不影响 condition；加噪 condition 不污染 clean target；origin 一致"
+    },
+    {
+      "path": "tests/test_dit.py",
+      "classes": [],
+      "role": "DiT shape、旋转行为、reference/optimized 前向与梯度一致"
+    },
+    {
+      "path": "tests/test_flow.py",
+      "classes": [],
+      "role": "插值/速度/终点、source、Euler 与观测钳制"
+    },
+    {
+      "path": "tests/test_losses.py",
+      "classes": [],
+      "role": "重建/几何辅助目标、mask、冻结 decoder 仍向 DiT 回传梯度"
+    },
+    {
+      "path": "tests/test_generation.py",
+      "classes": [],
+      "role": "新入口生成与多段 rollout；纯观测推理不读取未来真值"
+    },
+    {
+      "path": "tests/test_training.py",
+      "classes": [],
+      "role": "单步更新、冻结边界、resume、失败加载不污染状态"
+    },
+    {
+      "path": "tests/test_metrics.py",
+      "classes": [],
+      "role": "RMSD 等已有定义、RMSF 零值/缺失/冲突、系统级聚合"
+    },
+    {
+      "path": "tests/test_migration.py",
+      "classes": [],
+      "role": "旧→新 artifact/权重映射与数值回归，不使用源代码字符串断言"
+    },
+    {
+      "path": "tests/test_imports.py",
+      "classes": [],
+      "role": "导入新包不加载旧 module/trainer/scripts；入口不反向成为依赖"
+    },
+    {
+      "path": "tools/migrate_artifacts.py",
+      "classes": [],
+      "role": "旧命名空间、权重键、统计格式和数据记录 schema 的显式兼容/转换；不重写原始数据大文件"
+    },
+    {
+      "path": "tools/inspect_model.py",
+      "classes": [],
+      "role": "打印真实模型树、模块参数量、冻结项和一次实际 forward 的形状"
+    },
+    {
+      "path": "tools/inspect_dataset.py",
+      "classes": [],
+      "role": "打印 system/trajectory/clip/时间间隔/原子数统计"
+    },
+    {
+      "path": "benchmarks/overfit.py",
+      "classes": [],
+      "role": "真实 tiny clip 和 3 系统 9 轨迹过拟合"
+    },
+    {
+      "path": "benchmarks/profile.py",
+      "classes": [],
+      "role": "图/encoder/codec/DiT/decoder/反向的耗时和峰值显存"
+    },
+    {
+      "path": "experiments/architecture_20260914/protocol.py",
+      "classes": [],
+      "role": "validate_protocol/compare_arms/decide；保留各轮协议，不放模型和训练循环"
+    }
+  ],
+  "root_and_noncode_files": [
+    ".gitignore",
+    "README.md",
+    "AGENTS.md",
+    "LICENSE",
+    "NOTICE.md",
+    "pyproject.toml",
+    "env.yaml",
+    "configs/codec_train.yaml",
+    "configs/dit_train.yaml",
+    "configs/sample.yaml",
+    "configs/evaluate.yaml",
+    "configs/preprocess.yaml",
+    "configs/machine.example.yaml",
+    "docs/architecture.md",
+    "docs/migration.md",
+    "experiments/architecture_20260914/baseline.yaml",
+    "experiments/architecture_20260914/round1.yaml",
+    "experiments/architecture_20260914/round2.yaml",
+    "experiments/architecture_20260914/round3.yaml",
+    "experiments/architecture_20260914/round4.yaml",
+    "experiments/architecture_20260914/results.md"
+  ],
+  "renames": {
+    "PVBCodecModel": "TrajectoryCodec",
+    "PVBFrameEncoder": "FrameEncoder",
+    "PVBFrameGraph": "删除别名；使用 FrameGraphBatch",
+    "TorchMD_VQ_ET": "TorchMDEncoder",
+    "StateDetailCodecV2": "StateDetailCodec",
+    "MatchedPoolingCodecV2": "MatchedPoolingCodec",
+    "StateDetailLatentV2": "删除别名；使用 StateDetailLatent",
+    "StateDetailDecoderOutput": "CodecOutput",
+    "CenteredCoordinateVectorStem": "CoordinateVectorStem",
+    "_EquivariantCoordinateHead": "EquivariantCoordinateHead",
+    "HaarLift": "HaarCoefficients",
+    "LatentFieldSet": "LatentFields",
+    "DiTLatentBatch": "LatentBatch",
+    "FrozenCodec": "CodecArtifact",
+    "PilotData": "DatasetSplits",
+    "PreparedRound4Batch": "PreparedDiTBatch",
+    "MMAPDataset": "BlockStore"
+  },
+  "retirement_targets": [
+    {
+      "id": "R01",
+      "paths": [
+        "module/model.py",
+        "module/interpolant_matcher.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "module/model.py; module/interpolant_matcher.py",
+      "action": "删除旧 dyVAE/bridge 数学和模型；latent rectified flow 保留在 flow/。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R02",
+      "paths": [
+        "trainer/abs_trainer.py",
+        "trainer/dyvae_trainer.py",
+        "trainer/dynamic_trainer.py",
+        "trainer/adj_match_trainer.py",
+        "trainer/dpo_trainer.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "trainer/abs_trainer.py; dyvae_trainer.py; dynamic_trainer.py; adj_match_trainer.py; dpo_trainer.py",
+      "action": "退出新主线；不搬入 legacy 包。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R03",
+      "paths": [
+        "module/temporal_codec.py",
+        "module/coordinate_decoder.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "module/temporal_codec.py; module/coordinate_decoder.py",
+      "action": "旧 temporal/anchor decoder 退出主线；当前坐标 head 来自 state_detail_codec_v2.py。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R04",
+      "paths": [
+        "module/equiformer_v2/",
+        "ept/"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "module/equiformer_v2/; ept/",
+      "action": "不进入当前主包；旧实验留在固定 Git 提交。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": true
+    },
+    {
+      "id": "R05",
+      "paths": [
+        "module/visnet.py",
+        "module/visnet_v2.py",
+        "module/trajectory_temporal_refiner.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "module/visnet.py; module/visnet_v2.py; module/trajectory_temporal_refiner.py",
+      "action": "作为非当前主线的历史研究实现留在原提交，不等于判定算法无价值。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": true
+    },
+    {
+      "id": "R06",
+      "paths": [
+        "module/dit_latent_cache.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "module/dit_latent_cache.py",
+      "action": "不进入本轮新主线；在线 history corruption 路径不得复用不匹配的 latent 缓存。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": true
+    },
+    {
+      "id": "R07",
+      "paths": [
+        "train.py",
+        "train.sh",
+        "infer_prot.py",
+        "infer_complex.py",
+        "eval_dock.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "train.py; train.sh; infer_prot.py; infer_complex.py; eval_dock.py",
+      "action": "旧模型入口退出；仍需的格式读写函数先迁至 molvid/data/io.py。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R08",
+      "paths": [
+        "data/atlas_dataset.py",
+        "data/misato_dataset.py",
+        "data/mdcath_dataset.py",
+        "data/dypdbbind_dataset.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "data/atlas_dataset.py; data/misato_dataset.py; data/mdcath_dataset.py; data/dypdbbind_dataset.py",
+      "action": "旧 pair 数据入口退出；ordered clip 和静态源读取保留。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R09",
+      "paths": [
+        "data/data_init.py",
+        "data/dataset_wrapper.py",
+        "data/collate.py"
+      ],
+      "patterns_to_resolve": [],
+      "previous_description": "data/data_init.py; data/dataset_wrapper.py; data/collate.py",
+      "action": "旧数据调度退出；新 batch/store/sampling 接管当前能力。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R10",
+      "paths": [],
+      "patterns_to_resolve": [
+        "scripts/run_*round*.py",
+        "scripts/run_*pilot*.py",
+        "scripts/run_dit_source_ab.py",
+        "scripts/run_dit_source_reassessment.py",
+        "scripts/*acceptance*.py"
+      ],
+      "previous_description": "旧 scripts/run_*round*.py、pilot/source_ab/reassessment 和阶段 acceptance 脚本",
+      "action": "公共能力迁出；协议进入 experiments，长测进入 benchmarks，之后旧文件退出。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R11",
+      "paths": [
+        "tests/test_luna_review_contracts.py"
+      ],
+      "patterns_to_resolve": [
+        "tests/test_*round*.py"
+      ],
+      "previous_description": "旧 tests/test_luna_review_contracts.py、test_*round*.py 与历史模型测试",
+      "action": "有用断言按 tests 清单迁移；阶段专属断言入 protocol；不按旧文件名保留。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    },
+    {
+      "id": "R12",
+      "paths": [
+        "module/",
+        "trainer/",
+        "evaluation/",
+        "utils/",
+        "agents/"
+      ],
+      "patterns_to_resolve": [
+        "LUNA*.md"
+      ],
+      "previous_description": "旧 module/ trainer/ evaluation/ utils/ 包入口；根目录 LUNA 提示词、历史 agents 阶段树",
+      "action": "完成公共符号迁移后退休；历史来源通过旧 Git 快照追溯。",
+      "status": "candidate_pending_local_reachability_and_parity",
+      "earliest_phase": "P5",
+      "automatic_delete": false,
+      "checks": [
+        "Extract required symbols first.",
+        "Resolve all retained code/config/test/checkpoint callers.",
+        "Keep tracked evidence and user changes.",
+        "Do not follow data/checkpoint symlinks or delete external files."
+      ],
+      "scope_reduction_not_dead_code_proof": false
+    }
+  ],
+  "layout": {
+    "repository_root_label": "<repo>",
+    "package_root": "molvid",
+    "forbidden_target_prefixes": [
+      "src/",
+      "molvid/models/"
+    ],
+    "imports": [
+      "from molvid.codec.model import TrajectoryCodec",
+      "from molvid.spatial.encoder import FrameEncoder",
+      "from molvid.data.batch import ClipBatch"
+    ],
+    "init_policy": "Empty package markers; root molvid/__init__.py may define __version__. No eager re-exports, PVB aliases, old-package import shims or sys.path patches.",
+    "packaging": {
+      "discovery_root": ".",
+      "include": [
+        "molvid",
+        "molvid.*"
+      ],
+      "exclude_non_package_roots": [
+        "tests",
+        "tools",
+        "benchmarks",
+        "experiments",
+        "datasets",
+        "outputs",
+        "docs"
+      ],
+      "install_policy": "Use the existing project environment. Configure flat package discovery explicitly; do not install or upgrade third-party dependencies without authorization.",
+      "smoke_check": "After installing the project into the existing environment, import molvid from a directory outside the repository and check its resolved file path."
+    },
+    "data_locations": {
+      "python_code": "molvid/data/",
+      "training_data": "external NAS/data disk, located through configuration",
+      "optional_local_data_path": "datasets/",
+      "data_path_is_optional": true,
+      "test_fixtures": "tests/fixtures/",
+      "local_generated_outputs": "outputs/",
+      "policy": "Do not move, rewrite, delete or package the existing training data/checkpoints. datasets/ is optional, ignored by Git, and is not an additional Python package. Do not create a symlink automatically."
+    }
+  },
+  "directory_policies": [
+    {
+      "path": "tests/fixtures/",
+      "required": true,
+      "tracked": "tiny redistributable fixtures only",
+      "role": "Captured small numerical references; no copied training corpus or large checkpoint."
+    },
+    {
+      "path": "datasets/",
+      "required": false,
+      "tracked": false,
+      "role": "Optional local data location/symlink; external data remains the default."
+    },
+    {
+      "path": "outputs/",
+      "required": false,
+      "tracked": false,
+      "role": "Generated evaluation/profile outputs and large reference artifacts; not package content."
+    }
+  ],
+  "root_file_roles": {
+    "pyproject.toml": "Explicitly discover only the root molvid package; testpaths points to tests; no src package-dir mapping.",
+    ".gitignore": "Ignore local datasets/ and generated outputs; keep tiny tests/fixtures trackable; do not untrack existing evidence indiscriminately.",
+    "docs/migration.md": "One compact current migration record: actual HEAD, resolved symbols, phase, commands/results, key mapping, blockers and next step. Reuse it rather than proliferating new PLAN/HANDOFF files.",
+    "README.md": "Current import/CLI examples and external data locations; primary usage no longer describes the old PVB workflow.",
+    "experiments/architecture_20260914/round3.yaml": "Historical protocol/evidence only if its retired refiner is required. Reproduce the retired algorithm at the old commit, not by reintroducing it into the new package."
+  },
+  "execution": {
+    "default_mode": "one writer, sequential dependency groups, independent review",
+    "default_first_phase": "P0",
+    "progress_file": "docs/migration.md",
+    "continuation": "Continue to the next phase after its checks pass; do not seek confirmation for routine moves. Stop only the dependent work for unresolved scientific differences or unavailable mandatory resources.",
+    "rules": [
+      "Use an isolated worktree based on the actual checked-out HEAD. Preserve uncommitted changes; do not reset, force-push, or modify the remote.",
+      "All Python, tests and numerical commands run through the existing enter-container / torch-ito environment. Do not reinstall dependencies to hide an import failure.",
+      "Perform source inspection and symbol extraction before rewriting tests; migrate useful assertions instead of deleting failing tests or weakening tolerances.",
+      "Migrate one dependency group at a time. Finish its targeted checks and a recoverable local checkpoint before the next group; do not launch whole-repository rewrites in parallel.",
+      "Default to one integration owner. Other sessions may read/review; parallel writes are only for explicitly non-overlapping, dependency-stable work.",
+      "The old worktree/reference commit remains the oracle until final cutover. New production modules never import old module/trainer/scripts; compare old and new in separate processes.",
+      "Keep the original plan names/classes as responsibilities, not a license to create empty stubs or new model behavior. Log real interface conflicts in docs/migration.md.",
+      "New interfaces may use inputs that exist at inference (topology, timestamps, masks and observed coordinates); future coordinates must not enter conditions, graph caches or rollout state.",
+      "Do not alter model formulae, tensor semantics, vocabulary IDs, training data, loss reduction, RNG draw order, frozen modules or sampling strategy as part of this refactor.",
+      "No long training or full historical study reruns by default. Use existing tiny/3-system fixtures and short CUDA parity checks.",
+      "Retirement entries are candidates, not deletion commands. Delete only after retained callers, configuration dispatch, tests, artifacts and useful helpers have been checked.",
+      "If required CUDA/data/checkpoints are unavailable, mark the dependent numerical checks as not_run and hold the dependent cutover/deletion. Continue only independent, verifiable work."
+    ],
+    "phases": [
+      {
+        "id": "P0",
+        "title": "核对基线和迁移边界",
+        "depends_on": [],
+        "owns_runtime_files": [],
+        "tasks": [
+          "Record git HEAD/branch/dirty state, environment and retained entrypoints; compare actual HEAD against the design baseline instead of rolling back automatically.",
+          "Resolve actual source symbols and dynamic/config-driven callers for each target file; classify unused imports separately from runtime dependencies.",
+          "Record one working codec and DiT configuration, checkpoint/statistics identities and RNG states; capture old-path tiny forward/loss/gradient/update/resume references when resources are available.",
+          "Create/update only the compact docs/migration.md record; no production renaming or deletion in this phase."
+        ],
+        "acceptance": [
+          "Actual source/target mapping and retained call paths recorded.",
+          "Reference commands and availability recorded; missing resources are not marked as passed."
+        ],
+        "delete_legacy": false
+      },
+      {
+        "id": "P1",
+        "title": "浅层包、数据与几何基础",
+        "depends_on": [
+          "P0"
+        ],
+        "owns_runtime_files": [
+          "molvid/config.py",
+          "molvid/runtime.py",
+          "molvid/data/batch.py",
+          "molvid/data/store.py",
+          "molvid/data/sampling.py",
+          "molvid/data/io.py",
+          "molvid/data/preprocess.py",
+          "molvid/data/manifest.py",
+          "molvid/data/chemistry.py",
+          "molvid/geometry/types.py",
+          "molvid/geometry/frames.py",
+          "molvid/geometry/neighbors.py",
+          "molvid/geometry/topology.py",
+          "molvid/geometry/coordinates.py",
+          "molvid/equivariant.py"
+        ],
+        "tasks": [
+          "Create flat molvid/ package markers and explicit package discovery; no src/ or models/ wrapper.",
+          "Migrate data structures, stores, sampling, geometry and the two shared equivariant operators; preserve current storage bytes and type IDs."
+        ],
+        "acceptance": [
+          "Targeted data/geometry tests preserve existing assertions.",
+          "New foundational imports do not load old packages.",
+          "Tiny static and trajectory records retain units, atom ordering, masks and per-sample boundaries."
+        ],
+        "tests": [
+          "tests/test_data.py",
+          "tests/test_geometry.py"
+        ],
+        "delete_legacy": false
+      },
+      {
+        "id": "P2",
+        "title": "空间编码器、codec 与权重映射",
+        "depends_on": [
+          "P1"
+        ],
+        "owns_runtime_files": [
+          "molvid/checkpoints.py",
+          "molvid/spatial/encoder.py",
+          "molvid/spatial/torchmd.py",
+          "molvid/spatial/ops.py",
+          "molvid/codec/model.py",
+          "molvid/codec/types.py",
+          "molvid/codec/haar.py",
+          "molvid/codec/state_detail.py",
+          "molvid/codec/heads.py"
+        ],
+        "tasks": [
+          "Extract FrameEncoder/TorchMDEncoder and compose TrajectoryCodec without legacy bridge logic.",
+          "Move coordinate_head ownership explicitly and migrate checkpoint keys without reinitializing retained weights.",
+          "Preserve effective initialization/RNG order and shared-parameter identity; record any removed unreachable parameter/buffer separately."
+        ],
+        "acceptance": [
+          "Compare old/new frame features, Haar/codec latents and decoded coordinates using the same weights and input.",
+          "No missing target weights, duplicate key collisions or silent strict=False fallback for required weights.",
+          "Codec reconstruction loss and gradients match the reference within pre-established dtype/device tolerances."
+        ],
+        "tests": [
+          "tests/test_codec.py",
+          "tests/test_migration.py"
+        ],
+        "delete_legacy": false
+      },
+      {
+        "id": "P3",
+        "title": "latent、DiT 和 flow",
+        "depends_on": [
+          "P2"
+        ],
+        "owns_runtime_files": [
+          "molvid/dit/model.py",
+          "molvid/dit/blocks.py",
+          "molvid/dit/backend.py",
+          "molvid/latent/types.py",
+          "molvid/latent/adapter.py",
+          "molvid/latent/statistics.py",
+          "molvid/latent/conditioning.py",
+          "molvid/flow/objective.py",
+          "molvid/flow/source.py",
+          "molvid/flow/sampling.py"
+        ],
+        "tasks": [
+          "Migrate adapter/types/statistics/conditioning and both DiT execution backends.",
+          "Separate flow objective/source/sampling; preserve observation masks, source gauge, clean target and online noise semantics."
+        ],
+        "acceptance": [
+          "Same input weights/tau/noise produce equivalent DiT velocity and flow loss.",
+          "Reference/optimized forward and gradients agree as in the baseline.",
+          "Changing true future coordinates cannot change inference conditions; corrupted observations do not overwrite clean future targets."
+        ],
+        "tests": [
+          "tests/test_latent.py",
+          "tests/test_conditioning.py",
+          "tests/test_dit.py",
+          "tests/test_flow.py"
+        ],
+        "delete_legacy": false
+      },
+      {
+        "id": "P4",
+        "title": "训练、生成、评估与统一入口",
+        "depends_on": [
+          "P3"
+        ],
+        "owns_runtime_files": [
+          "molvid/generation.py",
+          "molvid/training/codec.py",
+          "molvid/training/dit.py",
+          "molvid/training/batches.py",
+          "molvid/losses/reconstruction.py",
+          "molvid/losses/geometry.py",
+          "molvid/evaluation/geometry.py",
+          "molvid/evaluation/motion.py",
+          "molvid/evaluation/latent.py",
+          "molvid/evaluation/runner.py",
+          "molvid/evaluation/report.py",
+          "molvid/cli/preprocess.py",
+          "molvid/cli/train_codec.py",
+          "molvid/cli/train_dit.py",
+          "molvid/cli/sample.py",
+          "molvid/cli/evaluate.py"
+        ],
+        "substeps": [
+          "P4a: losses and codec training",
+          "P4b: DiT batch preparation and training",
+          "P4c: sample/rollout and metrics",
+          "P4d: CLI/config/inspection tools"
+        ],
+        "tasks": [
+          "Extract common runtime work from pilot/round runners; route all active entrypoints through molvid.",
+          "Keep codec and DiT training as two trainers; do not add joint training in this round.",
+          "Map optimizer parameter identities and resume state, retain gradient flow through a parameter-frozen decoder, and preserve corrected RMSF reading."
+        ],
+        "acceptance": [
+          "One optimizer step and the next resumed step match the old reference.",
+          "Frozen parameters remain unchanged and required gradients reach the DiT/adapter.",
+          "Run a short observed-only generation/rollout and evaluate it independently.",
+          "CLI works from flat package imports; historical protocol-only configurations are not silently treated as runnable new architectures."
+        ],
+        "tests": [
+          "tests/test_losses.py",
+          "tests/test_training.py",
+          "tests/test_generation.py",
+          "tests/test_metrics.py",
+          "tests/test_migration.py"
+        ],
+        "delete_legacy": false
+      },
+      {
+        "id": "P5",
+        "title": "验证后切换与清理旧代码",
+        "depends_on": [
+          "P4"
+        ],
+        "owns_runtime_files": [],
+        "tasks": [
+          "Run retained targeted regression suite plus import isolation and a short CUDA profile; investigate material slowdown rather than adding CPU fallbacks.",
+          "Retire old paths only after extracted helpers, configuration callers and checkpoint needs have been accounted for.",
+          "Update README/current docs and package metadata; keep license/source notices and historical evidence intact.",
+          "Run package import checks outside the repository; only a separate explicit instruction permits publishing or remote pushes."
+        ],
+        "acceptance": [
+          "All retained public classes live at their listed target paths; no src/ or molvid/models/ target packages.",
+          "Active imports/CLI/tests no longer depend on old root packages or PVB class aliases.",
+          "Numerical checks genuinely passed, or final numerical sign-off/cutover is explicitly withheld.",
+          "Current paths, preserved functionality, removed paths, commands and results are recorded concisely."
+        ],
+        "tests": [
+          "tests/test_imports.py",
+          "tests/test_migration.py",
+          "tests/test_metrics.py"
+        ],
+        "delete_legacy": "only verified retirement candidates"
+      }
+    ]
+  },
+  "checkpoint_migration": {
+    "match_mode": "anchored_prefix, first_match_only, no_global_string_replace",
+    "prefix_rules": [
+      {
+        "from_prefix": "state_detail_codec.coordinate_head.",
+        "to_prefix": "coordinate_head."
+      },
+      {
+        "from_prefix": "coordinate_vector_stem.projection.",
+        "to_prefix": "coordinate_stem.projection."
+      },
+      {
+        "from_prefix": "frame_encoder.spatial_encoder.",
+        "to_prefix": "frame_encoder.backbone."
+      },
+      {
+        "from_prefix": "state_detail_codec.",
+        "to_prefix": "temporal_codec."
+      }
+    ],
+    "constraints": [
+      "Inspect actual checkpoint wrappers before applying rules; model/module/EMA prefixes must be handled explicitly per format.",
+      "Verify tensor values, dtype, shape, shared parameter identity, unexpected/missing keys and key collisions; do not silently ignore unmatched weights.",
+      "Preserve optimizer moment state by parameter identity and param-group ordering; a freshly initialized optimizer is not a migrated resume state.",
+      "Preserve scheduler/scaler/RNG/sampler/counters and normalization artifacts; validate old hashes before conversion and write new outputs without overwriting originals.",
+      "Class/module renaming and state-dict attribute-key renaming are separate operations; do not rewrite tensor keys just because a Python import path changed.",
+      "For whole-object pickle checkpoints, export trusted local artifacts in their old commit environment first; do not keep old PVB aliases in the production package.",
+      "Existing clip stores may be adapted in memory at read boundaries; no full data rewrite for namespace renaming."
+    ]
+  },
+  "symbol_migrations": [
+    {
+      "old_symbol": "PVBCodecModel",
+      "new_symbol": "TrajectoryCodec",
+      "target_path": "molvid/codec/model.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "PVBFrameEncoder",
+      "new_symbol": "FrameEncoder",
+      "target_path": "molvid/spatial/encoder.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "PVBFrameGraph",
+      "new_symbol": "FrameGraphBatch",
+      "target_path": "molvid/geometry/types.py",
+      "action": "remove_alias_and_update_callers"
+    },
+    {
+      "old_symbol": "TorchMD_VQ_ET",
+      "new_symbol": "TorchMDEncoder",
+      "target_path": "molvid/spatial/torchmd.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "StateDetailCodecV2",
+      "new_symbol": "StateDetailCodec",
+      "target_path": "molvid/codec/state_detail.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "MatchedPoolingCodecV2",
+      "new_symbol": "MatchedPoolingCodec",
+      "target_path": "molvid/codec/state_detail.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "StateDetailLatentV2",
+      "new_symbol": "StateDetailLatent",
+      "target_path": "molvid/codec/types.py",
+      "action": "remove_alias_and_update_callers"
+    },
+    {
+      "old_symbol": "StateDetailDecoderOutput",
+      "new_symbol": "CodecOutput",
+      "target_path": "molvid/codec/types.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "CenteredCoordinateVectorStem",
+      "new_symbol": "CoordinateVectorStem",
+      "target_path": "molvid/codec/heads.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "_EquivariantCoordinateHead",
+      "new_symbol": "EquivariantCoordinateHead",
+      "target_path": "molvid/codec/heads.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "HaarLift",
+      "new_symbol": "HaarCoefficients",
+      "target_path": "molvid/codec/haar.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "LatentFieldSet",
+      "new_symbol": "LatentFields",
+      "target_path": "molvid/latent/types.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "DiTLatentBatch",
+      "new_symbol": "LatentBatch",
+      "target_path": "molvid/latent/types.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "FrozenCodec",
+      "new_symbol": "CodecArtifact",
+      "target_path": "molvid/checkpoints.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "PilotData",
+      "new_symbol": "DatasetSplits",
+      "target_path": "molvid/data/manifest.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "PreparedRound4Batch",
+      "new_symbol": "PreparedDiTBatch",
+      "target_path": "molvid/training/batches.py",
+      "action": "rename_or_extract"
+    },
+    {
+      "old_symbol": "MMAPDataset",
+      "new_symbol": "BlockStore",
+      "target_path": "molvid/data/store.py",
+      "action": "rename_or_extract"
+    }
+  ],
+  "historical_reproduction": {
+    "retired_algorithm_policy": "History-only implementations remain reproducible at their original Git commit/environment; the flat main package is not required to support every historical runner or checkpoint architecture.",
+    "retained_artifact_policy": "Current codec/encoder/DiT weights and statistics are mandatory migration targets. If an actual required checkpoint contradicts the planned retained components, record the conflict before deleting dependencies."
+  },
+  "package_init_files": [
+    "molvid/__init__.py",
+    "molvid/cli/__init__.py",
+    "molvid/codec/__init__.py",
+    "molvid/data/__init__.py",
+    "molvid/dit/__init__.py",
+    "molvid/evaluation/__init__.py",
+    "molvid/flow/__init__.py",
+    "molvid/geometry/__init__.py",
+    "molvid/latent/__init__.py",
+    "molvid/losses/__init__.py",
+    "molvid/spatial/__init__.py",
+    "molvid/training/__init__.py"
+  ],
+  "all_target_files": [
+    ".gitignore",
+    "AGENTS.md",
+    "LICENSE",
+    "NOTICE.md",
+    "README.md",
+    "benchmarks/overfit.py",
+    "benchmarks/profile.py",
+    "configs/codec_train.yaml",
+    "configs/dit_train.yaml",
+    "configs/evaluate.yaml",
+    "configs/machine.example.yaml",
+    "configs/preprocess.yaml",
+    "configs/sample.yaml",
+    "docs/architecture.md",
+    "docs/migration.md",
+    "env.yaml",
+    "experiments/architecture_20260914/baseline.yaml",
+    "experiments/architecture_20260914/protocol.py",
+    "experiments/architecture_20260914/results.md",
+    "experiments/architecture_20260914/round1.yaml",
+    "experiments/architecture_20260914/round2.yaml",
+    "experiments/architecture_20260914/round3.yaml",
+    "experiments/architecture_20260914/round4.yaml",
+    "molvid/__init__.py",
+    "molvid/checkpoints.py",
+    "molvid/cli/__init__.py",
+    "molvid/cli/evaluate.py",
+    "molvid/cli/preprocess.py",
+    "molvid/cli/sample.py",
+    "molvid/cli/train_codec.py",
+    "molvid/cli/train_dit.py",
+    "molvid/codec/__init__.py",
+    "molvid/codec/haar.py",
+    "molvid/codec/heads.py",
+    "molvid/codec/model.py",
+    "molvid/codec/state_detail.py",
+    "molvid/codec/types.py",
+    "molvid/config.py",
+    "molvid/data/__init__.py",
+    "molvid/data/batch.py",
+    "molvid/data/chemistry.py",
+    "molvid/data/io.py",
+    "molvid/data/manifest.py",
+    "molvid/data/preprocess.py",
+    "molvid/data/sampling.py",
+    "molvid/data/store.py",
+    "molvid/dit/__init__.py",
+    "molvid/dit/backend.py",
+    "molvid/dit/blocks.py",
+    "molvid/dit/model.py",
+    "molvid/equivariant.py",
+    "molvid/evaluation/__init__.py",
+    "molvid/evaluation/geometry.py",
+    "molvid/evaluation/latent.py",
+    "molvid/evaluation/motion.py",
+    "molvid/evaluation/report.py",
+    "molvid/evaluation/runner.py",
+    "molvid/flow/__init__.py",
+    "molvid/flow/objective.py",
+    "molvid/flow/sampling.py",
+    "molvid/flow/source.py",
+    "molvid/generation.py",
+    "molvid/geometry/__init__.py",
+    "molvid/geometry/coordinates.py",
+    "molvid/geometry/frames.py",
+    "molvid/geometry/neighbors.py",
+    "molvid/geometry/topology.py",
+    "molvid/geometry/types.py",
+    "molvid/latent/__init__.py",
+    "molvid/latent/adapter.py",
+    "molvid/latent/conditioning.py",
+    "molvid/latent/statistics.py",
+    "molvid/latent/types.py",
+    "molvid/losses/__init__.py",
+    "molvid/losses/geometry.py",
+    "molvid/losses/reconstruction.py",
+    "molvid/runtime.py",
+    "molvid/spatial/__init__.py",
+    "molvid/spatial/encoder.py",
+    "molvid/spatial/ops.py",
+    "molvid/spatial/torchmd.py",
+    "molvid/training/__init__.py",
+    "molvid/training/batches.py",
+    "molvid/training/codec.py",
+    "molvid/training/dit.py",
+    "pyproject.toml",
+    "tests/conftest.py",
+    "tests/reference.py",
+    "tests/test_codec.py",
+    "tests/test_conditioning.py",
+    "tests/test_data.py",
+    "tests/test_dit.py",
+    "tests/test_flow.py",
+    "tests/test_generation.py",
+    "tests/test_geometry.py",
+    "tests/test_imports.py",
+    "tests/test_latent.py",
+    "tests/test_losses.py",
+    "tests/test_metrics.py",
+    "tests/test_migration.py",
+    "tests/test_training.py",
+    "tools/inspect_dataset.py",
+    "tools/inspect_model.py",
+    "tools/migrate_artifacts.py"
+  ],
+  "target_only_directories": [
+    "tests/fixtures/"
+  ],
+  "artifact_validation": {
+    "json_parse": "passed",
+    "runtime_target_paths_unique": "passed",
+    "runtime_file_count_preserved": 50,
+    "runtime_class_count_preserved": 74,
+    "runtime_public_functions_preserved": true,
+    "all_runtime_paths_present_in_markdown": "passed",
+    "runtime_phase_coverage": "passed",
+    "target_symbol_destinations": "passed",
+    "no_obsolete_target_prefix": "passed",
+    "tree_generated_from_inventory": true,
+    "repository_execution_tests": "not_run_design_only",
+    "markdown_retirement_table_matches_json": true,
+    "all_original_runtime_classes_and_functions_preserved": true
+  },
+  "field_semantics": {
+    "path": "Repository-relative target file; all runtime files are inside root molvid/.",
+    "source": "Previous baseline source locations or descriptions. Resolve actual symbols during P0; descriptions are not shell paths.",
+    "phase": "First migration phase, not an assertion that implementation or tests have been completed.",
+    "classes_and_public_functions": "Target responsibilities preserved from the previous design; not permission to create stubs or invent new science.",
+    "retirement_targets": "Non-executable candidates; resolve callers and preserve evidence before retiring any path."
+  }
+}

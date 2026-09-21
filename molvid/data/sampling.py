@@ -1038,7 +1038,10 @@ def _canonical_hash(value: Any) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 def _trajectory_id(sample_id: str) -> str:
-    return str(sample_id).rsplit("_w", 1)[0]
+    """Return the physical trajectory identity for a stored window."""
+
+    value = str(sample_id).rsplit("_w", 1)[0]
+    return re.sub(r"_dt_[0-9]+(?:\.[0-9]+)?ps$", "", value)
 
 
 def _spec_signature(specs: ClipSpecTable) -> str:
@@ -1057,12 +1060,7 @@ def _spec_signature(specs: ClipSpecTable) -> str:
 
 
 class TrajectoryCappedBatchSampler(Sampler[list[int]]):
-    """Sample exactly K distinct windows per trajectory in every epoch.
-
-    The selected windows are resampled deterministically from all 62 native
-    windows at each epoch.  The inner task-aware sampler then packs them under
-    the unchanged 80,000 T*N token budget with replacement disabled.
-    """
+    """Sample up to K distinct legal windows per trajectory in every epoch."""
 
     def __init__(
         self,
@@ -1072,12 +1070,34 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
         clips_per_trajectory: int,
         seed: int,
         shuffle: bool = True,
+        num_replicas: int | None = None,
+        rank: int | None = None,
+        drop_last: bool = False,
+        oversize_policy: str = "partition",
+        time_bucket_weights: Mapping[str, float] | None = None,
     ) -> None:
         self.specs = get_clip_specs(dataset)
         self.max_tokens = int(max_tokens)
         self.clips_per_trajectory = int(clips_per_trajectory)
         self.seed = int(seed)
         self.shuffle = bool(shuffle)
+        self.num_replicas = (
+            dist.get_world_size() if num_replicas is None and dist.is_available() and dist.is_initialized()
+            else 1 if num_replicas is None else int(num_replicas)
+        )
+        self.rank = (
+            dist.get_rank() if rank is None and dist.is_available() and dist.is_initialized()
+            else 0 if rank is None else int(rank)
+        )
+        self.drop_last = bool(drop_last)
+        self.oversize_policy = str(oversize_policy)
+        self.time_bucket_weights = {
+            str(key): float(value) for key, value in (time_bucket_weights or {}).items()
+        }
+        if self.oversize_policy != "partition":
+            raise ValueError("trajectory-capped training requires singleton oversize clips")
+        if self.num_replicas < 1 or not 0 <= self.rank < self.num_replicas:
+            raise ValueError("invalid capped-sampler DDP rank")
         self.epoch = 0
         self._inner: TaskAwareClipBatchSampler | None = None
         self._selected_positions: tuple[int, ...] = ()
@@ -1090,15 +1110,55 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
         }
         if not self._trajectory_positions:
             raise ValueError("T1 training dataset contains no trajectories")
+        if self.clips_per_trajectory < 1:
+            raise ValueError("clips_per_trajectory must be positive")
+        if any(self.clips_per_trajectory > len(positions) for positions in self._trajectory_positions.values()):
+            if not self.time_bucket_weights:
+                raise ValueError("clips_per_trajectory exceeds the legal windows of a trajectory")
+        self._trajectory_bucket_positions: dict[str, dict[str, tuple[int, ...]]] = {}
         for trajectory, positions in self._trajectory_positions.items():
-            windows = {int(self.specs[pos].sample_id.rsplit("_w", 1)[1]) for pos in positions}
-            if len(positions) != 62 or windows != set(range(62)):
-                raise ValueError(
-                    f"trajectory {trajectory} does not contain exactly windows 0..61"
-                )
-        if self.clips_per_trajectory < 1 or self.clips_per_trajectory > 62:
-            raise ValueError("clips_per_trajectory must be in [1, 62]")
+            buckets: dict[str, list[int]] = {}
+            for position in positions:
+                buckets.setdefault(str(self.specs[position].time_bucket_id), []).append(position)
+            self._trajectory_bucket_positions[trajectory] = {
+                bucket: tuple(values) for bucket, values in sorted(buckets.items())
+            }
+        self._validate_time_bucket_weights()
         self._source_signature = _spec_signature(self.specs)
+
+    def _validate_time_bucket_weights(self) -> None:
+        if not self.time_bucket_weights:
+            return
+        values = np.asarray(list(self.time_bucket_weights.values()), dtype=np.float64)
+        if values.size == 0 or not np.isfinite(values).all() or (values < 0).any() or float(values.sum()) <= 0:
+            raise ValueError("time_bucket_weights must be finite, non-negative, and have positive sum")
+        for trajectory, buckets in self._trajectory_bucket_positions.items():
+            unknown = set(self.time_bucket_weights) - set(buckets)
+            if unknown:
+                raise ValueError(
+                    f"trajectory {trajectory} lacks configured time buckets: {sorted(unknown)}"
+                )
+            if any(float(weight) > 0 and bucket not in buckets for bucket, weight in self.time_bucket_weights.items()):
+                raise ValueError(f"trajectory {trajectory} lacks a positively weighted time bucket")
+
+    def _bucket_counts(self, buckets: Mapping[str, tuple[int, ...]]) -> dict[str, int]:
+        positive = [(bucket, float(weight)) for bucket, weight in self.time_bucket_weights.items() if float(weight) > 0]
+        if not positive:
+            raise ValueError("time_bucket_weights must contain a positive bucket")
+        total = sum(weight for _, weight in positive)
+        raw = {bucket: self.clips_per_trajectory * weight / total for bucket, weight in positive}
+        counts = {bucket: int(math.floor(value)) for bucket, value in raw.items()}
+        remainder = self.clips_per_trajectory - sum(counts.values())
+        order = sorted(raw, key=lambda bucket: (-(raw[bucket] - counts[bucket]), bucket))
+        for bucket in order[:remainder]:
+            counts[bucket] += 1
+        for bucket, count in counts.items():
+            if count > len(buckets.get(bucket, ())):
+                raise ValueError(
+                    f"time bucket {bucket} has {len(buckets.get(bucket, ())) } windows, "
+                    f"but {count} are required per trajectory"
+                )
+        return counts
 
     def _trajectory_rng(self, trajectory: str, epoch: int) -> np.random.Generator:
         token = f"{self.seed}|{epoch}|{trajectory}".encode()
@@ -1110,12 +1170,23 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
         selected: list[int] = []
         for trajectory, positions in self._trajectory_positions.items():
             rng = self._trajectory_rng(trajectory, epoch)
-            choice = rng.choice(
-                np.asarray(positions, dtype=np.int64),
-                size=self.clips_per_trajectory,
-                replace=False,
-            )
-            chosen = [int(value) for value in choice.tolist()]
+            buckets = self._trajectory_bucket_positions[trajectory]
+            if self.time_bucket_weights:
+                chosen = []
+                for bucket, count in self._bucket_counts(buckets).items():
+                    choice = rng.choice(
+                        np.asarray(buckets[bucket], dtype=np.int64),
+                        size=count,
+                        replace=False,
+                    )
+                    chosen.extend(int(value) for value in choice.tolist())
+            else:
+                choice = rng.choice(
+                    np.asarray(positions, dtype=np.int64),
+                    size=self.clips_per_trajectory,
+                    replace=False,
+                )
+                chosen = [int(value) for value in choice.tolist()]
             if self.shuffle:
                 rng.shuffle(chosen)
             selected.extend(chosen)
@@ -1123,10 +1194,13 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
         inner = TaskAwareClipBatchSampler(
             ClipSpecTable.from_specs(selected_specs),
             max_tokens=self.max_tokens,
+            num_replicas=self.num_replicas,
+            rank=self.rank,
+            drop_last=self.drop_last,
             seed=self.seed + int(epoch),
             shuffle=self.shuffle,
             replacement=False,
-            oversize_policy="error",
+            oversize_policy=self.oversize_policy,
         )
         self._selected_positions = tuple(selected)
         return inner
@@ -1151,7 +1225,7 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
         self._selected_positions = ()
 
     def __iter__(self) -> Iterator[list[int]]:
-        return iter([list(batch) for batch in self._current().global_batches])
+        return iter(self._current())
 
     def __len__(self) -> int:
         return len(self._current())
@@ -1163,9 +1237,20 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
             "seed": int(self.seed),
             "max_tokens": int(self.max_tokens),
             "clips_per_trajectory": int(self.clips_per_trajectory),
+            "time_bucket_weights": {
+                str(key): float(value) for key, value in self.time_bucket_weights.items()
+            },
             "shuffle": bool(self.shuffle),
             "replacement": False,
             "trajectory_count": len(self._trajectory_positions),
+            "window_counts": {
+                trajectory: len(positions)
+                for trajectory, positions in self._trajectory_positions.items()
+            },
+            "num_replicas": self.num_replicas,
+            "rank": self.rank,
+            "drop_last": self.drop_last,
+            "oversize_policy": self.oversize_policy,
             "source_spec_signature": self._source_signature,
         }
 
@@ -1176,9 +1261,15 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
             "seed",
             "max_tokens",
             "clips_per_trajectory",
+            "time_bucket_weights",
             "shuffle",
             "replacement",
             "trajectory_count",
+            "window_counts",
+            "num_replicas",
+            "rank",
+            "drop_last",
+            "oversize_policy",
             "source_spec_signature",
         ):
             if state.get(key) != expected[key]:

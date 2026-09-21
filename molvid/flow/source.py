@@ -10,7 +10,7 @@ from torch import Tensor
 
 from ..latent.adapter import StateDetailLatentAdapter
 from ..latent.statistics import LatentStatistics
-from ..latent.types import LatentBatch, LatentFields
+from ..latent.types import FrameLatentBatch, LatentBatch, LatentFields, QuerySpec
 
 SOURCE_SCHEMA = "pvb.dit.state_detail.source.v1"
 SOURCE_MODES = ("gaussian", "conditional")
@@ -269,3 +269,46 @@ def source_contract(
         "future_source": "eps" if source_mode == "gaussian" else "m_plus_eps",
         "noise_std_per_coefficient": 1.0,
     }
+
+
+def repeat_last_frame_center(observed: FrameLatentBatch, query: QuerySpec) -> FrameLatentBatch:
+    """Repeat only the last valid observed h/v into every future query frame."""
+
+    if observed.batch_size != query.batch_size:
+        raise ValueError("observed and query batch sizes differ")
+    last = observed.frame_mask.sum(dim=1).long() - 1
+    if torch.any(last < 0):
+        raise ValueError("source center requires at least one observed frame per sample")
+    atom_last = last.index_select(0, observed.abid)
+    atom = torch.arange(observed.num_atoms, device=observed.h.device)
+    last_h = observed.h[atom_last, atom]
+    last_v = observed.v[atom_last, atom]
+    h = last_h.unsqueeze(0).expand(query.frames, -1, -1).clone()
+    v = last_v.unsqueeze(0).expand(query.frames, -1, -1, -1).clone()
+    atom_mask = query.frame_mask.index_select(0, observed.abid).transpose(0, 1)
+    return FrameLatentBatch(
+        h=h * atom_mask.unsqueeze(-1),
+        v=v * atom_mask.unsqueeze(-1).unsqueeze(-1),
+        time_ps=query.time_ps,
+        frame_mask=query.frame_mask,
+        topology=observed.topology,
+        statistics_hash=observed.statistics_hash,
+    )
+
+
+def sample_frame_source(
+    center: FrameLatentBatch,
+    *,
+    generator: Optional[torch.Generator] = None,
+) -> tuple[FrameLatentBatch, FrameLatentBatch]:
+    """Return ``repeat(last_observed)+N(0,1)`` and the sampled noise."""
+
+    noise_h = torch.randn(center.h.shape, device=center.h.device, dtype=center.h.dtype, generator=generator)
+    noise_v = torch.randn(center.v.shape, device=center.v.device, dtype=center.v.dtype, generator=generator)
+    atom_mask = center.atom_frame_mask()
+    noise = center.with_features(
+        noise_h * atom_mask.unsqueeze(-1),
+        noise_v * atom_mask.unsqueeze(-1).unsqueeze(-1),
+    )
+    source = center.with_features(center.h + noise.h, center.v + noise.v)
+    return source, noise

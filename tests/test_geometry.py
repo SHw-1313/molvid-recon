@@ -14,6 +14,7 @@ from molvid.geometry.frames import (
 from molvid.geometry.neighbors import CudaRadiusNeighborList
 from molvid.geometry.topology import BoundedTopologyCache, DistanceOnlyBondCache, build_canonical_reference_index
 from molvid.geometry.types import StaticTopologyMetadata
+from molvid.evaluation.geometry import aligned_rmsf_metrics, dynamic_acf_metrics
 
 
 def _record(sample_id: str, offset: float) -> dict:
@@ -176,3 +177,32 @@ def test_distance_only_bonds_use_train_frame_zero_reference():
     assert set(map(tuple, bonds.t().cpu().tolist())) == {
         (0, 1), (1, 0), (1, 2), (2, 1)
     }
+
+
+def test_static_motion_metrics_are_explicitly_unavailable():
+    record = _record("static", 0.0)
+    record["x"] = np.repeat(record["x"][:1], 3, axis=0)
+    record["bpos"] = record["x"].copy()
+    record["time_ps"] = np.array([0.0, 100.0, 200.0], dtype=np.float32)
+    record["delta_time_ps"] = np.array([100.0, 100.0], dtype=np.float32)
+    batch = collate_clip_records([record])
+    rmsf = aligned_rmsf_metrics(batch.x, batch.x, batch)
+    dynamic = dynamic_acf_metrics(batch.x, batch.x, batch)
+    assert rmsf["available"] is True
+    assert rmsf["correlation"] is None
+    assert rmsf["correlation_available"] is False
+    assert rmsf["correlation_reason"] == "zero_variance"
+    assert dynamic["available"] is False
+    assert dynamic["reason"] == "zero_variance"
+    assert dynamic["dynamic_correlation"] is None
+    assert dynamic["absolute_error"] is None
+
+
+def test_short_motion_metrics_are_explicitly_unavailable():
+    batch = collate_clip_records([_record("short", 0.0)])
+    dynamic = dynamic_acf_metrics(batch.x, batch.x, batch)
+    assert dynamic["available"] is False
+    assert dynamic["reason"] == "insufficient_frames"
+    assert dynamic["acf_available"] is False
+    assert dynamic["dynamic_correlation"] is None
+    assert dynamic["absolute_error"] is None

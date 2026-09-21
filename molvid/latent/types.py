@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, replace
 import hashlib
 import json
@@ -11,6 +12,7 @@ import torch
 from torch import Tensor
 
 from ..codec.types import STATE_DETAIL_CODEC_SCHEMA
+from ..geometry.types import StaticTopologyMetadata
 
 DIT_ADAPTER_SCHEMA = "pvb.dit.state_detail.adapter.v2"
 DIT_BATCH_SCHEMA = "pvb.dit.state_detail.batch.v2"
@@ -19,6 +21,7 @@ DIT_MODEL_SCHEMA = "pvb.dit.state_detail.model.v2"
 SUPPORTED_DIT_MODES = ("ratio2_state_detail", "ratio4_state_detail")
 SUPPORTED_RATIOS = (2, 4)
 FRAME_COUNT = 16
+FRAME_LATENT_SCHEMA = "molvid.frame_joint.latent.v1"
 
 def _json_safe(value: Any) -> Any:
     if value is None or isinstance(value, (str, bool, int)):
@@ -404,3 +407,246 @@ class LatentBatch:
     @property
     def hash(self) -> str:
         return contract_hash(self.contract())
+
+
+@dataclass(frozen=True)
+class FrameLatentBatch:
+    """Per-frame scalar/vector features on a packed atom axis.
+
+    ``h`` is ``[T,N,C]`` and ``v`` is ``[T,N,3,C]``.  The xyz axis is an
+    SO(3) vector axis; learned linear maps may only act on the final channel
+    axis.  ``time_ps`` is physical time and is unrelated to rectified-flow
+    progress.
+    """
+
+    h: Tensor
+    v: Tensor
+    time_ps: Tensor
+    frame_mask: Tensor
+    topology: StaticTopologyMetadata
+    statistics_hash: str = ""
+    schema_version: str = FRAME_LATENT_SCHEMA
+
+    def __post_init__(self) -> None:
+        if self.schema_version != FRAME_LATENT_SCHEMA:
+            raise ValueError(f"unsupported frame latent schema {self.schema_version!r}")
+        if self.h.ndim != 3:
+            raise ValueError("frame scalar features must have shape [T,N,C]")
+        if self.v.ndim != 4 or self.v.shape[:2] != self.h.shape[:2] or self.v.shape[2] != 3:
+            raise ValueError("frame vector features must have shape [T,N,3,C]")
+        if self.v.shape[-1] != self.h.shape[-1]:
+            raise ValueError("frame scalar/vector channel widths must match")
+        if self.topology.num_atoms != self.h.shape[1]:
+            raise ValueError("frame features and topology disagree on packed atoms")
+        if self.time_ps.shape != (self.topology.batch_size, self.h.shape[0]):
+            raise ValueError("time_ps must have shape [B,T]")
+        if self.frame_mask.shape != self.time_ps.shape:
+            raise ValueError("frame_mask must have shape [B,T]")
+        if self.h.device != self.v.device or self.h.device != self.topology.abid.device:
+            raise ValueError("frame features and topology must share a device")
+        if not torch.isfinite(self.h).all() or not torch.isfinite(self.v).all():
+            raise ValueError("frame latent contains NaN or Inf")
+        clock = self.time_ps.to(device=self.h.device, dtype=self.h.dtype)
+        mask = self.frame_mask.to(device=self.h.device, dtype=torch.bool)
+        object.__setattr__(self, "time_ps", clock)
+        object.__setattr__(self, "frame_mask", mask)
+        for sample in range(self.batch_size):
+            valid = torch.nonzero(mask[sample], as_tuple=False).flatten()
+            if valid.numel() and not torch.equal(valid, torch.arange(valid.numel(), device=valid.device)):
+                raise ValueError("frame_mask must be a valid prefix")
+            values = clock[sample].index_select(0, valid)
+            if values.numel() > 1 and not bool(torch.all(values[1:] > values[:-1])):
+                raise ValueError("valid physical times must be strictly increasing")
+
+    @property
+    def frames(self) -> int:
+        return int(self.h.shape[0])
+
+    @property
+    def num_atoms(self) -> int:
+        return int(self.h.shape[1])
+
+    @property
+    def width(self) -> int:
+        return int(self.h.shape[-1])
+
+    @property
+    def batch_size(self) -> int:
+        return self.topology.batch_size
+
+    @property
+    def abid(self) -> Tensor:
+        return self.topology.abid
+
+    @property
+    def atom_ptr(self) -> Tensor:
+        return self.topology.atom_ptr
+
+    @property
+    def atom_type(self) -> Tensor:
+        return self.topology.atom_type
+
+    @property
+    def block_type(self) -> Tensor:
+        return self.topology.block_type
+
+    @property
+    def component_id(self) -> Tensor:
+        return self.topology.component_id
+
+    @property
+    def block_id(self) -> Tensor:
+        return self.topology.block_id
+
+    @property
+    def token_mask(self) -> Tensor:
+        return self.frame_mask
+
+    @property
+    def state_h(self) -> Tensor:
+        """Compatibility name used only by the shared factorized layout."""
+
+        return self.h
+
+    def atom_frame_mask(self) -> Tensor:
+        return self.frame_mask.index_select(0, self.abid).transpose(0, 1)
+
+    def with_features(
+        self,
+        h: Tensor,
+        v: Tensor,
+        *,
+        statistics_hash: str | None = None,
+    ) -> "FrameLatentBatch":
+        """Replace differentiable fields without rechecking static metadata.
+
+        Flow integration calls this method many times with the same validated
+        topology, clock, and mask.  Re-running the constructor there would
+        synchronize CUDA merely to repeat finite/prefix checks.
+        """
+
+        if h.shape != self.h.shape or v.shape != self.v.shape:
+            raise ValueError("replacement frame features must preserve shape")
+        if h.device != self.h.device or v.device != self.v.device:
+            raise ValueError("replacement frame features must preserve device")
+        value = copy.copy(self)
+        object.__setattr__(value, "h", h)
+        object.__setattr__(value, "v", v)
+        if statistics_hash is not None:
+            object.__setattr__(value, "statistics_hash", str(statistics_hash))
+        return value
+
+    def slice_frames(self, start: int, stop: int) -> "FrameLatentBatch":
+        if not 0 <= int(start) < int(stop) <= self.frames:
+            raise ValueError("invalid frame latent slice")
+        return replace(
+            self,
+            h=self.h[int(start):int(stop)],
+            v=self.v[int(start):int(stop)],
+            time_ps=self.time_ps[:, int(start):int(stop)],
+            frame_mask=self.frame_mask[:, int(start):int(stop)],
+        )
+
+    def detach(self) -> "FrameLatentBatch":
+        return self.with_features(self.h.detach(), self.v.detach())
+
+    def to(self, *args, **kwargs) -> "FrameLatentBatch":
+        device = self.h.to(*args, **kwargs).device
+        return replace(
+            self,
+            h=self.h.to(*args, **kwargs),
+            v=self.v.to(*args, **kwargs),
+            time_ps=self.time_ps.to(device=device),
+            frame_mask=self.frame_mask.to(device=device),
+            topology=self.topology.to(device),
+        )
+
+
+@dataclass(frozen=True)
+class QuerySpec:
+    """Future query clock and validity; never contains target coordinates."""
+
+    time_ps: Tensor
+    frame_mask: Tensor
+
+    def __post_init__(self) -> None:
+        if self.time_ps.ndim != 2 or self.frame_mask.shape != self.time_ps.shape:
+            raise ValueError("query time_ps/frame_mask must have shape [B,Q]")
+        if not torch.isfinite(self.time_ps).all():
+            raise ValueError("query time_ps contains NaN or Inf")
+        object.__setattr__(self, "frame_mask", self.frame_mask.to(dtype=torch.bool))
+
+    @property
+    def batch_size(self) -> int:
+        return int(self.time_ps.shape[0])
+
+    @property
+    def frames(self) -> int:
+        return int(self.time_ps.shape[1])
+
+
+@dataclass(frozen=True)
+class ObservedContext:
+    """Observed-only model condition with an observation-defined origin."""
+
+    latent: FrameLatentBatch
+    coordinates: Tensor
+    sample_origin: Tensor
+    loss_mask: Tensor
+
+    def __post_init__(self) -> None:
+        if self.coordinates.shape != (self.latent.frames, self.latent.num_atoms, 3):
+            raise ValueError("observed coordinates must have shape [H,N,3]")
+        if self.sample_origin.shape != (self.latent.batch_size, 3):
+            raise ValueError("sample_origin must have shape [B,3]")
+        if self.loss_mask.shape != (self.latent.num_atoms,):
+            raise ValueError("loss_mask must have shape [N]")
+        if self.latent.frames < 1 or not bool(torch.all(self.latent.frame_mask[:, 0])):
+            raise ValueError("observed context requires a valid first frame")
+
+    @property
+    def topology(self) -> StaticTopologyMetadata:
+        return self.latent.topology
+
+    def last_features(self) -> tuple[Tensor, Tensor]:
+        last = self.latent.frame_mask.sum(dim=1).to(dtype=torch.long) - 1
+        atom_last = last.index_select(0, self.latent.abid)
+        atom = torch.arange(self.latent.num_atoms, device=self.latent.h.device)
+        return self.latent.h[atom_last, atom], self.latent.v[atom_last, atom]
+
+    def reference_centered_coordinates(self) -> Tensor:
+        atom_origin = self.sample_origin.index_select(0, self.latent.abid)
+        return self.coordinates[0] - atom_origin
+
+
+@dataclass(frozen=True)
+class HistoryMemory:
+    """Compressed observed history; detail fields are history-only diagnostics."""
+
+    h: Tensor
+    v: Tensor
+    token_mask: Tensor
+    group_time_ps: Tensor
+    group_frame_mask: Tensor
+    abid: Tensor
+    detail_h: Tensor
+    detail_v: Tensor
+
+    def __post_init__(self) -> None:
+        if self.h.ndim != 3 or self.v.ndim != 4 or self.v.shape[:2] != self.h.shape[:2] or self.v.shape[2] != 3:
+            raise ValueError("history memory expects h=[M,N,C], v=[M,N,3,Cv]")
+        batch, tokens = self.token_mask.shape
+        if self.h.shape[0] != tokens or self.h.shape[1] != self.abid.numel():
+            raise ValueError("history token/atom axes disagree")
+        if self.group_time_ps.shape != self.group_frame_mask.shape or self.group_time_ps.shape[:2] != (batch, tokens):
+            raise ValueError("history group time fields must have shape [B,M,G]")
+        if self.detail_h.shape[:2] != self.h.shape[:2] or self.detail_v.shape[:3] != self.v.shape[:3]:
+            raise ValueError("history detail diagnostics disagree with memory axes")
+
+    @property
+    def tokens(self) -> int:
+        return int(self.h.shape[0])
+
+    def representative_time_ps(self) -> Tensor:
+        valid = self.group_frame_mask.to(dtype=self.group_time_ps.dtype)
+        return (self.group_time_ps * valid).sum(dim=-1) / valid.sum(dim=-1).clamp_min(1.0)

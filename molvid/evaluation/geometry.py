@@ -487,15 +487,15 @@ def _frequency_retention(prediction: Tensor, target: Tensor, mask: Tensor) -> fl
     return float((pred_power / target_power).detach().cpu())
 
 
-def _safe_correlation(first: Tensor, second: Tensor) -> float:
+def _defined_correlation(first: Tensor, second: Tensor) -> tuple[float | None, str | None]:
     if first.numel() == 0 or second.numel() == 0:
-        return 0.0
+        return None, "empty_signal"
     first = first - first.mean()
     second = second - second.mean()
     denominator = torch.linalg.vector_norm(first) * torch.linalg.vector_norm(second)
     if float(denominator) <= 1.0e-12:
-        return 1.0 if torch.allclose(first, second) else 0.0
-    return float(((first * second).sum() / denominator).detach().cpu())
+        return None, "zero_variance"
+    return float(((first * second).sum() / denominator).detach().cpu()), None
 
 
 def _time_deltas(batch: Any, sample: int, frames: int, device: torch.device) -> Tensor:
@@ -664,20 +664,31 @@ def aligned_rmsf_metrics(
             target_samples.append(target_stack.mean())
     if not prediction_samples:
         return {
-            "prediction": 0.0,
-            "target": 0.0,
-            "absolute_error": 0.0,
-            "correlation": 0.0,
+            "available": False,
+            "reason": "no_valid_atoms",
+            "prediction": None,
+            "target": None,
+            "absolute_error": None,
+            "correlation": None,
+            "correlation_available": False,
+            "correlation_reason": "no_valid_atoms",
             "alignment": "per-frame-Kabsch-to-own-trajectory-frame0",
             "aggregation": "sample_equal_mean",
         }
     prediction_mean = torch.stack(prediction_samples).mean()
     target_mean = torch.stack(target_samples).mean()
+    correlation, correlation_reason = _defined_correlation(
+        torch.cat(prediction_atoms), torch.cat(target_atoms)
+    )
     return {
+        "available": True,
+        "reason": None,
         "prediction": float(prediction_mean.detach().cpu()),
         "target": float(target_mean.detach().cpu()),
         "absolute_error": float((prediction_mean - target_mean).abs().detach().cpu()),
-        "correlation": _safe_correlation(torch.cat(prediction_atoms), torch.cat(target_atoms)),
+        "correlation": correlation,
+        "correlation_available": correlation is not None,
+        "correlation_reason": correlation_reason,
         "alignment": "per-frame-Kabsch-to-own-trajectory-frame0",
         "aggregation": "sample_equal_mean",
     }
@@ -719,11 +730,13 @@ def dynamic_acf_metrics(
     prediction_acf: list[float] = []
     target_acf: list[float] = []
     dynamic_correlations: list[float] = []
+    stable_sample_count = 0
     for sample in torch.unique(abid, sorted=True).tolist():
         nodes = torch.nonzero(abid == int(sample), as_tuple=False).flatten()
         stable = mask[:, nodes].all(dim=0)
         if not torch.any(stable) or frames < 3:
             continue
+        stable_sample_count += 1
         stable_nodes = nodes[stable]
         deltas = _time_deltas(batch, int(sample), frames, prediction.device)
         pred_velocity = (
@@ -736,38 +749,65 @@ def dynamic_acf_metrics(
         ) / deltas.view(-1, 1, 1)
         pred_velocity = pred_velocity - pred_velocity.mean(dim=0, keepdim=True)
         target_velocity = target_velocity - target_velocity.mean(dim=0, keepdim=True)
-        dynamic_correlations.append(
-            _safe_correlation(pred_velocity.reshape(-1), target_velocity.reshape(-1))
+        dynamic_correlation, _ = _defined_correlation(
+            pred_velocity.reshape(-1), target_velocity.reshape(-1)
         )
+        if dynamic_correlation is not None:
+            dynamic_correlations.append(dynamic_correlation)
         if pred_velocity.shape[0] >= 2:
-            prediction_acf.append(
-                _safe_correlation(pred_velocity[:-1].reshape(-1), pred_velocity[1:].reshape(-1))
+            pred_acf, _ = _defined_correlation(
+                pred_velocity[:-1].reshape(-1), pred_velocity[1:].reshape(-1)
             )
-            target_acf.append(
-                _safe_correlation(target_velocity[:-1].reshape(-1), target_velocity[1:].reshape(-1))
+            target_acf_value, _ = _defined_correlation(
+                target_velocity[:-1].reshape(-1), target_velocity[1:].reshape(-1)
             )
+            if pred_acf is not None and target_acf_value is not None:
+                prediction_acf.append(pred_acf)
+                target_acf.append(target_acf_value)
     if not dynamic_correlations:
+        reason = (
+            "insufficient_frames"
+            if frames < 3
+            else "no_stable_atoms"
+            if stable_sample_count == 0
+            else "zero_variance"
+        )
         return {
-            "prediction": 0.0,
-            "target": 0.0,
-            "absolute_error": 0.0,
-            "dynamic_correlation": 0.0,
-            "dynamic_correlation_absolute_error": 0.0,
+            "available": False,
+            "reason": reason,
+            "acf_available": False,
+            "acf_reason": reason,
+            "prediction": None,
+            "target": None,
+            "absolute_error": None,
+            "dynamic_correlation": None,
+            "dynamic_correlation_absolute_error": None,
+            "valid_dynamic_samples": 0,
+            "valid_acf_samples": 0,
             "signal": "per-trajectory-Kabsch-aligned-frame-to-frame-velocity",
             "lag": 1,
             "units": "angstrom_per_ps",
             "mean_removed": True,
             "aggregation": "sample_equal_mean",
         }
-    pred_acf = sum(prediction_acf) / len(prediction_acf) if prediction_acf else 0.0
-    target_acf = sum(target_acf) / len(target_acf) if target_acf else 0.0
+    acf_available = bool(prediction_acf)
+    pred_acf = sum(prediction_acf) / len(prediction_acf) if acf_available else None
+    target_acf = sum(target_acf) / len(target_acf) if acf_available else None
     dynamic_correlation = sum(dynamic_correlations) / len(dynamic_correlations)
     return {
+        "available": True,
+        "reason": None,
+        "acf_available": acf_available,
+        "acf_reason": None if acf_available else "zero_variance",
         "prediction": pred_acf,
         "target": target_acf,
-        "absolute_error": abs(pred_acf - target_acf),
+        "absolute_error": (
+            abs(pred_acf - target_acf) if pred_acf is not None and target_acf is not None else None
+        ),
         "dynamic_correlation": dynamic_correlation,
         "dynamic_correlation_absolute_error": abs(1.0 - dynamic_correlation),
+        "valid_dynamic_samples": len(dynamic_correlations),
+        "valid_acf_samples": len(prediction_acf),
         "signal": "per-trajectory-Kabsch-aligned-frame-to-frame-velocity",
         "lag": 1,
         "units": "angstrom_per_ps",

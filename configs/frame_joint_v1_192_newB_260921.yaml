@@ -1,0 +1,53 @@
+schema: molvid.frame_joint.train.v1
+
+data:
+  manifest_root: /data4/users/sihao/workspace/molvid-dit-capacity-data-v1/outputs/dit_capacity_data_v1/data_manifest_20260914
+  train_view: train192
+
+codec:
+  checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+  sha256: ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df
+
+statistics:
+  path: runs/frame_joint_v1_192/frame_statistics.pt
+  sha256: 3ce928ad96ee79096872b719f3dc07a64c0d5c0322835ada7318ef21805d1c85
+  statistics_hash: 5f8e85833a89acd4a09b8d715b00824ad644b9654fb97075e394dbd7dd149fe7
+
+model:
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+
+loss:
+  bond_enabled: true
+  generated_bond: calibrate
+  calibration_target_ratio: 0.1
+  generated_bond_min_flow_time: 0.75
+  clean_coordinate: 1.0
+  clean_bond: 0.1
+  near_coordinate: 0.1
+  near_bond: 0.01
+  near_min_flow_time: 0.9
+
+training:
+  device: cuda
+  deterministic: false
+  precision: bf16
+  seed: 20260920
+  max_atom_frames_per_gpu: 40000
+  clips_per_trajectory: 24
+  history_order: [4, 8]
+  weight_decay: 0.01
+  grad_clip: 1.0
+  output_root: runs/frame_joint_v1_192_newB_260921
+  stages:
+    - name: decoder_warmup
+      updates: 15939
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.0001}
+    - name: flow_start
+      updates: 1000
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.00005}
+    - name: joint
+      updates: 106260
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.00005}

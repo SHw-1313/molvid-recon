@@ -1,4 +1,12 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
+- [x] Frame Joint v1 implementation, targeted CUDA/DDP/resume/continuation checks,
+  true largest-48-system profile, and original 3-system/9-trajectory tiny run;
+  see `docs/frame_joint_v1.md` and `agent/frame_joint_v1/HANDOFF.md`.
+- [x] Independently verify Frame Joint review R1--R6; fix BF16/local-branch,
+  per-term DDP normalization, child resume/schedule contracts and unavailable
+  motion metrics; targeted CUDA/DDP/CLI-resume/evaluator checks passed.
+- [ ] Frame Joint v1 48/192-system training and paired bond continuation are
+  intentionally deferred to `agent/frame_joint_v1/TRAIN_PROMPT.md`.
 - [x] Purge the archive directory from every local Git commit; keep the curated result bundle and preserve untracked design files.
 - [ ] Production cutover evidence: later-manifest optimizer/data continuation, real old-runner metric comparison, artifact export and warm matched profile.
 

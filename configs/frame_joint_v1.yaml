@@ -1,0 +1,55 @@
+schema: molvid.frame_joint.train.v1
+
+data:
+  manifest_root: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/manifest_20260904_token80000
+
+codec:
+  checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+  sha256: ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df
+
+statistics:
+  path: runs/frame_joint_v1_48/frame_statistics.pt
+  sha256: ""
+  statistics_hash: ""
+  max_atom_frames_per_gpu: 40000
+
+model:
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+
+loss:
+  bond_enabled: true
+  generated_bond: calibrate
+  calibration_target_ratio: 0.1
+  generated_bond_min_flow_time: 0.75
+  clean_coordinate: 1.0
+  clean_bond: 0.1
+  near_coordinate: 0.1
+  near_bond: 0.01
+  near_min_flow_time: 0.9
+
+training:
+  device: cuda
+  deterministic: false
+  precision: bf16
+  seed: 20260920
+  max_atom_frames_per_gpu: 40000
+  clips_per_trajectory: 24
+  history_order: [4, 8]
+  weight_decay: 0.01
+  grad_clip: 1.0
+  output_root: runs/frame_joint_v1_48
+  # Frozen manifest: 2716 global batches/effective epoch, hence 1358
+  # synchronized updates/epoch with the documented two-GPU command.
+  stages:
+    - name: decoder_warmup
+      updates: 4074
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.0001}
+    - name: flow_start
+      updates: 1000
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.00005}
+    - name: joint
+      updates: 8148
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.00005}
