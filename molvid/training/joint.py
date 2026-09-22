@@ -40,7 +40,18 @@ class JointLossConfig:
 
     @classmethod
     def resolve(cls, value: Mapping[str, Any]) -> "JointLossConfig":
-        enabled = bool(value.get("bond_enabled", True))
+        allowed = {
+            "bond_enabled", "generated_bond", "clean_coordinate", "clean_bond", "near_coordinate",
+            "near_bond", "generated_bond_min_flow_time", "near_min_flow_time",
+            "calibration_target_ratio",
+        }
+        unknown = sorted(set(value) - allowed)
+        if unknown:
+            raise ValueError(f"unknown loss keys: {unknown}")
+        enabled_value = value.get("bond_enabled", True)
+        if not isinstance(enabled_value, bool):
+            raise ValueError("bond_enabled must be a boolean")
+        enabled = enabled_value
         generated = value.get("generated_bond")
         if generated is None:
             raise ValueError("generated_bond must be calibrated or explicitly set")

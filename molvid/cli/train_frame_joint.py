@@ -42,6 +42,208 @@ from ..training.joint import (
 
 SCHEMA = "molvid.frame_joint.train.v1"
 
+_SECTION_KEYS = {
+    "data": {
+        "manifest_root", "train_view", "train_store", "valid_store", "base_data_hash",
+        "normalization_source_data_hash", "expected_data_hash", "train_systems", "derived_train",
+    },
+    "codec": {"checkpoint", "sha256"},
+    "statistics": {"path", "sha256", "statistics_hash", "max_atom_frames_per_gpu"},
+    "model": {"scalar_width", "vector_width", "depth", "heads", "geometry_enabled", "motion_enabled"},
+    "loss": {
+        "bond_enabled", "generated_bond", "clean_coordinate", "clean_bond", "near_coordinate",
+        "near_bond", "generated_bond_min_flow_time", "near_min_flow_time",
+        "calibration_target_ratio", "inherit_parent",
+    },
+    "training": {
+        "device", "deterministic", "precision", "seed", "max_atom_frames_per_gpu",
+        "clips_per_trajectory", "time_bucket_weights", "history_order", "weight_decay",
+        "grad_clip", "output_root", "stages",
+    },
+}
+_DERIVED_KEYS = {"store", "manifest", "manifest_sha256", "store_index_sha256", "record_count"}
+_STAGE_KEYS = {"name", "updates", "learning_rates"}
+_LEARNING_RATE_KEYS = {"history_encoder", "dit", "decoder"}
+_EXPOSURE_KEYS = {
+    "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
+    "view_history_clip_exposure", "valid_atom_frames",
+}
+
+
+def _reject_unknown(mapping: Mapping[str, Any], allowed: set[str], path: str) -> None:
+    unknown = sorted(set(mapping) - allowed)
+    if unknown:
+        raise ValueError(f"unknown {path} keys: {unknown}")
+
+
+def _require_mapping(value: Any, path: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{path} must be a mapping")
+    return value
+
+
+def _require_bool(mapping: Mapping[str, Any], name: str, path: str) -> None:
+    if name in mapping and not isinstance(mapping[name], bool):
+        raise ValueError(f"{path}.{name} must be a boolean")
+
+
+def _require_string(value: Any, path: str, *, allow_empty: bool = False) -> None:
+    if not isinstance(value, str) or (not allow_empty and not value):
+        raise ValueError(f"{path} must be a {'string' if allow_empty else 'nonempty string'}")
+
+
+def _require_number(
+    value: Any,
+    path: str,
+    *,
+    integer: bool = False,
+    positive: bool = False,
+    nonnegative: bool = False,
+) -> None:
+    expected = int if integer else (int, float)
+    if isinstance(value, bool) or not isinstance(value, expected):
+        raise ValueError(f"{path} must be {'an integer' if integer else 'numeric'}")
+    numeric = float(value)
+    if not math.isfinite(numeric) or (positive and numeric <= 0) or (nonnegative and numeric < 0):
+        qualifier = " and positive" if positive else " and non-negative" if nonnegative else ""
+        raise ValueError(f"{path} must be finite{qualifier}")
+
+
+def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
+    """Reject unknown or mistyped training settings before data or CUDA setup."""
+
+    _reject_unknown(raw, {"schema", *_SECTION_KEYS}, "root")
+    for section, allowed in _SECTION_KEYS.items():
+        value = _require_mapping(raw.get(section), section)
+        _reject_unknown(value, allowed, section)
+
+    data = raw["data"]
+    manifest_mode = "manifest_root" in data
+    direct_mode = "train_store" in data or "valid_store" in data
+    if manifest_mode == direct_mode:
+        raise ValueError("data must select exactly one of manifest_root or train_store/valid_store")
+    if manifest_mode:
+        _require_string(data["manifest_root"], "data.manifest_root")
+    if direct_mode:
+        for name in ("train_store", "valid_store"):
+            _require_string(data.get(name), f"data.{name}")
+    for name in (
+        "train_view", "base_data_hash", "normalization_source_data_hash", "expected_data_hash"
+    ):
+        if name in data:
+            _require_string(data[name], f"data.{name}")
+    if "train_systems" in data and (
+        not isinstance(data["train_systems"], list)
+        or not all(isinstance(value, str) and value for value in data["train_systems"])
+    ):
+        raise ValueError("data.train_systems must be a list of nonempty strings")
+    if "derived_train" in data:
+        derived = data["derived_train"]
+        if not isinstance(derived, list) or not derived:
+            raise ValueError("data.derived_train must be a nonempty list")
+        for index, item in enumerate(derived):
+            value = _require_mapping(item, f"data.derived_train[{index}]")
+            _reject_unknown(value, _DERIVED_KEYS, f"data.derived_train[{index}]")
+            missing = sorted(_DERIVED_KEYS - set(value))
+            if missing:
+                raise ValueError(f"data.derived_train[{index}] missing keys: {missing}")
+            for name in ("store", "manifest", "manifest_sha256", "store_index_sha256"):
+                _require_string(value[name], f"data.derived_train[{index}].{name}")
+            _require_number(value["record_count"], f"data.derived_train[{index}].record_count", integer=True, positive=True)
+
+    codec = raw["codec"]
+    for name in ("checkpoint", "sha256"):
+        _require_string(codec.get(name), f"codec.{name}")
+    statistics = raw["statistics"]
+    _require_string(statistics.get("path"), "statistics.path")
+    for name in ("sha256", "statistics_hash"):
+        if name in statistics:
+            _require_string(statistics[name], f"statistics.{name}", allow_empty=True)
+    if "max_atom_frames_per_gpu" in statistics:
+        _require_number(statistics["max_atom_frames_per_gpu"], "statistics.max_atom_frames_per_gpu", integer=True, positive=True)
+
+    model = raw["model"]
+    for name in ("scalar_width", "vector_width", "depth", "heads"):
+        if name in model:
+            _require_number(model[name], f"model.{name}", integer=True, positive=True)
+    for name in ("geometry_enabled", "motion_enabled"):
+        _require_bool(model, name, "model")
+
+    loss = raw["loss"]
+    for name in ("bond_enabled", "inherit_parent"):
+        _require_bool(loss, name, "loss")
+    for name, value in loss.items():
+        if name in {"bond_enabled", "inherit_parent"}:
+            continue
+        if name == "generated_bond" and value == "calibrate":
+            continue
+        _require_number(value, f"loss.{name}", nonnegative=True)
+
+    training = raw["training"]
+    _require_bool(training, "deterministic", "training")
+    for name in ("device", "output_root"):
+        _require_string(training.get(name), f"training.{name}")
+    for name in ("seed", "max_atom_frames_per_gpu", "clips_per_trajectory"):
+        if name not in training:
+            raise ValueError(f"training requires {name}")
+        _require_number(training[name], f"training.{name}", integer=True, positive=name != "seed")
+    for name in ("weight_decay", "grad_clip"):
+        if name in training:
+            _require_number(training[name], f"training.{name}", nonnegative=True)
+    if training.get("precision", "fp32") not in {"fp32", "bf16"}:
+        raise ValueError("training.precision must be fp32 or bf16")
+    histories = training.get("history_order", (4, 8))
+    if not isinstance(histories, list) or not histories:
+        raise ValueError("training.history_order must be a nonempty list")
+    for index, value in enumerate(histories):
+        _require_number(value, f"training.history_order[{index}]", integer=True, positive=True)
+    weights = training.get("time_bucket_weights")
+    if weights is not None:
+        weights = _require_mapping(weights, "training.time_bucket_weights")
+        for name, value in weights.items():
+            if not isinstance(name, str) or not name:
+                raise ValueError("training.time_bucket_weights keys must be nonempty strings")
+            _require_number(value, f"training.time_bucket_weights.{name}", positive=True)
+    stages = training.get("stages")
+    if not isinstance(stages, list) or not stages:
+        raise ValueError("training.stages must be a nonempty list")
+    for index, item in enumerate(stages):
+        stage = _require_mapping(item, f"training.stages[{index}]")
+        _reject_unknown(stage, _STAGE_KEYS, f"training.stages[{index}]")
+        if stage.get("name") not in STAGES:
+            raise ValueError(f"training.stages[{index}].name is unsupported")
+        _require_number(stage.get("updates"), f"training.stages[{index}].updates", integer=True, positive=True)
+        rates = _require_mapping(stage.get("learning_rates"), f"training.stages[{index}].learning_rates")
+        _reject_unknown(rates, _LEARNING_RATE_KEYS, f"training.stages[{index}].learning_rates")
+        missing = sorted(_LEARNING_RATE_KEYS - set(rates))
+        if missing:
+            raise ValueError(f"training.stages[{index}].learning_rates missing keys: {missing}")
+        for name, value in rates.items():
+            _require_number(
+                value,
+                f"training.stages[{index}].learning_rates.{name}",
+                nonnegative=True,
+            )
+
+
+def _verified_derived_identity(
+    item: Mapping[str, Any], manifest: Mapping[str, Any], store_path: Path, record_count: int
+) -> dict[str, Any]:
+    actual_index = sha256_file(store_path / "index.txt")
+    for source, expected in (
+        ("derived manifest", manifest.get("store_index_sha256")),
+        ("training config", item.get("store_index_sha256")),
+    ):
+        if str(expected) != actual_index:
+            raise ValueError(f"{source} store index SHA-256 differs")
+    for source, expected in (
+        ("derived manifest", manifest.get("record_count")),
+        ("training config", item.get("record_count")),
+    ):
+        if isinstance(expected, bool) or not isinstance(expected, int) or expected != record_count:
+            raise ValueError(f"{source} record count differs")
+    return {"index_sha256": actual_index, "record_count": record_count}
+
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -122,10 +324,10 @@ def _open_data(data: Mapping[str, Any]):
                         raise ValueError("derived training view points to a different base data identity")
                     store = ClipMMapDataset(store_path)
                     stores.append(store)
+                    store_identity = _verified_derived_identity(item, manifest, store_path, len(store))
                     identities.append({
                         "store": str(store_path.resolve()),
-                        "index_sha256": sha256_file(store_path / "index.txt"),
-                        "record_count": len(store),
+                        **store_identity,
                         "manifest": str(manifest_path.resolve()),
                         "manifest_sha256": actual_manifest,
                         "contract_hash": manifest.get("contract_hash"),
@@ -154,6 +356,9 @@ def _open_data(data: Mapping[str, Any]):
                     "valid_index_sha256": splits.valid_index_hash,
                     "test_opened": False,
                 })
+                expected_hash = str(data.get("expected_data_hash", ""))
+                if expected_hash and expected_hash != current_hash:
+                    raise ValueError("derived training data hash differs from the configured identity")
                 normalization_hash = str(data.get("normalization_source_data_hash", ""))
                 if normalization_hash != splits.data_hash:
                     raise ValueError(
@@ -359,6 +564,69 @@ def _trajectory(sample_id: str) -> str:
     return re.sub(r"_dt_[0-9]+(?:\.[0-9]+)?ps$", "", value)
 
 
+def _exposure_state(
+    exposures: Mapping[str, int],
+    bucket_exposures: Mapping[str, int],
+    view_history_exposures: Mapping[str, int],
+    *,
+    successful_updates: int,
+    valid_atom_frames: int,
+) -> dict[str, Any]:
+    return {
+        "schema": "molvid.frame_joint.exposure.rank.v1",
+        "successful_updates": int(successful_updates),
+        "trajectory_clip_exposure": dict(sorted((str(key), int(value)) for key, value in exposures.items())),
+        "bucket_clip_exposure": dict(sorted((str(key), int(value)) for key, value in bucket_exposures.items())),
+        "view_history_clip_exposure": dict(
+            sorted((str(key), int(value)) for key, value in view_history_exposures.items())
+        ),
+        "valid_atom_frames": int(valid_atom_frames),
+    }
+
+
+def _validate_exposure_state(value: Any, *, successful_updates: int) -> Mapping[str, Any]:
+    state = _require_mapping(value, "checkpoint exposure_state")
+    _reject_unknown(state, _EXPOSURE_KEYS, "checkpoint exposure_state")
+    if state.get("schema") != "molvid.frame_joint.exposure.rank.v1":
+        raise ValueError("checkpoint exposure_state schema differs")
+    if state.get("successful_updates") != successful_updates:
+        raise ValueError("checkpoint exposure_state update count differs")
+    for name in ("trajectory_clip_exposure", "bucket_clip_exposure", "view_history_clip_exposure"):
+        counts = _require_mapping(state.get(name), f"checkpoint exposure_state.{name}")
+        for key, count in counts.items():
+            if not isinstance(key, str) or isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                raise ValueError(f"checkpoint exposure_state.{name} is invalid")
+    count = state.get("valid_atom_frames")
+    if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+        raise ValueError("checkpoint exposure_state.valid_atom_frames is invalid")
+    return state
+
+
+def _merge_exposure_states(values: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    trajectories: Counter[str] = Counter()
+    buckets: Counter[str] = Counter()
+    views: Counter[str] = Counter()
+    valid_atom_frames = 0
+    successful_updates: int | None = None
+    for value in values:
+        updates = int(value["successful_updates"])
+        if successful_updates is None:
+            successful_updates = updates
+        elif successful_updates != updates:
+            raise ValueError("rank exposure states disagree on successful updates")
+        trajectories.update(value["trajectory_clip_exposure"])
+        buckets.update(value["bucket_clip_exposure"])
+        views.update(value["view_history_clip_exposure"])
+        valid_atom_frames += int(value["valid_atom_frames"])
+    return {
+        "successful_updates": int(successful_updates or 0),
+        "trajectory_clip_exposure": dict(sorted(trajectories.items())),
+        "bucket_clip_exposure": dict(sorted(buckets.items())),
+        "view_history_clip_exposure": dict(sorted(views.items())),
+        "valid_atom_frames": valid_atom_frames,
+    }
+
+
 def _git_commit() -> str:
     return subprocess.check_output(
         ["git", "rev-parse", "HEAD"], text=True, cwd=Path(__file__).resolve().parents[2]
@@ -377,9 +645,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.fit_statistics_only:
         args.fit_statistics = True
     raw = load_config(args.config, schema=SCHEMA)
-    for section in ("data", "codec", "statistics", "model", "loss", "training"):
-        if not isinstance(raw.get(section), Mapping):
-            raise ValueError(f"configuration requires {section!r}")
+    _validate_frame_joint_config(raw)
     training = dict(raw["training"])
     if args.output_root is not None:
         training["output_root"] = str(args.output_root)
@@ -525,6 +791,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         epoch = batch_index = ordinary_batch_index = 0
         sampler.set_epoch(epoch)
         warm_start_report = None
+        resumed_exposure: Mapping[str, Any] | None = None
         if args.resume:
             loaded = trainer.load_checkpoint(
                 args.resume,
@@ -533,8 +800,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 rank=rank,
             )
             rank_states = loaded["extra_state"].get("rank_states", {})
-            rank_cursor = rank_states.get(str(rank), {}).get("cursor") if isinstance(rank_states, Mapping) else None
+            rank_state = rank_states.get(str(rank), {}) if isinstance(rank_states, Mapping) else {}
+            rank_cursor = rank_state.get("cursor") if isinstance(rank_state, Mapping) else None
             cursor = rank_cursor if isinstance(rank_cursor, Mapping) else loaded["cursor"]
+            resumed_exposure = _validate_exposure_state(
+                rank_state.get("exposure_state") if isinstance(rank_state, Mapping) else None,
+                successful_updates=trainer.successful_updates,
+            )
             epoch, batch_index = int(cursor["epoch"]), int(cursor["batch_index"])
             ordinary_batch_index = int(cursor.get("ordinary_batch_index", trainer.step))
             sampler.set_epoch(epoch)
@@ -609,10 +881,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                     code_commit=_git_commit(),
                 ),
             )
-        exposures: Counter[str] = Counter()
-        bucket_exposures: Counter[str] = Counter()
-        view_history_exposures: Counter[str] = Counter()
-        valid_atom_frames = 0
+        exposures: Counter[str] = Counter(
+            {} if resumed_exposure is None else resumed_exposure["trajectory_clip_exposure"]
+        )
+        bucket_exposures: Counter[str] = Counter(
+            {} if resumed_exposure is None else resumed_exposure["bucket_clip_exposure"]
+        )
+        view_history_exposures: Counter[str] = Counter(
+            {} if resumed_exposure is None else resumed_exposure["view_history_clip_exposure"]
+        )
+        valid_atom_frames = int(0 if resumed_exposure is None else resumed_exposure["valid_atom_frames"])
         if args.dry_run:
             total_updates = min(total_updates, trainer.step + 1)
         last: dict[str, Any] = {}
@@ -721,6 +999,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "cursor": cursor,
                     "rng_state": capture_rng_state(),
                     "training_generator_state": generator.get_state().detach().cpu(),
+                    "exposure_state": _exposure_state(
+                        exposures,
+                        bucket_exposures,
+                        view_history_exposures,
+                        successful_updates=trainer.successful_updates,
+                        valid_atom_frames=valid_atom_frames,
+                    ),
                 }
                 states: list[Any] = [None for _ in range(world)]
                 if world > 1:
@@ -736,13 +1021,23 @@ def main(argv: Sequence[str] | None = None) -> int:
                     )
                 if world > 1:
                     dist.barrier()
+        local_exposure = _exposure_state(
+            exposures,
+            bucket_exposures,
+            view_history_exposures,
+            successful_updates=trainer.successful_updates,
+            valid_atom_frames=valid_atom_frames,
+        )
+        rank_exposures: list[Any] = [None for _ in range(world)]
+        if world > 1:
+            dist.all_gather_object(rank_exposures, local_exposure)
+        else:
+            rank_exposures[0] = local_exposure
         if rank == 0:
+            merged_exposure = _merge_exposure_states(rank_exposures)
             atomic_write_json(output_root / "exposure.json", {
-                "successful_updates": trainer.successful_updates,
-                "local_trajectory_clip_exposure": dict(sorted(exposures.items())),
-                "bucket_clip_exposure": dict(sorted(bucket_exposures.items())),
-                "view_history_clip_exposure": dict(sorted(view_history_exposures.items())),
-                "valid_atom_frames": valid_atom_frames,
+                "schema": "molvid.frame_joint.exposure.v2",
+                **merged_exposure,
                 "clips_per_trajectory_per_epoch": int(training["clips_per_trajectory"]),
                 "world_size": world,
             })

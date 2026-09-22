@@ -1,0 +1,58 @@
+{
+  "schema": "molvid.fresh_review.request.v1",
+  "stage": "P2",
+  "round": "r01",
+  "base_commit": "0895fa7abe0ee475e6acf0d3fe20b54a8164f48f",
+  "candidate_commit": "f6ec672c7d8582772c9056cac0d116c1eddf1ffc",
+  "review_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-P2-r01",
+  "output_dir": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r01",
+  "evidence_root": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/evidence",
+  "spec_files": [
+    "agent/frame_gm_calibration_v2/PLAN.md",
+    "agent/frame_gm_calibration_v2/ARCHITECTURE.md",
+    "agent/frame_gm_calibration_v2/DATA_TRAIN_EVAL.md"
+  ],
+  "artifacts": [
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/evidence/pilot_summary.json",
+      "sha256": "54e839104f5b6d1dda7c705973310374a49d22b419e935ab629f24ba2323e164"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/evidence/resolved_experiment.json",
+      "sha256": "791953289753a41845dc7c14cddc82f0681ca3980fbed75d50ca5af398ebd8a0"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/evidence/commands.sh",
+      "sha256": "e8835e1582f5d3b70de60bb4ce384df3b87abc6c709e6384094d0893e2e31af9"
+    }
+  ],
+  "implementation_facts": {
+    "changed_modules": [
+      "molvid/dit/local_geometry.py",
+      "molvid/codec/motion_context.py",
+      "molvid/time.py",
+      "molvid/dit/blocks.py",
+      "molvid/dit/frame.py",
+      "molvid/model.py",
+      "molvid/flow/sampling.py",
+      "molvid/training/joint.py",
+      "molvid/cli/train_frame_joint.py",
+      "molvid/checkpoints.py",
+      "molvid/evaluation/geometry.py",
+      "tools/recompute_frame_gm_metrics_v3.py"
+    ],
+    "pilot_run_ids": ["P2/pilot/B0", "P2/pilot/G", "P2/pilot/M", "P2/pilot/GM"],
+    "actual_commands_and_exit_codes_file": "artifact:commands.sh plus pilot_summary.json",
+    "unexecuted_checks": [
+      "formal four-arm 192-system training (review gate not yet cleared)",
+      "formal 8-system x 3-replica x 2-anchor evaluation",
+      "paired system bootstrap and P3-parent selection",
+      "P3 implementation/pilot/review/training/evaluation"
+    ],
+    "known_pilot_limitations": [
+      "128-update training prefix reaches fixed-history 400ps but not fixed-history 100/200ps; separate seed-0 fixed-history inference covers all 100/200/300/400ps masks for every arm",
+      "pilot metric means are data-flow evidence only and are not used to rank arms"
+    ],
+    "previous_review_and_fix_response": null
+  }
+}

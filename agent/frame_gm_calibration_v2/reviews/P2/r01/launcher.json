@@ -1,0 +1,16 @@
+{
+  "schema": "molvid.fresh_review.launch.v1",
+  "status": "REVIEW_COMPLETED_FIX_REQUIRED",
+  "stage": "P2",
+  "candidate_commit": "f6ec672c7d8582772c9056cac0d116c1eddf1ffc",
+  "request_sha256": "ffdf7433af1a13d27413f32c6d92d1f71840f05ada1841f3cdd6ce795b6cc76d",
+  "prompt_sha256": "605b18cbbd7d019945b1b62ce8c2e5d564a1165a8bf05e84a38c83dd49ce0c9e",
+  "conversation_inheritance": "none; fresh platform reviewer with fork_turns=none",
+  "sandbox": "read-only",
+  "model_override": null,
+  "reviewer_session": "/root/p2_independent_review_r01",
+  "host_cli_attempt": "rejected before review by the execution security boundary because repository content might be exported; no bypass attempted",
+  "host_request_path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r01/review_request.json",
+  "report_path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r01/REVIEW.md",
+  "report_sha256": "99cf9f588679644e7ba36dbefa9f84bc5248cfb4eee51f3a7fe701df01e9dbd1"
+}
