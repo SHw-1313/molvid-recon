@@ -263,3 +263,21 @@ multi-time 4-GPU run 已正常完成全部 22,272 updates（warmup 7,977、flow-
 ## 192B 运行状态快照（2026-09-21）
 
 192 new-B 仍由 torchrun PID `253811` 在 GPU 0/2 正常运行，无 NaN/Inf/OOM。当前约 step `66670/123199`（54.1%），处于 joint 阶段（joint 已完成 49,731/106,260 updates）；最新已保存 checkpoint 为 step `63756`，SHA-256 `facc7715c695e8d787d31ac37e0606e43eedb7497c91284826196e91651c53d6`。最近 5,000 steps 平均 loss `0.1211`、flow `0.1198`、clean-coordinate `6.97e-4`、grad norm `1.91`。此前 checkpoint 间隔约 1 h 42 min/5,313 updates，剩余时间按当前吞吐粗估约 18 h，仅作运行安排不作完成承诺；尚未做 held-out eval。
+
+
+## 2026-09-22 RMSD diagnosis (evaluation-only)
+
+- Added `tools/evaluate_frame_joint_rmsd_diagnosis.py` (A persistence, B clean-latent decoder oracle, C generated) and ran the fixed valid-quick windows: 8 systems, 24 trajectories, two windows each, H4/H8, 100 ps, Euler 16, seed 0.
+- Pilot raw output: `runs/frame_joint_v1_rmsd_diagnosis_260922/pilot_48_full/`; checkpoint `frame_joint_step_00013222.pt`, SHA `e615b36a600d56b69e004305695fa804509ecb5591d2dcb10643a63d698759fb`. A single-window CUDA replay matched the existing valid-quick generated/oracle metrics exactly (max absolute difference 0.0); evidence is in `pilot_single/consistency_check.json`.
+- Added and ran `tools/evaluate_frame_joint_rmsd_endpoint.py` on 8 fixed systems (H4/H8, s=0.1/0.5/0.95, same source/noise per window); this is explicitly future-informed diagnostic input, not generation performance.
+- 192 capacity comparison used the stable complete checkpoint `runs/frame_joint_v1_192_newB_260921/frame_joint_step_00106260.pt`, SHA `84e580cb87e6df8eae258210e3738911e51a9c4c9ff18762810f71a2ae2e0f51`, own valid index/store and own embedded statistics. Training remained running (observed step 113234 after the evaluation); no process was interrupted.
+- Archive report/CSV/plots: `results_archive/frame_joint_v1_rmsd_diagnosis_260922/`. Main result: pilot generated aligned RMSD 2.314/2.229 Å (H4/H8) versus persistence 2.155/1.988 and clean oracle 0.064/0.064; generated bond RMSE 0.544/0.598 versus persistence 0.042 and oracle 0.037. 192 improves generated bond RMSE to 0.350/0.358 and clean oracle to ~0.025 Å but generated aligned RMSD remains 2.370/2.249 Å. The measured decoder floor is therefore not the dominant error; source-to-target flow/endpoint integration remains the leading localization, pending a training decision.
+
+
+## 2026-09-22 RMSD diagnosis latest-checkpoint update
+
+- During the read-only evaluation, training wrote the later complete checkpoint `runs/frame_joint_v1_192_newB_260921/frame_joint_step_00111573.pt` (SHA `40eac969d2f33870a4b6fe333b9230283cf237c46f571b8d0598b095cdfd69c5`). The same fixed-window A/B/C protocol was run on it; final archive/report use step 111573. The earlier step-106260 raw result remains under `192_step106260_full` for provenance.
+- Latest 192 generated aligned RMSD/bond RMSE are 2.390/0.354 Å (H4) and 2.280/0.364 Å (H8); clean oracle is 0.025/0.0145 Å in both.
+
+
+- Final read-only process check after the latest evaluation found no 192 training PID; `train_metrics.jsonl` last recorded step is 115625. No signal/kill/restart was issued by this evaluation work; the reason for the process disappearance is not diagnosed here.

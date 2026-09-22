@@ -1,0 +1,200 @@
+{
+  "protocol": "single CUDA window replay against evaluation_valid_quick",
+  "sample_id": "atlas_2ejn_B_R1_w000000",
+  "checks": [
+    {
+      "history": 4,
+      "path": "generated",
+      "metric": "aligned_rmsd",
+      "new": 2.5252988581789912,
+      "reference": 2.5252988581789912,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "generated",
+      "metric": "bond_rmse",
+      "new": 0.5341004028620198,
+      "reference": 0.5341004028620198,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "generated",
+      "metric": "contact_f1",
+      "new": 0.7822035365006353,
+      "reference": 0.7822035365006353,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "generated",
+      "metric": "dynamic_correlation",
+      "new": -0.03824809938669205,
+      "reference": -0.03824809938669205,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "generated",
+      "metric": "rmsf_absolute_error",
+      "new": 0.19786947965621948,
+      "reference": 0.19786947965621948,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "generated",
+      "metric": "velocity_rmse",
+      "new": 0.01213552872181561,
+      "reference": 0.01213552872181561,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "aligned_rmsd",
+      "new": 0.06599383050854239,
+      "reference": 0.06599383050854239,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "bond_rmse",
+      "new": 0.03577157139019038,
+      "reference": 0.03577157139019038,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "contact_f1",
+      "new": 0.9820756481093671,
+      "reference": 0.9820756481093671,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "dynamic_correlation",
+      "new": 0.99973464012146,
+      "reference": 0.99973464012146,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "rmsf_absolute_error",
+      "new": 0.00016939640045166016,
+      "reference": 0.00016939640045166016,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 4,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "velocity_rmse",
+      "new": 0.0002050770456469597,
+      "reference": 0.0002050770456469597,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "generated",
+      "metric": "aligned_rmsd",
+      "new": 2.057888771676992,
+      "reference": 2.057888771676992,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "generated",
+      "metric": "bond_rmse",
+      "new": 0.5855208377762352,
+      "reference": 0.5855208377762352,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "generated",
+      "metric": "contact_f1",
+      "new": 0.7703545135011594,
+      "reference": 0.7703545135011594,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "generated",
+      "metric": "dynamic_correlation",
+      "new": -0.048724062740802765,
+      "reference": -0.048724062740802765,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "generated",
+      "metric": "rmsf_absolute_error",
+      "new": 0.11596179008483887,
+      "reference": 0.11596179008483887,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "generated",
+      "metric": "velocity_rmse",
+      "new": 0.011996210659001496,
+      "reference": 0.011996210659001496,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "aligned_rmsd",
+      "new": 0.06575717388022898,
+      "reference": 0.06575717388022898,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "bond_rmse",
+      "new": 0.03551468321608434,
+      "reference": 0.03551468321608434,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "contact_f1",
+      "new": 0.9819119453736359,
+      "reference": 0.9819119453736359,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "dynamic_correlation",
+      "new": 0.9997230768203735,
+      "reference": 0.9997230768203735,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "rmsf_absolute_error",
+      "new": 9.053945541381836e-05,
+      "reference": 9.053945541381836e-05,
+      "abs_diff": 0.0
+    },
+    {
+      "history": 8,
+      "path": "clean_latent_decoder_oracle",
+      "metric": "velocity_rmse",
+      "new": 0.0002036963162160496,
+      "reference": 0.0002036963162160496,
+      "abs_diff": 0.0
+    }
+  ],
+  "max_abs_diff": 0.0,
+  "passed": true
+}
