@@ -73,15 +73,41 @@ class FrozenFrameTeacher(nn.Module):
         for start in range(0, batch.frames, self.frame_chunk_size):
             stop = min(start + self.frame_chunk_size, batch.frames)
             chunk = slice_clip_frames(centered_batch, start, stop)
-            encoded = self.frame_encoder(chunk)
-            scalar_chunks.append(encoded.h)
-            vector_chunks.append(
-                encoded.v
-                + self.coordinate_stem(centered[start:stop]).to(dtype=encoded.v.dtype)
-            )
+            chunk_atom_mask = chunk.frame_mask.index_select(
+                0, chunk.abid
+            ).transpose(0, 1)
+            if bool(torch.any(chunk.frame_mask)):
+                encoded = self.frame_encoder(chunk)
+                scalar = encoded.h
+                vector = encoded.v + self.coordinate_stem(
+                    centered[start:stop]
+                ).to(dtype=encoded.v.dtype)
+                scalar_chunks.append(scalar * chunk_atom_mask.unsqueeze(-1))
+                vector_chunks.append(
+                    vector * chunk_atom_mask.unsqueeze(-1).unsqueeze(-1)
+                )
+            else:
+                if not scalar_chunks:
+                    raise RuntimeError("the first frame-encoder chunk cannot be padding-only")
+                scalar_chunks.append(
+                    scalar_chunks[0].new_zeros(
+                        stop - start, batch.atom_count, scalar_chunks[0].shape[-1]
+                    )
+                )
+                vector_chunks.append(
+                    vector_chunks[0].new_zeros(
+                        stop - start,
+                        batch.atom_count,
+                        3,
+                        vector_chunks[0].shape[-1],
+                    )
+                )
+        h = torch.cat(scalar_chunks, dim=0)
+        v = torch.cat(vector_chunks, dim=0)
+        atom_frame_mask = batch.frame_mask.index_select(0, batch.abid).transpose(0, 1)
         latent = FrameLatentBatch(
-            h=torch.cat(scalar_chunks, dim=0),
-            v=torch.cat(vector_chunks, dim=0),
+            h=h * atom_frame_mask.unsqueeze(-1),
+            v=v * atom_frame_mask.unsqueeze(-1).unsqueeze(-1),
             time_ps=batch.time_ps,
             frame_mask=batch.frame_mask,
             topology=StaticTopologyMetadata.from_batch(batch),

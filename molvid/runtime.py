@@ -16,6 +16,10 @@ import torch
 
 def configure_device(device: str | torch.device = "cuda", *, deterministic: bool = False) -> torch.device:
     selected = torch.device("cuda" if str(device) == "auto" else device)
+    if deterministic and selected.type == "cuda":
+        # This must be present before the first cuBLAS handle is created;
+        # otherwise deterministic matrix multiplication raises at runtime.
+        os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
     if selected.type == "cuda":
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is required; no CPU fallback is permitted")

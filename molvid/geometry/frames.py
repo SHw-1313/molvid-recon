@@ -151,28 +151,49 @@ def pack_frame_nodes(batch: ClipBatch | Mapping[str, Any]) -> FrameNodeBatch:
     if frame_mask.shape != (batch_size, frames):
         raise ValueError("frame_mask must have shape [B, T]")
     _assert_device_condition(
-        torch.any(frame_mask, dim=1),
-        "every sample must contain at least one valid frame",
+        torch.any(frame_mask),
+        "a frame-encoder chunk must contain at least one valid frame",
     )
+    if frames > 1:
+        _assert_device_condition(
+            (~frame_mask[:, 1:]) | frame_mask[:, :-1],
+            "frame_mask must be a valid prefix, including within a sliced chunk",
+        )
 
-    pos = x.reshape(frames * atoms, 3)
-    z = _expand_atom_field(
+    dense_pos = x.reshape(frames * atoms, 3)
+    dense_z = _expand_atom_field(
         _as_tensor(_get_field(batch, "atype"), name="atype", dtype=torch.long),
         frames=frames,
         atoms=atoms,
         name="atype",
     )
-    b = _expand_atom_field(
+    dense_b = _expand_atom_field(
         _as_tensor(_get_field(batch, "btype"), name="btype", dtype=torch.long),
         frames=frames,
         atoms=atoms,
         name="btype",
     )
-    sample_id = abid.repeat(frames)
-    frame_id = torch.arange(
-        frames, device=pos.device, dtype=torch.long
+    dense_sample_id = abid.repeat(frames)
+    dense_frame_id = torch.arange(
+        frames, device=dense_pos.device, dtype=torch.long
     ).repeat_interleave(atoms)
-    graph_id = frame_id * batch_size + sample_id
+    dense_graph_id = dense_frame_id * batch_size + dense_sample_id
+    dense_valid = frame_mask.index_select(0, abid).transpose(0, 1).reshape(-1)
+    dense_index = torch.nonzero(dense_valid, as_tuple=False).flatten()
+    dense_to_compact = torch.full(
+        (frames * atoms,), -1, device=dense_pos.device, dtype=torch.long
+    )
+    dense_to_compact.index_copy_(
+        0,
+        dense_index,
+        torch.arange(dense_index.numel(), device=dense_pos.device, dtype=torch.long),
+    )
+    pos = dense_pos.index_select(0, dense_index)
+    z = dense_z.index_select(0, dense_index)
+    b = dense_b.index_select(0, dense_index)
+    sample_id = dense_sample_id.index_select(0, dense_index)
+    frame_id = dense_frame_id.index_select(0, dense_index)
+    graph_id = dense_graph_id.index_select(0, dense_index)
     return FrameNodeBatch(
         pos=pos,
         z=z,
@@ -181,6 +202,8 @@ def pack_frame_nodes(batch: ClipBatch | Mapping[str, Any]) -> FrameNodeBatch:
         graph_id=graph_id,
         frame_id=frame_id,
         sample_id=sample_id,
+        dense_index=dense_index,
+        dense_to_compact=dense_to_compact,
         frame_mask=frame_mask,
         atom_counts=tuple(int(value) for value in atom_counts),
         frames=frames,
@@ -250,25 +273,31 @@ def _union_edges(
 def _replicate_sample_bonds(
     local_bonds: Tensor,
     *,
-    frame_count: int,
+    frame_indices: Tensor,
     sample_start: int,
     sample_atoms: int,
     packed_atoms: int,
+    dense_to_compact: Tensor,
 ) -> Tensor:
-    if local_bonds.numel() == 0:
+    if local_bonds.numel() == 0 or frame_indices.numel() == 0:
         return torch.empty((2, 0), dtype=torch.long, device=local_bonds.device)
     _assert_device_condition(
         (local_bonds >= 0) & (local_bonds < sample_atoms),
         "cached bond topology exceeds its sample atom count",
     )
     offsets = (
-        torch.arange(frame_count, device=local_bonds.device, dtype=torch.long)
-        * int(packed_atoms)
+        frame_indices.to(device=local_bonds.device, dtype=torch.long) * int(packed_atoms)
         + int(sample_start)
     )
-    return (
+    dense = (
         local_bonds.unsqueeze(1) + offsets.view(1, -1, 1)
     ).permute(0, 1, 2).reshape(2, -1)
+    compact = dense_to_compact.index_select(0, dense.reshape(-1)).reshape_as(dense)
+    _assert_device_condition(
+        compact >= 0,
+        "padded frame nodes must not receive replicated covalent bonds",
+    )
+    return compact
 def build_frame_graph(
     nodes: FrameNodeBatch,
     batch: ClipBatch | Mapping[str, Any],
@@ -335,10 +364,13 @@ def build_frame_graph(
         replicated_parts.append(
             _replicate_sample_bonds(
                 local_bonds,
-                frame_count=frames,
+                frame_indices=torch.nonzero(
+                    frame_mask[sample_index], as_tuple=False
+                ).flatten(),
                 sample_start=sample_start,
                 sample_atoms=sample_atoms,
                 packed_atoms=atoms,
+                dense_to_compact=nodes.dense_to_compact,
             )
         )
     if replicated_parts:
@@ -410,7 +442,11 @@ def unpack_frame_features(result: Any, nodes: FrameNodeBatch) -> tuple[Tensor, T
             "spatial vector output must have shape [T*N_total, 3, C], "
             f"got {tuple(v.shape)}"
         )
+    dense_h = h.new_zeros((nodes.frames * nodes.atoms, h.shape[-1]))
+    dense_v = v.new_zeros((nodes.frames * nodes.atoms, 3, v.shape[-1]))
+    dense_h.index_copy_(0, nodes.dense_index, h)
+    dense_v.index_copy_(0, nodes.dense_index, v)
     return (
-        h.reshape(nodes.frames, nodes.atoms, h.shape[-1]),
-        v.reshape(nodes.frames, nodes.atoms, 3, v.shape[-1]),
+        dense_h.reshape(nodes.frames, nodes.atoms, h.shape[-1]),
+        dense_v.reshape(nodes.frames, nodes.atoms, 3, v.shape[-1]),
     )

@@ -1,0 +1,27 @@
+{
+  "schema": "molvid.fresh_review.request.v1",
+  "stage": "P2",
+  "round": "r01",
+  "base_commit": "REPLACE_WITH_40_CHAR_BASE_SHA",
+  "candidate_commit": "REPLACE_WITH_40_CHAR_CANDIDATE_SHA",
+  "review_worktree": "/REPLACE/absolute/detached_review_worktree",
+  "output_dir": "/REPLACE/absolute/implementation_worktree/agent/frame_gm_calibration_v2/reviews/P2/r01",
+  "evidence_root": "/REPLACE/absolute/pilot_evidence",
+  "spec_files": [
+    "agent/frame_gm_calibration_v2/PLAN.md",
+    "agent/frame_gm_calibration_v2/ARCHITECTURE.md",
+    "agent/frame_gm_calibration_v2/DATA_TRAIN_EVAL.md"
+  ],
+  "artifacts": [
+    {"path": "/REPLACE/absolute/pilot_evidence/pilot_summary.json", "sha256": "REPLACE_WITH_64_CHAR_SHA256"},
+    {"path": "/REPLACE/absolute/pilot_evidence/resolved_experiment.json", "sha256": "REPLACE_WITH_64_CHAR_SHA256"},
+    {"path": "/REPLACE/absolute/pilot_evidence/commands.sh", "sha256": "REPLACE_WITH_64_CHAR_SHA256"}
+  ],
+  "implementation_facts": {
+    "changed_modules": [],
+    "pilot_run_ids": [],
+    "actual_commands_and_exit_codes_file": "artifact:commands.sh plus pilot_summary.json",
+    "unexecuted_checks": [],
+    "previous_review_and_fix_response": null
+  }
+}

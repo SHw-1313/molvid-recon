@@ -158,6 +158,17 @@ def validate_clip_record(
     )
     if time.size != t_len:
         raise ClipValidationError("time_ps length must equal x.shape[0]")
+    frame_mask = np.asarray(
+        record.get("frame_mask", np.ones(t_len, dtype=np.bool_)),
+        dtype=np.bool_,
+    )
+    if frame_mask.ndim != 1 or frame_mask.size != t_len:
+        raise ClipValidationError("frame_mask must have shape [T]")
+    valid_frames = np.flatnonzero(frame_mask)
+    if valid_frames.size == 0:
+        raise ClipValidationError("frame_mask must select at least one frame")
+    if not np.array_equal(valid_frames, np.arange(valid_frames.size)):
+        raise ClipValidationError("frame_mask must be a valid prefix")
     task = _task_id(record.get("task", "trajectory"))
     if task == STATIC_TASK and t_len != 1:
         raise ClipValidationError("static clips must have T=1")
@@ -194,6 +205,7 @@ def validate_clip_record(
             "bond_index": bonds,
             "time_ps": time,
             "delta_time_ps": delta,
+            "frame_mask": frame_mask,
             "task": task,
             "time_bucket_id": bucket,
         }
@@ -415,7 +427,9 @@ def collate_clip_records(
         edge_mask=torch.from_numpy(np.concatenate(flat_fields["edge_mask"])),
         loss_mask=torch.from_numpy(np.concatenate(flat_fields["loss_mask"])),
         align_mask=torch.from_numpy(np.concatenate(flat_fields["align_mask"])),
-        frame_mask=torch.ones((len(normalized), frames), dtype=torch.bool),
+        frame_mask=torch.from_numpy(
+            np.stack([item["frame_mask"] for item in normalized], axis=0)
+        ),
         time_ps=torch.from_numpy(np.stack(times, axis=0)),
         delta_time_ps=torch.from_numpy(np.stack(deltas, axis=0)),
         time_bucket_id=tuple(buckets),

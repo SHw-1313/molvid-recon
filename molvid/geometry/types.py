@@ -11,15 +11,22 @@ from torch import Tensor
 STATIC_TOPOLOGY_SCHEMA = "pvb.codec.state_detail.static_topology.v1"
 @dataclass
 class FrameNodeBatch:
-    """Packed frame nodes independent of any spatial graph construction."""
+    """Valid packed frame nodes independent of spatial graph construction.
 
-    pos: Tensor  # [T*N_total, 3]
-    z: Tensor  # [T*N_total]
-    b: Tensor  # [T*N_total]
-    batch: Tensor  # [T*N_total], graph id = frame_id * B + sample_id
+    ``dense_index`` maps the valid-node axis back to the conceptual
+    time-major ``[T * N]`` layout. ``dense_to_compact`` is its inverse and is
+    ``-1`` for padded frame nodes, which must never enter a graph.
+    """
+
+    pos: Tensor  # [N_valid_frame_atoms, 3]
+    z: Tensor  # [N_valid_frame_atoms]
+    b: Tensor  # [N_valid_frame_atoms]
+    batch: Tensor  # [N_valid_frame_atoms], graph id = frame_id * B + sample_id
     graph_id: Tensor  # explicit graph-id alias
-    frame_id: Tensor  # [T*N_total]
-    sample_id: Tensor  # [T*N_total]
+    frame_id: Tensor  # [N_valid_frame_atoms]
+    sample_id: Tensor  # [N_valid_frame_atoms]
+    dense_index: Tensor  # [N_valid], compact node -> dense T*N node
+    dense_to_compact: Tensor  # [T*N], -1 for padded nodes
     frame_mask: Tensor  # [B, T]
     atom_counts: tuple[int, ...]
     frames: int
