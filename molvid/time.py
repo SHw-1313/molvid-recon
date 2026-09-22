@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
 
 import torch
@@ -9,10 +10,93 @@ from torch import Tensor, nn
 
 
 TIME_SCALE_PS = 100.0
+MOTION_TIME_SCALES_PS = (10.0, 100.0, 1000.0, 10000.0)
 
 
 def _signed_log1p(value: Tensor) -> Tensor:
     return value.sign() * torch.log1p(value.abs())
+
+
+def multiscale_signed_features(
+    value_ps: Tensor,
+    *,
+    scales_ps: tuple[float, ...] = MOTION_TIME_SCALES_PS,
+) -> Tensor:
+    """Return linear and signed-log features without periodic aliasing."""
+
+    value = torch.as_tensor(value_ps)
+    if not scales_ps or any(not math.isfinite(float(scale)) or float(scale) <= 0 for scale in scales_ps):
+        raise ValueError("physical time scales must be finite and positive")
+    features: list[Tensor] = []
+    for scale in scales_ps:
+        normalized = value / float(scale)
+        features.extend((normalized, _signed_log1p(normalized)))
+    return torch.stack(features, dim=-1)
+
+
+@dataclass(frozen=True)
+class MotionTimeFeatures:
+    query_horizon_ps: Tensor
+    query_delta_ps: Tensor
+    history_span_ps: Tensor
+    observed_delta_ps: Tensor
+    observed_delta_mask: Tensor
+    encoded: Tensor
+
+
+def motion_time_features(
+    observed_time_ps: Tensor,
+    observed_frame_mask: Tensor,
+    query_time_ps: Tensor,
+    query_frame_mask: Tensor,
+) -> MotionTimeFeatures:
+    """Build shift-invariant M-path time quantities and multiscale features."""
+
+    observed = torch.as_tensor(observed_time_ps)
+    observed_mask = torch.as_tensor(
+        observed_frame_mask, device=observed.device, dtype=torch.bool
+    )
+    query = torch.as_tensor(query_time_ps, device=observed.device, dtype=observed.dtype)
+    query_mask = torch.as_tensor(query_frame_mask, device=observed.device, dtype=torch.bool)
+    if observed.ndim != 2 or observed_mask.shape != observed.shape:
+        raise ValueError("observed time/mask must have shape [B,H]")
+    if query.ndim != 2 or query_mask.shape != query.shape or query.shape[0] != observed.shape[0]:
+        raise ValueError("query time/mask must have shape [B,Q] with the observed batch")
+    valid_count = observed_mask.sum(dim=1).long()
+    if bool(torch.any(valid_count < 1)):
+        raise ValueError("motion time features require observed history")
+    last_index = valid_count - 1
+    last = observed.gather(1, last_index.unsqueeze(1)).squeeze(1)
+    first = observed[:, 0]
+    horizon = query - last.unsqueeze(1)
+    previous = torch.cat((last.unsqueeze(1), query[:, :-1]), dim=1)
+    query_delta = query - previous
+    if bool(torch.any(query_mask & (horizon <= 0))) or bool(torch.any(query_mask & (query_delta <= 0))):
+        raise ValueError("valid query times must follow the last observation with positive intervals")
+    observed_delta = observed[:, 1:] - observed[:, :-1]
+    observed_delta_mask = observed_mask[:, 1:] & observed_mask[:, :-1]
+    if bool(torch.any(observed_delta_mask & (observed_delta <= 0))):
+        raise ValueError("valid observed intervals must be positive")
+    span = last - first
+    valid = observed_delta_mask.to(dtype=observed.dtype)
+    mean_observed_delta = (observed_delta * valid).sum(dim=1) / valid.sum(dim=1).clamp_min(1.0)
+    query_frames = query.shape[1]
+    encoded = torch.cat((
+        multiscale_signed_features(horizon),
+        multiscale_signed_features(query_delta),
+        multiscale_signed_features(span[:, None]).expand(-1, query_frames, -1),
+        multiscale_signed_features(mean_observed_delta[:, None]).expand(-1, query_frames, -1),
+        query_mask.to(dtype=query.dtype).unsqueeze(-1),
+    ), dim=-1)
+    encoded = encoded * query_mask.to(dtype=encoded.dtype).unsqueeze(-1)
+    return MotionTimeFeatures(
+        query_horizon_ps=horizon,
+        query_delta_ps=query_delta,
+        history_span_ps=span,
+        observed_delta_ps=observed_delta,
+        observed_delta_mask=observed_delta_mask,
+        encoded=encoded,
+    )
 
 
 def physical_time_features(

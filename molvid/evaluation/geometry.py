@@ -1048,3 +1048,90 @@ def clash_statistics(
 ) -> dict[str, float]:
     mask = _mask(batch, prediction.shape[0], prediction.device)
     return {"clash_rate": _clash_rate(prediction, batch, mask, frames)}
+
+
+def angle_statistics(
+    prediction: Tensor, target: Tensor, batch: Any, frames: Sequence[int]
+) -> dict[str, Any]:
+    """Evaluate sparse covalent bond angles without future-selected topology."""
+
+    if prediction.shape != target.shape or prediction.ndim != 3 or prediction.shape[-1] != 3:
+        raise ValueError("prediction and target must have shape [T,N,3]")
+    bond_index = _pairs(batch, prediction.device)
+    if bond_index is None:
+        return {
+            "available": False,
+            "reason": "missing_bonds",
+            "mae_radian": None,
+            "prediction_valid_fraction": None,
+            "target_valid_fraction": None,
+            "angle_count": 0,
+            "evaluated_instances": 0,
+        }
+    atom_count = int(prediction.shape[1])
+    adjacency: list[set[int]] = [set() for _ in range(atom_count)]
+    for first, second in bond_index.detach().cpu().transpose(0, 1).tolist():
+        first, second = int(first), int(second)
+        if first == second:
+            continue
+        adjacency[first].add(second)
+        adjacency[second].add(first)
+    triplets: list[tuple[int, int, int]] = []
+    for center, neighbors_set in enumerate(adjacency):
+        neighbors = sorted(neighbors_set)
+        for index, first in enumerate(neighbors):
+            for last in neighbors[index + 1 :]:
+                triplets.append((first, center, last))
+    if not triplets:
+        return {
+            "available": False,
+            "reason": "missing_angle_paths",
+            "mae_radian": None,
+            "prediction_valid_fraction": None,
+            "target_valid_fraction": None,
+            "angle_count": 0,
+            "evaluated_instances": 0,
+        }
+    indices = torch.as_tensor(triplets, device=prediction.device, dtype=torch.long)
+    mask = _mask(batch, prediction.shape[0], prediction.device)
+    errors: list[Tensor] = []
+    predicted_valid = target_valid = evaluated = 0
+
+    def angles(coordinates: Tensor) -> tuple[Tensor, Tensor]:
+        left = coordinates.index_select(0, indices[:, 0]) - coordinates.index_select(0, indices[:, 1])
+        right = coordinates.index_select(0, indices[:, 2]) - coordinates.index_select(0, indices[:, 1])
+        left_norm = torch.linalg.vector_norm(left, dim=-1)
+        right_norm = torch.linalg.vector_norm(right, dim=-1)
+        valid = (
+            torch.isfinite(left).all(dim=-1)
+            & torch.isfinite(right).all(dim=-1)
+            & (left_norm > 1.0e-8)
+            & (right_norm > 1.0e-8)
+        )
+        cross = torch.linalg.vector_norm(torch.cross(left, right, dim=-1), dim=-1)
+        dot = (left * right).sum(dim=-1)
+        return torch.atan2(cross, dot), valid
+
+    for frame in frames:
+        declared = mask[int(frame)].index_select(0, indices.reshape(-1)).reshape(-1, 3).all(dim=-1)
+        count = int(declared.sum())
+        if count == 0:
+            continue
+        prediction_angle, prediction_ok = angles(prediction[int(frame)])
+        target_angle, target_ok = angles(target[int(frame)])
+        predicted_valid += int((declared & prediction_ok).sum())
+        target_valid += int((declared & target_ok).sum())
+        evaluated += count
+        valid = declared & prediction_ok & target_ok
+        if bool(valid.any()):
+            errors.append((prediction_angle[valid] - target_angle[valid]).abs())
+    return {
+        "available": bool(errors),
+        "reason": None if errors else "no_valid_angle_instances",
+        "mae_radian": float(torch.cat(errors).mean().detach().cpu()) if errors else None,
+        "prediction_valid_fraction": predicted_valid / evaluated if evaluated else None,
+        "target_valid_fraction": target_valid / evaluated if evaluated else None,
+        "angle_count": len(triplets),
+        "evaluated_instances": evaluated,
+        "selection": "unique unordered covalent neighbor pairs around each central atom",
+    }

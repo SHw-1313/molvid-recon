@@ -10,8 +10,10 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 
 from ..equivariant import AxisPreservingLinear, SO3ChannelNorm
+from ..codec.motion_context import MotionContextInjector
 from ..latent.types import LatentBatch
 from .backend import reference_block_forward
+from .local_geometry import LocalGeometryMessage
 
 class ScalarVectorAttention(nn.Module):
     """Multi-head attention with scalar q/k and shared scalar weights."""
@@ -225,7 +227,17 @@ class FactorizedDiTBlock(nn.Module):
 class FrameDiTBlock(nn.Module):
     """History cross-attention, spatial groups, future time, then equivariant FFN."""
 
-    def __init__(self, scalar_width: int, vector_width: int, heads: int, ffn_multiplier: int, dropout: float) -> None:
+    def __init__(
+        self,
+        scalar_width: int,
+        vector_width: int,
+        heads: int,
+        ffn_multiplier: int,
+        dropout: float,
+        *,
+        local_geometry: bool = False,
+        motion_context: bool = False,
+    ) -> None:
         super().__init__()
         self.history = ScalarVectorCrossAttention(scalar_width, vector_width, heads, dropout)
         self.spatial = ScalarVectorAttention(scalar_width, vector_width, heads, dropout)
@@ -237,3 +249,17 @@ class FrameDiTBlock(nn.Module):
         self.ffn_adaln = AdaLNZero(scalar_width, vector_width)
         self.history_time_bias = nn.Linear(4, heads, bias=False)
         self.temporal_time_bias = nn.Linear(4, heads, bias=False)
+        self.local_geometry = (
+            LocalGeometryMessage(scalar_width, vector_width)
+            if bool(local_geometry) else None
+        )
+        self.motion_context = (
+            MotionContextInjector(scalar_width, vector_width)
+            if bool(motion_context) else None
+        )
+        if motion_context:
+            self.history_time_decay_raw = nn.Parameter(torch.full((heads,), -4.0))
+            self.temporal_time_decay_raw = nn.Parameter(torch.full((heads,), -4.0))
+        else:
+            self.register_parameter("history_time_decay_raw", None)
+            self.register_parameter("temporal_time_decay_raw", None)

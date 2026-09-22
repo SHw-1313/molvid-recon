@@ -710,6 +710,20 @@ def load_frame_joint_inference(
     dit_contract = model_contract.get("dit") if isinstance(model_contract, Mapping) else None
     if not isinstance(dit_contract, Mapping):
         raise ValueError("Frame Joint checkpoint lacks its model constructor contract")
+    model_schema = str(model_contract.get("schema_version"))
+    dit_schema = str(dit_contract.get("schema_version"))
+    if model_schema == "molvid.frame_joint.model.v1" and dit_schema == "molvid.frame_joint.dit.v1":
+        geometry_enabled = False
+        motion_enabled = False
+    elif model_schema == "molvid.frame_joint.model.v2" and dit_schema == "molvid.frame_joint.dit.v2":
+        geometry_enabled = model_contract.get("geometry_enabled")
+        motion_enabled = model_contract.get("motion_enabled")
+        if not isinstance(geometry_enabled, bool) or not isinstance(motion_enabled, bool):
+            raise ValueError("Frame Joint v2 checkpoint has invalid G/M switches")
+        if geometry_enabled != dit_contract.get("geometry_enabled") or motion_enabled != dit_contract.get("motion_enabled"):
+            raise ValueError("Frame Joint model and DiT G/M switches differ")
+    else:
+        raise ValueError("unsupported Frame Joint model/DiT contract schemas")
     model = FrameJointModel.from_codec(
         artifact.model,
         statistics.to(device=device),
@@ -717,6 +731,8 @@ def load_frame_joint_inference(
         vector_width=int(dit_contract["vector_width"]),
         depth=int(dit_contract["depth"]),
         heads=int(dit_contract["heads"]),
+        geometry_enabled=geometry_enabled,
+        motion_enabled=motion_enabled,
     ).to(device)
     if dict(model.contract()) != dict(model_contract):
         raise ValueError("reconstructed Frame Joint model contract differs")

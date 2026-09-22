@@ -1,0 +1,41 @@
+schema: molvid.frame_joint.train.v1
+data:
+  manifest_root: /workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921
+  base_data_hash: 54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0
+  normalization_source_data_hash: 54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0
+  derived_train:
+    - store: /workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/data/fixed_history_train/clip_store/train
+      manifest: /workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/data/fixed_history_train/fixed_history_train_manifest.json
+      manifest_sha256: 863d368d8b6937dd7c5a5efce0ccfc4a2857b77b7aaf1de007ade3a40ae0cc61
+codec:
+  checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+  sha256: ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df
+statistics:
+  path: /workspace/molvid_recon/runs/frame_joint_v1_multitime/frame_statistics.pt
+  sha256: 117dbcb674f9932c40216c4e2c3ee69153dacc3d3efebcca6e67c876a3b6bee9
+  statistics_hash: 7be1542ce10e35bd7f2e170ca88eaf6db464bae4f7721402214bf2c4f0fad76a
+model:
+  scalar_width: 256
+  vector_width: 128
+  depth: 4
+  heads: 8
+  geometry_enabled: true
+  motion_enabled: false
+loss:
+  inherit_parent: true
+training:
+  device: cuda
+  deterministic: false
+  precision: bf16
+  seed: 20260923
+  max_atom_frames_per_gpu: 40000
+  clips_per_trajectory: 24
+  time_bucket_weights: {dt_100ps: 0.25, dt_200ps: 0.25, dt_400ps: 0.25, fixed_history_dt_100ps: 0.08333333333333333, fixed_history_dt_200ps: 0.08333333333333333, fixed_history_dt_400ps: 0.08333333333333333}
+  history_order: [4, 8]
+  weight_decay: 0.01
+  grad_clip: 1.0
+  output_root: runs/frame_gm_calibration_v2/P2/formal/G
+  stages:
+    - name: continuation
+      updates: 21208
+      learning_rates: {history_encoder: 0.0001, dit: 0.0002, decoder: 0.00005}

@@ -10,6 +10,7 @@ from torch import nn
 
 from molvid.codec.frame import FrozenFrameTeacher
 from molvid.data.batch import ClipValidationError, collate_clip_records, validate_clip_record
+from molvid.evaluation.geometry import angle_statistics
 from molvid.evaluation.temporal import system_mean_rmsf_summary, temporal_metrics_v3
 from molvid.geometry.frames import pack_frame_nodes
 
@@ -136,6 +137,22 @@ def test_zero_motion_is_valid_rmsf_but_correlation_is_unavailable() -> None:
     assert rmsf["system_mean_target_A"] == 0.0
     assert rmsf["atom_profile"]["pearson"]["available"] is False
     assert rmsf["atom_profile"]["pearson"]["reason"] == "zero_variance"
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
+def test_sparse_bond_angles_respect_padding_and_report_validity_on_cuda() -> None:
+    batch = collate_clip_records([_record(valid_frames=6)]).to("cuda")
+    target = batch.x.clone()
+    prediction = target.clone()
+    prediction[4:6, 2, 1] = 0.5
+    prediction[6:, 2, 1] = float("nan")
+    result = angle_statistics(prediction, target, batch, frames=range(4, 8))
+    assert result["available"] is True
+    assert result["angle_count"] == 2
+    assert result["evaluated_instances"] == 4
+    assert result["prediction_valid_fraction"] == 1.0
+    assert result["target_valid_fraction"] == 1.0
+    assert result["mae_radian"] > 0.0
 
 
 def test_system_spread_is_distinct_from_mean_amplitude() -> None:

@@ -77,6 +77,28 @@ class JointStepLoss:
     bond_diagnostics: Mapping[str, FutureBondLoss]
 
 
+@dataclass(frozen=True)
+class WarmStartReport:
+    """Auditable model-only initialization from a changed experiment."""
+
+    source_path: str
+    source_sha256: str
+    source_step: int
+    source_model_contract: Mapping[str, Any]
+    target_model_contract: Mapping[str, Any]
+    loaded: tuple[str, ...]
+    initialized: tuple[str, ...]
+    unexpected: tuple[str, ...]
+    shape_mismatch: tuple[str, ...]
+    optimizer_restored: bool = False
+    scheduler_restored: bool = False
+    cursor_restored: bool = False
+    rng_restored: bool = False
+
+    def as_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 def _sample_equal_coordinate_mse(
     prediction: Tensor,
     target: Tensor,
@@ -298,14 +320,22 @@ def _component_parameter_groups(
     weight_decay: float,
 ) -> list[dict[str, Any]]:
     groups: list[dict[str, Any]] = []
-    for component in ("history_encoder", "dit", "decoder"):
-        module = getattr(model, component)
+    component_modules: dict[str, list[nn.Module]] = {
+        "history_encoder": [
+            model.history_encoder,
+            *([] if model.motion_encoder is None else [model.motion_encoder]),
+        ],
+        "dit": [model.dit],
+        "decoder": [model.decoder],
+    }
+    for component, modules in component_modules.items():
         decay: list[nn.Parameter] = []
         no_decay: list[nn.Parameter] = []
-        for name, parameter in module.named_parameters():
-            if not parameter.requires_grad:
-                continue
-            (no_decay if parameter.ndim == 1 or name.endswith("bias") else decay).append(parameter)
+        for module in modules:
+            for name, parameter in module.named_parameters():
+                if not parameter.requires_grad:
+                    continue
+                (no_decay if parameter.ndim == 1 or name.endswith("bias") else decay).append(parameter)
         for suffix, parameters, decay_value in (
             ("decay", decay, float(weight_decay)),
             ("no_decay", no_decay, 0.0),
@@ -389,6 +419,8 @@ class FrameJointTrainer:
                 module.set_trainable(name in active)
             else:
                 module.requires_grad_(name in active)
+        if self.base_model.motion_encoder is not None:
+            self.base_model.motion_encoder.requires_grad_("history_encoder" in active)
         self.base_model.target_teacher.requires_grad_(False)
         self.stage = stage
 
@@ -551,6 +583,8 @@ class FrameJointTrainer:
         for name in ("history_encoder", "dit", "decoder"):
             module = getattr(self.base_model, name)
             module.set_trainable(True) if name in {"history_encoder", "dit"} else module.requires_grad_(True)
+        if self.base_model.motion_encoder is not None:
+            self.base_model.motion_encoder.requires_grad_(True)
         payload = load_training_checkpoint(
             path,
             model=self.base_model,
@@ -576,6 +610,106 @@ class FrameJointTrainer:
         self.successful_updates = int(extra["successful_optimizer_updates"])
         self.configure_stage(stage)
         return payload
+
+    def load_warm_start(
+        self,
+        path: str | Path,
+        *,
+        expected_sha256: str,
+    ) -> WarmStartReport:
+        """Load compatible model tensors while resetting all training state.
+
+        Warm start is deliberately distinct from strict resume and exact
+        continuation.  It permits only newly introduced G/M tensors to be
+        absent from the parent; old tensors must all exist with identical
+        shapes and dtypes.  Optimizer moments, counters, cursor, and RNG are
+        never read into the child experiment.
+        """
+
+        actual_sha256 = sha256_file(path)
+        if actual_sha256 != str(expected_sha256):
+            raise ValueError("warm-start parent SHA-256 mismatch")
+        payload = torch.load(path, map_location="cpu", weights_only=False)
+        if not isinstance(payload, Mapping) or payload.get("schema_version") != "molvid.training.checkpoint.v1":
+            raise ValueError("unsupported warm-start checkpoint schema")
+        parent_contracts = payload.get("contracts")
+        source_state = payload.get("model_state")
+        if not isinstance(parent_contracts, Mapping) or not isinstance(source_state, Mapping):
+            raise ValueError("warm-start parent lacks contracts or model state")
+        for name, expected in (
+            ("statistics_hash", self.base_model.statistics_hash),
+            ("teacher_artifact_sha256", self.teacher_artifact_sha256),
+        ):
+            if parent_contracts.get(name) != expected:
+                raise ValueError(f"warm-start parent {name!r} differs")
+        parent_model = parent_contracts.get("model")
+        if not isinstance(parent_model, Mapping):
+            raise ValueError("warm-start parent model contract is missing")
+        target_state = self.base_model.state_dict()
+        loaded: dict[str, Tensor] = {}
+        unexpected: list[str] = []
+        shape_mismatch: list[str] = []
+        for name, value in source_state.items():
+            if not isinstance(name, str) or not isinstance(value, Tensor):
+                raise ValueError("warm-start model state must contain named tensors")
+            target = target_state.get(name)
+            if target is None:
+                unexpected.append(name)
+            elif value.shape != target.shape or value.dtype != target.dtype:
+                shape_mismatch.append(name)
+            else:
+                loaded[name] = value
+        if unexpected or shape_mismatch:
+            raise ValueError(
+                "warm-start parent has incompatible old tensors: "
+                f"unexpected={unexpected[:8]}, shape_mismatch={shape_mismatch[:8]}"
+            )
+        initialized = sorted(set(target_state) - set(loaded))
+        allowed_fragments = (
+            "motion_encoder.",
+            ".local_geometry.",
+            ".motion_context.",
+            ".history_time_decay_raw",
+            ".temporal_time_decay_raw",
+        )
+        forbidden_missing = [
+            name for name in initialized
+            if not any(fragment in name for fragment in allowed_fragments)
+        ]
+        if forbidden_missing:
+            raise ValueError(
+                "warm-start is missing non-G/M tensors: "
+                f"{forbidden_missing[:8]}"
+            )
+        result = self.base_model.load_state_dict(loaded, strict=False)
+        if tuple(sorted(result.missing_keys)) != tuple(initialized) or result.unexpected_keys:
+            raise RuntimeError("warm-start load report disagrees with the validated tensor sets")
+        restored = self.base_model.state_dict()
+        for name, value in loaded.items():
+            if not torch.equal(restored[name].detach().cpu(), value.detach().cpu()):
+                raise RuntimeError(f"warm-start tensor changed while loading {name!r}")
+        self.step = 0
+        self.successful_updates = 0
+        self.continuation_parent = {
+            "mode": "model_only_warm_start",
+            "sha256": actual_sha256,
+            "step": int(payload.get("step", -1)),
+            "source_data_hash": parent_contracts.get("data_hash"),
+            "optimizer_restored": False,
+            "cursor_restored": False,
+            "rng_restored": False,
+        }
+        return WarmStartReport(
+            source_path=str(Path(path).resolve()),
+            source_sha256=actual_sha256,
+            source_step=int(payload.get("step", -1)),
+            source_model_contract=dict(parent_model),
+            target_model_contract=dict(self.base_model.contract()),
+            loaded=tuple(sorted(loaded)),
+            initialized=tuple(initialized),
+            unexpected=tuple(unexpected),
+            shape_mismatch=tuple(shape_mismatch),
+        )
 
     def load_continuation_parent(
         self,
@@ -630,6 +764,8 @@ class FrameJointTrainer:
         for name in ("history_encoder", "dit", "decoder"):
             module = getattr(self.base_model, name)
             module.set_trainable(True) if name in {"history_encoder", "dit"} else module.requires_grad_(True)
+        if self.base_model.motion_encoder is not None:
+            self.base_model.motion_encoder.requires_grad_(True)
         payload = load_training_checkpoint(
             path,
             model=self.base_model,

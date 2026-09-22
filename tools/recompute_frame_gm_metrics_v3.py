@@ -16,6 +16,13 @@ import torch
 
 from molvid.data.batch import collate_clip_records
 from molvid.data.store import ClipMMapDataset
+from molvid.evaluation.geometry import (
+    angle_statistics,
+    bond_errors,
+    clash_statistics,
+    contact_scores,
+    coordinate_errors,
+)
 from molvid.evaluation.temporal import (
     TEMPORAL_METRIC_SCHEMA,
     system_mean_rmsf_summary,
@@ -77,6 +84,13 @@ def _value(record: Mapping[str, Any], path: Sequence[str]) -> float | None:
 
 
 SCALARS: dict[str, tuple[str, ...]] = {
+    "aligned_rmsd_A": ("geometry", "aligned_rmsd"),
+    "drmsd_A": ("geometry", "drmsd"),
+    "bond_rmse_A": ("geometry", "bond_rmse"),
+    "angle_mae_radian": ("geometry", "angles", "mae_radian"),
+    "angle_prediction_valid_fraction": ("geometry", "angles", "prediction_valid_fraction"),
+    "clash_rate": ("geometry", "clash_rate"),
+    "contact_f1": ("geometry", "contact_f1"),
     "displacement_increment_rmse_A": ("increments", "displacement_increment_rmse_A"),
     "finite_difference_velocity_rmse_A_per_ps": ("increments", "finite_difference_velocity_rmse_A_per_ps"),
     "velocity_correlation": ("increments", "velocity_correlation", "value"),
@@ -224,6 +238,18 @@ def main() -> int:
                 batch,
                 history_frames=int(meta["history_frames"]),
             )
+            future_frames = list(range(int(meta["history_frames"]), int(target.shape[0])))
+            geometry = {
+                **coordinate_errors(prediction, target, batch, future_frames),
+                **bond_errors(prediction, target, batch, future_frames),
+                **contact_scores(prediction, target, batch, future_frames),
+                **clash_statistics(prediction, batch, future_frames),
+                "angles": angle_statistics(prediction, target, batch, future_frames),
+                "coordinate_unit": "angstrom",
+                "angle_unit": "radian",
+            }
+            combined_metrics = dict(result.metrics)
+            combined_metrics["geometry"] = geometry
             profile_name = hashlib.sha1(row_key.encode()).hexdigest() + ".npz"
             np.savez_compressed(
                 profiles_root / profile_name,
@@ -237,7 +263,7 @@ def main() -> int:
                 "clock": source_row["clock"],
                 "seed": source_row.get("seed"),
                 "meta": meta,
-                "metrics": _jsonable(result.metrics),
+                "metrics": _jsonable(combined_metrics),
                 "profile_file": profile_name,
                 "coordinate_source": {
                     "relative_path": str(Path("coordinates") / str(source_row["coordinate_file"])),

@@ -15,13 +15,18 @@ from typing import Any, Mapping, Sequence
 import torch
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import ConcatDataset, Subset
 
 from ..checkpoints import capture_rng_state, frame_target_provenance, load_codec_artifact
 from ..codec.frame import FrozenFrameTeacher
 from ..config import load_config
 from ..data.batch import collate_clip_records
 from ..data.manifest import load_datasets
-from ..data.sampling import TaskAwareClipBatchSampler, TrajectoryCappedBatchSampler
+from ..data.sampling import (
+    TaskAwareClipBatchSampler,
+    TrajectoryCappedBatchSampler,
+    get_clip_specs,
+)
 from ..data.store import ClipMMapDataset
 from ..latent.statistics import FrameLatentStatistics
 from ..model import FrameJointModel
@@ -47,6 +52,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--resume-sha256")
     parser.add_argument("--continuation-parent", type=Path)
     parser.add_argument("--continuation-parent-sha256")
+    parser.add_argument("--warm-start", type=Path)
+    parser.add_argument("--warm-start-sha256")
     parser.add_argument("--checkpoint-every", type=int, default=0)
     parser.add_argument("--max-steps", type=int)
     parser.add_argument("--output-root", type=Path)
@@ -89,10 +96,92 @@ def _open_data(data: Mapping[str, Any]):
     manifest_root = data.get("manifest_root")
     if manifest_root:
         splits = load_datasets(manifest_root, train_view=str(data.get("train_view", "train")))
-        return splits.train, splits.valid, splits.data_hash, splits.close
+        expected_base = str(data.get("base_data_hash", ""))
+        if expected_base and expected_base != splits.data_hash:
+            splits.close()
+            raise ValueError("base data hash differs from the derived-view contract")
+        derived = data.get("derived_train", ())
+        if derived:
+            if not isinstance(derived, list) or not all(isinstance(item, Mapping) for item in derived):
+                splits.close()
+                raise ValueError("data.derived_train must be a list of mappings")
+            stores: list[ClipMMapDataset] = []
+            identities: list[dict[str, Any]] = []
+            try:
+                for item in derived:
+                    store_path = Path(item["store"])
+                    manifest_path = Path(item["manifest"])
+                    expected_manifest = str(item["manifest_sha256"])
+                    actual_manifest = sha256_file(manifest_path)
+                    if actual_manifest != expected_manifest:
+                        raise ValueError("derived-view manifest SHA-256 differs")
+                    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    if manifest.get("test_opened") is not False or manifest.get("split") != "train":
+                        raise ValueError("derived training view must declare split=train and sealed test")
+                    if manifest.get("source_data_hash") != splits.data_hash:
+                        raise ValueError("derived training view points to a different base data identity")
+                    store = ClipMMapDataset(store_path)
+                    stores.append(store)
+                    identities.append({
+                        "store": str(store_path.resolve()),
+                        "index_sha256": sha256_file(store_path / "index.txt"),
+                        "record_count": len(store),
+                        "manifest": str(manifest_path.resolve()),
+                        "manifest_sha256": actual_manifest,
+                        "contract_hash": manifest.get("contract_hash"),
+                    })
+                train: Any = ConcatDataset([splits.train, *stores])
+                requested_systems = tuple(str(value) for value in data.get("train_systems", ()))
+                if requested_systems:
+                    requested = set(requested_systems)
+                    selected_indices = []
+                    selected_trajectories: set[str] = set()
+                    for item in get_clip_specs(train):
+                        match = re.match(r"^(atlas_.+)_R([123])_", item.sample_id)
+                        if match is not None and match.group(1) in requested:
+                            selected_indices.append(int(item.index))
+                            selected_trajectories.add(f"{match.group(1)}_R{match.group(2)}")
+                    if set(requested_systems) != {
+                        value.rsplit("_R", 1)[0] for value in selected_trajectories
+                    } or len(selected_trajectories) != 3 * len(requested_systems):
+                        raise ValueError("pilot train_systems do not form a complete three-replica grid")
+                    train = Subset(train, selected_indices)
+                current_hash = canonical_hash({
+                    "schema": "molvid.frame_joint.derived_train_data.v1",
+                    "base_data_hash": splits.data_hash,
+                    "derived_train": identities,
+                    "train_systems": list(requested_systems),
+                    "valid_index_sha256": splits.valid_index_hash,
+                    "test_opened": False,
+                })
+                normalization_hash = str(data.get("normalization_source_data_hash", ""))
+                if normalization_hash != splits.data_hash:
+                    raise ValueError(
+                        "derived training requires normalization_source_data_hash equal to base_data_hash"
+                    )
+                def close() -> None:
+                    for store in stores:
+                        store.close()
+                    splits.close()
+
+                relationship = {
+                    "mode": "authorized_train_only_derived_views",
+                    "base_data_hash": splits.data_hash,
+                    "normalization_source_data_hash": normalization_hash,
+                    "derived_train": identities,
+                    "train_systems": list(requested_systems),
+                }
+                return train, splits.valid, current_hash, normalization_hash, relationship, close
+            except Exception:
+                for store in stores:
+                    store.close()
+                splits.close()
+                raise
+        return splits.train, splits.valid, splits.data_hash, splits.data_hash, None, splits.close
     train = ClipMMapDataset(data["train_store"])
     valid = ClipMMapDataset(data["valid_store"])
-    return train, valid, _direct_data_hash(train, valid), lambda: (train.close(), valid.close())
+    data_hash = _direct_data_hash(train, valid)
+    return train, valid, data_hash, data_hash, None, lambda: (train.close(), valid.close())
 
 
 def _statistics_stream(
@@ -152,7 +241,7 @@ def _load_statistics(
     config: Mapping[str, Any],
     *,
     device: torch.device,
-    data_hash: str,
+    normalization_data_hash: str,
     codec_sha256: str,
 ) -> FrameLatentStatistics:
     path = Path(config["path"])
@@ -165,8 +254,8 @@ def _load_statistics(
     expected_contract = str(config.get("statistics_hash", ""))
     if expected_contract and expected_contract != statistics.hash:
         raise ValueError("frame statistics contract hash differs")
-    if statistics.provenance.get("data_hash") != data_hash:
-        raise ValueError("frame statistics were not fit on this training data")
+    if statistics.provenance.get("data_hash") != normalization_data_hash:
+        raise ValueError("frame statistics normalization source differs")
     if statistics.provenance.get("codec_checkpoint_sha256") != codec_sha256:
         raise ValueError("frame statistics target encoder differs")
     return statistics.to(device)
@@ -215,7 +304,7 @@ def _scheduled_rates(stage: Mapping[str, Any], position: int) -> dict[str, float
 
 
 def _sampler(
-    dataset: ClipMMapDataset,
+    dataset: Any,
     training: Mapping[str, Any],
     *,
     seed: int,
@@ -278,10 +367,13 @@ def _git_commit() -> str:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    if args.resume and args.continuation_parent:
-        raise ValueError("ordinary resume and continuation parent are mutually exclusive")
+    parent_modes = [args.resume is not None, args.continuation_parent is not None, args.warm_start is not None]
+    if sum(parent_modes) > 1:
+        raise ValueError("resume, continuation parent, and warm start are mutually exclusive")
     if args.continuation_parent and not args.continuation_parent_sha256:
         raise ValueError("continuation parent requires its SHA-256")
+    if args.warm_start and not args.warm_start_sha256:
+        raise ValueError("warm start requires its SHA-256")
     if args.fit_statistics_only:
         args.fit_statistics = True
     raw = load_config(args.config, schema=SCHEMA)
@@ -296,7 +388,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("fit statistics in one CUDA process before launching DDP")
     seed = int(training["seed"])
     seed_all(seed + rank)
-    train, valid, data_hash, close_data = _open_data(raw["data"])
+    train, valid, data_hash, normalization_data_hash, data_relationship, close_data = _open_data(raw["data"])
     del valid  # Validation is opened for identity only; this command never opens test.
     try:
         codec_config = raw["codec"]
@@ -329,7 +421,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             statistics = _load_statistics(
                 raw["statistics"],
                 device=device,
-                data_hash=data_hash,
+                normalization_data_hash=normalization_data_hash,
                 codec_sha256=artifact.report.source_sha256,
             )
 
@@ -342,6 +434,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             vector_width=int(model_config.get("vector_width", 128)),
             depth=int(model_config.get("depth", 4)),
             heads=int(model_config.get("heads", 8)),
+            geometry_enabled=bool(model_config.get("geometry_enabled", False)),
+            motion_enabled=bool(model_config.get("motion_enabled", False)),
         ).to(device)
         stages = _stages(training)
         histories = tuple(int(value) for value in training.get("history_order", (4, 8)))
@@ -365,12 +459,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             total_updates = min(total_updates, int(args.max_steps))
         initial_stage = stages[0]
         resume_payload = None
-        continuation_preview = None
+        parent_preview = None
         if args.resume:
             resume_payload = torch.load(args.resume, map_location="cpu", weights_only=False)
             initial_stage = {**stages[0], "name": str(resume_payload["contracts"]["stage"])}
         elif args.continuation_parent:
-            continuation_preview = torch.load(
+            parent_preview = torch.load(
                 args.continuation_parent, map_location="cpu", weights_only=False
             )
             if any(stage["name"] not in {"continuation", "frozen_decoder"} for stage in stages):
@@ -378,6 +472,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "a continuation config may contain only continuation or frozen_decoder stages"
                 )
             initial_stage = stages[0]
+        elif args.warm_start:
+            parent_preview = torch.load(args.warm_start, map_location="cpu", weights_only=False)
         wrapped: torch.nn.Module = model
         if world > 1:
             wrapped = DistributedDataParallel(
@@ -396,9 +492,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if resume_payload is not None:
             loss_mapping = dict(resume_payload["contracts"]["loss"])
         elif inherit_parent_loss:
-            if continuation_preview is None:
-                raise ValueError("loss.inherit_parent requires --continuation-parent")
-            loss_mapping = dict(continuation_preview["contracts"]["loss"])
+            if parent_preview is None:
+                raise ValueError("loss.inherit_parent requires a continuation parent or warm start")
+            loss_mapping = dict(parent_preview["contracts"]["loss"])
         calibration_requested = loss_mapping.get("generated_bond") in (None, "calibrate")
         if resume_payload is None and calibration_requested:
             loss_mapping["generated_bond"] = 0.0
@@ -426,8 +522,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         generator = torch.Generator(device=device).manual_seed(seed + 1000 + rank)
         sampler = _sampler(train, training, seed=seed, rank=rank, world=world)
-        epoch = batch_index = 0
+        epoch = batch_index = ordinary_batch_index = 0
         sampler.set_epoch(epoch)
+        warm_start_report = None
         if args.resume:
             loaded = trainer.load_checkpoint(
                 args.resume,
@@ -439,6 +536,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             rank_cursor = rank_states.get(str(rank), {}).get("cursor") if isinstance(rank_states, Mapping) else None
             cursor = rank_cursor if isinstance(rank_cursor, Mapping) else loaded["cursor"]
             epoch, batch_index = int(cursor["epoch"]), int(cursor["batch_index"])
+            ordinary_batch_index = int(cursor.get("ordinary_batch_index", trainer.step))
             sampler.set_epoch(epoch)
             sampler.validate_state_dict(cursor["sampler_state"])
             if canonical_hash(sampler.global_batches) != cursor["global_batch_schedule_hash"]:
@@ -458,11 +556,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             sampler.validate_state_dict(cursor["sampler_state"])
             if canonical_hash(sampler.global_batches) != cursor["global_batch_schedule_hash"]:
                 raise ValueError("continuation parent batch schedule differs")
+        elif args.warm_start:
+            warm_start_report = trainer.load_warm_start(
+                args.warm_start,
+                expected_sha256=args.warm_start_sha256,
+            )
         output_root = Path(training["output_root"])
         resolved_config = {
             **raw,
             "resolved": {
                 "data_hash": data_hash,
+                "normalization_source_data_hash": normalization_data_hash,
+                "data_relationship": data_relationship,
                 "statistics_hash": statistics.hash,
                 "statistics_sha256": sha256_file(stats_path),
                 "codec_artifact_step": artifact.step,
@@ -476,6 +581,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         if rank == 0:
             output_root.mkdir(parents=True, exist_ok=True)
             atomic_write_json(output_root / "resolved_config.json", resolved_config)
+            if warm_start_report is not None:
+                atomic_write_json(output_root / "warm_start_report.json", warm_start_report.as_dict())
+            specs = get_clip_specs(train)
+            by_index = {int(item.index): item for item in specs}
+            sampler_manifest = {
+                "schema": "molvid.frame_gm.p2_sampler_schedule.v1",
+                "epoch": epoch,
+                "sampler_state": sampler.state_dict(),
+                "global_batch_schedule": [list(batch) for batch in sampler.global_batches],
+                "global_batch_schedule_hash": canonical_hash(sampler.global_batches),
+                "selected_sample_ids": list(sampler.selected_sample_ids),
+                "selected_sample_ids_hash": canonical_hash(sampler.selected_sample_ids),
+                "selected_bucket_counts": dict(sorted(Counter(
+                    by_index[index].time_bucket_id
+                    for batch in sampler.global_batches
+                    for index in batch
+                ).items())),
+                "test_opened": False,
+            }
+            atomic_write_json(output_root / "sampler_manifest.json", sampler_manifest)
             atomic_write_json(
                 output_root / "target_encoder_provenance.json",
                 frame_target_provenance(
@@ -485,6 +610,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ),
             )
         exposures: Counter[str] = Counter()
+        bucket_exposures: Counter[str] = Counter()
+        view_history_exposures: Counter[str] = Counter()
+        valid_atom_frames = 0
         if args.dry_run:
             total_updates = min(total_updates, trainer.step + 1)
         last: dict[str, Any] = {}
@@ -498,7 +626,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 batches = list(iter(sampler))
             indices = batches[batch_index]
             cpu_batch = collate_clip_records([train[index] for index in indices])
-            history = histories[trainer.step % len(histories)]
+            buckets = set(str(value) for value in cpu_batch.time_bucket_id)
+            if len(buckets) != 1:
+                raise RuntimeError("Frame Joint sampler produced a mixed time-bucket batch")
+            bucket = next(iter(buckets))
+            fixed_history = bucket.startswith("fixed_history_dt_")
+            if fixed_history:
+                history = 4
+            else:
+                history = histories[ordinary_batch_index % len(histories)]
+                ordinary_batch_index += 1
             if history >= cpu_batch.frames:
                 raise ValueError("sampled history must leave future query frames")
             stage, stage_position = _stage_at(stages, trainer.step)
@@ -548,6 +685,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "history_frames": history,
                 "sample_ids": list(cpu_batch.sample_id),
                 "atom_frames": cpu_batch.atom_count * cpu_batch.frames,
+                "valid_atom_frames": int(
+                    cpu_batch.frame_mask.index_select(0, cpu_batch.abid).transpose(0, 1).sum()
+                ),
+                "view_kind": "fixed_history" if fixed_history else "legacy_uniform",
+                "time_bucket_id": bucket,
                 "learning_rates": {
                     str(group["group_name"]): float(group["lr"])
                     for group in trainer.optimizer.param_groups
@@ -555,6 +697,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             })
             for sample_id in cpu_batch.sample_id:
                 exposures[_trajectory(sample_id)] += 1
+            bucket_exposures[bucket] += cpu_batch.batch_size
+            view_history_exposures[
+                f"{'fixed_history' if fixed_history else 'legacy_uniform'}|H{history}"
+            ] += cpu_batch.batch_size
+            valid_atom_frames += int(
+                cpu_batch.frame_mask.index_select(0, cpu_batch.abid).transpose(0, 1).sum()
+            )
             batch_index += 1
             if rank == 0:
                 with (output_root / "train_metrics.jsonl").open("a", encoding="utf-8") as handle:
@@ -564,6 +713,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 cursor = {
                     "epoch": epoch,
                     "batch_index": batch_index,
+                    "ordinary_batch_index": ordinary_batch_index,
                     "sampler_state": sampler.state_dict(),
                     "global_batch_schedule_hash": canonical_hash(sampler.global_batches),
                 }
@@ -590,6 +740,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             atomic_write_json(output_root / "exposure.json", {
                 "successful_updates": trainer.successful_updates,
                 "local_trajectory_clip_exposure": dict(sorted(exposures.items())),
+                "bucket_clip_exposure": dict(sorted(bucket_exposures.items())),
+                "view_history_clip_exposure": dict(sorted(view_history_exposures.items())),
+                "valid_atom_frames": valid_atom_frames,
                 "clips_per_trajectory_per_epoch": int(training["clips_per_trajectory"]),
                 "world_size": world,
             })

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import torch
+import torch.nn.functional as F
 from torch import Tensor, nn
 
+from ..codec.motion_context import MotionContext
 from ..latent.adapter import FrameLatentAdapter
 from ..latent.types import FrameLatentBatch, HistoryMemory, ObservedContext, QuerySpec
 from ..time import PhysicalTimeEmbedding, pairwise_time_features
@@ -32,6 +34,8 @@ class FrameDiT(nn.Module):
         max_atom_type: int = 128,
         max_block_type: int = 256,
         max_component_type: int = 128,
+        geometry_enabled: bool = False,
+        motion_enabled: bool = False,
     ) -> None:
         super().__init__()
         self.adapter = adapter
@@ -39,8 +43,12 @@ class FrameDiT(nn.Module):
         self.vector_width = int(vector_width)
         self.depth = int(depth)
         self.heads = int(heads)
+        self.geometry_enabled = bool(geometry_enabled)
+        self.motion_enabled = bool(motion_enabled)
         if min(self.scalar_width, self.vector_width, self.depth, self.heads) < 1:
             raise ValueError("FrameDiT widths/depth/heads must be positive")
+        if self.geometry_enabled and self.depth < 4:
+            raise ValueError("the G branch requires depth >= 4 for blocks 2 and 4")
         if self.scalar_width % self.heads or self.vector_width % self.heads:
             raise ValueError("FrameDiT widths must divide heads")
         if float(dropout) != 0.0:
@@ -55,7 +63,18 @@ class FrameDiT(nn.Module):
         self.block_embedding = nn.Embedding(int(max_block_type), self.scalar_width)
         self.component_embedding = nn.Embedding(int(max_component_type), self.scalar_width)
         self.blocks = nn.ModuleList(
-            [FrameDiTBlock(self.scalar_width, self.vector_width, self.heads, int(ffn_multiplier), 0.0) for _ in range(self.depth)]
+            [
+                FrameDiTBlock(
+                    self.scalar_width,
+                    self.vector_width,
+                    self.heads,
+                    int(ffn_multiplier),
+                    0.0,
+                    local_geometry=self.geometry_enabled and index in {1, 3},
+                    motion_context=self.motion_enabled,
+                )
+                for index in range(self.depth)
+            ]
         )
         # History cross-attention uses scalar queries and memory vector
         # values; its query-vector normalization is intentionally outside the
@@ -105,6 +124,7 @@ class FrameDiT(nn.Module):
         query: QuerySpec,
         history_memory: HistoryMemory,
         flow_time: Tensor,
+        motion_context: MotionContext | None = None,
     ) -> FrameLatentBatch:
         if noisy.time_ps.shape != query.time_ps.shape or (
             noisy.frame_mask is not query.frame_mask
@@ -113,6 +133,8 @@ class FrameDiT(nn.Module):
             raise ValueError("noisy future latent and QuerySpec disagree")
         if noisy.topology is not context.topology and noisy.topology.contract() != context.topology.contract():
             raise ValueError("observed and query topology differ")
+        if self.motion_enabled != (motion_context is not None):
+            raise ValueError("motion context presence must match the explicit M switch")
         h, v = self.adapter.project_inputs(noisy)
         condition = self._condition(noisy, context, query, flow_time)
         h = h + condition
@@ -130,8 +152,23 @@ class FrameDiT(nn.Module):
         memory_h = history_memory.h.permute(1, 0, 2)
         memory_v = history_memory.v.permute(1, 0, 2, 3)
         for block in self.blocks:
+            if block.motion_context is not None:
+                assert motion_context is not None
+                motion_h, motion_v = block.motion_context(
+                    motion_context, condition, context, query
+                )
+                h = h + motion_h
+                v = v + motion_v
             h_norm, v_norm, h_gate, v_gate = block.history_adaln(h, v, condition)
             cross_bias = block.history_time_bias(cross_features).permute(0, 3, 1, 2)
+            if block.history_time_decay_raw is not None:
+                cross_distance = (
+                    (query.time_ps[:, :, None] - history_time[:, None, :]).abs()
+                    / 100.0
+                ).sqrt().index_select(0, noisy.abid)
+                cross_bias = cross_bias - F.softplus(
+                    block.history_time_decay_raw
+                ).view(1, -1, 1, 1) * cross_distance.unsqueeze(1)
             cross_h, cross_v = block.history(
                 h_norm.permute(1, 0, 2),
                 v_norm.permute(1, 0, 2, 3),
@@ -148,9 +185,21 @@ class FrameDiT(nn.Module):
             spatial_h, spatial_v = block_spatial_attention(h_norm, v_norm, noisy, block.spatial, layout)
             h = h + torch.tanh(h_gate) * spatial_h
             v = v + torch.tanh(v_gate).unsqueeze(-2) * spatial_v
+            if block.local_geometry is not None:
+                local_h, local_v = block.local_geometry(h, v, noisy, context)
+                h = h + local_h
+                v = v + local_v
 
             h_norm, v_norm, h_gate, v_gate = block.temporal_adaln(h, v, condition)
             temporal_bias = block.temporal_time_bias(temporal_features).permute(0, 3, 1, 2)
+            if block.temporal_time_decay_raw is not None:
+                temporal_distance = (
+                    (query.time_ps[:, :, None] - query.time_ps[:, None, :]).abs()
+                    / 100.0
+                ).sqrt().index_select(0, noisy.abid)
+                temporal_bias = temporal_bias - F.softplus(
+                    block.temporal_time_decay_raw
+                ).view(1, -1, 1, 1) * temporal_distance.unsqueeze(1)
             temporal_h, temporal_v = block.temporal(
                 h_norm.permute(1, 0, 2),
                 v_norm.permute(1, 0, 2, 3),
@@ -171,7 +220,7 @@ class FrameDiT(nn.Module):
         return self.adapter.project_outputs(noisy, h, v)
 
     def contract(self) -> dict[str, object]:
-        return {
+        base: dict[str, object] = {
             "schema_version": "molvid.frame_joint.dit.v1",
             "adapter": self.adapter.contract(),
             "scalar_width": self.scalar_width,
@@ -183,3 +232,26 @@ class FrameDiT(nn.Module):
             "physical_time_bias": True,
             "future_fields": ["h", "v"],
         }
+        if not self.geometry_enabled and not self.motion_enabled:
+            return base
+        base.update({
+            "schema_version": "molvid.frame_joint.dit.v2",
+            "geometry_enabled": self.geometry_enabled,
+            "motion_enabled": self.motion_enabled,
+            "local_geometry_blocks_one_based": [2, 4] if self.geometry_enabled else [],
+            "local_geometry": (
+                self.blocks[1].local_geometry.contract()
+                if self.geometry_enabled and self.blocks[1].local_geometry is not None
+                else None
+            ),
+            "motion_context": (
+                self.blocks[0].motion_context.contract()
+                if self.motion_enabled and self.blocks[0].motion_context is not None
+                else None
+            ),
+            "time_decay": (
+                "learned_residual_minus_softplus(lambda_head)*sqrt(abs_dt_over_100ps)"
+                if self.motion_enabled else None
+            ),
+        })
+        return base

@@ -154,6 +154,7 @@ def euler_sample_frames(
     current, _ = sample_frame_source(
         center, generator=_make_generator(context.latent.h.device, seed)
     )
+    prepared_condition = model.prepare_condition(context)
     was_training = model.training
     model.eval()
     for step in range(int(steps)):
@@ -168,6 +169,7 @@ def euler_sample_frames(
             query=query,
             noisy_future=current,
             flow_time=flow_time,
+            prepared_condition=prepared_condition,
         )
         velocity = output.velocity
         current = current.with_features(

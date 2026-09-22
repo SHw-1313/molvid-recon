@@ -244,12 +244,15 @@ def main():
       if args.resume and existing_checks.exists():
         checks=json.loads(existing_checks.read_text())
       else:
-        check_records=[]
+        preferred_check_records=[]; fallback_check_records=[]; changed_clock_records=[]
         for sid in ids:
           r=ds[by_id[sid]]
-          if int(r["lag_ps"])==300 and int(r["history_frames"]) in HISTORIES: check_records.append(r)
-        check_records=check_records[:2]
-        if not check_records: raise RuntimeError("no 300ps H4/H8 records available for CUDA check")
+          if int(r["history_frames"]) in HISTORIES:
+            fallback_check_records.append(r)
+            if int(r["lag_ps"])!=int(args.wrong_clock_dt): changed_clock_records.append(r)
+            if int(r["lag_ps"])==300: preferred_check_records.append(r)
+        check_records=(preferred_check_records or changed_clock_records or fallback_check_records)[:2]
+        if not check_records: raise RuntimeError("no supported H4/H8 records available for CUDA check")
         finite=[]; prefix=[]; times=[]
         for r in check_records:
           h=int(r["history_frames"]); b=collate_clip_records([r]); pred,g=sample_frame_joint(model,template=b,prefix_coordinates=b.x[:h],history_frames=h,steps=args.steps,seed=0)
@@ -257,7 +260,8 @@ def main():
         checks["sample_checks"]=times; checks["finite_passed"]=all(finite); checks["prefix_passed"]=all(prefix)
         checks["future_leakage"]=leakage_check(model,check_records[0],device,args.steps)
         checks["future_leakage_passed"]=checks["future_leakage"]["passed"]
-        checks["wrong_clock_time_change"]={"true_dt":300,"wrong_dt":args.wrong_clock_dt,"changes_input":300!=args.wrong_clock_dt,"scoring_clock":"true physical clock"}
+        true_dt=int(check_records[0]["lag_ps"])
+        checks["wrong_clock_time_change"]={"true_dt":true_dt,"wrong_dt":args.wrong_clock_dt,"changes_input":true_dt!=args.wrong_clock_dt,"scoring_clock":"true physical clock"}
         checks["passed"]=bool(checks["finite_passed"] and checks["prefix_passed"] and checks["future_leakage_passed"] and checks["wrong_clock_time_change"]["changes_input"])
         atomic_write_json(existing_checks,checks)
       print(json.dumps({"check_only":True,"passed":checks["passed"],"output":str(out/"checks"/"checks.json")},sort_keys=True),flush=True)

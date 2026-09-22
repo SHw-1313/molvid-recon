@@ -11,6 +11,7 @@ from torch import Tensor, nn
 from .codec.decoder import TrajectoryDecoder, TrajectoryDecoderOutput
 from .codec.frame import FrozenFrameTeacher
 from .codec.history import HistoryEncoder
+from .codec.motion_context import MotionContext, MotionContextEncoder
 from .dit.frame import FrameDiT
 from .flow.objective import frame_endpoint_from_velocity
 from .latent.adapter import FrameLatentAdapter
@@ -31,6 +32,14 @@ class FrameJointOutput:
     near: TrajectoryDecoderOutput | None = None
 
 
+@dataclass(frozen=True)
+class FrameJointCondition:
+    """Observed-only condition reusable across flow evaluations."""
+
+    history_memory: HistoryMemory
+    motion_context: MotionContext | None
+
+
 class FrameJointModel(nn.Module):
     """Frozen target teacher plus trainable history, flow field, and decoder.
 
@@ -47,6 +56,7 @@ class FrameJointModel(nn.Module):
         dit: FrameDiT,
         decoder: TrajectoryDecoder,
         statistics: FrameLatentStatistics,
+        motion_encoder: MotionContextEncoder | None = None,
     ) -> None:
         super().__init__()
         if statistics.width != history_encoder.channels:
@@ -57,6 +67,7 @@ class FrameJointModel(nn.Module):
         self.history_encoder = history_encoder
         self.dit = dit
         self.decoder = decoder
+        self.motion_encoder = motion_encoder
         self.register_buffer("frame_h_mean", statistics.h_mean.detach().clone())
         self.register_buffer("frame_h_std", statistics.h_std.detach().clone())
         self.register_buffer("frame_v_rms", statistics.v_rms.detach().clone())
@@ -75,6 +86,8 @@ class FrameJointModel(nn.Module):
         vector_width: int = 128,
         depth: int = 4,
         heads: int = 8,
+        geometry_enabled: bool = False,
+        motion_enabled: bool = False,
     ) -> "FrameJointModel":
         channels = int(statistics.width)
         if channels != 128:
@@ -98,6 +111,8 @@ class FrameJointModel(nn.Module):
             vector_width=vector_width,
             depth=depth,
             heads=heads,
+            geometry_enabled=geometry_enabled,
+            motion_enabled=motion_enabled,
         )
         decoder = TrajectoryDecoder.from_codec_head(
             codec.coordinate_head,
@@ -110,6 +125,10 @@ class FrameJointModel(nn.Module):
             dit=dit,
             decoder=decoder,
             statistics=statistics,
+            motion_encoder=(
+                MotionContextEncoder(channels, scalar_width, vector_width)
+                if motion_enabled else None
+            ),
         )
 
     @property
@@ -153,6 +172,13 @@ class FrameJointModel(nn.Module):
         self.target_teacher.eval()
         return self
 
+    def prepare_condition(self, context: ObservedContext) -> FrameJointCondition:
+        """Compute observed-only condition once without changing gradients."""
+
+        history = self.history_encoder(context)
+        motion = self.motion_encoder(context) if self.motion_encoder is not None else None
+        return FrameJointCondition(history_memory=history, motion_context=motion)
+
     def forward(
         self,
         noisy_future: FrameLatentBatch,
@@ -164,14 +190,18 @@ class FrameJointModel(nn.Module):
         decode_generated: bool = False,
         decode_clean: bool = False,
         decode_near: bool = False,
+        prepared_condition: FrameJointCondition | None = None,
     ) -> FrameJointOutput:
-        history = self.history_encoder(context)
+        condition = prepared_condition or self.prepare_condition(context)
+        if self.dit.motion_enabled != (condition.motion_context is not None):
+            raise ValueError("prepared condition disagrees with the model M switch")
         velocity = self.dit(
             noisy_future,
             context=context,
             query=query,
-            history_memory=history,
+            history_memory=condition.history_memory,
             flow_time=flow_time,
+            motion_context=condition.motion_context,
         )
         normalized_endpoint = frame_endpoint_from_velocity(noisy_future, velocity, flow_time)
         endpoint = self.inverse(normalized_endpoint)
@@ -186,14 +216,14 @@ class FrameJointModel(nn.Module):
             velocity=velocity,
             normalized_endpoint=normalized_endpoint,
             endpoint=endpoint,
-            history_memory=history,
+            history_memory=condition.history_memory,
             generated=generated,
             clean=clean,
             near=near,
         )
 
     def contract(self) -> Mapping[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "schema_version": "molvid.frame_joint.model.v1",
             "future_representation": ["h", "v"],
             "teacher_frozen": True,
@@ -203,3 +233,11 @@ class FrameJointModel(nn.Module):
             "decoder_depth": len(self.decoder.blocks),
             "statistics_hash": self.statistics_hash,
         }
+        if self.dit.geometry_enabled or self.dit.motion_enabled:
+            result["schema_version"] = "molvid.frame_joint.model.v2"
+            result["geometry_enabled"] = self.dit.geometry_enabled
+            result["motion_enabled"] = self.dit.motion_enabled
+            result["motion_encoder"] = (
+                self.motion_encoder.contract() if self.motion_encoder is not None else None
+            )
+        return result
