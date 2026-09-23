@@ -13,6 +13,8 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
+from molvid.config import load_config
+
 
 ARMS = ("B0", "G", "M", "GM")
 MAIN_METRICS = ("bond_rmse_A", "residue_rmsf_mae_A", "msd_curve_mae_A2")
@@ -162,11 +164,58 @@ def _validate_metrics_run(
         raise ValueError(f"source paired-view provenance is missing in {metrics_dir}")
     if manifest.get("paired_store") != paired_store.get("path"):
         raise ValueError(f"metric/evaluation paired store differs in {metrics_dir}")
+    store_path = Path(str(paired_store.get("path", "")))
+    store_index_path = store_path / "index.txt"
+    if not store_index_path.is_file():
+        raise FileNotFoundError(store_index_path)
+    actual_index_sha256 = _sha256(store_index_path)
+    if (
+        metrics.get("paired_store_index_sha256") != actual_index_sha256
+        or paired_store.get("index_sha256") != actual_index_sha256
+    ):
+        raise ValueError(f"paired store index SHA-256 differs in {metrics_dir}")
+    paired_manifest_path = Path(str(paired_manifest.get("path", "")))
+    if not paired_manifest_path.is_file():
+        raise FileNotFoundError(paired_manifest_path)
+    actual_manifest_sha256 = _sha256(paired_manifest_path)
+    if paired_manifest.get("sha256") != actual_manifest_sha256:
+        raise ValueError(f"paired manifest SHA-256 differs in {metrics_dir}")
+    paired_manifest_value = _read_json(paired_manifest_path)
+    if paired_manifest_value.get("test_opened") is not False:
+        raise ValueError(f"paired manifest opened sealed test data in {metrics_dir}")
+    if expected_rows == 2352:
+        if (
+            paired_manifest_value.get("schema_version")
+            != "molvid.frame_joint.multitime.eval_views.v1"
+            or paired_manifest_value.get("history_frames") != [4, 8]
+            or paired_manifest_value.get("views_per_trajectory") != 16
+        ):
+            raise ValueError(f"unexpected legacy paired-view family in {metrics_dir}")
+        view_family = "legacy"
+    elif expected_rows == 1392:
+        if (
+            paired_manifest_value.get("schema") != "molvid.frame_gm.fixed_history_views.v1"
+            or paired_manifest_value.get("view_kind")
+            != "fixed_history_h4_horizon_1200ps"
+            or paired_manifest_value.get("observed_relative_time_ps") != [-300, -200, -100, 0]
+        ):
+            raise ValueError(f"unexpected fixed-history paired-view family in {metrics_dir}")
+        view_family = "fixed"
+    else:
+        raise ValueError(f"unsupported formal row contract: {expected_rows}")
     return {
         "metric_manifest": str((metrics_dir / "run_manifest.json").resolve()),
         "metric_manifest_sha256": _sha256(metrics_dir / "run_manifest.json"),
         "evaluation_protocol": str(protocol_path.resolve()),
         "evaluation_protocol_sha256": _sha256(protocol_path),
+        "paired_data": {
+            "family": view_family,
+            "store": str(store_path.resolve()),
+            "store_index_sha256": actual_index_sha256,
+            "manifest": str(paired_manifest_path.resolve()),
+            "manifest_sha256": actual_manifest_sha256,
+            "test_opened": False,
+        },
         "protocol_identity": {
             key: protocol.get(key)
             for key in (
@@ -182,12 +231,13 @@ def _validate_view_grid(
     rows: Sequence[Mapping[str, str]],
     *,
     histories: Sequence[int],
+    family: str,
     source: Path,
-) -> tuple[list[str], dict[tuple[str, int, int], float]]:
+) -> tuple[list[str], dict[tuple[str, str, int, int], float]]:
     expected_views = {(lag, history) for lag in (100, 200, 300, 400) for history in histories}
     systems = sorted({str(row["system"]) for row in rows})
     keys: set[tuple[str, int, int]] = set()
-    targets: dict[tuple[str, int, int], float] = {}
+    targets: dict[tuple[str, str, int, int], float] = {}
     for row in rows:
         system = str(row["system"])
         lag = int(row["lag_ps"])
@@ -200,7 +250,7 @@ def _validate_view_grid(
         if int(row["replica_count"]) != 3:
             raise ValueError(f"formal view {key} does not contain three replicas")
         keys.add(key)
-        targets[key] = _finite_float(
+        targets[(family, *key)] = _finite_float(
             str(row["system_mean_rmsf_target_A"]),
             field="system_mean_rmsf_target_A",
             source=source,
@@ -237,10 +287,10 @@ def load_arm_values(
             f"unexpected generated view counts: legacy={len(legacy)}, fixed={len(fixed)}"
         )
     legacy_systems, legacy_targets = _validate_view_grid(
-        legacy, histories=(4, 8), source=legacy_path
+        legacy, histories=(4, 8), family="legacy", source=legacy_path
     )
     fixed_systems, fixed_targets = _validate_view_grid(
-        fixed, histories=(4,), source=fixed_path
+        fixed, histories=(4,), family="fixed", source=fixed_path
     )
     if legacy_systems != fixed_systems:
         raise ValueError("legacy and fixed-history system sets differ")
@@ -371,6 +421,8 @@ def _validate_formal_provenance(
         raise ValueError("formal arm/config provenance differs")
     checkpoints: dict[str, dict[str, str]] = {}
     arm_provenance: dict[str, Any] = {}
+    baseline_exposure: dict[str, Any] | None = None
+    baseline_sampler: dict[str, Any] | None = None
     for arm in ARMS:
         arm_manifest = formal_arms[arm]
         resolved_config = resolved_configs[arm]
@@ -394,6 +446,16 @@ def _validate_formal_provenance(
         sampler = _read_json(formal_root / arm / "sampler_manifest.json")
         target = _read_json(formal_root / arm / "target_encoder_provenance.json")
         arm_resolved = _read_json(formal_root / arm / "resolved_config.json")
+        reviewed_config = load_config(
+            config_path, schema="molvid.frame_joint.train.v1"
+        )
+        actual_config = {
+            key: value for key, value in arm_resolved.items() if key != "resolved"
+        }
+        if actual_config != reviewed_config:
+            raise ValueError(
+                f"formal runtime config differs from reviewed config for {arm}"
+            )
         if exposure.get("successful_updates") != expected_step:
             raise ValueError(f"formal exposure is incomplete for {arm}")
         if sampler.get("test_opened") is not False:
@@ -409,6 +471,13 @@ def _validate_formal_provenance(
             or child.get("data_hash") != resolved.get("data", {}).get("derived_data_hash")
         ):
             raise ValueError(f"formal resolved config differs for {arm}")
+        if baseline_exposure is None:
+            baseline_exposure = exposure
+            baseline_sampler = sampler
+        elif exposure != baseline_exposure or sampler != baseline_sampler:
+            raise ValueError(
+                f"formal sampler schedule or exposure differs for {arm}"
+            )
         checkpoints[arm] = {"path": str(checkpoint.resolve()), "sha256": checkpoint_sha}
         arm_provenance[arm] = {
             "config": str(config_path),
