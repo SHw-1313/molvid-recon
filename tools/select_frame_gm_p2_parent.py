@@ -162,9 +162,11 @@ def _validate_metrics_run(
     paired_manifest = protocol.get("paired_manifest")
     if not isinstance(paired_store, Mapping) or not isinstance(paired_manifest, Mapping):
         raise ValueError(f"source paired-view provenance is missing in {metrics_dir}")
-    if manifest.get("paired_store") != paired_store.get("path"):
+    metric_store_path = Path(str(manifest.get("paired_store", "")))
+    protocol_store_path = Path(str(paired_store.get("path", "")))
+    if metric_store_path.resolve() != protocol_store_path.resolve():
         raise ValueError(f"metric/evaluation paired store differs in {metrics_dir}")
-    store_path = Path(str(paired_store.get("path", "")))
+    store_path = protocol_store_path
     store_index_path = store_path / "index.txt"
     if not store_index_path.is_file():
         raise FileNotFoundError(store_index_path)

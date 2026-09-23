@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 from pathlib import Path
 import sys
 
@@ -260,6 +261,29 @@ def test_metric_provenance_hashes_and_checkpoint_fail_closed(tmp_path: Path) -> 
         _validate_metrics_run(
             metrics_dir, 2352, expected_checkpoint_sha256="checkpoint"
         )
+
+
+def test_metric_provenance_accepts_relative_absolute_alias_of_same_store(
+    tmp_path: Path,
+) -> None:
+    metrics_dir, protocol_path = _metric_fixture(tmp_path)
+    protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
+    protocol["paired_store"]["path"] = os.path.relpath(
+        protocol["paired_store"]["path"], Path.cwd()
+    )
+    _write_json(protocol_path, protocol)
+    metrics = json.loads((metrics_dir / "metrics.json").read_text(encoding="utf-8"))
+    metrics["source_protocol_sha256"] = _sha256(protocol_path)
+    _write_json(metrics_dir / "metrics.json", metrics)
+    manifest = json.loads((metrics_dir / "run_manifest.json").read_text(encoding="utf-8"))
+    manifest["metrics_sha256"] = _sha256(metrics_dir / "metrics.json")
+    _write_json(metrics_dir / "run_manifest.json", manifest)
+    result = _validate_metrics_run(
+        metrics_dir, 2352, expected_checkpoint_sha256="checkpoint"
+    )
+    assert Path(result["paired_data"]["store"]).resolve() == Path(
+        manifest["paired_store"]
+    ).resolve()
 
 
 def test_metric_paired_data_identity_and_sealed_test_fail_closed(tmp_path: Path) -> None:
