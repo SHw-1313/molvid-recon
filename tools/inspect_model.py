@@ -20,12 +20,17 @@ from molvid.data.batch import ClipBatch, collate_clip_records
 from molvid.data.manifest import load_datasets
 from molvid.data.store import ClipMMapDataset
 from molvid.flow.objective import FrameRectifiedFlowObjective
+from molvid.flow.source import sample_frame_source
 from molvid.generation import _block_positions, _observed_scaffold
 from molvid.latent.conditioning import build_observation_condition
 from molvid.runtime import atomic_write_json, configure_device
 from molvid.training.batches import prepare_batch_then_to_device, prepare_frame_joint_batch
 from molvid.training.dit import module_state_hash
-from molvid.training.joint import JointLossConfig, frame_joint_loss
+from molvid.training.joint import (
+    JointLossConfig,
+    SampledAuxiliaryConfig,
+    frame_joint_loss,
+)
 
 
 def model_summary(model: nn.Module) -> dict[str, Any]:
@@ -112,6 +117,7 @@ def inspect_frame_joint_forward(
     device: torch.device,
     history_frames: int,
     loss_config: JointLossConfig,
+    sampled_config: SampledAuxiliaryConfig | None = None,
 ) -> dict[str, Any]:
     prepared = prepare_frame_joint_batch(
         model.target_teacher,
@@ -130,6 +136,14 @@ def inspect_frame_joint_forward(
         ),
     )
     model.zero_grad(set_to_none=True)
+    sampled_config = sampled_config or SampledAuxiliaryConfig()
+    sampled_sources = None
+    if sampled_config.enabled:
+        sampled_generator = torch.Generator(device=device).manual_seed(1)
+        sampled_sources = tuple(
+            sample_frame_source(prepared.source_center, generator=sampled_generator)[0]
+            for _ in range(sampled_config.draws)
+        )
     output = model(
         sample.interpolated,
         context=prepared.observed_context,
@@ -139,6 +153,9 @@ def inspect_frame_joint_forward(
         decode_generated=True,
         decode_clean=True,
         decode_near=True,
+        sampled_sources=sampled_sources,
+        sampled_steps=sampled_config.euler_steps,
+        checkpoint_sampled_steps=sampled_config.activation_checkpoint,
     )
     losses = frame_joint_loss(
         output,
@@ -147,6 +164,7 @@ def inspect_frame_joint_forward(
         sample.flow_time,
         stage="joint",
         config=loss_config,
+        sampled_config=sampled_config,
     )
     losses.total.backward()
     gradients = {}
@@ -174,6 +192,12 @@ def inspect_frame_joint_forward(
         "velocity_h": list(output.velocity.h.shape),
         "velocity_v": list(output.velocity.v.shape),
         "generated_coordinates": list(output.generated.coordinates.shape),
+        "sampled_coordinates": [
+            list(item.coordinates.shape) for item in output.sampled
+        ],
+        "sampled_auxiliary": (
+            sampled_config.contract() if sampled_config.enabled else None
+        ),
         "history_memory_h": list(output.history_memory.h.shape),
         "history_memory_v": list(output.history_memory.v.shape),
         "physical_time_shape": list(prepared.query.time_ps.shape),
@@ -252,6 +276,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 history_frames=args.history,
                 loss_config=JointLossConfig.resolve(
                     loaded["payload"]["contracts"]["loss"]
+                ),
+                sampled_config=SampledAuxiliaryConfig.resolve(
+                    loaded["payload"]["contracts"].get("sampled_auxiliary")
                 ),
             )
             identity = args.checkpoint_sha256

@@ -14,18 +14,26 @@ flowchart LR
   O --> C[observed-only source center]
   Y --> N[global train statistics]
   C --> Z[conditional source + noise]
+  C --> AZ[actual source: repeat last observed normalized latent + N(0,I)]
   N --> Z
   Z --> D[FrameDiT: history cross, spatial, future temporal, FFN]
   HE --> D
   QT[future query time_ps] --> D
   S[flow_time] --> D
   D --> U[future h/v velocity]
+  AZ --> AD[4-step differentiable Euler, K=2, every 8 successful updates]
+  HE --> AD
+  QT --> AD
+  AD --> ADEC[shared decoder]
+  ADEC --> AXYZ[actual sampled future coordinates]
+  AXYZ --> ES[condition-local physical feature energy score]
   U --> E[normalized endpoint and inverse statistics]
   E --> DEC[2-layer temporal/covalent decoder]
   O --> DEC
   DEC --> XYZ[all future coordinates]
   Y -. supervision only .-> U
   Y -. clean/near reconstruction only .-> DEC
+  Y -. loss target only; never condition .-> ES
 ```
 
 ## 源码入口
@@ -39,7 +47,8 @@ flowchart LR
 | flow field | `molvid/dit/frame.py` | history cross → spatial → 双向 future temporal → FFN |
 | decoder | `molvid/codec/decoder.py` | 两层整段 temporal/covalent decoder；coordinate head 可训练 warm start |
 | 整体模型 | `molvid/model.py` | history、DiT、endpoint、generated/clean/near decode 的显式组合 |
-| loss/trainer | `molvid/training/joint.py` | staged optimizer、统一 bond 开关、校准、resume/continuation |
+| 分布特征 | `molvid/losses/distribution.py` | observed-reference RMSF、Å² 位移、稀疏局部距离增量与 condition-local energy score |
+| loss/trainer | `molvid/training/joint.py` | staged optimizer、统一 bond 开关、实际样本校准、独立 RNG、resume/continuation |
 | 数据与 CLI | `molvid/training/batches.py`, `molvid/cli/train_frame_joint.py` | teacher-only no-grad、DDP、cursor/RNG、配置驱动训练 |
 | 生成/评估 | `molvid/generation.py`, `tools/evaluate_frame_joint_tiny.py` | observed-only Euler 生成和固定 3/9 tiny 协议 |
 
@@ -57,6 +66,15 @@ flowchart LR
    endpoint 已 detach；bond release 把 generated/clean/near 三个显式 bond 权重统一置零。
 6. DDP 对整个 `FrameJointModel` 同步；flow/clean/generated/near 分别按自己的
    global applicable-sample count 修正 local mean，再做 clip、AdamW 和成功 update 计数。
+7. P3 J1 仅在第 8、16、…个全局成功 update 内，用独立 generator 生成两个
+   `[Q,N,C]`/`[Q,N,3,C]` source。每个 source 在同一次外层 DDP forward 中经过
+   4 次可微 Euler DiT 调用和共享 decoder，产生两个 `[Q,N,3]` 坐标样本；一次
+   backward 同时更新 history、DiT、decoder。J0 不构造该分支，主 flow generator
+   和数据顺序与 J1 完全相同。
+8. J1 energy score 只在 loss 端读取真实未来坐标。RMSF 的单位是 Å，位移平方是
+   Å²，内部距离增量/相邻增量乘积分别是 Å/Å²；尺度只由固定 8 个 train batch
+   拟合。K=2 的 diversity 项系数为 0.5。实际样本 bond target 只取最后观测帧，
+   不读取隐藏未来 bond。
 
 H8、887 atoms 的真实 inspector shape 为：observed `h=[8,887,128]`、
 `v=[8,887,3,128]`，history memory `h=[2,887,256]`、
@@ -76,6 +94,9 @@ H8、887 atoms 的真实 inspector shape 为：observed `h=[8,887,128]`、
   单侧零初始化，使第一步启动 gate、后续步骤能够训练 message 参数。
 - 普通 resume 严格保持模型、loss、数据、optimizer、cursor 和 RNG 契约。
   checkpoint 同时校验完整 stage/update/LR、H 顺序和 LR 公式版本。
+- J1 checkpoint 额外绑定 cadence=8、K=2、Euler=4、固定特征尺度、两项 resolved
+  loss 权重，并逐 rank 保存独立 sampled generator。strict resume 恢复该 RNG，
+  因而下一次 sampled cadence 和 source draw 均连续；J0 不增加 sampled contract。
   `--continuation-parent` 是独立的新实验：复制 parent weights/moments/cursor/RNG，
   将 child update/scheduler 归零，并在 checkpoint 中记录 parent SHA/step。
 

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import torch
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
 from .codec.decoder import TrajectoryDecoder, TrajectoryDecoderOutput
 from .codec.frame import FrozenFrameTeacher
@@ -30,6 +31,7 @@ class FrameJointOutput:
     generated: TrajectoryDecoderOutput | None = None
     clean: TrajectoryDecoderOutput | None = None
     near: TrajectoryDecoderOutput | None = None
+    sampled: tuple[TrajectoryDecoderOutput, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -191,6 +193,9 @@ class FrameJointModel(nn.Module):
         decode_clean: bool = False,
         decode_near: bool = False,
         prepared_condition: FrameJointCondition | None = None,
+        sampled_sources: Sequence[FrameLatentBatch] | None = None,
+        sampled_steps: int = 4,
+        checkpoint_sampled_steps: bool = False,
     ) -> FrameJointOutput:
         condition = prepared_condition or self.prepare_condition(context)
         if self.dit.motion_enabled != (condition.motion_context is not None):
@@ -212,6 +217,62 @@ class FrameJointModel(nn.Module):
         # Near-data consistency trains only the decoder.  Detaching the endpoint
         # makes that scope explicit without changing the generated branch.
         near = self.decoder(context, endpoint.detach(), query) if decode_near else None
+        sampled: list[TrajectoryDecoderOutput] = []
+        if sampled_sources is not None:
+            if len(sampled_sources) != 2:
+                raise ValueError("actual-source training sampling is frozen at K=2")
+            if int(sampled_steps) != 4:
+                raise ValueError("actual-source training sampling is frozen at four Euler steps")
+            for source in sampled_sources:
+                if (
+                    source.statistics_hash != self.statistics_hash
+                    or source.time_ps.shape != query.time_ps.shape
+                    or not torch.equal(source.frame_mask, query.frame_mask)
+                    or source.topology.contract() != context.topology.contract()
+                ):
+                    raise ValueError("actual-source latent differs from the normalized query contract")
+                current = source
+                for step in range(int(sampled_steps)):
+                    sampled_flow_time = torch.full(
+                        (context.latent.batch_size,),
+                        float(step) / float(sampled_steps),
+                        device=current.h.device,
+                        dtype=current.h.dtype,
+                    )
+
+                    def integrate(
+                        h: Tensor,
+                        v: Tensor,
+                        *,
+                        template: FrameLatentBatch = current,
+                        local_flow_time: Tensor = sampled_flow_time,
+                    ) -> tuple[Tensor, Tensor]:
+                        state = template.with_features(h, v)
+                        sampled_velocity = self.dit(
+                            state,
+                            context=context,
+                            query=query,
+                            history_memory=condition.history_memory,
+                            flow_time=local_flow_time,
+                            motion_context=condition.motion_context,
+                        )
+                        return (
+                            h + sampled_velocity.h / float(sampled_steps),
+                            v + sampled_velocity.v / float(sampled_steps),
+                        )
+
+                    if checkpoint_sampled_steps and torch.is_grad_enabled():
+                        next_h, next_v = activation_checkpoint(
+                            integrate,
+                            current.h,
+                            current.v,
+                            use_reentrant=False,
+                            preserve_rng_state=False,
+                        )
+                    else:
+                        next_h, next_v = integrate(current.h, current.v)
+                    current = current.with_features(next_h, next_v)
+                sampled.append(self.decoder(context, self.inverse(current), query))
         return FrameJointOutput(
             velocity=velocity,
             normalized_endpoint=normalized_endpoint,
@@ -220,6 +281,7 @@ class FrameJointModel(nn.Module):
             generated=generated,
             clean=clean,
             near=near,
+            sampled=tuple(sampled),
         )
 
     def contract(self) -> Mapping[str, Any]:

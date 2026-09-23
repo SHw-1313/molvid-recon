@@ -35,8 +35,11 @@ from ..training.batches import prepare_batch_then_to_device, prepare_frame_joint
 from ..training.joint import (
     FrameJointTrainer,
     JointLossConfig,
+    SampledAuxiliaryConfig,
     STAGES,
     calibrate_generated_bond_weight,
+    calibrate_sampled_auxiliary_weights,
+    fit_sampled_feature_scales,
 )
 
 
@@ -64,6 +67,12 @@ _SECTION_KEYS = {
 _DERIVED_KEYS = {"store", "manifest", "manifest_sha256", "store_index_sha256", "record_count"}
 _STAGE_KEYS = {"name", "updates", "learning_rates"}
 _LEARNING_RATE_KEYS = {"history_encoder", "dit", "decoder"}
+_SAMPLED_AUXILIARY_KEYS = {
+    "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
+    "energy_weight", "observed_bond_weight", "feature_scales",
+    "calibration_batches", "energy_gradient_target_ratio",
+    "observed_bond_gradient_target_ratio",
+}
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
     "view_history_clip_exposure", "valid_atom_frames",
@@ -112,7 +121,7 @@ def _require_number(
 def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     """Reject unknown or mistyped training settings before data or CUDA setup."""
 
-    _reject_unknown(raw, {"schema", *_SECTION_KEYS}, "root")
+    _reject_unknown(raw, {"schema", "sampled_auxiliary", *_SECTION_KEYS}, "root")
     for section, allowed in _SECTION_KEYS.items():
         value = _require_mapping(raw.get(section), section)
         _reject_unknown(value, allowed, section)
@@ -224,6 +233,61 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
                 f"training.stages[{index}].learning_rates.{name}",
                 nonnegative=True,
             )
+
+    sampled = _require_mapping(raw.get("sampled_auxiliary", {}), "sampled_auxiliary")
+    _reject_unknown(sampled, _SAMPLED_AUXILIARY_KEYS, "sampled_auxiliary")
+    for name in ("enabled", "activation_checkpoint"):
+        _require_bool(sampled, name, "sampled_auxiliary")
+    for name, frozen in (("cadence", 8), ("draws", 2), ("euler_steps", 4)):
+        if name in sampled:
+            _require_number(
+                sampled[name], f"sampled_auxiliary.{name}", integer=True, positive=True
+            )
+            if int(sampled[name]) != frozen:
+                raise ValueError(
+                    "sampled auxiliary is frozen at cadence=8, K=2, Euler steps=4"
+                )
+    if "calibration_batches" in sampled:
+        _require_number(
+            sampled["calibration_batches"],
+            "sampled_auxiliary.calibration_batches",
+            integer=True,
+            positive=True,
+        )
+        if int(sampled["calibration_batches"]) != 8:
+            raise ValueError("sampled auxiliary calibration is frozen at eight train batches")
+    for name in ("energy_gradient_target_ratio", "observed_bond_gradient_target_ratio"):
+        if name in sampled:
+            _require_number(sampled[name], f"sampled_auxiliary.{name}", positive=True)
+            if not math.isclose(float(sampled[name]), 0.05, rel_tol=0.0, abs_tol=0.0):
+                raise ValueError("sampled auxiliary gradient target ratios are frozen at 0.05")
+    for name in ("energy_weight", "observed_bond_weight"):
+        value = sampled.get(name, 0.0)
+        if value != "calibrate":
+            _require_number(value, f"sampled_auxiliary.{name}", nonnegative=True)
+    feature_scales = sampled.get("feature_scales")
+    if feature_scales != "fit" and feature_scales is not None:
+        values = _require_mapping(feature_scales, "sampled_auxiliary.feature_scales")
+        if set(values) != {
+            "residue_rmsf_A",
+            "displacement_squared_A2",
+            "internal_distance_increment_A",
+            "internal_distance_increment_product_A2",
+        }:
+            raise ValueError("sampled auxiliary feature scales have unexpected keys")
+        for name, value in values.items():
+            _require_number(
+                value, f"sampled_auxiliary.feature_scales.{name}", positive=True
+            )
+    enabled = bool(sampled.get("enabled", False))
+    if enabled and feature_scales is None:
+        raise ValueError("enabled sampled auxiliary requires feature_scales or 'fit'")
+    calibrated_weights = [
+        sampled.get(name) == "calibrate"
+        for name in ("energy_weight", "observed_bond_weight")
+    ]
+    if any(calibrated_weights) and not all(calibrated_weights):
+        raise ValueError("sampled auxiliary weights must be calibrated together")
 
 
 def _verified_derived_identity(
@@ -537,11 +601,15 @@ def _calibration_stream(
     device: torch.device,
     seed: int,
     histories: Sequence[int],
+    count: int = 16,
+    sampler_seed_offset: int = 7000,
 ):
-    sampler = _sampler(dataset, training, seed=seed + 7000, rank=0, world=1)
+    sampler = _sampler(
+        dataset, training, seed=seed + sampler_seed_offset, rank=0, world=1
+    )
     yielded = 0
     epoch = 0
-    while yielded < 16:
+    while yielded < count:
         sampler.set_epoch(epoch)
         for indices in sampler:
             cpu_batch = collate_clip_records([dataset[index] for index in indices])
@@ -554,7 +622,7 @@ def _calibration_stream(
                 history_frames=history,
             )
             yielded += 1
-            if yielded == 16:
+            if yielded == count:
                 return
         epoch += 1
 
@@ -765,6 +833,54 @@ def main(argv: Sequence[str] | None = None) -> int:
         if resume_payload is None and calibration_requested:
             loss_mapping["generated_bond"] = 0.0
         loss_config = JointLossConfig.resolve(loss_mapping)
+        sampled_raw = dict(raw.get("sampled_auxiliary", {}))
+        sampled_enabled = bool(sampled_raw.get("enabled", False))
+        sampled_weight_calibration = (
+            sampled_enabled and sampled_raw.get("energy_weight") == "calibrate"
+        )
+        sampled_scale_fitting = (
+            sampled_enabled and sampled_raw.get("feature_scales") == "fit"
+        )
+        sampled_runtime_keys = {
+            "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
+            "energy_weight", "observed_bond_weight", "feature_scales",
+        }
+        if resume_payload is not None:
+            resumed_sampled = resume_payload["contracts"].get("sampled_auxiliary")
+            if sampled_enabled != isinstance(resumed_sampled, Mapping):
+                raise ValueError(
+                    "resume sampled auxiliary enablement differs from checkpoint"
+                )
+            sampled_config = SampledAuxiliaryConfig.resolve(
+                {
+                    key: value
+                    for key, value in resumed_sampled.items()
+                    if key in sampled_runtime_keys
+                }
+                if isinstance(resumed_sampled, Mapping)
+                else None
+            )
+            sampled_weight_calibration = False
+            sampled_scale_fitting = False
+        elif sampled_enabled:
+            provisional = {
+                key: value
+                for key, value in sampled_raw.items()
+                if key in sampled_runtime_keys
+            }
+            if sampled_scale_fitting:
+                provisional["feature_scales"] = {
+                    "residue_rmsf_A": 1.0,
+                    "displacement_squared_A2": 1.0,
+                    "internal_distance_increment_A": 1.0,
+                    "internal_distance_increment_product_A2": 1.0,
+                }
+            if sampled_weight_calibration:
+                provisional["energy_weight"] = 0.0
+                provisional["observed_bond_weight"] = 0.0
+            sampled_config = SampledAuxiliaryConfig.resolve(provisional)
+        else:
+            sampled_config = SampledAuxiliaryConfig()
         base_rates = {
             name: max(float(stage["learning_rates"][name]) for stage in stages)
             for name in ("history_encoder", "dit", "decoder")
@@ -785,8 +901,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if resume_payload is not None
                 else None
             ),
+            sampled_config=sampled_config,
         )
         generator = torch.Generator(device=device).manual_seed(seed + 1000 + rank)
+        sampled_generator = torch.Generator(device=device).manual_seed(
+            seed + 2000 + rank
+        )
         sampler = _sampler(train, training, seed=seed, rank=rank, world=world)
         epoch = batch_index = ordinary_batch_index = 0
         sampler.set_epoch(epoch)
@@ -796,6 +916,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             loaded = trainer.load_checkpoint(
                 args.resume,
                 generator=generator,
+                sampled_generator=sampled_generator,
                 expected_sha256=args.resume_sha256,
                 rank=rank,
             )
@@ -834,6 +955,75 @@ def main(argv: Sequence[str] | None = None) -> int:
                 expected_sha256=args.warm_start_sha256,
             )
         output_root = Path(training["output_root"])
+        sampled_scale_diagnostics: dict[str, Any] | None = None
+        sampled_weight_diagnostics: dict[str, Any] | None = None
+        if sampled_scale_fitting or sampled_weight_calibration:
+            if world != 1:
+                raise ValueError(
+                    "fit sampled auxiliary calibration in one CUDA process, "
+                    "then use the resolved numeric contract for DDP"
+                )
+            scales = trainer.sampled_config.feature_scales
+            if sampled_scale_fitting:
+                scales, sampled_scale_diagnostics = fit_sampled_feature_scales(
+                    _calibration_stream(
+                        model,
+                        train,
+                        training,
+                        device=device,
+                        seed=seed,
+                        histories=histories,
+                        count=8,
+                        sampler_seed_offset=17000,
+                    )
+                )
+            if scales is None:
+                raise ValueError("sampled auxiliary calibration lacks feature scales")
+            energy_weight = trainer.sampled_config.energy_weight
+            observed_bond_weight = trainer.sampled_config.observed_bond_weight
+            if sampled_weight_calibration:
+                (
+                    (energy_weight, observed_bond_weight),
+                    sampled_weight_diagnostics,
+                ) = calibrate_sampled_auxiliary_weights(
+                    model,
+                    _calibration_stream(
+                        model,
+                        train,
+                        training,
+                        device=device,
+                        seed=seed,
+                        histories=histories,
+                        count=8,
+                        sampler_seed_offset=17000,
+                    ),
+                    main_generator=torch.Generator(device=device).manual_seed(
+                        seed + 18000
+                    ),
+                    sampled_generator=torch.Generator(device=device).manual_seed(
+                        seed + 19000
+                    ),
+                    feature_scales=scales,
+                    energy_target_ratio=float(
+                        sampled_raw.get("energy_gradient_target_ratio", 0.05)
+                    ),
+                    observed_bond_target_ratio=float(
+                        sampled_raw.get(
+                            "observed_bond_gradient_target_ratio", 0.05
+                        )
+                    ),
+                    checkpoint_sampled_steps=trainer.sampled_config.activation_checkpoint,
+                )
+            trainer.sampled_config = SampledAuxiliaryConfig.resolve({
+                "enabled": True,
+                "cadence": trainer.sampled_config.cadence,
+                "draws": trainer.sampled_config.draws,
+                "euler_steps": trainer.sampled_config.euler_steps,
+                "activation_checkpoint": trainer.sampled_config.activation_checkpoint,
+                "energy_weight": energy_weight,
+                "observed_bond_weight": observed_bond_weight,
+                "feature_scales": scales.contract(),
+            })
         resolved_config = {
             **raw,
             "resolved": {
@@ -848,6 +1038,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "output_root": str(output_root),
                 "continuation_parent": trainer.continuation_parent,
                 "loss_contract": trainer.loss_config.contract(),
+                "sampled_auxiliary_contract": (
+                    trainer.sampled_config.contract()
+                    if trainer.sampled_config.enabled
+                    else None
+                ),
             },
         }
         if rank == 0:
@@ -855,6 +1050,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             atomic_write_json(output_root / "resolved_config.json", resolved_config)
             if warm_start_report is not None:
                 atomic_write_json(output_root / "warm_start_report.json", warm_start_report.as_dict())
+            if sampled_scale_diagnostics is not None:
+                atomic_write_json(
+                    output_root / "sampled_feature_scale_calibration.json",
+                    sampled_scale_diagnostics,
+                )
+            if sampled_weight_diagnostics is not None:
+                atomic_write_json(
+                    output_root / "sampled_auxiliary_gradient_calibration.json",
+                    sampled_weight_diagnostics,
+                )
             specs = get_clip_specs(train)
             by_index = {int(item.index): item for item in specs}
             sampler_manifest = {
@@ -956,7 +1161,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 normalizer=model,
                 history_frames=history,
             )
-            last = trainer.train_step(prepared, generator=generator)
+            last = trainer.train_step(
+                prepared,
+                generator=generator,
+                sampled_generator=sampled_generator,
+            )
             last.update({
                 "epoch": epoch,
                 "batch_index": batch_index,
@@ -999,6 +1208,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "cursor": cursor,
                     "rng_state": capture_rng_state(),
                     "training_generator_state": generator.get_state().detach().cpu(),
+                    "sampled_generator_state": (
+                        sampled_generator.get_state().detach().cpu()
+                    ),
                     "exposure_state": _exposure_state(
                         exposures,
                         bucket_exposures,
@@ -1017,6 +1229,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         output_root / f"frame_joint_step_{trainer.step:08d}.pt",
                         cursor=cursor,
                         generator=generator,
+                        sampled_generator=sampled_generator,
                         rank_states={str(index): state for index, state in enumerate(states)},
                     )
                 if world > 1:

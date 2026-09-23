@@ -15,7 +15,7 @@ from molvid.cli.train_frame_joint import (
 )
 from molvid.config import load_config
 from molvid.runtime import sha256_file
-from molvid.training.joint import JointLossConfig
+from molvid.training.joint import JointLossConfig, SampledAuxiliaryConfig
 from tools.profile_frame_gm_p2 import _arm_from_config
 
 
@@ -153,3 +153,74 @@ def test_loss_contract_rejects_unknown_and_string_boolean() -> None:
         JointLossConfig.resolve({"generated_bond": 0.1, "near_bnd": 0.2})
     with pytest.raises(ValueError, match="must be a boolean"):
         JointLossConfig.resolve({"generated_bond": 0.1, "bond_enabled": "false"})
+
+
+def test_sampled_auxiliary_config_is_explicit_and_frozen() -> None:
+    config = deepcopy(_valid_config())
+    config["sampled_auxiliary"] = {
+        "enabled": True,
+        "cadence": 8,
+        "draws": 2,
+        "euler_steps": 4,
+        "activation_checkpoint": True,
+        "feature_scales": "fit",
+        "energy_weight": "calibrate",
+        "observed_bond_weight": "calibrate",
+        "calibration_batches": 8,
+        "energy_gradient_target_ratio": 0.05,
+        "observed_bond_gradient_target_ratio": 0.05,
+    }
+    _validate_frame_joint_config(config)
+    for name, value in (
+        ("cadence", 7),
+        ("draws", 3),
+        ("euler_steps", 8),
+        ("calibration_batches", 7),
+        ("energy_gradient_target_ratio", 0.1),
+    ):
+        invalid = deepcopy(config)
+        invalid["sampled_auxiliary"][name] = value
+        with pytest.raises(ValueError, match="frozen"):
+            _validate_frame_joint_config(invalid)
+    invalid = deepcopy(config)
+    invalid["sampled_auxiliary"]["enabled"] = "true"
+    with pytest.raises(ValueError, match="must be a boolean"):
+        _validate_frame_joint_config(invalid)
+
+
+def test_sampled_auxiliary_runtime_contract_and_cadence() -> None:
+    scales = {
+        "residue_rmsf_A": 1.0,
+        "displacement_squared_A2": 2.0,
+        "internal_distance_increment_A": 3.0,
+        "internal_distance_increment_product_A2": 4.0,
+    }
+    enabled = SampledAuxiliaryConfig.resolve({
+        "enabled": True,
+        "cadence": 8,
+        "draws": 2,
+        "euler_steps": 4,
+        "activation_checkpoint": True,
+        "energy_weight": 0.25,
+        "observed_bond_weight": 0.5,
+        "feature_scales": scales,
+    })
+    assert [enabled.active_at(step) for step in range(16)] == [
+        False, False, False, False, False, False, False, True,
+        False, False, False, False, False, False, False, True,
+    ]
+    assert enabled.contract()["target_used_as_condition"] is False
+    assert SampledAuxiliaryConfig.resolve(enabled.contract()) == enabled
+    assert not SampledAuxiliaryConfig().active_at(7)
+    invalid_source = enabled.contract()
+    invalid_source["source"] = "future_target_plus_noise"
+    with pytest.raises(ValueError, match="source contract differs"):
+        SampledAuxiliaryConfig.resolve(invalid_source)
+    invalid_target_boundary = enabled.contract()
+    invalid_target_boundary["target_used_as_condition"] = True
+    with pytest.raises(ValueError, match="must not use target"):
+        SampledAuxiliaryConfig.resolve(invalid_target_boundary)
+    invalid_integer = enabled.contract()
+    invalid_integer["cadence"] = True
+    with pytest.raises(ValueError, match="must be integers"):
+        SampledAuxiliaryConfig.resolve(invalid_integer)
