@@ -1,0 +1,37 @@
+{
+  "schema": "molvid.frame_gm.review_request.v1",
+  "stage": "P2",
+  "review_kind": "targeted_selector_path_identity_recheck",
+  "candidate_commit": "039202e4ed6bc497d3f2cb70e59a3cd15c4c3e4f",
+  "repository": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2",
+  "task_prompt": "/data4/users/sihao/workspace/molvid_gm_calibration_v2_260922/CODEX_FRAME_GM_CALIBRATION_PROMPT_260922.md",
+  "review_prompt": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/REVIEW_PROMPT.md",
+  "output": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r07/REVIEW.md",
+  "scope": {
+    "implementation": [
+      "tools/select_frame_gm_p2_parent.py"
+    ],
+    "tests": [
+      "tests/test_frame_gm_selection.py"
+    ],
+    "issue": "Fixed-history evaluation protocols record the reviewed paired store as a repository-relative path while metric recomputation records the identical store as an absolute path. The prior selector compared raw strings and rejected real artifacts before checking their content hashes.",
+    "required_properties": [
+      "Only relative/absolute spellings resolving to the same filesystem object are accepted",
+      "Different resolved stores remain rejected",
+      "Store index and paired-manifest SHA-256 checks remain mandatory and unchanged",
+      "Formal config/checkpoint/code/data/protocol provenance remains fail-closed",
+      "The actual B0/G/M fixed and legacy metric artifacts pass the full loader"
+    ]
+  },
+  "evidence": {
+    "targeted_test_command": "enter-container; conda activate torch-ito; cd /workspace/molvid-recon-gm-calibration-v2; PYTHONPATH=. pytest -q tests/test_frame_gm_selection.py",
+    "targeted_test_result": "15 passed in 0.33s",
+    "actual_artifact_result": "load_arm_values completed for B0, G and M using both formal legacy and fixed metrics; GM legacy evaluation is still running and is not part of this code-fix review"
+  },
+  "constraints": [
+    "Use a fresh no-context session and inspect the candidate commit, not the implementation worktree diff",
+    "Read-only review: do not edit implementation or tests and do not start training",
+    "Write only the requested REVIEW.md report",
+    "Return PASS or FIX_REQUIRED with reproducible blockers only"
+  ]
+}
