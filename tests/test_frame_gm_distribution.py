@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
+import pytest
 import torch
 
 from molvid.data.batch import ClipBatch
@@ -17,6 +18,7 @@ from molvid.losses.distribution import (
     observed_reference_bond_loss,
     resolve_feature_scales,
 )
+from molvid.training.joint import fit_sampled_feature_scales
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,7 @@ class _Batch:
     coordinate_batch: ClipBatch
     observed_context: ObservedContext
     query: QuerySpec
+    target_coordinates: torch.Tensor
 
 
 def _batch() -> tuple[_Batch, torch.Tensor]:
@@ -91,7 +94,7 @@ def _batch() -> tuple[_Batch, torch.Tensor]:
         sample_id=("toy_R1",),
         atom_counts=(4,),
     )
-    return _Batch(coordinate_batch, context, query), target
+    return _Batch(coordinate_batch, context, query, target), target
 
 
 def _scales(batch: _Batch, target: torch.Tensor) -> SampledFeatureScales:
@@ -165,6 +168,41 @@ def test_zero_motion_features_remain_structurally_eligible() -> None:
     assert count.item() == 1
     assert len(groups) == 3
     assert loss.item() < 1.0e-5
+
+
+def test_feature_scale_fitting_requires_exactly_eight_train_batches() -> None:
+    batch, _target = _batch()
+    scales, diagnostics = fit_sampled_feature_scales([batch] * 8)
+    assert scales == SampledFeatureScales.resolve(diagnostics["scales"])
+    assert diagnostics["batch_count"] == 8
+    assert diagnostics["split"] == "train"
+    assert diagnostics["test_opened"] is False
+    with pytest.raises(ValueError, match="exactly eight"):
+        fit_sampled_feature_scales([batch] * 7)
+    with pytest.raises(ValueError, match="more than eight"):
+        fit_sampled_feature_scales([batch] * 9)
+
+
+def test_structurally_missing_internal_group_is_not_filled_with_zero() -> None:
+    batch, target = _batch()
+    topology = replace(
+        batch.observed_context.latent.topology,
+        covalent_bond_index=torch.empty((2, 0), dtype=torch.long),
+        covalent_bond_type=torch.empty((0,), dtype=torch.long),
+    )
+    context = replace(
+        batch.observed_context,
+        latent=replace(batch.observed_context.latent, topology=topology),
+    )
+    no_pairs = replace(batch, observed_context=context)
+    scales = _scales(batch, target)
+    loss, count, groups = energy_score_loss((target, target), target, no_pairs, scales)
+    bond, bond_count = observed_reference_bond_loss((target, target), no_pairs)
+    assert torch.isfinite(loss)
+    assert count.item() == 1
+    assert groups == {"residue_rmsf": 1, "displacement": 1}
+    assert bond.item() == 0.0
+    assert bond_count.item() == 0
 
 
 def test_sampled_source_rng_does_not_advance_main_flow_rng() -> None:

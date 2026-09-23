@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -19,7 +20,12 @@ from molvid.data.store import ClipMMapDataset
 from molvid.flow.objective import FrameRectifiedFlowObjective, broadcast_sample_time
 from molvid.runtime import atomic_write_json, configure_device, sha256_file
 from molvid.training.batches import PreparedFrameJointBatch, prepare_frame_joint_batch
-from molvid.training.joint import FrameJointTrainer, JointLossConfig, frame_joint_loss
+from molvid.training.joint import (
+    FrameJointTrainer,
+    JointLossConfig,
+    SampledAuxiliaryConfig,
+    frame_joint_loss,
+)
 
 
 def _arguments() -> argparse.Namespace:
@@ -45,7 +51,49 @@ def _trainer(model: torch.nn.Module, contracts: Mapping[str, Any]) -> FrameJoint
         amp=False,
         data_hash=str(contracts["data_hash"]),
         teacher_artifact_sha256=str(contracts["teacher_artifact_sha256"]),
+        sampled_config=SampledAuxiliaryConfig.resolve(
+            contracts.get("sampled_auxiliary")
+        ),
     )
+
+
+def _fixed_sampled_sources(
+    batch: PreparedFrameJointBatch,
+    *,
+    draws: int,
+) -> tuple[Any, ...]:
+    """Create per-sample Gaussian draws equal in packed and split batches."""
+
+    center = batch.source_center
+    mask = center.atom_frame_mask()
+    sources = []
+    for draw in range(draws):
+        noise_h = torch.zeros_like(center.h)
+        noise_v = torch.zeros_like(center.v)
+        for sample, sample_id in enumerate(center.topology.sample_id):
+            nodes = torch.nonzero(center.abid == sample, as_tuple=False).flatten()
+            seed = int.from_bytes(
+                hashlib.sha256(f"{sample_id}|draw={draw}".encode()).digest()[:8],
+                "little",
+            ) % (2**63 - 1)
+            generator = torch.Generator(device=center.h.device).manual_seed(seed)
+            noise_h[:, nodes] = torch.randn(
+                (center.frames, nodes.numel(), center.width),
+                device=center.h.device,
+                dtype=center.h.dtype,
+                generator=generator,
+            )
+            noise_v[:, nodes] = torch.randn(
+                (center.frames, nodes.numel(), 3, center.width),
+                device=center.v.device,
+                dtype=center.v.dtype,
+                generator=generator,
+            )
+        sources.append(center.with_features(
+            center.h + noise_h * mask.unsqueeze(-1),
+            center.v + noise_v * mask.unsqueeze(-1).unsqueeze(-1),
+        ))
+    return tuple(sources)
 
 
 def _fixed_step(
@@ -79,6 +127,13 @@ def _fixed_step(
         decode_generated=True,
         decode_clean=True,
         decode_near=True,
+        sampled_sources=(
+            _fixed_sampled_sources(batch, draws=trainer.sampled_config.draws)
+            if trainer.sampled_config.enabled
+            else None
+        ),
+        sampled_steps=trainer.sampled_config.euler_steps,
+        checkpoint_sampled_steps=trainer.sampled_config.activation_checkpoint,
     )
     print(f"[{label}] forward complete", flush=True)
     objective = FrameRectifiedFlowObjective()
@@ -89,6 +144,7 @@ def _fixed_step(
         flow_time,
         stage="joint",
         config=trainer.loss_config,
+        sampled_config=trainer.sampled_config,
     )
     print(f"[{label}] loss complete", flush=True)
     trainer.optimizer.zero_grad(set_to_none=True)
@@ -237,10 +293,13 @@ def main() -> int:
         _mark(rank, "finished update comparison")
 
         generator = torch.Generator(device=device).manual_seed(260920 + rank)
+        sampled_generator = torch.Generator(device=device).manual_seed(260930 + rank)
+        torch.rand((17,), device=device, generator=sampled_generator)
         rank_state = {
             "cursor": {"epoch": 0, "batch_index": rank + 1},
             "rng_state": capture_rng_state(),
             "training_generator_state": generator.get_state().detach().cpu(),
+            "sampled_generator_state": sampled_generator.get_state().detach().cpu(),
         }
         gathered: list[Any] = [None, None]
         dist.all_gather_object(gathered, rank_state)
@@ -251,12 +310,17 @@ def main() -> int:
                 checkpoint,
                 cursor={"epoch": 0, "batch_index": 1},
                 generator=generator,
+                sampled_generator=sampled_generator,
                 rank_states={str(index): state for index, state in enumerate(gathered)},
             )
         dist.barrier(device_ids=[local_rank])
         checkpoint_sha = sha256_file(checkpoint)
         before_model = _cpu_state(wrapped)
         before_optimizer = trainer.optimizer.state_dict()
+        sampled_cadence_before = trainer.sampled_config.active_at(
+            trainer.successful_updates
+        )
+        sampled_enabled = trainer.sampled_config.enabled
         _mark(rank, "saved resume checkpoint")
 
         del trainer, wrapped, model
@@ -272,9 +336,11 @@ def main() -> int:
         )
         resumed = _trainer(resumed_wrapped, contracts)
         resumed_generator = torch.Generator(device=device)
+        resumed_sampled_generator = torch.Generator(device=device)
         resumed.load_checkpoint(
             checkpoint,
             generator=resumed_generator,
+            sampled_generator=resumed_sampled_generator,
             expected_sha256=checkpoint_sha,
             rank=rank,
         )
@@ -285,6 +351,13 @@ def main() -> int:
         generator_equal = torch.equal(
             resumed_generator.get_state().cpu(), generator.get_state().cpu()
         )
+        sampled_generator_equal = not sampled_enabled or torch.equal(
+            resumed_sampled_generator.get_state().cpu(), sampled_generator.get_state().cpu()
+        )
+        sampled_cadence_equal = (
+            resumed.sampled_config.active_at(resumed.successful_updates)
+            == sampled_cadence_before
+        )
         local_result = {
             "rank": rank,
             "local_loss": local_loss,
@@ -293,6 +366,8 @@ def main() -> int:
             "resume_model_max_abs": resume_model_error,
             "resume_optimizer_max_abs": resume_optimizer_error,
             "generator_state_equal": generator_equal,
+            "sampled_generator_state_equal": sampled_generator_equal,
+            "sampled_cadence_equal": sampled_cadence_equal,
         }
         results: list[Any] = [None, None]
         dist.all_gather_object(results, local_result)
@@ -316,6 +391,13 @@ def main() -> int:
                 "per_rank_generator_state_equal": all(
                     row["generator_state_equal"] for row in results
                 ),
+                "sampled_branch_enabled": resumed.sampled_config.enabled,
+                "per_rank_sampled_generator_state_equal": all(
+                    row["sampled_generator_state_equal"] for row in results
+                ),
+                "per_rank_sampled_cadence_equal": all(
+                    row["sampled_cadence_equal"] for row in results
+                ),
                 "resume_checkpoint_sha256": checkpoint_sha,
                 "tolerance": 2.0e-6,
                 "passed": bool(
@@ -326,6 +408,8 @@ def main() -> int:
                     and all(row["resume_model_max_abs"] == 0 for row in results)
                     and all(row["resume_optimizer_max_abs"] == 0 for row in results)
                     and all(row["generator_state_equal"] for row in results)
+                    and all(row["sampled_generator_state_equal"] for row in results)
+                    and all(row["sampled_cadence_equal"] for row in results)
                 ),
             }
             atomic_write_json(args.output / "ddp_check.json", output)
