@@ -94,21 +94,27 @@ def main() -> int:
             motion_enabled=bool(model_config.get("motion_enabled", False)),
         ).to(device)
         parent = torch.load(args.parent, map_location="cpu", weights_only=False)
-        scales = {
-            "residue_rmsf_A": 1.0,
-            "displacement_squared_A2": 1.0,
-            "internal_distance_increment_A": 1.0,
-            "internal_distance_increment_product_A2": 1.0,
-        }
+        if (
+            sampled.get("feature_scales") == "fit"
+            or sampled.get("energy_weight") == "calibrate"
+            or sampled.get("observed_bond_weight") == "calibrate"
+        ):
+            raise ValueError(
+                "largest-sample profile requires the reviewed numeric sampled contract"
+            )
         sampled_config = SampledAuxiliaryConfig.resolve({
-            "enabled": True,
-            "cadence": 8,
-            "draws": 2,
-            "euler_steps": 4,
-            "activation_checkpoint": bool(sampled.get("activation_checkpoint", True)),
-            "energy_weight": 1.0e-3,
-            "observed_bond_weight": 1.0e-3,
-            "feature_scales": scales,
+            key: value
+            for key, value in sampled.items()
+            if key in {
+                "enabled",
+                "cadence",
+                "draws",
+                "euler_steps",
+                "activation_checkpoint",
+                "energy_weight",
+                "observed_bond_weight",
+                "feature_scales",
+            }
         })
         rates = training["stages"][0]["learning_rates"]
         trainer = FrameJointTrainer(
@@ -175,6 +181,7 @@ def main() -> int:
             "sampled_draws": sampled_config.draws,
             "sampled_euler_steps": sampled_config.euler_steps,
             "activation_checkpoint": sampled_config.activation_checkpoint,
+            "sampled_auxiliary_contract": sampled_config.contract(),
             "step_seconds": elapsed,
             "baseline_allocated_bytes": baseline_allocated,
             "baseline_reserved_bytes": baseline_reserved,
