@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import csv
 import json
 import math
 from pathlib import Path
+import sys
 
 import numpy as np
 import pytest
@@ -14,6 +16,7 @@ from tools.select_frame_gm_p2_parent import (
     _validate_formal_provenance,
     _validate_metrics_run,
     _validate_view_grid,
+    main as selection_main,
     select_from_system_values,
 )
 
@@ -431,3 +434,193 @@ def test_formal_provenance_binds_runtime_config_and_symmetric_schedule(
     _write_json(exposure_path, exposure)
     with pytest.raises(ValueError, match="schedule or exposure differs"):
         _validate_formal_provenance(formal_root, resolved_path, expected_step=10)
+
+    formal_root, resolved_path = _formal_fixture(tmp_path / "sampler")
+    sampler_path = formal_root / "GM" / "sampler_manifest.json"
+    sampler = json.loads(sampler_path.read_text(encoding="utf-8"))
+    sampler["selected_sample_ids_hash"] = "different"
+    _write_json(sampler_path, sampler)
+    with pytest.raises(ValueError, match="schedule or exposure differs"):
+        _validate_formal_provenance(formal_root, resolved_path, expected_step=10)
+
+
+def _write_metric_arm(
+    root: Path,
+    *,
+    arm: str,
+    family: str,
+    checkpoint_sha256: str,
+    override_legacy_h4: bool = False,
+) -> Path:
+    expected_rows = 2352 if family == "legacy" else 1392
+    histories = (4, 8) if family == "legacy" else (4,)
+    metrics_dir = root / f"{family}_metrics" / arm
+    source_run = root / f"{family}_eval" / arm
+    paired_root = root / "paired" / family
+    store = paired_root / "store"
+    manifest_path = paired_root / "manifest.json"
+    metrics_dir.mkdir(parents=True)
+    source_run.mkdir(parents=True)
+    if not store.exists():
+        store.mkdir(parents=True)
+        (store / "index.txt").write_text(f"{family}-record\n", encoding="utf-8")
+        if family == "legacy":
+            paired_manifest = {
+                "schema_version": "molvid.frame_joint.multitime.eval_views.v1",
+                "history_frames": [4, 8],
+                "views_per_trajectory": 16,
+                "test_opened": False,
+            }
+        else:
+            paired_manifest = {
+                "schema": "molvid.frame_gm.fixed_history_views.v1",
+                "view_kind": "fixed_history_h4_horizon_1200ps",
+                "observed_relative_time_ps": [-300, -200, -100, 0],
+                "test_opened": False,
+            }
+        _write_json(manifest_path, paired_manifest)
+    protocol = {
+        "schema": "molvid.frame_joint.multitime_eval.v1",
+        "checkpoint": {"sha256": checkpoint_sha256},
+        "steps": 16,
+        "seeds": [0, 1, 2],
+        "paths": ["persistence", "clean_latent_decoder_oracle", "generated"],
+        "expected_rows": expected_rows,
+        "rows_written": expected_rows,
+        "paired_store": {
+            "path": str(store),
+            "index_sha256": _sha256(store / "index.txt"),
+        },
+        "paired_manifest": {
+            "path": str(manifest_path),
+            "sha256": _sha256(manifest_path),
+        },
+    }
+    protocol_path = source_run / "protocol.json"
+    _write_json(protocol_path, protocol)
+    rows_path = metrics_dir / "rows.jsonl"
+    rows_path.write_text("{}\n", encoding="utf-8")
+    fieldnames = [
+        "path", "clock", "system", "lag_ps", "history_frames", "replica_count",
+        "system_mean_rmsf_target_A", "bond_rmse_A", "residue_rmsf_mae_A",
+        "msd_curve_mae_A2", "clash_rate", "system_mean_rmsf_prediction_A",
+    ]
+    per_system_path = metrics_dir / "per_system.csv"
+    with per_system_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for system_index in range(8):
+            system = f"system_{system_index}"
+            base_target = 0.5 + 0.1 * system_index
+            for lag in (100, 200, 300, 400):
+                for history in histories:
+                    target = base_target
+                    if (
+                        override_legacy_h4
+                        and family == "legacy"
+                        and system_index == 0
+                        and lag == 100
+                        and history == 4
+                    ):
+                        target += 1.0
+                    writer.writerow({
+                        "path": "generated",
+                        "clock": "true",
+                        "system": system,
+                        "lag_ps": lag,
+                        "history_frames": history,
+                        "replica_count": 3,
+                        "system_mean_rmsf_target_A": target,
+                        "bond_rmse_A": 2.0,
+                        "residue_rmsf_mae_A": 1.0,
+                        "msd_curve_mae_A2": 3.0,
+                        "clash_rate": 0.1,
+                        "system_mean_rmsf_prediction_A": base_target,
+                    })
+    metrics_path = metrics_dir / "metrics.json"
+    _write_json(metrics_path, {
+        "schema": "molvid.frame_gm.metric_summary.v3",
+        "test_opened": False,
+        "historical_rows_mutated": False,
+        "aggregation": "draw/seed mean -> anchor mean -> replica mean -> system equal",
+        "source_rows": expected_rows,
+        "source_protocol_sha256": _sha256(protocol_path),
+        "paired_store_index_sha256": _sha256(store / "index.txt"),
+    })
+    _write_json(metrics_dir / "run_manifest.json", {
+        "schema": "molvid.frame_gm.metric_recompute_run.v1",
+        "row_count": expected_rows,
+        "source_run": str(source_run),
+        "paired_store": str(store),
+        "output_rows_sha256": _sha256(rows_path),
+        "metrics_sha256": _sha256(metrics_path),
+        "per_system_sha256": _sha256(per_system_path),
+    })
+    return metrics_dir
+
+
+def _selection_fixture(
+    root: Path,
+    *,
+    override_g_legacy_h4: bool = False,
+) -> tuple[Path, Path, Path, Path]:
+    formal_root, resolved_path = _formal_fixture(root)
+    for arm in ARMS:
+        checkpoint = formal_root / arm / "frame_joint_step_00000010.pt"
+        _write_metric_arm(
+            root,
+            arm=arm,
+            family="legacy",
+            checkpoint_sha256=_sha256(checkpoint),
+            override_legacy_h4=override_g_legacy_h4 and arm == "G",
+        )
+        _write_metric_arm(
+            root,
+            arm=arm,
+            family="fixed",
+            checkpoint_sha256=_sha256(checkpoint),
+        )
+    return (
+        formal_root,
+        resolved_path,
+        root / "legacy_metrics",
+        root / "fixed_metrics",
+    )
+
+
+def test_selection_main_rejects_single_arm_legacy_h4_target_mismatch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    formal_root, resolved_path, legacy_root, fixed_root = _selection_fixture(
+        tmp_path / "valid"
+    )
+    output = tmp_path / "valid" / "selection.json"
+    monkeypatch.setattr(sys, "argv", [
+        "select_frame_gm_p2_parent.py",
+        "--legacy-root", str(legacy_root),
+        "--fixed-root", str(fixed_root),
+        "--formal-root", str(formal_root),
+        "--resolved-experiment", str(resolved_path),
+        "--output", str(output),
+        "--expected-step", "10",
+        "--bootstrap-samples", "1000",
+    ])
+    assert selection_main() == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["selected_arm"] == "B0"
+
+    formal_root, resolved_path, legacy_root, fixed_root = _selection_fixture(
+        tmp_path / "mismatch", override_g_legacy_h4=True
+    )
+    monkeypatch.setattr(sys, "argv", [
+        "select_frame_gm_p2_parent.py",
+        "--legacy-root", str(legacy_root),
+        "--fixed-root", str(fixed_root),
+        "--formal-root", str(formal_root),
+        "--resolved-experiment", str(resolved_path),
+        "--output", str(tmp_path / "mismatch" / "selection.json"),
+        "--expected-step", "10",
+        "--bootstrap-samples", "1000",
+    ])
+    with pytest.raises(ValueError, match="per-view RMSF targets are not paired for G"):
+        selection_main()
