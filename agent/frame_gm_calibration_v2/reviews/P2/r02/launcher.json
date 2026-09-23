@@ -1,0 +1,16 @@
+{
+  "schema": "molvid.fresh_review.launch.v1",
+  "status": "REVIEW_COMPLETED_PASS",
+  "stage": "P2",
+  "round": "r02",
+  "candidate_commit": "c6d1f6eaa34861a0a408dfc60a1385b2cca833ed",
+  "request_sha256": "3a4ac5992e12a668c623c4ecf2b10978b0a23662b2d254f38b47385fde71720c",
+  "fix_response_sha256": "84eab47974bc73bd2ab5e22abdef589913e410eaac4ca4ee1ed9c86319b6be2e",
+  "report_sha256": "8e2dd9cbf9760f17bf28a0dc4cbe7f22b0bee0e08ad3bd5dfd8c5e671a8cf1d2",
+  "conversation_inheritance": "none; fresh platform reviewer with fork_turns=none",
+  "reviewer_session": "/root/p2_independent_review_r02",
+  "review_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-P2-r02",
+  "sandbox": "read-only by instruction",
+  "model_override": null,
+  "verdict": "PASS"
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "molvid.fresh_review.request.v1",
+  "stage": "P2",
+  "round": "r02",
+  "base_commit": "f6ec672c7d8582772c9056cac0d116c1eddf1ffc",
+  "candidate_commit": "c6d1f6eaa34861a0a408dfc60a1385b2cca833ed",
+  "review_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-P2-r02",
+  "output_dir": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r02",
+  "evidence_root": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/r02/evidence",
+  "previous_review": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r01/REVIEW.md",
+  "fix_response": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P2/r02/FIX_RESPONSE.md",
+  "review_scope": ["R1", "R2", "R3", "R4", "obvious regressions introduced by their fixes"],
+  "artifacts": [
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/r02/evidence/pilot_summary.json",
+      "sha256": "da9b2e5f8229852343d6d0b7c3dc4a88ad6359624ab10e3353e0d3909d93b73c"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/r02/evidence/resolved_experiment.json",
+      "sha256": "25c002e5995a6251b341eb0d13ff642e47bbebf3c7a8f54da6e8a9cbcb68e971"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/r02/evidence/commands.sh",
+      "sha256": "f1e35f4e57a3fa509229ebab4c9eae0496d26bd6491495acf18e061a2856013d"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/r02/evidence/resume_comparison.json",
+      "sha256": "3cce79694ba313fee8638112526b21d17387acb47ca91520c56c9ff338dbb504"
+    }
+  ],
+  "implementation_facts": {
+    "targeted_tests": {"passed": 49, "failed": 0},
+    "pilot_updates_per_arm": 128,
+    "formal_training_started": false,
+    "test_opened": false,
+    "unexecuted_checks": [
+      "formal four-arm 192-system training",
+      "formal 8-system x 3-replica x 2-anchor evaluation",
+      "paired system bootstrap and P3-parent selection",
+      "P3 implementation/pilot/review/training/evaluation"
+    ]
+  }
+}
