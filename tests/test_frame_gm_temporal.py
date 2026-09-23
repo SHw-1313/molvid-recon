@@ -13,6 +13,7 @@ from molvid.data.batch import ClipValidationError, collate_clip_records, validat
 from molvid.evaluation.geometry import angle_statistics
 from molvid.evaluation.temporal import system_mean_rmsf_summary, temporal_metrics_v3
 from molvid.geometry.frames import pack_frame_nodes
+from tools.evaluate_frame_joint_multitime import expected_evaluation_rows
 
 
 def _record(*, frames: int = 8, valid_frames: int | None = None) -> dict:
@@ -44,6 +45,22 @@ def _record(*, frames: int = 8, valid_frames: int | None = None) -> dict:
         "align_mask": np.asarray([True, True, True, False]),
         "bond_index": np.asarray([[0, 1, 2], [1, 2, 3]], dtype=np.int64),
     }
+
+
+def test_evaluation_row_count_follows_selected_view_family() -> None:
+    legacy = [
+        {"history_frames": history, "lag_ps": lag}
+        for history in (4, 8)
+        for lag in (100, 200, 300, 400)
+        for _ in range(48)
+    ]
+    fixed = [
+        {"history_frames": 4, "lag_ps": lag}
+        for lag in (100, 200, 300, 400)
+        for _ in range(48)
+    ]
+    assert expected_evaluation_rows(legacy, (0, 1, 2)) == 2352
+    assert expected_evaluation_rows(fixed, (0, 1, 2)) == 1392
 
 
 def test_frame_mask_is_a_serialized_valid_prefix() -> None:

@@ -215,6 +215,15 @@ def leakage_check(model,record,device,steps):
     batch2=collate_clip_records([altered]); p2,_=sample_frame_joint(model,template=batch2,prefix_coordinates=batch2.x[:h],history_frames=h,steps=steps,seed=0)
     diff=float((p1-p2).abs().max().detach().cpu()); return {"sample_id":record["sample_id"],"history_frames":h,"steps":steps,"max_abs_difference":diff,"passed":diff==0.0}
 
+def expected_evaluation_rows(records, seeds):
+    """Return the exact protocol row count for the selected view family."""
+    seed_count=len(tuple(seeds))
+    wrong_clock_records=sum(
+        int(record["history_frames"])==4 and int(record["lag_ps"]) in (200,300,400)
+        for record in records
+    )
+    return 2*len(records)+seed_count*(len(records)+wrong_clock_records)
+
 def args_parse():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--checkpoint",type=Path,required=True); p.add_argument("--checkpoint-sha256",required=True)
@@ -306,7 +315,7 @@ def main():
               emit({"row_key":key,"path":"generated","clock":f"wrong_{args.wrong_clock_dt}ps","seed":int(seed),"meta":meta,"time_ps":jsonable(r["time_ps"]),"input_time_ps":jsonable(wr["time_ps"]),"source_absolute_time_ps":jsonable(r["source_absolute_time_ps"]),"mask_info":{"coordinate_unit":r.get("coordinate_unit"),"loss_mask_atoms":int(cb.loss_mask.sum()),"align_mask_atoms":int(cb.align_mask.sum()),"align_and_loss_atoms":int((cb.loss_mask&cb.align_mask).sum()),"frame_valid_atoms":int(cb.frame_mask.sum()),"total_atoms":int(cb.atom_count),"total_frames":int(cb.frames)},"summary":summary_metrics(m),"rmsf":rs,"lag_msd":lags,"per_frame":pf,"coordinate_file":arr_name,"generation":jsonable(wgen),"scoring_clock":"true physical clock"})
               total+=1
           if (ri+1)%8==0: print(json.dumps({"seed":seed,"records_done":ri+1,"records_total":len(records),"rows_written":total,"elapsed_s":round(time.time()-started_all,1)},sort_keys=True),flush=True)
-      protocol={"schema":"molvid.frame_joint.multitime_eval.v1","checkpoint":{"path":str(args.checkpoint),"sha256":args.checkpoint_sha256},"codec":{"path":str(args.codec),"sha256":args.codec_sha256},"paired_store":{"path":str(args.paired_store),"index_sha256":sha256_file(args.paired_store/"index.txt")},"paired_manifest":{"path":str(args.paired_manifest),"sha256":sha256_file(args.paired_manifest)},"device":str(device),"cuda_device_name":torch.cuda.get_device_name(device),"steps":args.steps,"seeds":list(args.seeds),"wrong_clock_dt":args.wrong_clock_dt,"ids":ids,"expected_rows":384*2+384*len(args.seeds)+48*3*len(args.seeds),"rows_written":total,"paths":list(PATHS),"physical_time_axis":"distance from last observed frame; source_absolute_time_ps retained","aggregation":"window mean -> replica mean -> equal system mean","generated_conditioning":"observed prefix, topology, query time only","wrong_clock_scoring":"true target/time batch; only H4, 200/300/400ps"}
+      protocol={"schema":"molvid.frame_joint.multitime_eval.v1","checkpoint":{"path":str(args.checkpoint),"sha256":args.checkpoint_sha256},"codec":{"path":str(args.codec),"sha256":args.codec_sha256},"paired_store":{"path":str(args.paired_store),"index_sha256":sha256_file(args.paired_store/"index.txt")},"paired_manifest":{"path":str(args.paired_manifest),"sha256":sha256_file(args.paired_manifest)},"device":str(device),"cuda_device_name":torch.cuda.get_device_name(device),"steps":args.steps,"seeds":list(args.seeds),"wrong_clock_dt":args.wrong_clock_dt,"ids":ids,"expected_rows":expected_evaluation_rows(records,args.seeds),"rows_written":total,"paths":list(PATHS),"physical_time_axis":"distance from last observed frame; source_absolute_time_ps retained","aggregation":"window mean -> replica mean -> equal system mean","generated_conditioning":"observed prefix, topology, query time only","wrong_clock_scoring":"true target/time batch; only H4, 200/300/400ps"}
       atomic_write_json(out/"protocol.json",protocol); print(json.dumps({"complete":True,"rows_written":total,"output":str(out),"elapsed_s":time.time()-started_all},sort_keys=True),flush=True)
     finally: ds.close()
     return 0
