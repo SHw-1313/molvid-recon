@@ -11,6 +11,7 @@ from molvid.flow.source import sample_frame_source
 from molvid.latent.types import FrameLatentBatch, ObservedContext, QuerySpec
 from molvid.losses.distribution import (
     SampledFeatureScales,
+    _detached_kabsch_rotation,
     _feature_distance,
     _scaled_groups,
     energy_score_loss,
@@ -144,6 +145,20 @@ def test_energy_features_share_one_observed_reference_under_rigid_motion() -> No
     loss, _, _ = energy_score_loss((transformed, transformed), target, batch, scales)
     # Internal distances are exact; fixed-reference Kabsch removes the rigid frame.
     assert loss.item() < 2.0e-4
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="requires CUDA BF16 autocast")
+def test_kabsch_solve_stays_fp32_under_cuda_bf16_autocast() -> None:
+    source = torch.tensor(
+        [[0.0, 0.0, 0.0], [1.0, 0.1, 0.0], [0.0, 1.0, 0.2]],
+        device="cuda",
+        dtype=torch.bfloat16,
+    )
+    reference = source.roll(1, dims=0)
+    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+        rotation = _detached_kabsch_rotation(source, reference)
+    assert rotation.dtype == torch.bfloat16
+    assert torch.isfinite(rotation).all()
 
 
 def test_actual_sample_bond_uses_observed_reference_not_hidden_future() -> None:

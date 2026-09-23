@@ -87,19 +87,25 @@ def _detached_kabsch_rotation(source: Tensor, reference: Tensor) -> Tensor:
     with torch.no_grad():
         if source.shape[0] < 3:
             return torch.eye(3, device=source.device, dtype=source.dtype)
-        source_centered = source.float() - source.float().mean(dim=0)
-        reference_centered = reference.float() - reference.float().mean(dim=0)
-        left, _singular, right_transpose = torch.linalg.svd(
-            source_centered.transpose(0, 1) @ reference_centered,
-            full_matrices=False,
-        )
-        rotation = left @ right_transpose
-        if bool(torch.linalg.det(rotation) < 0):
-            left = left.clone()
-            left[:, -1] *= -1
+        # CUDA SVD has no BF16 implementation. Merely casting the operands is
+        # insufficient under autocast because the covariance matmul is cast
+        # back to BF16 before it reaches SVD, so keep the full solve in FP32.
+        with torch.autocast(device_type=source.device.type, enabled=False):
+            source_fp32 = source.float()
+            reference_fp32 = reference.float()
+            source_centered = source_fp32 - source_fp32.mean(dim=0)
+            reference_centered = reference_fp32 - reference_fp32.mean(dim=0)
+            left, _singular, right_transpose = torch.linalg.svd(
+                source_centered.transpose(0, 1) @ reference_centered,
+                full_matrices=False,
+            )
             rotation = left @ right_transpose
-        if not torch.isfinite(rotation).all():
-            raise FloatingPointError("non-finite observed-reference Kabsch rotation")
+            if bool(torch.linalg.det(rotation) < 0):
+                left = left.clone()
+                left[:, -1] *= -1
+                rotation = left @ right_transpose
+            if not torch.isfinite(rotation).all():
+                raise FloatingPointError("non-finite observed-reference Kabsch rotation")
         return rotation.to(dtype=source.dtype)
 
 
