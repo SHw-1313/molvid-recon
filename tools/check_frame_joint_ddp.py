@@ -102,7 +102,7 @@ def _fixed_step(
     *,
     label: str,
     flow_time_values: tuple[float, ...],
-) -> float:
+) -> tuple[float, dict[str, Any], dict[str, Tensor]]:
     target = batch.normalized_target
     source = target.with_features(torch.zeros_like(target.h), torch.zeros_like(target.v))
     flow_time = torch.tensor(
@@ -151,13 +151,27 @@ def _fixed_step(
     scaled = trainer._distributed_total(losses)
     scaled.backward()
     print(f"[{label}] backward complete", flush=True)
+    gradients = {
+        name: parameter.grad.detach().cpu().clone()
+        for name, parameter in trainer.base_model.named_parameters()
+        if parameter.requires_grad and parameter.grad is not None
+    }
+    components = {
+        "weighted": {
+            name: float(value.detach()) for name, value in losses.weighted.items()
+        },
+        "applicable_samples": {
+            name: int(value.detach())
+            for name, value in losses.applicable_samples.items()
+        },
+    }
     active = [parameter for parameter in trainer.base_model.parameters() if parameter.requires_grad]
     torch.nn.utils.clip_grad_norm_(active, trainer.grad_clip)
     trainer.optimizer.step()
     print(f"[{label}] optimizer complete", flush=True)
     trainer.step += 1
     trainer.successful_updates += 1
-    return float(losses.total.detach())
+    return float(losses.total.detach()), components, gradients
 
 
 def _cpu_state(model: torch.nn.Module) -> dict[str, Tensor]:
@@ -178,6 +192,50 @@ def _state_max_abs(model: torch.nn.Module, expected: Mapping[str, Tensor]) -> fl
         elif not torch.equal(current, reference):
             return float("inf")
     return maximum
+
+
+def _gradient_comparison(
+    actual: Mapping[str, Tensor], expected: Mapping[str, Tensor]
+) -> dict[str, float]:
+    if set(actual) != set(expected):
+        return {"max_abs": float("inf"), "relative_l2": float("inf")}
+    difference_squared = 0.0
+    reference_squared = 0.0
+    maximum = 0.0
+    for name in expected:
+        difference = actual[name].float() - expected[name].float()
+        maximum = max(maximum, float(difference.abs().max()))
+        difference_squared += float(difference.square().sum())
+        reference_squared += float(expected[name].float().square().sum())
+    return {
+        "max_abs": maximum,
+        "relative_l2": (difference_squared ** 0.5) / max(reference_squared ** 0.5, 1.0e-12),
+    }
+
+
+def _component_aggregation(
+    reference: Mapping[str, Any], ranks: list[Mapping[str, Any]]
+) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for name, reference_value in reference["weighted"].items():
+        count = sum(int(row["applicable_samples"][name]) for row in ranks)
+        distributed = (
+            sum(
+                float(row["weighted"][name])
+                * int(row["applicable_samples"][name])
+                for row in ranks
+            )
+            / count
+            if count
+            else 0.0
+        )
+        result[name] = {
+            "reference": float(reference_value),
+            "distributed_count_weighted": distributed,
+            "abs_difference": abs(float(reference_value) - distributed),
+            "global_applicable_samples": count,
+        }
+    return result
 
 
 def _mark(rank: int, message: str) -> None:
@@ -253,7 +311,7 @@ def main() -> int:
             history_frames=8,
         )
         reference_trainer = _trainer(model, contracts)
-        reference_loss = _fixed_step(
+        reference_loss, reference_components, reference_gradients = _fixed_step(
             reference_trainer,
             global_prepared,
             label=f"rank{rank}-reference",
@@ -281,7 +339,7 @@ def main() -> int:
             find_unused_parameters=True,
         )
         trainer = _trainer(wrapped, contracts)
-        local_loss = _fixed_step(
+        local_loss, local_components, local_gradients = _fixed_step(
             trainer,
             local,
             label=f"rank{rank}-ddp",
@@ -290,6 +348,9 @@ def main() -> int:
         torch.cuda.synchronize(device)
         _mark(rank, "finished DDP update")
         update_error = _state_max_abs(wrapped, reference_state)
+        gradient_comparison = _gradient_comparison(
+            local_gradients, reference_gradients
+        )
         _mark(rank, "finished update comparison")
 
         generator = torch.Generator(device=device).manual_seed(260920 + rank)
@@ -362,6 +423,9 @@ def main() -> int:
             "rank": rank,
             "local_loss": local_loss,
             "reference_loss": reference_loss,
+            "reference_components": reference_components,
+            "local_components": local_components,
+            "gradient_comparison": gradient_comparison,
             "single_vs_ddp_model_max_abs": update_error,
             "resume_model_max_abs": resume_model_error,
             "resume_optimizer_max_abs": resume_optimizer_error,
@@ -373,6 +437,22 @@ def main() -> int:
         dist.all_gather_object(results, local_result)
         _mark(rank, "finished strict resume comparison")
         if rank == 0:
+            component_aggregation = _component_aggregation(
+                results[0]["reference_components"],
+                [row["local_components"] for row in results],
+            )
+            component_max_abs = max(
+                row["abs_difference"] for row in component_aggregation.values()
+            )
+            gradient_max_abs = max(
+                row["gradient_comparison"]["max_abs"] for row in results
+            )
+            gradient_relative_l2 = max(
+                row["gradient_comparison"]["relative_l2"] for row in results
+            )
+            component_tolerance = 1.0e-6
+            gradient_absolute_tolerance = 1.0e-5
+            gradient_relative_tolerance = 1.0e-5
             output = {
                 "schema_version": "molvid.frame_joint.ddp_check.v1",
                 "world_size": 2,
@@ -383,6 +463,10 @@ def main() -> int:
                 "threshold_applicability_differs_by_rank": True,
                 "single_gpu_loss": results[0]["reference_loss"],
                 "ddp_rank_losses": [row["local_loss"] for row in results],
+                "component_aggregation": component_aggregation,
+                "component_aggregation_max_abs": component_max_abs,
+                "single_vs_ddp_gradient_max_abs": gradient_max_abs,
+                "single_vs_ddp_gradient_relative_l2": gradient_relative_l2,
                 "single_vs_ddp_model_max_abs": max(
                     row["single_vs_ddp_model_max_abs"] for row in results
                 ),
@@ -399,12 +483,16 @@ def main() -> int:
                     row["sampled_cadence_equal"] for row in results
                 ),
                 "resume_checkpoint_sha256": checkpoint_sha,
-                "tolerance": 2.0e-6,
+                "post_adam_model_delta_is_diagnostic_only": True,
+                "tolerances": {
+                    "component_aggregation_max_abs": component_tolerance,
+                    "gradient_max_abs": gradient_absolute_tolerance,
+                    "gradient_relative_l2": gradient_relative_tolerance,
+                },
                 "passed": bool(
-                    all(
-                        row["single_vs_ddp_model_max_abs"] <= 2.0e-6
-                        for row in results
-                    )
+                    component_max_abs <= component_tolerance
+                    and gradient_max_abs <= gradient_absolute_tolerance
+                    and gradient_relative_l2 <= gradient_relative_tolerance
                     and all(row["resume_model_max_abs"] == 0 for row in results)
                     and all(row["resume_optimizer_max_abs"] == 0 for row in results)
                     and all(row["generator_state_equal"] for row in results)
