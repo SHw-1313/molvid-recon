@@ -42,8 +42,7 @@ def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--legacy-root", type=Path, required=True)
     parser.add_argument("--fixed-root", type=Path, required=True)
-    parser.add_argument("--j0-checkpoint", type=Path, required=True)
-    parser.add_argument("--j1-checkpoint", type=Path, required=True)
+    parser.add_argument("--formal-summary", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--bootstrap-samples", type=int, default=10000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260924)
@@ -133,12 +132,27 @@ def compare_from_system_values(
 
 def main() -> int:
     args = _arguments()
-    if not args.j0_checkpoint.is_file() or not args.j1_checkpoint.is_file():
-        raise FileNotFoundError("both formal P3 checkpoints must exist")
-    checkpoint_sha = {
-        "J0": sha256_file(args.j0_checkpoint),
-        "J1": sha256_file(args.j1_checkpoint),
+    formal = json.loads(args.formal_summary.read_text(encoding="utf-8"))
+    if (
+        not isinstance(formal, Mapping)
+        or formal.get("schema") != "molvid.frame_gm.p3_formal_summary.v1"
+        or formal.get("test_opened") is not False
+        or set(formal.get("arms", {})) != {"J0", "J1"}
+        or formal.get("paired_main_stream")
+        != {"exposure_exact": True, "sampler_manifest_exact": True}
+    ):
+        raise ValueError("P3 formal summary is missing or invalid")
+    checkpoints = {
+        arm: Path(str(formal["arms"][arm].get("checkpoint", "")))
+        for arm in ("J0", "J1")
     }
+    checkpoint_sha = {}
+    for arm, checkpoint in checkpoints.items():
+        if not checkpoint.is_file():
+            raise FileNotFoundError(checkpoint)
+        checkpoint_sha[arm] = sha256_file(checkpoint)
+        if checkpoint_sha[arm] != formal["arms"][arm].get("checkpoint_sha256"):
+            raise ValueError(f"{arm} checkpoint differs from P3 formal summary")
     values = {
         arm: load_arm_values(
             args.legacy_root / arm,
@@ -176,9 +190,11 @@ def main() -> int:
             "system; paired percentile bootstrap resamples systems"
         ),
         "checkpoints": {
-            "J0": {"path": str(args.j0_checkpoint.resolve()), "sha256": checkpoint_sha["J0"]},
-            "J1": {"path": str(args.j1_checkpoint.resolve()), "sha256": checkpoint_sha["J1"]},
+            arm: {"path": str(checkpoints[arm].resolve()), "sha256": checkpoint_sha[arm]}
+            for arm in ("J0", "J1")
         },
+        "formal_summary": str(args.formal_summary.resolve()),
+        "formal_summary_sha256": sha256_file(args.formal_summary),
         "metric_sources": {
             arm: values[arm]["source"] for arm in ("J0", "J1")
         },
