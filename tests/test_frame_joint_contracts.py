@@ -16,6 +16,7 @@ from molvid.cli.train_frame_joint import (
 from molvid.config import load_config
 from molvid.runtime import sha256_file
 from molvid.training.joint import JointLossConfig
+from tools.profile_frame_gm_p2 import _arm_from_config
 
 
 def _valid_config() -> dict:
@@ -65,6 +66,19 @@ def test_all_p2_configs_pass_strict_validation() -> None:
     root = Path(__file__).parents[1]
     for path in sorted((root / "configs").glob("frame_gm_p2_*_260923.yaml")):
         _validate_frame_joint_config(load_config(path, schema="molvid.frame_joint.train.v1"))
+
+
+@pytest.mark.parametrize(
+    ("name", "arm"),
+    [
+        ("frame_gm_p2_pilot_B0_260923.yaml", "B0"),
+        ("frame_gm_p2_formal_G_260923.yaml", "G"),
+        ("frame_gm_p2_formal_M_260923.yaml", "M"),
+        ("frame_gm_p2_formal_GM_260923.yaml", "GM"),
+    ],
+)
+def test_profile_config_name_identifies_arm(name: str, arm: str) -> None:
+    assert _arm_from_config(Path(name)) == arm
 
 
 def test_derived_identity_binds_index_and_record_count(tmp_path: Path) -> None:

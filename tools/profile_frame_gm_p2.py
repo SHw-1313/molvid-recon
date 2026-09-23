@@ -10,7 +10,11 @@ from pathlib import Path
 import torch
 
 from molvid.checkpoints import load_codec_artifact
-from molvid.cli.train_frame_joint import _load_statistics, _open_data
+from molvid.cli.train_frame_joint import (
+    _load_statistics,
+    _open_data,
+    _validate_frame_joint_config,
+)
 from molvid.config import load_config
 from molvid.data.batch import collate_clip_records
 from molvid.data.sampling import get_clip_specs
@@ -29,11 +33,24 @@ def _args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _arm_from_config(path: Path) -> str:
+    stem = path.stem
+    for prefix in ("frame_gm_p2_formal_", "frame_gm_p2_pilot_"):
+        if stem.startswith(prefix) and stem.endswith("_260923"):
+            arm = stem.removeprefix(prefix).removesuffix("_260923")
+            if arm in {"B0", "G", "M", "GM"}:
+                return arm
+    raise ValueError("profile config filename does not identify a P2 arm")
+
+
 def main() -> int:
     args = _args()
     raw = load_config(args.config, schema="molvid.frame_joint.train.v1")
+    _validate_frame_joint_config(raw)
     data_config = dict(raw["data"])
-    data_config.pop("train_systems", None)
+    if data_config.get("train_systems"):
+        raise ValueError("largest-sample profile requires the full-data formal arm config")
+    arm = _arm_from_config(args.config)
     device = configure_device("cuda", deterministic=False)
     seed = int(raw["training"]["seed"])
     seed_all(seed)
@@ -107,7 +124,7 @@ def main() -> int:
         )
         result = {
             "schema": "molvid.frame_gm.p2_largest_sample_profile.v1",
-            "arm": args.config.stem.removeprefix("frame_gm_p2_pilot_").removesuffix("_260923"),
+            "arm": arm,
             "config": str(args.config.resolve()),
             "parent": str(args.parent.resolve()),
             "parent_sha256": args.parent_sha256,

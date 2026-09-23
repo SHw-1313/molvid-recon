@@ -47,6 +47,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--candidate-commit", required=True)
+    parser.add_argument("--targeted-tests-passed", type=int, required=True)
     args = parser.parse_args()
     arms: dict[str, Any] = {}
     schedule_hashes: set[str] = set()
@@ -56,7 +58,13 @@ def main() -> int:
         metrics = read_jsonl(run / "train_metrics.jsonl")
         exposure = read_json(run / "exposure.json")
         warm = read_json(run / "warm_start_report.json")
+        provenance_path = run / "target_encoder_provenance.json"
+        provenance = read_json(provenance_path)
+        if provenance.get("code_commit") != args.candidate_commit:
+            raise ValueError(f"{arm} target provenance is not bound to the candidate commit")
         profile = read_json(args.root / "profile" / f"{arm}.json")
+        if profile.get("arm") != arm:
+            raise ValueError(f"{arm} profile arm differs")
         sampler = read_json(run / "sampler_manifest.json")
         checkpoint = run / "frame_joint_step_00000128.pt"
         schedule_hashes.add(str(sampler["global_batch_schedule_hash"]))
@@ -75,8 +83,17 @@ def main() -> int:
             "mean_grad_norm": fmean(float(row["grad_norm"]) for row in metrics),
             "checkpoint": str(checkpoint.resolve()),
             "checkpoint_sha256": sha256_file(checkpoint),
-            "config_sha256": sha256_file(Path(profile["config"])),
+            "pilot_config_sha256": sha256_file(
+                Path(f"configs/frame_gm_p2_pilot_{arm}_260923.yaml")
+            ),
+            "profile_config_sha256": sha256_file(Path(profile["config"])),
             "train_metrics_sha256": sha256_file(run / "train_metrics.jsonl"),
+            "resolved_config_sha256": sha256_file(run / "resolved_config.json"),
+            "sampler_manifest_sha256": sha256_file(run / "sampler_manifest.json"),
+            "exposure_sha256": sha256_file(run / "exposure.json"),
+            "warm_start_report_sha256": sha256_file(run / "warm_start_report.json"),
+            "target_encoder_provenance": provenance,
+            "target_encoder_provenance_sha256": sha256_file(provenance_path),
             "warm_start_report": warm,
             "exposure": exposure,
             "profile": profile,
@@ -85,6 +102,7 @@ def main() -> int:
         }
     output = {
         "schema": "molvid.frame_gm.p2_pilot_summary.v1",
+        "candidate_commit": args.candidate_commit,
         "arms": arms,
         "paired_sampler": {
             "schedule_hashes": sorted(schedule_hashes),
@@ -100,7 +118,11 @@ def main() -> int:
             "legacy_views": "one paired anchor, lags 100/200/300/400ps, H4/H8",
             "fixed_history_views": "one paired anchor, lags 100/200/300/400ps, H4 with padded frame masks",
         },
-        "targeted_tests": {"passed": 32, "failed": 0, "device": "CUDA"},
+        "targeted_tests": {
+            "passed": args.targeted_tests_passed,
+            "failed": 0,
+            "device": "CUDA and contract CPU checks",
+        },
         "test_opened": False,
         "formal_training_started": False,
     }
