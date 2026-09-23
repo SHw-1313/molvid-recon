@@ -1,0 +1,72 @@
+{
+  "schema": "molvid.frame_gm.p3_review_request.v1",
+  "stage": "P3",
+  "round": "r02",
+  "review_type": "fresh_independent_targeted_budget_fix",
+  "candidate_commit": "f6f33a95a08627e5c779ca099d075679e9bed5ac",
+  "base_commit": "68abde6e1dc9196983cc5fd408e69118e60df41b",
+  "code_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-p3-r02",
+  "evidence_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2",
+  "formal_training_started": false,
+  "test_opened": false,
+  "prior_review": {
+    "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P3/r01/REVIEW.md",
+    "sha256": "6ec94450c85f94c40562606f05e705016be023f7016880edda157725fc26e1fa",
+    "verdict": "FIX_REQUIRED",
+    "blocking_issue": "R1"
+  },
+  "fix_response": {
+    "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P3/r01/FIX_RESPONSE.md",
+    "sha256": "b3be32b070e174484d9508293e876d7593b1d98869abd1bcb097bdf4c558138f"
+  },
+  "artifacts": {
+    "resolved_experiment": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/resolved_experiment.json",
+      "sha256": "d089b30b04c2dac1c2031b74d105d6239378e155d1b7ab31fdd3578fc7d0647a"
+    },
+    "ordinary_profile": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/profile/largest_ordinary.json",
+      "sha256": "3e4e67af374804bd86cb66cc63c176fbd7dbbf57c8b8ce6dae20357fd66a4d71"
+    },
+    "ordinary_profiler": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/profile_ordinary_largest.py",
+      "sha256": "328d873c2e62602e1b7991e375d1db1137b1ff5b007060967cb4c6d7d26f1cf0"
+    },
+    "sampled_profile": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/profile/largest_sample.json",
+      "sha256": "c58448d6372d4fefe16e1795e467b5487ff378024dda203092fff987badb5056"
+    },
+    "commands": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/commands.sh",
+      "sha256": "ecd8b5de67232d3884a2ae5f91d824e9f5388b0572749c25d2362bcbe45c0f6e"
+    },
+    "formal_config_J0": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-p3-r02/configs/frame_gm_p3_formal_J0_260923.yaml",
+      "sha256": "e9cb92ba0235ccb61455e58249e50c3db51f09452a2293909682aa909897a8dc"
+    },
+    "formal_config_J1": {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-p3-r02/configs/frame_gm_p3_formal_J1_260923.yaml",
+      "sha256": "b05ef564d9f0c778fc31cccd3a0cbec042fc675044ff1fe37426a1f1d17e6a3f"
+    }
+  },
+  "required_checks": [
+    "verify every listed SHA-256 and detached candidate HEAD",
+    "inspect the evidence-only ordinary profiler and confirm it times one real BF16 forward/backward/optimizer update on the same largest train sample with sampled branch disabled",
+    "independently recompute J0 and cadence-weighted J1 formal GPU-hours for 21208 updates per arm",
+    "independently recompute two trigger-only bond fork arms of 2651 updates each beginning after successful update 21208",
+    "confirm the frozen 2x conservative total is below the 96 GPU-hour P3 limit",
+    "confirm formal config update counts remain symmetric and no formal training/test access has begun",
+    "report PASS or FIX_REQUIRED; only reproducible validity, budget, provenance, or runtime blockers block launch"
+  ],
+  "expected_budget": {
+    "ordinary_step_seconds": 1.0679053366184235,
+    "sampled_step_seconds": 6.8627921268343925,
+    "formal_gpu_hours": 16.84958823301933,
+    "conditional_fork_gpu_hours": 2.638402541631626,
+    "profile_bound_total_gpu_hours": 19.487990774650953,
+    "safety_multiplier": 2.0,
+    "authorized_budgeted_gpu_hours": 38.975981549301906,
+    "limit_gpu_hours": 96.0
+  },
+  "output_instruction": "Return the complete Markdown review to the main session only. Do not write files, modify code, train, or open sealed test data; the main session owns file handoff."
+}

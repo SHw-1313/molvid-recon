@@ -1,0 +1,81 @@
+{
+  "schema": "molvid.fresh_review.request.v1",
+  "stage": "P3",
+  "round": "r01",
+  "base_commit": "68abde6e1dc9196983cc5fd408e69118e60df41b",
+  "candidate_commit": "f6f33a95a08627e5c779ca099d075679e9bed5ac",
+  "review_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2-review-p3-r01",
+  "output_dir": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/agent/frame_gm_calibration_v2/reviews/P3/r01",
+  "evidence_root": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence",
+  "spec_files": [
+    "agent/frame_gm_calibration_v2/PLAN.md",
+    "agent/frame_gm_calibration_v2/ARCHITECTURE.md",
+    "agent/frame_gm_calibration_v2/DATA_TRAIN_EVAL.md"
+  ],
+  "artifacts": [
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/pilot_summary.json",
+      "sha256": "ed663fb336eed2c4f2b7a80869a75e3b51118b8cc25f278891529bd0b914c33d"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/resolved_experiment.json",
+      "sha256": "9cd7f4a18ccb314731dba9da02a2517317fcfc023f79c8c17521b0ac271331fc"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/commands.sh",
+      "sha256": "b9a9dbcb1290968fdc5125729f893b8b8994f228d1ed954138ff8dcc4b51af56"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/evidence/runtime_gpu_mapping.json",
+      "sha256": "2140b7ec3dcfab81ab9a501992925c7646e11d5aa25e892ce9211a14e124b400"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/profile/largest_sample.json",
+      "sha256": "c58448d6372d4fefe16e1795e467b5487ff378024dda203092fff987badb5056"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/checks/target_mutation.json",
+      "sha256": "b3e01c4ada88834ef1fedcf5aeeaf7363083c1a004d734da164503d0b0255432"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/checks/ddp/ddp_check.json",
+      "sha256": "7d4c509bf047b11994a63ca1f3d96ccd125ad6cb96414bef50fa352f3d82da17"
+    },
+    {
+      "path": "/data4/users/sihao/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/r01/checks/continuation/continuation_check.json",
+      "sha256": "59f20d6692472e482d4fcada78afc56fb0a8fbb3074a214823a9bd769f1de1b9"
+    }
+  ],
+  "implementation_facts": {
+    "changed_modules": [
+      "molvid/losses/distribution.py",
+      "molvid/model.py",
+      "molvid/training/joint.py",
+      "molvid/cli/train_frame_joint.py",
+      "tools/check_frame_gm_p3_cuda.py",
+      "tools/check_frame_joint_continuation.py",
+      "tools/check_frame_joint_ddp.py",
+      "tools/profile_frame_gm_p3.py",
+      "tools/summarize_frame_gm_p3_pilot.py",
+      "tools/summarize_frame_gm_p3_formal.py",
+      "tools/compare_frame_gm_p3.py"
+    ],
+    "pilot_run_ids": [
+      "P3/r01/pilot/J0",
+      "P3/r01/pilot/J1",
+      "P3/r01/resume_reference/J1"
+    ],
+    "actual_commands_and_exit_codes_file": "artifact:commands.sh plus pilot_summary.json",
+    "unexecuted_checks": [
+      "formal J0/J1 training and checkpoint comparison",
+      "Euler16 legacy/fixed-history formal evaluation",
+      "paired-CI bond keep/release trigger evaluation"
+    ],
+    "previous_review_and_fix_response": null,
+    "notes": [
+      "P2 selection fell back to B0 because G/M/GM each had a clear clash or cross-target regression.",
+      "Superseded pilot artifacts are retained but excluded from final hashes; final pilot provenance is candidate f6f33a95a08627e5c779ca099d075679e9bed5ac.",
+      "DDP validity gates globally count-weighted loss components and pre-Adam gradients; post-Adam delta remains diagnostic because Adam amplifies sign changes in near-zero gradients."
+    ]
+  }
+}

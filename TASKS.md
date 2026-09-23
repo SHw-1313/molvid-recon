@@ -1,4 +1,15 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
+
+- [x] Frame GM Calibration v2 P1--P3 completed in the dedicated
+  `feat/frame-gm-calibration-v2` worktree: repaired temporal metrics and
+  fixed-history views, four-arm G/M calibration, and sampled-trajectory
+  distribution calibration; see `docs/frame_gm_calibration_v2.md`.
+- [x] P2 selected B0 after no G/M/GM arm passed the frozen joint safety gate;
+  P3 J1 improved bond RMSE but worsened fixed-history MSD, so the frozen
+  three-way trigger did not authorize the optional bond fork.
+- [x] P2 and P3 independent review loops are closed; formal runs used 192
+  train systems, Euler16 evaluation on eight valid systems, and never opened
+  sealed test data.
 - [x] Frame Joint v1 implementation, targeted CUDA/DDP/resume/continuation checks,
   true largest-48-system profile, and original 3-system/9-trajectory tiny run;
   see `docs/frame_joint_v1.md` and `agent/frame_joint_v1/HANDOFF.md`.

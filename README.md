@@ -24,3 +24,5 @@ on the missing real-artifact checks in [`docs/migration.md`](docs/migration.md).
   outputs were purged from Git history after this bundle was verified.
 - [`TASKS.md`](TASKS.md) and [`HANDOFF.md`](HANDOFF.md) — outstanding gates and
   handoff status.
+- [`docs/frame_gm_calibration_v2.md`](docs/frame_gm_calibration_v2.md) —
+  completed P1--P3 geometry, motion and sampled-distribution calibration study.
