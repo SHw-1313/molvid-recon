@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from tools.compare_frame_gm_p3 import compare_from_system_values
+from tools.summarize_frame_gm_p3_pilot import _tree_max_abs
 
 
 def _values() -> tuple[dict[str, object], dict[str, object]]:
@@ -67,3 +68,11 @@ def test_bond_fork_comparison_rejects_unpaired_or_nonfinite_inputs() -> None:
     j1["bond_rmse_A"][0] = np.nan
     with pytest.raises(ValueError, match="invalid bond_rmse_A"):
         compare_from_system_values(j0, j1, bootstrap_samples=2000, bootstrap_seed=19)
+
+
+def test_resume_tree_comparison_handles_numpy_rng_state_arrays() -> None:
+    left = {"numpy_state": ("MT19937", np.asarray([1, 2, 3], dtype=np.uint32))}
+    right = {"numpy_state": ("MT19937", np.asarray([1, 2, 3], dtype=np.uint32))}
+    assert _tree_max_abs(left, right) == 0.0
+    right["numpy_state"][1][1] = 9
+    assert _tree_max_abs(left, right) == float("inf")

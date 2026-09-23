@@ -9,6 +9,7 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any, Mapping
 
+import numpy as np
 import torch
 from torch import Tensor
 
@@ -72,6 +73,19 @@ def _tree_max_abs(left: Any, right: Any) -> float:
         if left.dtype.is_floating_point:
             return float((left - right).abs().max()) if left.numel() else 0.0
         return 0.0 if torch.equal(left, right) else float("inf")
+    if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
+        if (
+            not isinstance(left, np.ndarray)
+            or not isinstance(right, np.ndarray)
+            or left.shape != right.shape
+            or left.dtype != right.dtype
+        ):
+            return float("inf")
+        if not left.size:
+            return 0.0
+        if np.issubdtype(left.dtype, np.floating):
+            return float(np.max(np.abs(left.astype(np.float64) - right.astype(np.float64))))
+        return 0.0 if np.array_equal(left, right) else float("inf")
     if isinstance(left, Mapping) and isinstance(right, Mapping):
         if set(left) != set(right):
             return float("inf")
