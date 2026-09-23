@@ -16,7 +16,11 @@ from molvid.data.sampling import TrajectoryCappedBatchSampler
 from molvid.data.store import ClipMMapDataset
 from molvid.runtime import atomic_write_json, canonical_hash, configure_device, sha256_file
 from molvid.training.batches import prepare_frame_joint_batch
-from molvid.training.joint import FrameJointTrainer, JointLossConfig
+from molvid.training.joint import (
+    FrameJointTrainer,
+    JointLossConfig,
+    SampledAuxiliaryConfig,
+)
 
 
 RATES = {"history_encoder": 2.5e-5, "dit": 5.0e-5, "decoder": 1.25e-5}
@@ -46,7 +50,12 @@ def _arm(
     args: argparse.Namespace,
     device: torch.device,
     loss: Mapping[str, Any],
-) -> tuple[FrameJointTrainer, torch.Generator, Mapping[str, Any]]:
+) -> tuple[
+    FrameJointTrainer,
+    torch.Generator,
+    torch.Generator,
+    Mapping[str, Any],
+]:
     loaded = load_frame_joint_inference(
         args.parent,
         expected_sha256=args.parent_sha256,
@@ -67,15 +76,20 @@ def _arm(
         data_hash=str(parent_contracts["data_hash"]),
         teacher_artifact_sha256=str(parent_contracts["teacher_artifact_sha256"]),
         schedule_contract=SCHEDULE,
+        sampled_config=SampledAuxiliaryConfig.resolve(
+            parent_contracts.get("sampled_auxiliary")
+        ),
     )
     generator = torch.Generator(device=device)
+    sampled_generator = torch.Generator(device=device)
     parent = trainer.load_continuation_parent(
         args.parent,
         generator=generator,
+        sampled_generator=sampled_generator,
         expected_sha256=args.parent_sha256,
     )
     trainer.set_learning_rates(RATES)
-    return trainer, generator, parent
+    return trainer, generator, sampled_generator, parent
 
 
 def _tensor_tree_max_abs(left: Any, right: Any) -> float:
@@ -104,8 +118,12 @@ def main() -> int:
         "clean_bond": 0.0,
         "near_bond": 0.0,
     })
-    keep, keep_generator, keep_parent = _arm(args, device, keep_loss)
-    release, release_generator, release_parent = _arm(args, device, release_loss)
+    keep, keep_generator, keep_sampled_generator, keep_parent = _arm(
+        args, device, keep_loss
+    )
+    release, release_generator, release_sampled_generator, release_parent = _arm(
+        args, device, release_loss
+    )
     model_error = _tensor_tree_max_abs(
         keep.base_model.state_dict(), release.base_model.state_dict()
     )
@@ -114,6 +132,10 @@ def main() -> int:
     )
     generator_start_equal = torch.equal(
         keep_generator.get_state().cpu(), release_generator.get_state().cpu()
+    )
+    sampled_generator_start_equal = not keep.sampled_config.enabled or torch.equal(
+        keep_sampled_generator.get_state().cpu(),
+        release_sampled_generator.get_state().cpu(),
     )
     cursor_equal = keep_parent["cursor"] == release_parent["cursor"]
 
@@ -145,12 +167,26 @@ def main() -> int:
             normalizer=release.base_model,
             history_frames=8,
         )
-        keep_metrics = keep.train_step(keep_batch, generator=keep_generator)
-        release_metrics = release.train_step(release_batch, generator=release_generator)
+        if keep.sampled_config.enabled:
+            keep.successful_updates = release.successful_updates = 7
+        keep_metrics = keep.train_step(
+            keep_batch,
+            generator=keep_generator,
+            sampled_generator=keep_sampled_generator,
+        )
+        release_metrics = release.train_step(
+            release_batch,
+            generator=release_generator,
+            sampled_generator=release_sampled_generator,
+        )
     finally:
         dataset.close()
     generator_end_equal = torch.equal(
         keep_generator.get_state().cpu(), release_generator.get_state().cpu()
+    )
+    sampled_generator_end_equal = not keep.sampled_config.enabled or torch.equal(
+        keep_sampled_generator.get_state().cpu(),
+        release_sampled_generator.get_state().cpu(),
     )
     child_checkpoint = args.output / "continuation_child_resume_check.pt"
     args.output.mkdir(parents=True, exist_ok=True)
@@ -163,14 +199,18 @@ def main() -> int:
             "global_batch_schedule_hash": canonical_hash(sampler.global_batches),
         },
         generator=keep_generator,
+        sampled_generator=keep_sampled_generator,
     )
     child_sha256 = sha256_file(child_checkpoint)
     child_model = keep.base_model.state_dict()
     child_optimizer = keep.optimizer.state_dict()
-    resumed, resumed_generator, _ = _arm(args, device, keep_loss)
+    resumed, resumed_generator, resumed_sampled_generator, _ = _arm(
+        args, device, keep_loss
+    )
     resumed.load_checkpoint(
         child_checkpoint,
         generator=resumed_generator,
+        sampled_generator=resumed_sampled_generator,
         expected_sha256=child_sha256,
     )
     child_resume_model_error = _tensor_tree_max_abs(
@@ -182,6 +222,13 @@ def main() -> int:
     child_resume_generator_equal = torch.equal(
         keep_generator.get_state().cpu(), resumed_generator.get_state().cpu()
     )
+    child_resume_sampled_generator_equal = (
+        not keep.sampled_config.enabled
+        or torch.equal(
+            keep_sampled_generator.get_state().cpu(),
+            resumed_sampled_generator.get_state().cpu(),
+        )
+    )
     child_resume_parent_equal = resumed.continuation_parent == keep.continuation_parent
     resumed.schedule_contract = {
         **SCHEDULE,
@@ -191,6 +238,7 @@ def main() -> int:
         resumed.load_checkpoint(
             child_checkpoint,
             generator=resumed_generator,
+            sampled_generator=resumed_sampled_generator,
             expected_sha256=child_sha256,
         )
     except ValueError as error:
@@ -208,10 +256,14 @@ def main() -> int:
         "cursor_equal": cursor_equal,
         "generator_start_equal": generator_start_equal,
         "generator_end_equal": generator_end_equal,
+        "sampled_auxiliary_enabled": keep.sampled_config.enabled,
+        "sampled_generator_start_equal": sampled_generator_start_equal,
+        "sampled_generator_end_equal": sampled_generator_end_equal,
         "child_checkpoint_sha256": child_sha256,
         "child_resume_model_max_abs": child_resume_model_error,
         "child_resume_optimizer_max_abs": child_resume_optimizer_error,
         "child_resume_generator_equal": child_resume_generator_equal,
+        "child_resume_sampled_generator_equal": child_resume_sampled_generator_equal,
         "child_resume_parent_equal": child_resume_parent_equal,
         "schedule_mismatch_rejected": schedule_mismatch_rejected,
         "flow_time_keep": keep_metrics["flow_time_mean"],
@@ -222,8 +274,15 @@ def main() -> int:
         },
         "release_weighted_bonds": {
             name: release_metrics[f"weighted_{name}"]
-            for name in ("generated_bond", "clean_bond", "near_bond")
+            for name in (
+                "generated_bond",
+                "clean_bond",
+                "near_bond",
+                "sampled_observed_bond",
+            )
         },
+        "weighted_sampled_energy_keep": keep_metrics["weighted_sampled_energy"],
+        "weighted_sampled_energy_release": release_metrics["weighted_sampled_energy"],
     }
     result["passed"] = bool(
         model_error == 0
@@ -231,13 +290,18 @@ def main() -> int:
         and cursor_equal
         and generator_start_equal
         and generator_end_equal
+        and sampled_generator_start_equal
+        and sampled_generator_end_equal
         and child_resume_model_error == 0
         and child_resume_optimizer_error == 0
         and child_resume_generator_equal
+        and child_resume_sampled_generator_equal
         and child_resume_parent_equal
         and schedule_mismatch_rejected
         and keep_metrics["flow_time_mean"] == release_metrics["flow_time_mean"]
         and all(value == 0 for value in result["release_weighted_bonds"].values())
+        and result["weighted_sampled_energy_keep"]
+        == result["weighted_sampled_energy_release"]
     )
     atomic_write_json(args.output / "continuation_check.json", result)
     print(json.dumps(result, sort_keys=True))

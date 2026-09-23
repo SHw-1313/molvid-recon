@@ -938,6 +938,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             loaded = trainer.load_continuation_parent(
                 args.continuation_parent,
                 generator=generator,
+                sampled_generator=sampled_generator,
                 expected_sha256=args.continuation_parent_sha256,
                 rank=rank,
             )

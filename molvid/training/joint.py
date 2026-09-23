@@ -1034,6 +1034,7 @@ class FrameJointTrainer:
         path: str | Path,
         *,
         generator: torch.Generator,
+        sampled_generator: torch.Generator | None = None,
         expected_sha256: str,
         rank: int = 0,
     ) -> Mapping[str, Any]:
@@ -1062,6 +1063,7 @@ class FrameJointTrainer:
             "teacher_artifact_sha256",
             "teacher_state_hash",
             "data_hash",
+            "sampled_auxiliary",
         ):
             if parent.get(name) != current.get(name):
                 raise ValueError(f"continuation parent {name!r} differs")
@@ -1103,6 +1105,17 @@ class FrameJointTrainer:
         if not isinstance(state, Tensor):
             raise ValueError("continuation parent lacks training generator state")
         generator.set_state(state.detach().cpu())
+        sampled_state = (
+            rank_state.get("sampled_generator_state")
+            if isinstance(rank_state, Mapping)
+            else extra.get("sampled_generator_state")
+        )
+        if self.sampled_config.enabled:
+            if sampled_generator is None or not isinstance(sampled_state, Tensor):
+                raise ValueError(
+                    "sampled auxiliary continuation lacks its independent generator state"
+                )
+            sampled_generator.set_state(sampled_state.detach().cpu())
         if isinstance(rank_state, Mapping) and isinstance(rank_state.get("rng_state"), Mapping):
             restore_rng_state(rank_state["rng_state"])
         self.step = 0

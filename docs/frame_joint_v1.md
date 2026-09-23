@@ -97,6 +97,9 @@ H8、887 atoms 的真实 inspector shape 为：observed `h=[8,887,128]`、
 - J1 checkpoint 额外绑定 cadence=8、K=2、Euler=4、固定特征尺度、两项 resolved
   loss 权重，并逐 rank 保存独立 sampled generator。strict resume 恢复该 RNG，
   因而下一次 sampled cadence 和 source draw 均连续；J0 不增加 sampled contract。
+- changed-objective continuation（包括条件触发的 bond keep/release）要求 sampled
+  contract 与 parent 完全相同，并恢复同一 rank-local sampled RNG；child update/cadence
+  从零重新计数，使两个分叉从相同 source stream 和相同 sampler cursor 起步。
   `--continuation-parent` 是独立的新实验：复制 parent weights/moments/cursor/RNG，
   将 child update/scheduler 归零，并在 checkpoint 中记录 parent SHA/step。
 
