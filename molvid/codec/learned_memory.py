@@ -149,7 +149,19 @@ class LightHistoryEncoder(nn.Module):
                 h, v = layer(h, v, x, observation.anchor_coordinates, edges)
             outputs_h.append(mapping.pool(h * mask[..., None]))
             outputs_v.append(mapping.pool(v * mask[..., None, None]))
-        return torch.cat(outputs_h), torch.cat(outputs_v)
+        h, v = torch.cat(outputs_h), torch.cat(outputs_v)
+        # Identical geometry must reuse identical learned features. Different
+        # chunk GEMMs/atomic reductions may otherwise manufacture ~1e-8 motion.
+        # Exact coordinate equality only: no tolerance or amplitude clipping.
+        changed_atom = (observation.coordinates != observation.anchor_coordinates[None]).any(-1)
+        changed_system = torch.zeros(h.shape[0], observation.frame_mask.shape[0], device=h.device, dtype=torch.long)
+        changed_system.index_add_(1, topology.abid, changed_atom.long())
+        same = (changed_system[:, mapping.group_system] == 0) & observation.frame_mask.T[:, mapping.group_system]
+        last = observation.frame_mask.sum(1) - 1
+        group = torch.arange(mapping.counts.numel(), device=h.device)
+        anchor_h = h[last[mapping.group_system], group]
+        anchor_v = v[last[mapping.group_system], group]
+        return torch.where(same[..., None], anchor_h[None], h), torch.where(same[..., None, None], anchor_v[None], v)
 
 
 @dataclass(frozen=True)
