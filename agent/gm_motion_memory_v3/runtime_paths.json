@@ -1,0 +1,14 @@
+{
+  "lane": "B",
+  "host_workspace": "/data4/users/sihao/workspace/molvid-recon-learned-memory-v1",
+  "container_workspace": "/workspace/molvid-recon-learned-memory-v1",
+  "host_coordination": "/data4/users/sihao/workspace/molvid-gm-memory-v3-coordination",
+  "container_coordination": "/workspace/molvid-gm-memory-v3-coordination",
+  "raw_atlas": "/data1/repo/BioKinema/data_atlas",
+  "container_entry": "enter-container",
+  "conda_environment": "torch-ito",
+  "gpu_uuid": null,
+  "gpu_allocation_status": "waiting_for_A_resources_json",
+  "common_commit": null,
+  "recipe_release": null
+}
