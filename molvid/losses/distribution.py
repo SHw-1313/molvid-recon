@@ -400,15 +400,23 @@ def sampled_auxiliary_loss(
     sampled_coordinates: Sequence[Tensor],
     target_coordinates: Tensor,
     batch: Any,
-    scales: SampledFeatureScales,
+    scales: SampledFeatureScales | None,
+    *,
+    compute_energy: bool = True,
+    compute_bond: bool = True,
 ) -> SampledAuxiliaryLoss:
-    energy, energy_count, group_counts = energy_score_loss(
-        sampled_coordinates,
-        target_coordinates,
-        batch,
-        scales,
-    )
-    bond, bond_count = observed_reference_bond_loss(sampled_coordinates, batch)
+    zero = sampled_coordinates[0].sum() * 0.0
+    energy = bond = zero
+    energy_count = bond_count = torch.zeros((), device=zero.device, dtype=torch.long)
+    group_counts = {}
+    if compute_energy:
+        if scales is None:
+            raise ValueError("energy score requires fixed train-only scales")
+        energy, energy_count, group_counts = energy_score_loss(
+            sampled_coordinates, target_coordinates, batch, scales,
+        )
+    if compute_bond:
+        bond, bond_count = observed_reference_bond_loss(sampled_coordinates, batch)
     return SampledAuxiliaryLoss(
         energy_score=energy,
         observed_bond=bond,

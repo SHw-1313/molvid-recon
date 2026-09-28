@@ -221,8 +221,8 @@ class FrameJointModel(nn.Module):
         if sampled_sources is not None:
             if len(sampled_sources) != 2:
                 raise ValueError("actual-source training sampling is frozen at K=2")
-            if int(sampled_steps) != 4:
-                raise ValueError("actual-source training sampling is frozen at four Euler steps")
+            if sampled_steps not in (4, 8):
+                raise ValueError("actual-source training sampling requires four or eight Euler steps")
             for source in sampled_sources:
                 if (
                     source.statistics_hash != self.statistics_hash

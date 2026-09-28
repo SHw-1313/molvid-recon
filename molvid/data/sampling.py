@@ -664,6 +664,10 @@ class TaskAwareClipBatchSampler(Sampler[list[int]]):
                     "batches_per_epoch is smaller than the exact no-replacement "
                     f"schedule ({self._batches_per_epoch} < {len(result)})"
                 )
+            # Packing preserves shape homogeneity. Mixing *packed batches*
+            # prevents a whole lag/view from running in one contiguous block.
+            if self.shuffle:
+                rng.shuffle(result)
             return result
 
         orders: dict[tuple[int, int, str], np.ndarray] = {}
@@ -803,6 +807,7 @@ class TaskAwareClipBatchSampler(Sampler[list[int]]):
 
     def state_dict(self) -> dict[str, Any]:
         return {
+            "batch_order_version": "packed_batch_shuffle.v2",
             "epoch": int(self.epoch),
             "seed": int(self.seed),
             "replacement": bool(self.replacement),
@@ -823,6 +828,7 @@ class TaskAwareClipBatchSampler(Sampler[list[int]]):
         if not isinstance(state, Mapping):
             raise ValueError("sampler state must be a mapping")
         exact = {
+            "batch_order_version": (str, "packed_batch_shuffle.v2", "batch order version"),
             "seed": (int, self.seed, "seed"),
             "replacement": (bool, self.replacement, "replacement"),
             "shuffle": (bool, self.shuffle, "shuffle"),
@@ -1232,7 +1238,7 @@ class TrajectoryCappedBatchSampler(Sampler[list[int]]):
 
     def state_dict(self) -> dict[str, Any]:
         return {
-            "schema_version": "pvb.codec.t1.trajectory_capped_sampler.v1",
+            "schema_version": "molvid.trajectory_capped_sampler.packed_shuffle.v2",
             "epoch": int(self.epoch),
             "seed": int(self.seed),
             "max_tokens": int(self.max_tokens),
