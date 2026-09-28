@@ -131,20 +131,24 @@ def _clash_condition(coordinates: Tensor, batch: Any, sample: int,
     total = coordinates.sum() * 0.0
     overlaps = 0
     excluded, one_four = distances
-    for frame in frames.tolist():
-        xyz = coordinates[frame].index_select(0, nodes).float()
-        for start in range(0, len(atom_ids), config.distance_chunk_size):
-            stop = min(start + config.distance_chunk_size, len(atom_ids))
-            # Static topology exclusion includes real disulfide bonds.
-            valid = torch.tensor([
-                [j > i and b not in excluded[a] for j, b in enumerate(atom_ids)]
-                for i, a in enumerate(atom_ids[start:stop], start)
-            ], device=xyz.device, dtype=torch.bool)
-            is14 = torch.tensor([
-                [b in one_four[a] for b in atom_ids] for a in atom_ids[start:stop]
-            ], device=xyz.device, dtype=torch.bool)
-            allowance = torch.where(is14, config.one_four_overlap_A, config.allowed_overlap_A)
-            minimum = (radii[start:stop, None] + radii[None, :] - allowance).clamp_min(0)
+    local_index = {atom: i for i, atom in enumerate(atom_ids)}
+    selected = coordinates.index_select(0, frames).index_select(1, nodes).float()
+    columns = torch.arange(len(nodes), device=coordinates.device)
+    for start in range(0, len(atom_ids), config.distance_chunk_size):
+        stop = min(start + config.distance_chunk_size, len(atom_ids))
+        # Only sparse, coordinate-independent topology is visited in Python.
+        # Dense candidate distances stay chunked on CUDA; no NxN Python loop.
+        valid = torch.arange(start, stop, device=coordinates.device)[:, None] < columns[None, :]
+        is14 = torch.zeros_like(valid)
+        for relations, mask, value in ((excluded, valid, False), (one_four, is14, True)):
+            pairs = [(i-start, local_index[b]) for i,a in enumerate(atom_ids[start:stop],start)
+                     for b in relations[a] if b in local_index]
+            if pairs:
+                indices = torch.tensor(pairs, device=coordinates.device, dtype=torch.long).T
+                mask[indices[0], indices[1]] = value
+        allowance = torch.where(is14, config.one_four_overlap_A, config.allowed_overlap_A)
+        minimum = (radii[start:stop, None] + radii[None, :] - allowance).clamp_min(0)
+        for xyz in selected:
             # Candidate search is detached. Selected distances retain autograd.
             with torch.no_grad():
                 delta = xyz[start:stop, None] - xyz[None, :]

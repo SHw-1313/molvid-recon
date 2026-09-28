@@ -16,7 +16,7 @@
   "statistics_sha256_verified": "117dbcb674f9932c40216c4e2c3ee69153dacc3d3efebcca6e67c876a3b6bee9",
   "derived_train_container_path": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/data/fixed_history_train/clip_store/train",
   "local_output_container_path": "/workspace/molvid-recon-gm-motion-v3/agent/gm_motion_memory_v3/artifacts/A",
-  "assigned_gpu_uuids": [],
-  "gpu_status": "waiting_for_unoccupied_GPU; all_8_occupied_by_other_users_at_startup",
+  "assigned_gpu_uuids": ["GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0"],
+  "gpu_status": "A_claimed_physical_GPU0_under_exclusive_flock_on_resume",
   "sealed_test_opened": false
 }
