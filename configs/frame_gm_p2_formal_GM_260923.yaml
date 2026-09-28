@@ -11,7 +11,7 @@ data:
       store_index_sha256: 3a1be208b90f77bf78452cb6e7402b14f9066b8b0208ce6e250852133d250045
       record_count: 6912
 codec:
-  checkpoint: /data4/users/sihao/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt
+  checkpoint: /workspace/molvid-recon-gm-motion-v3/inputs/codec_best.pt
   sha256: ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df
 statistics:
   path: /workspace/molvid_recon/runs/frame_joint_v1_multitime/frame_statistics.pt
