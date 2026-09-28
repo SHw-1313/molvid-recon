@@ -1,9 +1,12 @@
 """Metadata-only tests; no CPU model execution or sealed data."""
 
 from collections import Counter
+from pathlib import Path
 
 import pytest
+import yaml
 
+from molvid.cli.train_frame_joint import _validate_frame_joint_config
 from molvid.data.sampling import ClipItemSpec, ClipSpecTable, TaskAwareClipBatchSampler
 from molvid.evaluation.families import metric_family
 from molvid.training.execution import execution_manifest, execution_schedule
@@ -63,3 +66,31 @@ def test_family_and_endpoint_release_are_separate():
     assert (loss.clean_bond, loss.near_bond, loss.generated_bond) == (0.1, 0.01, 0.0)
     assert SampledAuxiliaryConfig.resolve({"enabled": True, "euler_steps": 8,
                                           "observed_bond_weight": 1}).feature_scales is None
+
+
+def test_public_cli_accepts_non_energy_branch_without_scales():
+    path = Path(__file__).resolve().parents[1] / "configs/frame_gm_p3_formal_J0_260923.yaml"
+    raw = yaml.safe_load(path.read_text())
+    raw["sampled_auxiliary"] = {"enabled": True, "observed_bond_weight": 1.0, "euler_steps": 8}
+    _validate_frame_joint_config(raw)
+    raw["sampled_auxiliary"]["energy_weight"] = 0.1
+    with pytest.raises(ValueError, match="energy score requires"):
+        _validate_frame_joint_config(raw)
+
+
+def test_physical_configuration_does_not_invent_uncalibrated_tables():
+    from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
+    with pytest.raises(ValueError, match="explicit frozen"):
+        PhysicalAuxiliaryConfig.resolve({"clash_weight": 1.0})
+    with pytest.raises(ValueError, match="train-only scale"):
+        PhysicalAuxiliaryConfig.resolve({"rmsf_weight": 1.0})
+    with pytest.raises(ValueError, match="training-derived widths"):
+        PhysicalAuxiliaryConfig.resolve({"bond_band_weight": 1.0})
+    config = SampledAuxiliaryConfig.resolve({"enabled": True, "physical": {
+        "displacement_weight": 0.1, "displacement_scale_A2": 1.0,
+    }})
+    assert config.feature_scales is None
+    assert SampledAuxiliaryConfig.resolve(config.contract()) == config
+    with pytest.raises(ValueError, match="historical J1"):
+        SampledAuxiliaryConfig.resolve({"enabled": True, "observed_bond_weight": 0.1,
+                                       "physical": {"displacement_weight": 0.1, "displacement_scale_A2": 1.0}})
