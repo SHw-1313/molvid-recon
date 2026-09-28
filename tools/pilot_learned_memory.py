@@ -13,7 +13,7 @@ import time
 import torch
 from molvid.checkpoints import load_codec_artifact
 from molvid.codec.frame import slice_clip_frames
-from molvid.data.raw_history import RawHistoryWindow, load_pilot_inputs
+from molvid.data.raw_history import RawHistoryWindow, load_pilot_inputs, pack_pilot_inputs
 from molvid.latent.statistics import FrameLatentStatistics
 from molvid.model import FrameJointModel
 from molvid.runtime import sha256_file
@@ -155,6 +155,10 @@ def main():
         hooks.extend((module.register_forward_pre_hook(before),module.register_forward_hook(after)))
     profile_entries=[(entry,span,dt,lag) for entry in config['profile_banks'] for span,dt,lag in
                      ((800,100,100),(3200,100,200),(12800,100,400),(12800,400,100))]
+    # Last profile condition packs median-system dt100/short + dt400/long.
+    profile_entries.append((config['profile_banks'][0],800,100,100))
+    profile_conditions=len(profile_entries)
+    profile_entries=profile_entries*2  # cold pass, then warm repeat
     update_count=len(profile_entries) if args.profile_only else config['updates']
     previous_seconds=0.
     with (output/'train_metrics.jsonl').open('w') as stream:
@@ -170,6 +174,10 @@ def main():
                 entry,span,dt,lag=profile_entries[step]
             io_start=time.perf_counter()
             raw,anchors,future=load_pilot_inputs(Path(entry['path']),RawHistoryWindow(1280,span,dt,lag,'train'))
+            mixed=args.profile_only and step % profile_conditions == profile_conditions-1
+            if mixed:
+                other=load_pilot_inputs(Path(entry['path']),RawHistoryWindow(1280,12800,400,lag,'train'))
+                raw,anchors,future=pack_pilot_inputs([(raw,anchors,future),other])
             io_seconds=time.perf_counter()-io_start
             torch.cuda.reset_peak_memory_stats(); before_calls=len(frame_calls); step_start=time.perf_counter()
             profiler=torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA]) if args.profile_only else nullcontext()
@@ -198,6 +206,7 @@ def main():
             metrics.update(history_span_ps=span,observed_dt_ps=dt,query_lag_ps=lag,raw_io_seconds=io_seconds,
                            step_seconds=elapsed,peak_allocated_bytes=torch.cuda.max_memory_allocated(),teacher_frames=14,
                            memory_gradient_path_norms=path_norms,
+                           mixed_history_dt=mixed,profile_pass=('warm' if step>=profile_conditions else 'cold') if args.profile_only else None,
                            module_ms={k:sum(a.elapsed_time(b) for a,b in pairs) for k,pairs in timings.items()})
             metrics['module_ms']['memory_slots_and_readout']=metrics['module_ms'].get('memory_inclusive',0)-metrics['module_ms'].get('light_encode',0)-metrics['module_ms'].get('time_analysis',0)
             if args.profile_only:
@@ -215,7 +224,7 @@ def main():
         'training_seconds':elapsed,'gpu_hours_including_setup_checks':(time.perf_counter()-gpu_start)/3600,'effective_atom_frames_per_second':total_atom_frames/elapsed,
         'teacher_observed_frames_per_prefix':2,'teacher_target_frames_per_prefix':12,
         'formal':False,'profile_banks_training':args.profile_only,
-        'size_profile':'cold train-step profiles complete; mixed-dt packing and warm timing remain' if args.profile_only else 'run --profile-only separately',
+        'size_profile':'cold/warm median/largest and mixed-dt packed train-step profiles complete' if args.profile_only else 'run --profile-only separately',
         'module_timings':'inclusive; graph_and_pack is encoder entry to backbone entry; do not sum overlapping ranges'},indent=2))
     torch.save({'model_state':model.state_dict(),'scope':'pilot_only_not_formal_parent'},output/'pilot_model.pt')
 

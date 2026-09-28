@@ -145,3 +145,41 @@ def load_pilot_inputs(path: Path, window: RawHistoryWindow):
     raw = RawHistoryObservation(history, torch.tensor((window.history_indices-window.anchor_index)*10,dtype=torch.float32)[None],
                                 torch.ones(1,len(history),dtype=torch.bool),topology,ChemicalMapping.from_topology(topology),history[-1])
     return raw, anchors, future
+
+
+def pack_pilot_inputs(items):
+    """Pack single-system pilot inputs, including mixed history lengths/dt.
+
+    Padding coordinates/time are zero and always invalid, never repeated
+    observations. This packs explicit views; it does not schedule exposures.
+    """
+    import torch
+    from .batch import ClipBatch
+    from ..codec.learned_memory import RawHistoryObservation, ChemicalMapping
+    from ..geometry.types import StaticTopologyMetadata
+    if not items or any(anchor.batch_size != 1 for _, anchor, _ in items):
+        raise ValueError('packing expects nonempty single-system pilot views')
+    offsets=[0]
+    for _,anchor,_ in items: offsets.append(offsets[-1]+anchor.atom_count)
+    def clips(values):
+        if len({v.frames for v in values}) != 1:
+            raise ValueError('packed anchor/query views must share frame counts')
+        fields={name:torch.cat([getattr(v,name) for v in values],dim=0) for name in
+                ('atype','btype','block_id','component_id','atom_source_index','edge_mask','loss_mask','align_mask',
+                 'time_ps','delta_time_ps','frame_mask','task')}
+        fields.update(x=torch.cat([v.x for v in values],1),bpos=torch.cat([v.bpos for v in values],1),
+                      abid=torch.cat([v.abid+i for i,v in enumerate(values)]),atom_ptr=torch.tensor(offsets,dtype=torch.long),
+                      bond_index=torch.cat([v.bond_index+offsets[i] for i,v in enumerate(values)],1))
+        for name in ('time_bucket_id','topology_id','sample_id','atom_counts','atom_identity_sha256','host_task_ids'):
+            fields[name]=tuple(item for v in values for item in getattr(v,name))
+        return ClipBatch(**fields)
+    anchors=clips([anchor for _,anchor,_ in items]); future=clips([target for _,_,target in items])
+    length=max(raw.coordinates.shape[0] for raw,_,_ in items)
+    x=torch.zeros(length,offsets[-1],3); time=torch.zeros(len(items),length); mask=torch.zeros(len(items),length,dtype=torch.bool)
+    for i,(raw,_,_) in enumerate(items):
+        count=raw.coordinates.shape[0]
+        x[:count,offsets[i]:offsets[i+1]]=raw.coordinates
+        time[i,:count]=raw.physical_time_ps[0]; mask[i,:count]=raw.frame_mask[0]
+    topology=StaticTopologyMetadata.from_batch(anchors)
+    raw=RawHistoryObservation(x,time,mask,topology,ChemicalMapping.from_topology(topology),anchors.x[-1])
+    return raw,anchors,future
