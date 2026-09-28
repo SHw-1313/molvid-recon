@@ -29,6 +29,7 @@ from ..data.sampling import (
 )
 from ..data.store import ClipMMapDataset
 from ..latent.statistics import FrameLatentStatistics
+from ..losses.sampled_physical import PhysicalAuxiliaryConfig
 from ..model import FrameJointModel
 from ..runtime import atomic_write_json, canonical_hash, configure_device, seed_all, sha256_file
 from ..training.batches import prepare_batch_then_to_device, prepare_frame_joint_batch
@@ -73,6 +74,7 @@ _SAMPLED_AUXILIARY_KEYS = {
     "energy_weight", "observed_bond_weight", "feature_scales",
     "calibration_batches", "energy_gradient_target_ratio",
     "observed_bond_gradient_target_ratio",
+    "physical",
 }
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
@@ -281,6 +283,8 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
                 value, f"sampled_auxiliary.feature_scales.{name}", positive=True
             )
     enabled = bool(sampled.get("enabled", False))
+    if sampled.get("physical") is not None:
+        PhysicalAuxiliaryConfig.resolve(_require_mapping(sampled["physical"], "sampled_auxiliary.physical"))
     energy_requested = sampled.get("energy_weight", 0.0)
     if enabled and feature_scales is None and (energy_requested == "calibrate" or float(energy_requested) > 0):
         raise ValueError("enabled energy score requires feature_scales or 'fit'")
@@ -860,6 +864,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sampled_runtime_keys = {
             "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
             "energy_weight", "observed_bond_weight", "feature_scales",
+            "physical",
         }
         if resume_payload is not None:
             resumed_sampled = resume_payload["contracts"].get("sampled_auxiliary")
