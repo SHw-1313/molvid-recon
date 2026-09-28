@@ -8,9 +8,10 @@
   "container_entry": "enter-container",
   "conda_environment": "torch-ito",
   "gpu_uuid": null,
-  "gpu_allocation_status": "waiting_for_A_resources_json",
+  "gpu_allocation_status": "resources.json: waiting_for_free_gpus; B=[]",
   "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
   "recipe_release": null,
   "common_local_cherry_pick": "7270e54",
-  "common_status": "integration_candidate_cuda_validation_pending"
+  "common_status": "integration_candidate_cuda_validation_pending",
+  "reviewed_code_commit": "d104135e89804d841943d08309d8a5660642e3fa"
 }

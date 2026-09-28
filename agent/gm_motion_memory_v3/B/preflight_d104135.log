@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/molvid-recon-learned-memory-v1/tools/pilot_learned_memory.py", line 208, in <module>
+    main()
+  File "/workspace/molvid-recon-learned-memory-v1/tools/pilot_learned_memory.py", line 41, in main
+    raise RuntimeError('B requires one assigned UUID and matching CUDA_VISIBLE_DEVICES; no GPU claimed')
+RuntimeError: B requires one assigned UUID and matching CUDA_VISIBLE_DEVICES; no GPU claimed

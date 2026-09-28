@@ -10,3 +10,5 @@ PYTHONPATH=. python agent/gm_motion_memory_v3/B/check_data.py
 # CUDA_VISIBLE_DEVICES=<assigned UUID> python -m pytest -q tests/test_learned_memory.py
 # CUDA_VISIBLE_DEVICES=<assigned UUID> python -m tools.pilot_learned_memory --config agent/gm_motion_memory_v3/B/pilot_config.json --code-commit <fixed candidate>
 # CUDA_VISIBLE_DEVICES=<assigned UUID> python -m tools.pilot_learned_memory --config agent/gm_motion_memory_v3/B/pilot_config.json --code-commit <fixed candidate> --profile-only
+# Actual repaired-candidate preflight (resource-blocked, no CUDA model execution):
+python -m tools.pilot_learned_memory --config agent/gm_motion_memory_v3/B/pilot_config.json --code-commit d104135e89804d841943d08309d8a5660642e3fa > agent/gm_motion_memory_v3/B/preflight_d104135.log 2>&1

@@ -13,5 +13,8 @@
   "formal_M_index": "not_authorized_by_default",
   "A_evaluated_recipe": null,
   "CPU_model_fallback": false,
-  "resource_evidence": "/workspace/molvid-gm-memory-v3-coordination/resources.json"
+  "resource_evidence": "/workspace/molvid-gm-memory-v3-coordination/resources.json",
+  "reviewed_code_commit": "d104135e89804d841943d08309d8a5660642e3fa",
+  "independent_static_review": "r02 BLOCKED_ENV; original source issue closed",
+  "data_paired_checks": 198
 }

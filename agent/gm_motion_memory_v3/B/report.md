@@ -1,6 +1,6 @@
 # B learned history memory：实现与 raw 数据阶段报告
 
-状态：blocked（CUDA 槽位），2026-09-28。集成候选 `43bbadf0491c8b3815be03ae1f3ad0114484227a`；独立静态审阅进行中，尚无数值或正式训练放行。环境为 enter-container / torch-ito。没有 CPU 模型 fallback。
+状态：blocked（CUDA 槽位），2026-09-28。修复代码 `d104135e89804d841943d08309d8a5660642e3fa`；两次fresh独立静态审阅已完成，r02结论BLOCKED_ENV，尚无数值或正式训练放行。环境为 enter-container / torch-ito。没有 CPU 模型 fallback。
 
 ## 问题与方法
 
@@ -41,3 +41,13 @@ raw读取/对齐/压缩写出每条约0.46–2.88秒；这是CPU数据IO，不�
 已固定吸收A公共候选`eec76455a7d9a36723e7c1a2aad1043bba553198`，本地cherry-pick `7270e54`。A公共代码本身尚待CUDA验证；不是recipe release。
 
 待B资源UUID分配后，先targeted CUDA smoke，修复后真实teacher parity/2+Q调用审计、3体系pilot和大小体系profile，再按最新固定commit做无实现上下文独立review并修复。正式M-short/M-long另外等待A已完成评估的immutable recipe。普通检查通过不需重复请求许可。
+
+## 独立审阅与最终本阶段状态
+
+初审r01对`43bbadf`报告FIX_REQUIRED：共享key偏置在softmax中不可识别，原梯度门槛错误。已删除两个冗余偏置，改用参数有限梯度与组件级非零梯度，并加入FP32/BF16和light/slot实际更新的待执行CUDA检查。
+
+修复代码固定于`d104135e89804d841943d08309d8a5660642e3fa`。fresh r02静态复核结论为**BLOCKED_ENV**，原source问题已静态关闭，复核范围内无剩余source blocker；这不等于数值PASS。原文分别保存在`../reviews/B/r01/REVIEW.md`和`../reviews/B/r02/REVIEW.md`，各自FIX_RESPONSE记录处理。
+
+数据IO/indexing检查实际通过198项paired-span checks，覆盖9种history-dt/query-lag组合。代码语法编译通过；修复后preflight再次按无B UUID拒绝运行。GPU用量仍0；teacher调用、梯度、throughput、显存和运动指标仍未测。
+
+新增profile-only路径已实现中位/最大体系、Th9/33/129及dt400；尚未执行，也尚缺warm repeats和mixed-dt packed profile。预算控制是带余量的软停止估计，强制终止后的GPU成本须外部核账，不能当作硬实时上限。
