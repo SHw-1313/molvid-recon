@@ -1,0 +1,8 @@
+{
+  "status": "not_evaluated",
+  "selected_arm": null,
+  "reason": "No formal A0-A3 checkpoints or evaluations exist.",
+  "capacity_release_eligible": false,
+  "recipe_release_eligible": false,
+  "keep_release_trigger_evaluated": false
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "molvid.A.experiment_status.v1",
+  "status": "blocked",
+  "executable_training_config": false,
+  "reason": "No unoccupied GPU; CUDA smoke/calibration/pilot required before final configs/review/formal.",
+  "base_commit": "cc74a385577e57c64c9623111e0db86e54e48770",
+  "common_commit": "5a745960f673d5397b883c2b129f39cf57593856",
+  "A_loss_candidate_commit": "7323adc7c1895e045812288d582c2e2bce26013a",
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "arms": {
+    "A0": "GM + complete base loss",
+    "A1": "GM + complete base loss + sampled clash",
+    "A2": "GM + complete base loss + sampled clash + motion-only ES",
+    "A3": "GM + complete base loss + sampled clash + motion-only ES + sampled bond band"
+  },
+  "shared_parent_and_symmetric_reset": true,
+  "frozen_auxiliary_recipe": null,
+  "common_review": "static fixes PASS; no formal approval",
+  "A_scientific_review": "not_requested_before_smoke_and_pilot",
+  "scientific_results": null
+}
