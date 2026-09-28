@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--config',type=Path,required=True)
     parser.add_argument('--code-commit',required=True)
     parser.add_argument('--profile-only',action='store_true')
+    parser.add_argument('--gpu-authorization',type=Path)
     args=parser.parse_args()
     config=json.loads(args.config.read_text())
     actual_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
@@ -37,12 +38,18 @@ def main():
         raise ValueError('only bounded 1..1000 update pilot is permitted')
     resources=json.loads(Path(config['resources']).read_text())
     assignment=resources['assigned_gpu_uuids']['B']
+    shared_authorization=None
+    if args.gpu_authorization is not None:
+        shared_authorization=json.loads(args.gpu_authorization.read_text())
+        if shared_authorization.get('lane')!='B' or shared_authorization.get('mode')!='user_authorized_shared':
+            raise ValueError('invalid explicit B GPU sharing authorization')
+        assignment=[shared_authorization['gpu_uuid']]
     if len(assignment)!=1 or os.environ.get('CUDA_VISIBLE_DEVICES')!=assignment[0]:
         raise RuntimeError('B requires one assigned UUID and matching CUDA_VISIBLE_DEVICES; no GPU claimed')
     lock=Path(config['resources']).with_name('B_gpu.lock').open('a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     processes=subprocess.check_output(['nvidia-smi','--query-compute-apps=gpu_uuid,pid','--format=csv,noheader'],text=True)
-    if any(assignment[0] in row for row in processes.splitlines()):
+    if shared_authorization is None and any(assignment[0] in row for row in processes.splitlines()):
         raise RuntimeError('assigned B GPU has an existing compute process; do not share or preempt')
     previous_cost=sum(float(json.loads(p.read_text())['gpu_hours_including_setup_checks'])
                       for p in Path(config['budget_root']).glob('*/cost_ledger.json'))
@@ -60,6 +67,8 @@ def main():
     atexit.register(cost_record)
     (output/'code_identity.json').write_text(json.dumps({'code_commit':actual_commit,'config_sha256':sha256_file(args.config),'profile_only':args.profile_only},indent=2))
     (output/'resolved_experiment.json').write_text(json.dumps(config,indent=2))
+    (output/'gpu_authorization.json').write_text(json.dumps({'explicit_sharing':shared_authorization,'gpu_uuid':assignment[0],
+        'preexisting_processes':processes.splitlines()},indent=2))
     for name in ('teacher','statistics','parent'):
         if sha256_file(config[name]['path'])!=config[name]['sha256']:
             raise ValueError(f'{name} identity differs')
