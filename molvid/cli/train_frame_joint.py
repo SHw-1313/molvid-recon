@@ -281,8 +281,9 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
                 value, f"sampled_auxiliary.feature_scales.{name}", positive=True
             )
     enabled = bool(sampled.get("enabled", False))
-    if enabled and feature_scales is None:
-        raise ValueError("enabled sampled auxiliary requires feature_scales or 'fit'")
+    energy_requested = sampled.get("energy_weight", 0.0)
+    if enabled and feature_scales is None and (energy_requested == "calibrate" or float(energy_requested) > 0):
+        raise ValueError("enabled energy score requires feature_scales or 'fit'")
     calibrated_weights = [
         sampled.get(name) == "calibrate"
         for name in ("energy_weight", "observed_bond_weight")
@@ -719,6 +720,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.output_root is not None:
         training["output_root"] = str(args.output_root)
     device, rank, local_rank, world = _distributed_device(training)
+    if world != 1:
+        raise ValueError(
+            "stratified execution currently supports one process per arm only; "
+            "rank-local aux masks require a separately validated DDP normalization protocol"
+        )
     if args.fit_statistics and world != 1:
         raise ValueError("fit statistics in one CUDA process before launching DDP")
     seed = int(training["seed"])
@@ -1175,7 +1181,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     coefficient.fill_(coefficient_value)
                 if world > 1:
                     dist.broadcast(coefficient, src=0)
-                resolved_loss = dict(raw["loss"])
+                resolved_loss = dict(loss_mapping)
+                resolved_loss.pop("inherit_parent", None)
                 resolved_loss.pop("calibration_target_ratio", None)
                 resolved_loss["generated_bond"] = float(coefficient)
                 trainer.loss_config = JointLossConfig.resolve(resolved_loss)
