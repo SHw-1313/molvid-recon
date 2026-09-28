@@ -202,7 +202,7 @@ def main():
                 path_norms[path]=float(norm)
             elapsed=time.perf_counter()-step_start
             previous_seconds=elapsed
-            total_atom_frames+=(raw.coordinates.shape[0]+14)*anchors.atom_count
+            total_atom_frames+=int(raw.frame_mask.index_select(0,raw.topology.abid).sum())+14*anchors.atom_count
             metrics.update(history_span_ps=span,observed_dt_ps=dt,query_lag_ps=lag,raw_io_seconds=io_seconds,
                            step_seconds=elapsed,peak_allocated_bytes=torch.cuda.max_memory_allocated(),teacher_frames=14,
                            memory_gradient_path_norms=path_norms,
