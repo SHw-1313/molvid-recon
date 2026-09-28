@@ -4,8 +4,8 @@
   "seed": 20260928,
   "analysis_mode": "physical",
   "resources": "/workspace/molvid-gm-memory-v3-coordination/resources.json",
-  "output": "runs/learned_memory_v1/cuda_pilot_r02",
-  "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
+  "output": "runs/learned_memory_v1/cuda_pilot_r03",
+  "common_commit": "5a745960f673d5397b883c2b129f39cf57593856",
   "raw_data_card_sha256": "235a671c01f48b367656733f0174d45aaad9a28ed774ebc311b01e85afe42a3c",
   "learning_rates": {
     "history_encoder": 0.0001,

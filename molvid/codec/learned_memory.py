@@ -12,6 +12,7 @@ import torch
 from torch import Tensor, nn
 
 from ..equivariant import AxisPreservingLinear
+from ..data.chemistry import NUM_ATOM_TYPE, NUM_BLOCK_TYPE
 from ..geometry.types import StaticTopologyMetadata
 from ..time import pairwise_time_features
 
@@ -123,8 +124,8 @@ class LightHistoryEncoder(nn.Module):
     """
     def __init__(self, scalar_width=64, vector_width=32, layers=2, frame_chunk_size=8):
         super().__init__()
-        self.element = nn.Embedding(128, scalar_width)
-        self.block_type = nn.Embedding(128, scalar_width)
+        self.element = nn.Embedding(NUM_ATOM_TYPE, scalar_width)
+        self.block_type = nn.Embedding(NUM_BLOCK_TYPE, scalar_width)
         self.displacement_gate = nn.Linear(scalar_width, vector_width)
         self.layers = nn.ModuleList(LocalAtomUpdate(scalar_width, vector_width) for _ in range(layers))
         self.frame_chunk_size = int(frame_chunk_size)

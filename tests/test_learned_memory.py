@@ -4,6 +4,7 @@ import pytest
 import torch
 from molvid.codec.learned_memory import ChemicalMapping, RawHistoryObservation, LearnedHistoryMemory
 from molvid.geometry.types import StaticTopologyMetadata
+from molvid.data.chemistry import NUM_BLOCK_TYPE
 
 
 @pytest.fixture
@@ -17,7 +18,7 @@ def observed():
     block = torch.arange(n, device=device)//3
     left = torch.tensor([0,1,2,3,4,6,7,8,9,10], device=device)
     edges = torch.stack((left, left+1))
-    topology = StaticTopologyMetadata(torch.full((n,),6,device=device), torch.zeros(n,dtype=torch.long,device=device), abid, block,
+    topology = StaticTopologyMetadata(torch.full((n,),6,device=device), torch.full((n,),NUM_BLOCK_TYPE-1,dtype=torch.long,device=device), abid, block,
                                       torch.zeros_like(abid), torch.tensor([0,6,12],device=device), edges, torch.ones(edges.shape[1],device=device))
     mapping = ChemicalMapping.from_topology(topology)
     x = torch.randn(9,n,3,device=device)
