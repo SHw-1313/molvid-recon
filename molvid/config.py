@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import json
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -28,8 +29,9 @@ def validate_config(
 
 
 def load_config(path: str | Path, *, schema: str | None = None) -> dict[str, Any]:
-    with Path(path).open(encoding="utf-8") as handle:
-        value = yaml.safe_load(handle)
+    path = Path(path)
+    with path.open(encoding="utf-8") as handle:
+        value = json.load(handle) if path.suffix.lower() == ".json" else yaml.safe_load(handle)
     validate_config(value, schema=schema)
     return dict(value)
 
