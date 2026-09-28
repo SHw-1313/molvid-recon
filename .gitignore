@@ -12,4 +12,5 @@
 *.tar.gz
 
 /runs/
+/inputs/
 /old/

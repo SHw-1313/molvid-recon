@@ -76,7 +76,7 @@ _SAMPLED_AUXILIARY_KEYS = {
     "energy_weight", "observed_bond_weight", "feature_scales",
     "calibration_batches", "energy_gradient_target_ratio",
     "observed_bond_gradient_target_ratio",
-    "physical",
+    "physical", "streamed_atom_frames_threshold",
 }
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
@@ -254,6 +254,12 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
                 raise ValueError(
                     "sampled auxiliary requires cadence=8, K=2, Euler steps=4 or 8"
                 )
+    if "streamed_atom_frames_threshold" in sampled:
+        _require_number(
+            sampled["streamed_atom_frames_threshold"],
+            "sampled_auxiliary.streamed_atom_frames_threshold",
+            integer=True, nonnegative=True,
+        )
     if "calibration_batches" in sampled:
         _require_number(
             sampled["calibration_batches"],
@@ -868,7 +874,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sampled_runtime_keys = {
             "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
             "energy_weight", "observed_bond_weight", "feature_scales",
-            "physical",
+            "physical", "streamed_atom_frames_threshold",
         }
         if resume_payload is not None:
             resumed_sampled = resume_payload["contracts"].get("sampled_auxiliary")

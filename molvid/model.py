@@ -239,58 +239,11 @@ class FrameJointModel(nn.Module):
         if sampled_sources is not None:
             if len(sampled_sources) != 2:
                 raise ValueError("actual-source training sampling is frozen at K=2")
-            if sampled_steps not in (4, 8):
-                raise ValueError("actual-source training sampling requires four or eight Euler steps")
             for source in sampled_sources:
-                if (
-                    source.statistics_hash != self.statistics_hash
-                    or source.time_ps.shape != query.time_ps.shape
-                    or not torch.equal(source.frame_mask, query.frame_mask)
-                    or source.topology.contract() != context.topology.contract()
-                ):
-                    raise ValueError("actual-source latent differs from the normalized query contract")
-                current = source
-                for step in range(int(sampled_steps)):
-                    sampled_flow_time = torch.full(
-                        (context.latent.batch_size,),
-                        float(step) / float(sampled_steps),
-                        device=current.h.device,
-                        dtype=current.h.dtype,
-                    )
-
-                    def integrate(
-                        h: Tensor,
-                        v: Tensor,
-                        *,
-                        template: FrameLatentBatch = current,
-                        local_flow_time: Tensor = sampled_flow_time,
-                    ) -> tuple[Tensor, Tensor]:
-                        state = template.with_features(h, v)
-                        sampled_velocity = self.dit(
-                            state,
-                            context=context,
-                            query=query,
-                            history_memory=condition.history_memory,
-                            flow_time=local_flow_time,
-                            motion_context=condition.motion_context,
-                        )
-                        return (
-                            h + sampled_velocity.h / float(sampled_steps),
-                            v + sampled_velocity.v / float(sampled_steps),
-                        )
-
-                    if checkpoint_sampled_steps and torch.is_grad_enabled():
-                        next_h, next_v = activation_checkpoint(
-                            integrate,
-                            current.h,
-                            current.v,
-                            use_reentrant=False,
-                            preserve_rng_state=False,
-                        )
-                    else:
-                        next_h, next_v = integrate(current.h, current.v)
-                    current = current.with_features(next_h, next_v)
-                sampled.append(self.decoder(context, self.inverse(current), query))
+                sampled.append(self.sample_source(
+                    source, context=context, query=query, condition=condition,
+                    steps=sampled_steps, checkpoint_steps=checkpoint_sampled_steps,
+                ))
         return FrameJointOutput(
             velocity=velocity,
             normalized_endpoint=normalized_endpoint,
@@ -301,6 +254,65 @@ class FrameJointModel(nn.Module):
             near=near,
             sampled=tuple(sampled),
         )
+
+    def sample_source(
+        self,
+        source: FrameLatentBatch,
+        *,
+        context: ObservedContext,
+        query: QuerySpec,
+        condition: FrameJointCondition,
+        steps: int,
+        checkpoint_steps: bool,
+    ) -> TrajectoryDecoderOutput:
+        """Decode one actual source draw with autograd unless the caller disables it.
+
+        `query.time_ps` is physical time; `sampled_flow_time` is dimensionless.
+        The supplied condition contains observed frames only. Streamed training
+        calls this once per draw so a second Euler graph need not stay resident.
+        """
+        if steps not in (4, 8):
+            raise ValueError("actual-source training sampling requires four or eight Euler steps")
+        if (
+            source.statistics_hash != self.statistics_hash
+            or source.time_ps.shape != query.time_ps.shape
+            or not torch.equal(source.frame_mask, query.frame_mask)
+            or source.topology.contract() != context.topology.contract()
+        ):
+            raise ValueError("actual-source latent differs from the normalized query contract")
+        current = source
+        for step in range(steps):
+            sampled_flow_time = torch.full(
+                (context.latent.batch_size,), float(step) / float(steps),
+                device=current.h.device, dtype=current.h.dtype,
+            )
+
+            def integrate(
+                h: Tensor, v: Tensor, *,
+                template: FrameLatentBatch = current,
+                local_flow_time: Tensor = sampled_flow_time,
+            ) -> tuple[Tensor, Tensor]:
+                state = template.with_features(h, v)
+                sampled_velocity = self.dit(
+                    state, context=context, query=query,
+                    history_memory=condition.history_memory,
+                    flow_time=local_flow_time,
+                    motion_context=condition.motion_context,
+                )
+                return (
+                    h + sampled_velocity.h / float(steps),
+                    v + sampled_velocity.v / float(steps),
+                )
+
+            if checkpoint_steps and torch.is_grad_enabled():
+                next_h, next_v = activation_checkpoint(
+                    integrate, current.h, current.v,
+                    use_reentrant=False, preserve_rng_state=False,
+                )
+            else:
+                next_h, next_v = integrate(current.h, current.v)
+            current = current.with_features(next_h, next_v)
+        return self.decoder(context, self.inverse(current), query)
 
     def contract(self) -> Mapping[str, Any]:
         result: dict[str, Any] = {

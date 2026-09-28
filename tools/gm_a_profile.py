@@ -34,12 +34,18 @@ def main():
         trainer=FrameJointTrainer(model,loss_config=JointLossConfig.resolve(loaded['payload']['contracts']['loss']),
             learning_rates={'history_encoder':1e-4,'dit':2e-4,'decoder':5e-5},stage='continuation',amp=True,
             data_hash=data_hash,teacher_artifact_sha256=raw['codec']['sha256'],schedule_contract={'profile_only':True},
-            sampled_config=SampledAuxiliaryConfig.resolve({'enabled':True,'physical':recipe['physical'],'euler_steps':recipe['euler_steps']}))
+            sampled_config=SampledAuxiliaryConfig.resolve({
+                'enabled':True,'physical':recipe['physical'],'euler_steps':recipe['euler_steps'],
+                'streamed_atom_frames_threshold':50000,
+            }))
         warm=trainer.load_warm_start(PARENT,expected_sha256=PARENT_SHA)
         before=module_state_hash(model.target_teacher)
         io_start=time.time();cpu=collate_clip_records([train[largest.index]]);io_seconds=time.time()-io_start
         rows=[]
-        for history in (4,8):
+        # Fixed-history records carry a four-frame observed prefix and can
+        # have fewer than eight valid frames; H8 has no query on such clips.
+        profile_histories = (4,) if largest.time_bucket_id.startswith('fixed_history_') else (4,8)
+        for history in profile_histories:
             prep_start=time.time();batch=prepare_frame_joint_batch(model.target_teacher,cpu,device=device,normalizer=model,history_frames=history)
             torch.cuda.synchronize();prepare_seconds=time.time()-prep_start
             main=torch.Generator(device=device).manual_seed(SEED);aux_generator=torch.Generator(device=device).manual_seed(SEED+1)
