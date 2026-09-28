@@ -1,18 +1,17 @@
 """B split teacher boundary; never encode raw long history.
 
-This private boundary is pending integration into prepare_frame_joint_batch
-once A publishes its common commit. It is not yet a training backend switch.
+The learned_memory branch in prepare_frame_joint_batch calls these boundaries.
+Only frozen teacher features cross no-grad; raw features are learned later.
 """
 from __future__ import annotations
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import torch
 from torch import Tensor
 from ..data.batch import ClipBatch
 from ..flow.source import repeat_last_frame_center
 from ..geometry.coordinates import compute_masked_centroid_origin
-from ..geometry.types import StaticTopologyMetadata
 from ..latent.types import FrameLatentBatch, ObservedContext, QuerySpec
-from .frame import FrozenFrameTeacher, slice_clip_frames
+from .frame import FrozenFrameTeacher
 from .learned_memory import RawHistoryObservation
 
 
@@ -24,33 +23,9 @@ def encode_teacher_at_observed_origin(teacher: FrozenFrameTeacher, frames: ClipB
     is Angstrom and MUST be derived from observed anchors, never targets.
     Topology registration and device transfer precede this function.
     """
-    if observed_origin.shape != (frames.frame_mask.shape[0], 3):
-        raise ValueError("observed origin must have shape [B,3]")
-    if observed_origin.device != frames.x.device or not bool(torch.isfinite(observed_origin).all()):
-        raise ValueError("observed origin must be finite and on the model device")
-    if any(p.requires_grad for p in teacher.parameters()) or teacher.training:
-        raise ValueError("teacher must remain frozen/eval")
-    centered = frames.x - observed_origin[frames.abid][None]
-    centered_batch = replace(frames, x=centered)
-    scalar, vector = [], []
-    # Do not let BF16 round physical clocks or the reference coordinate origin.
     with torch.autocast(device_type=frames.x.device.type, enabled=False):
-        for start in range(0, frames.frames, teacher.frame_chunk_size):
-            stop = min(start + teacher.frame_chunk_size, frames.frames)
-            chunk = slice_clip_frames(centered_batch, start, stop)
-            valid = chunk.frame_mask[chunk.abid].T
-            if bool(chunk.frame_mask.any()):
-                encoded = teacher.frame_encoder(chunk)
-                h = encoded.h.float()
-                v = encoded.v.float() + teacher.coordinate_stem(centered[start:stop].float()).float()
-                scalar.append(torch.where(valid[..., None], h, 0))
-                vector.append(torch.where(valid[..., None, None], v, 0))
-            elif scalar:
-                scalar.append(scalar[0].new_zeros(stop-start, frames.atom_count, scalar[0].shape[-1]))
-                vector.append(vector[0].new_zeros(stop-start, frames.atom_count, 3, vector[0].shape[-1]))
-            else:
-                raise ValueError("first teacher chunk must have an observed/target valid frame")
-    return FrameLatentBatch(torch.cat(scalar), torch.cat(vector), frames.time_ps.float(), frames.frame_mask, StaticTopologyMetadata.from_batch(frames))
+        latent, _ = teacher(frames, reference_origin=observed_origin)
+    return latent
 
 
 @dataclass(frozen=True)
@@ -81,7 +56,7 @@ def prepare_memory_observation(teacher: FrozenFrameTeacher, raw_history: RawHist
     origin = compute_masked_centroid_origin(geometry_anchors.x, frame_mask=geometry_anchors.frame_mask,
                                             abid=geometry_anchors.abid, atom_mask=geometry_anchors.loss_mask)
     latent = encode_teacher_at_observed_origin(teacher, geometry_anchors, origin)
-    geometry = ObservedContext(latent, geometry_anchors.x, origin, geometry_anchors.loss_mask.bool())
+    geometry = ObservedContext(latent, geometry_anchors.x, origin, geometry_anchors.loss_mask.bool(), raw_history)
     return PreparedMemoryObservation(raw_history, geometry)
 
 

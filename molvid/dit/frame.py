@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 
 from ..codec.motion_context import MotionContext
+from ..codec.learned_memory import GroupMemory
 from ..latent.adapter import FrameLatentAdapter
 from ..latent.types import FrameLatentBatch, HistoryMemory, ObservedContext, QuerySpec
 from ..time import PhysicalTimeEmbedding, pairwise_time_features
@@ -36,6 +37,7 @@ class FrameDiT(nn.Module):
         max_component_type: int = 128,
         geometry_enabled: bool = False,
         motion_enabled: bool = False,
+        history_backend: str = "legacy",
     ) -> None:
         super().__init__()
         self.adapter = adapter
@@ -45,6 +47,9 @@ class FrameDiT(nn.Module):
         self.heads = int(heads)
         self.geometry_enabled = bool(geometry_enabled)
         self.motion_enabled = bool(motion_enabled)
+        if history_backend not in ("legacy", "learned_memory"):
+            raise ValueError("unsupported history backend")
+        self.history_backend = history_backend
         if min(self.scalar_width, self.vector_width, self.depth, self.heads) < 1:
             raise ValueError("FrameDiT widths/depth/heads must be positive")
         if self.geometry_enabled and self.depth < 4:
@@ -72,6 +77,7 @@ class FrameDiT(nn.Module):
                     0.0,
                     local_geometry=self.geometry_enabled and index in {1, 3},
                     motion_context=self.motion_enabled,
+                    physical_time_decay=self.history_backend == "learned_memory",
                 )
                 for index in range(self.depth)
             ]
@@ -122,7 +128,7 @@ class FrameDiT(nn.Module):
         *,
         context: ObservedContext,
         query: QuerySpec,
-        history_memory: HistoryMemory,
+        history_memory: HistoryMemory | GroupMemory,
         flow_time: Tensor,
         motion_context: MotionContext | None = None,
     ) -> FrameLatentBatch:
@@ -145,12 +151,19 @@ class FrameDiT(nn.Module):
             layout = build_factorized_layout(noisy)
             self._layout_cache = layout
         query_atom_mask = noisy.frame_mask.index_select(0, noisy.abid)
-        history_atom_mask = history_memory.token_mask.index_select(0, noisy.abid)
-        history_time = history_memory.representative_time_ps()
-        cross_features = pairwise_time_features(query.time_ps, history_time).index_select(0, noisy.abid)
+        if isinstance(history_memory, GroupMemory):
+            gathered_h, gathered_v = history_memory.gather_atoms()
+            history_atom_mask = torch.ones(noisy.num_atoms, gathered_h.shape[0], device=noisy.h.device, dtype=torch.bool)
+            cross_features, cross_distance = history_memory.query_time_features(query.time_ps)
+        else:
+            history_atom_mask = history_memory.token_mask.index_select(0, noisy.abid)
+            history_time = history_memory.representative_time_ps()
+            cross_features = pairwise_time_features(query.time_ps, history_time).index_select(0, noisy.abid)
+            cross_distance = (((query.time_ps[:, :, None] - history_time[:, None, :]).abs() / 100.0).sqrt().index_select(0, noisy.abid))
+            gathered_h, gathered_v = history_memory.h, history_memory.v
         temporal_features = pairwise_time_features(query.time_ps, query.time_ps).index_select(0, noisy.abid)
-        memory_h = history_memory.h.permute(1, 0, 2)
-        memory_v = history_memory.v.permute(1, 0, 2, 3)
+        memory_h = gathered_h.permute(1, 0, 2)
+        memory_v = gathered_v.permute(1, 0, 2, 3)
         for block in self.blocks:
             if block.motion_context is not None:
                 assert motion_context is not None
@@ -162,10 +175,6 @@ class FrameDiT(nn.Module):
             h_norm, v_norm, h_gate, v_gate = block.history_adaln(h, v, condition)
             cross_bias = block.history_time_bias(cross_features).permute(0, 3, 1, 2)
             if block.history_time_decay_raw is not None:
-                cross_distance = (
-                    (query.time_ps[:, :, None] - history_time[:, None, :]).abs()
-                    / 100.0
-                ).sqrt().index_select(0, noisy.abid)
                 cross_bias = cross_bias - F.softplus(
                     block.history_time_decay_raw
                 ).view(1, -1, 1, 1) * cross_distance.unsqueeze(1)
@@ -251,7 +260,9 @@ class FrameDiT(nn.Module):
             ),
             "time_decay": (
                 "learned_residual_minus_softplus(lambda_head)*sqrt(abs_dt_over_100ps)"
-                if self.motion_enabled else None
+                if self.motion_enabled or self.history_backend == "learned_memory" else None
             ),
         })
+        if self.history_backend == "learned_memory":
+            base.update(history_backend="learned_memory", history_time_semantics="slot_weighted_observed_support_endpoints")
         return base

@@ -9,6 +9,8 @@
   "conda_environment": "torch-ito",
   "gpu_uuid": null,
   "gpu_allocation_status": "waiting_for_A_resources_json",
-  "common_commit": null,
-  "recipe_release": null
+  "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
+  "recipe_release": null,
+  "common_local_cherry_pick": "7270e54",
+  "common_status": "integration_candidate_cuda_validation_pending"
 }

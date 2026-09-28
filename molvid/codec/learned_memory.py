@@ -13,6 +13,7 @@ from torch import Tensor, nn
 
 from ..equivariant import AxisPreservingLinear
 from ..geometry.types import StaticTopologyMetadata
+from ..time import pairwise_time_features
 
 
 @dataclass(frozen=True)
@@ -249,8 +250,8 @@ class PhysicalScaleAnalysis(nn.Module):
 
 @dataclass(frozen=True)
 class GroupMemory:
-    h: Tensor  # [K,R,128]
-    v: Tensor  # [K,R,3,64]
+    h: Tensor  # [K,R,256], projected from scalar128 slots
+    v: Tensor  # [K,R,3,128], projected from vector64 slots
     mapping: ChemicalMapping
     source_support_ps: Tensor  # [B,S,2], slot attends a distribution of supports
     source_valid: Tensor  # [B,S]
@@ -261,10 +262,26 @@ class GroupMemory:
         """Local group gather only, never Q*N*R*K attention."""
         return self.h[:, self.mapping.atom_to_group], self.v[:, self.mapping.atom_to_group]
 
+    def query_time_features(self, query_time_ps: Tensor) -> tuple[Tensor, Tensor]:
+        """Expected endpoint time features over each slot's actual support.
+
+        Slots have a distribution over observation intervals, not a fabricated
+        representative frame time. Output [N,Q,K,4] and [N,Q,K].
+        """
+        lower, upper = self.source_support_ps.unbind(-1)
+        features = (pairwise_time_features(query_time_ps, lower) + pairwise_time_features(query_time_ps, upper)) / 2
+        distance = (((query_time_ps[:, :, None] - lower[:, None]).abs() / 100).sqrt()
+                    + ((query_time_ps[:, :, None] - upper[:, None]).abs() / 100).sqrt()) / 2
+        group = self.mapping.group_system
+        features = torch.einsum('rks,rqsd->rqkd', self.slot_weights.float(), features[group].float())
+        distance = torch.einsum('rks,rqs->rqk', self.slot_weights.float(), distance[group].float())
+        atom = self.mapping.atom_to_group
+        return features[atom], distance[atom]
+
 
 class LearnedHistoryMemory(nn.Module):
     """Prepare once per observed prefix; callers must preserve this graph."""
-    def __init__(self, scalar_width=64, vector_width=32, slots=8, memory_scalar=128, memory_vector=64, analysis_mode="physical"):
+    def __init__(self, scalar_width=64, vector_width=32, slots=8, memory_scalar=128, memory_vector=64, analysis_mode="physical", output_scalar=256, output_vector=128):
         super().__init__()
         self.light_encoder = LightHistoryEncoder(scalar_width, vector_width)
         self.analysis = PhysicalScaleAnalysis(mode=analysis_mode)
@@ -276,6 +293,22 @@ class LearnedHistoryMemory(nn.Module):
         self.vector_value = AxisPreservingLinear(vector_width, memory_vector)
         self.scalar_interaction = nn.Sequential(nn.Linear(memory_scalar, memory_scalar), nn.SiLU(), nn.Linear(memory_scalar, memory_scalar))
         self.vector_gate = nn.Linear(memory_scalar, memory_vector)
+        self.scalar_output = nn.Linear(memory_scalar, output_scalar)
+        self.vector_output = AxisPreservingLinear(memory_vector, output_vector)
+        self.channels = 128  # frozen target width; light widths are independent
+
+    def set_trainable(self, enabled: bool):
+        self.requires_grad_(bool(enabled))
+
+    def contract(self):
+        return {"backend": "learned_memory", "light_scalar": self.light_encoder.element.embedding_dim,
+                "light_vector": self.light_encoder.displacement_gate.out_features,
+                "light_layers": len(self.light_encoder.layers), "graph": "covalent_only",
+                "slots": self.queries.shape[0], "memory_scalar": self.queries.shape[1],
+                "memory_vector": self.vector_value.output_width,
+                "analysis_mode": self.analysis.mode, "scales_ps": list(self.analysis.scales_ps),
+                "max_centers": self.analysis.max_centers, "recent": self.analysis.recent,
+                "teacher_observed_frames": 2, "teacher_anchor_times_ps": [-800, 0]}
 
     def forward(self, observation: RawHistoryObservation) -> GroupMemory:
         h, v = self.light_encoder(observation)
@@ -294,4 +327,4 @@ class LearnedHistoryMemory(nn.Module):
         vector = torch.einsum("rks,srdc->krdc", weights, self.vector_value(analysis.v).float())
         scalar = scalar + self.scalar_interaction(scalar)
         vector = vector * torch.sigmoid(self.vector_gate(scalar))[:, :, None]
-        return GroupMemory(scalar, vector, observation.mapping, analysis.support_ps, analysis.valid, weights, analysis)
+        return GroupMemory(self.scalar_output(scalar), self.vector_output(vector), observation.mapping, analysis.support_ps, analysis.valid, weights, analysis)

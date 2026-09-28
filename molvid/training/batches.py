@@ -23,6 +23,8 @@ from ..latent.types import (
     QuerySpec,
 )
 from ..codec.frame import FrozenFrameTeacher, slice_clip_frames
+from ..codec.learned_memory import RawHistoryObservation
+from ..codec.memory_teacher import prepare_memory_observation, prepare_memory_targets
 
 
 def _to_device(value: Any, device: torch.device, *, non_blocking: bool = False) -> Any:
@@ -109,6 +111,8 @@ def prepare_frame_joint_batch(
     device: torch.device,
     normalizer: FrameLatentNormalizer,
     history_frames: int,
+    raw_history: RawHistoryObservation | None = None,
+    geometry_anchors: ClipBatch | None = None,
 ) -> PreparedFrameJointBatch:
     """Encode a clip once while exposing only observed tensors to the model.
 
@@ -116,6 +120,21 @@ def prepare_frame_joint_batch(
     history encoder is invoked later by ``FrameJointModel.forward``.
     """
 
+    if getattr(normalizer, "history_backend", "legacy") == "learned_memory":
+        # B passes Q future frames as `batch`; raw past is a separate object.
+        # The legacy whole-clip teacher call below is unreachable in this backend.
+        if raw_history is None or geometry_anchors is None or int(history_frames) != 2:
+            raise ValueError("learned_memory requires separate raw history, two anchors, and Q-only targets")
+        anchors = prepare_batch_then_to_device(teacher, geometry_anchors, device)
+        coordinate = prepare_batch_then_to_device(teacher, batch, device)
+        raw = _to_device(raw_history, device)
+        observed = prepare_memory_observation(teacher, raw, anchors)
+        targets = prepare_memory_targets(teacher, observed, coordinate, normalizer)
+        return PreparedFrameJointBatch(coordinate, observed.geometry, targets.query,
+                                       targets.target_future, targets.normalized_target,
+                                       targets.source_center, targets.target_coordinates)
+    if raw_history is not None or geometry_anchors is not None:
+        raise ValueError("separated learned-memory inputs require the learned_memory backend")
     history = int(history_frames)
     if history < 1 or history >= batch.frames:
         raise ValueError("history_frames must leave at least one future frame")

@@ -102,3 +102,46 @@ def align_bank_to_observed(bank: np.ndarray, indices: np.ndarray, anchor_index: 
         rotation, translation = kabsch_align(frame[align_mask].astype(np.float64), reference)
         result[i] = frame @ rotation + translation
     return result
+
+
+def load_pilot_inputs(path: Path, window: RawHistoryWindow):
+    """Materialize separate CPU raw/anchor/target objects from an audited bank.
+
+    This is pilot I/O; it does not select or weight training exposures. The
+    generator receives only the returned raw and anchor objects, never bank.
+    """
+    import torch
+    from .batch import collate_clip_records
+    from ..codec.learned_memory import RawHistoryObservation, ChemicalMapping
+    from ..geometry.types import StaticTopologyMetadata
+    with np.load(path, allow_pickle=False) as stored:
+        bank = {k: stored[k] for k in stored.files}
+    indices = bank['raw_indices']
+    window.validate_coverage(int(indices.max()) + 1)
+    def positions(requested):
+        position = np.searchsorted(indices, requested)
+        if (position >= indices.size).any() or not np.array_equal(indices[position], requested):
+            raise ValueError('pilot bank lacks requested physical frames')
+        expected = (requested - window.anchor_index) * 10
+        anchor_position = np.flatnonzero(indices == window.anchor_index).item()
+        if not np.array_equal(bank['absolute_time_ps'][position] - bank['absolute_time_ps'][anchor_position], expected):
+            raise ValueError('pilot timestamps differ from native raw indices')
+        return position
+    common = {k: bank[k] for k in ('atype','btype','block_id','component_id','bond_index','align_mask','loss_mask','atom_source_index')}
+    common.update(sample_id=path.stem, task='trajectory', coordinate_unit='angstrom',
+                  edge_mask=np.zeros_like(bank['atype']), atom_identity=[f'{path.stem}:{i}' for i in bank['atom_source_index']],
+                  time_bucket_id='raw_memory_pilot')
+    def clip(requested):
+        x = bank['coordinates_angstrom'][positions(requested)]
+        bpos = np.empty_like(x)
+        for group in np.unique(bank['block_id']):
+            atom = bank['block_id'] == group
+            bpos[:,atom] = x[:,atom].mean(1,keepdims=True)
+        return collate_clip_records([{**common,'x':x,'bpos':bpos,'time_ps':(requested-window.anchor_index)*10}])
+    anchors = clip(window.anchor_indices)
+    future = clip(window.future_indices)
+    topology = StaticTopologyMetadata.from_batch(anchors)
+    history = torch.from_numpy(bank['coordinates_angstrom'][positions(window.history_indices)])
+    raw = RawHistoryObservation(history, torch.tensor((window.history_indices-window.anchor_index)*10,dtype=torch.float32)[None],
+                                torch.ones(1,len(history),dtype=torch.bool),topology,ChemicalMapping.from_topology(topology),history[-1])
+    return raw, anchors, future

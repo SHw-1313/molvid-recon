@@ -199,6 +199,7 @@ class WarmStartReport:
     initialized: tuple[str, ...]
     unexpected: tuple[str, ...]
     shape_mismatch: tuple[str, ...]
+    retired: tuple[str, ...] = ()
     optimizer_restored: bool = False
     scheduler_restored: bool = False
     cursor_restored: bool = False
@@ -971,12 +972,20 @@ class FrameJointTrainer:
         if not isinstance(parent_model, Mapping):
             raise ValueError("warm-start parent model contract is missing")
         target_state = self.base_model.state_dict()
+        replacing_history = (self.base_model.history_backend == "learned_memory"
+                             and parent_model.get("history_backend", "legacy") != "learned_memory")
+        if replacing_history and (self.step or self.successful_updates or self.optimizer.state):
+            raise ValueError("learned-memory warm start requires a fresh optimizer/cursor")
+        retired: list[str] = []
         loaded: dict[str, Tensor] = {}
         unexpected: list[str] = []
         shape_mismatch: list[str] = []
         for name, value in source_state.items():
             if not isinstance(name, str) or not isinstance(value, Tensor):
                 raise ValueError("warm-start model state must contain named tensors")
+            if replacing_history and (name.startswith("history_encoder.") or name.startswith("motion_encoder.") or ".motion_context." in name):
+                retired.append(name)
+                continue
             target = target_state.get(name)
             if target is None:
                 unexpected.append(name)
@@ -997,10 +1006,9 @@ class FrameJointTrainer:
             ".history_time_decay_raw",
             ".temporal_time_decay_raw",
         )
-        forbidden_missing = [
-            name for name in initialized
-            if not any(fragment in name for fragment in allowed_fragments)
-        ]
+        forbidden_missing = [name for name in initialized
+                             if (not name.startswith("history_encoder.") if replacing_history
+                                 else not any(fragment in name for fragment in allowed_fragments))]
         if forbidden_missing:
             raise ValueError(
                 "warm-start is missing non-G/M tensors: "
@@ -1034,6 +1042,7 @@ class FrameJointTrainer:
             initialized=tuple(initialized),
             unexpected=tuple(unexpected),
             shape_mismatch=tuple(shape_mismatch),
+            retired=tuple(sorted(retired)),
         )
 
     def load_continuation_parent(

@@ -254,3 +254,28 @@ def sample_frame_joint(
         "conditioning": "observed_coordinates_topology_query_time_only",
         "coordinate_prefix_clamp_exact": bool(torch.equal(prediction[:history], prefix)),
     }
+
+
+@torch.no_grad()
+def sample_learned_memory(model: FrameJointModel, *, raw_history, geometry_anchors: ClipBatch,
+                          query: QuerySpec, steps: int = 16, seed: int = 0):
+    """B observed-only entry: two geometry anchors, raw past and query clock.
+
+    No template with hidden future coordinates is accepted. The shared Euler
+    sampler prepares learned memory once and caches it across denoising steps.
+    """
+    from .codec.memory_teacher import prepare_memory_observation
+    from .training.batches import prepare_batch_then_to_device, _to_device
+    if model.history_backend != "learned_memory":
+        raise ValueError("sample_learned_memory requires the learned_memory backend")
+    device = next(model.parameters()).device
+    anchors = prepare_batch_then_to_device(model.target_teacher, geometry_anchors, device)
+    raw = _to_device(raw_history, device)
+    observed = prepare_memory_observation(model.target_teacher, raw, anchors)
+    query = QuerySpec(query.time_ps.to(device), query.frame_mask.to(device))
+    if bool((query.time_ps[query.frame_mask] <= 0).any()):
+        raise ValueError("query physical times must follow the observed prefix")
+    future, metadata = euler_sample_frames(model, context=observed.geometry, query=query, steps=steps, seed=seed)
+    coordinates = model.decoder(observed.geometry, future, query).coordinates.float()
+    return coordinates, {**metadata, "history_backend": "learned_memory", "teacher_observed_frames": 2,
+                         "teacher_target_frames": 0, "query_frames": query.frames}

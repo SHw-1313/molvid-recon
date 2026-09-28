@@ -58,15 +58,21 @@ class FrozenFrameTeacher(nn.Module):
         self.frame_encoder.prepare_batch(batch)
 
     @torch.no_grad()
-    def forward(self, batch: ClipBatch) -> tuple[FrameLatentBatch, Tensor]:
+    def forward(self, batch: ClipBatch, *, reference_origin: Tensor | None = None) -> tuple[FrameLatentBatch, Tensor]:
         """Encode exactly the supplied frames; no hidden future is accepted."""
 
-        centered, origin = center_coordinates(
-            batch.x,
-            frame_mask=batch.frame_mask,
-            abid=batch.abid,
-            atom_mask=batch.loss_mask,
-        )
+        if reference_origin is None:
+            centered, origin = center_coordinates(
+                batch.x, frame_mask=batch.frame_mask, abid=batch.abid,
+                atom_mask=batch.loss_mask,
+            )
+        else:
+            origin = reference_origin
+            if origin.shape != (batch.frame_mask.shape[0], 3) or origin.device != batch.x.device:
+                raise ValueError("reference_origin must be observed-only [B,3] on the batch device")
+            if not bool(torch.isfinite(origin).all()):
+                raise ValueError("reference_origin must be finite")
+            centered = batch.x - origin[batch.abid][None]
         centered_batch = replace(batch, x=centered)
         scalar_chunks: list[Tensor] = []
         vector_chunks: list[Tensor] = []
