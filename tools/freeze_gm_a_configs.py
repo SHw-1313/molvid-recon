@@ -36,7 +36,11 @@ def main():
         cfg=copy.deepcopy(raw);physical=copy.deepcopy(recipe['physical'])
         if arm=='A1':physical.update(rmsf_weight=0.,displacement_weight=0.,bond_band_weight=0.)
         elif arm=='A2':physical['bond_band_weight']=0.
-        cfg['sampled_auxiliary']={'enabled':arm!='A0','euler_steps':recipe['euler_steps'],'draws':2,'cadence':8,'activation_checkpoint':True}
+        cfg['sampled_auxiliary']={
+            'enabled':arm!='A0','euler_steps':recipe['euler_steps'],
+            'draws':2,'cadence':8,'activation_checkpoint':True,
+            'streamed_atom_frames_threshold':50000,
+        }
         if arm!='A0':cfg['sampled_auxiliary']['physical']=physical
         records={}
         for phase,updates in (('pilot',128),('formal',sum(counts))):
