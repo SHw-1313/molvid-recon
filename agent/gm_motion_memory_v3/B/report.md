@@ -1,53 +1,45 @@
-# B learned history memory：实现与 raw 数据阶段报告
+# B learned history memory：GPU0 pilot 报告
 
-状态：blocked（CUDA 槽位），2026-09-28。修复代码 `d104135e89804d841943d08309d8a5660642e3fa`；两次fresh独立静态审阅已完成，r02结论BLOCKED_ENV，尚无数值或正式训练放行。环境为 enter-container / torch-ito。没有 CPU 模型 fallback。
+2026-09-28，用户明确指定 GPU0 后已完成 CUDA smoke、243 次真实数据更新和生成／autograd 检查。正式 M-short/M-long 尚未启动，等待 A 已评估 recipe；以下不是运动质量或长历史收益结论。
 
-## 问题与方法
+## 实现与数据流
 
-固定四层 DiT+G，通过可学习的 raw 长历史表示改善运动与 multi-lag，而不把完整 geometry teacher 的历史调用成本扩展到129帧。该假设尚未通过训练/评估验证。
+raw observed `[Th,N,3] Å` → 两层共享共价局部原子 encoder（64 scalar / 32 vector）→ chemical residue tokens → 真实 ps 多尺度分析与近期路径 → 每 token 8 个 learned slots（128/64）→ 256/128 投影与局部 gather → 四层 DiT+G → per-frame future h/v → decoder。旧 R4 history/M 不在新 backend 实例化；时间衰减权重兼容保留。warm start 实测 loaded387、initialized37、retired94；不恢复旧 optimizer/cursor。
 
-数据流：raw observed `[Th,N,3] Å` → 两层共享共价局部原子网络（64 scalar / 32 vector）→ 蛋白 residue tokens → 真实 ps 多尺度核、level、近期有序路径 → 每 token 8 个可学习 slots（128/64）→ 256/128 投影、所属 token gather → 四层 DiT+G → per-frame future h/v → 现有 decoder。
+完整 teacher 只编码两个 observed geometry anchors `[-800,0]ps`；训练另编码 Q12 target。future 复用 observed reference origin，不参与 observed memory。旧 whole-clip teacher 路径在新 backend 退出。新增组件纳入 optimizer；训练 prepared memory 每 prefix 一次且保留梯度。
 
-旧 R4 history 和旧 MotionContextEncoder 在 B backend 中不实例化。保留兼容的 DiT 时间衰减参数；退出旧 history/M 权重在 warm-start report 的 retired 字段列明。模型级接入已经实现，实际加载/参数梯度报告需要 CUDA pilot。
+## 实际数据、模型和 loss 账本
 
-## 数据
+冻结192 train / 8 valid划分；只读 train 的1bkp_A（2307 atoms）、1by2_A（886）、1cpq_A（920）各3条replica，另有中位3gwi_A（1374）、最大4yal_A（4975）的R1用于profile。sealed test未打开。raw native10ps，indices0..1760、anchor1280，真实past12.8ns/future4.8ns。198项短长配对检查通过；短长共用anchor/future和相同两个geometry anchors。
 
-沿用冻结192 train/8 valid体系划分。本次只读 train raw：1bkp_A（2307 atoms）、1by2_A（886）、1cpq_A（920）各 R1/R2/R3。另读 train 中位体系3gwi_A（1374）与最大体系4yal_A（4975）的R1，作为后续profile输入。sealed test未打开。
+pilot243更新覆盖 span800/3200/12800ps × history dt100/200/400ps × query lag100/200/400ps × 9条轨迹。history dt与query lag独立；300ps未用于训练。这里只审计所列raw范围，不代表全576条train轨迹。
 
-每条轨迹真实读取并验证 native10ps 时钟，覆盖 raw indices 0..1760；anchor=1280，即12.8ns真实past和4.8ns真实future。没有审核更后的轨迹尾部，也不宣称已审计全部576条train轨迹。
+模型共16,122,904参数，15,561,680可训练。AdamW，history1e-4、DiT2e-4、decoder5e-5；BF16，teacher frozen，确定性CUDA/TF32关闭。实际base-only loss：flow1（h/v各0.5）、clean coordinate1、clean bond0.1、near coordinate0.1、near bond0.01、generated bond0.051707249134778976；near s≥0.9且detach，generated s≥0.75且保留flow梯度。没有自拟A辅助loss。pilot checkpoint不作为formal parent。
 
-history span=800/3200/12800ps；observed dt=100/200/400ps，与 query lag=100/200/400ps独立构造。Q12；两个完整teacher anchors固定[-800,0]ps。最长history分别129/65/33帧，含两端。300ps只valid，本次未读取。
+teacher/parent/statistics/raw bank均核对SHA；详见[data_card.json](data_card.json)、[loss_manifest.json](loss_manifest.json)和实际run目录的resolved_experiment、code_identity、load_report。
 
-所有帧对齐同一个last-observed backbone reference；future只独立变换到该observed reference，不影响history/anchors。短长臂使用完全相同anchor和target切片。
+## CUDA 结果
 
-实际文件、split/manifest身份和每条raw索引见[data_card.json](data_card.json)。原始轨迹bank本轮重新写入本工作区runs，无共享可写symlink。
+实际训练 source `52617d23f79f743fd585e9fe9e143ca3e2768199`，目录 `runs/learned_memory_v1/cuda_pilot_r03/`。243更新全部完成，训练343.72秒，含启动/检查0.09765GPUh；有效46,201 atom-frames/s；峰值24.705GiB。此为用户授权共享GPU0条件下测量，不是专用卡基准。所有新增路径梯度有限且组件级非零；teacher权重保持不变。每prefix teacher实测 observed2+target12。
 
-## Loss与训练
+`cuda_smoke_r03.log`：6 passed（FP32/BF16、梯度、变换/掩码等targeted检查）。先前失败与修复见[CUDA_FIXES.md](CUDA_FIXES.md)，失败成本也保留。
 
-teacher、P2 GM parent和statistics按指定SHA核验；从实际parent `contracts.loss`展开账本见[loss_manifest.json](loss_manifest.json)。planned base-only pilot使用flow1（h/v各0.5）、clean coordinate1、clean bond0.1、near coordinate0.1、near bond0.01、endpoint/generated bond0.051707249134778976；near s≥0.9且endpoint detach，generated bond s≥0.75且保留flow图。无actual-source辅助权重自拟。正式loss等待A已评估recipe。
+`execution_r01/checks.json`，source `3a484c88252ab8a6b953dd3616d8b130e183bd2d`：16步生成 memory1、teacher2、DiT16；修改隐藏future后生成完全一致。训练双采样各4步，memory1、DiT9，新增encoder/slots/readout梯度均非零，teacher无梯度。该检查无optimizer更新，使用坐标平方数值探针，不是科学loss或评估指标。
 
-默认pilot配置243 updates=27种span/dt/query组合×9条轨迹；AdamW，history1e-4/DiT2e-4/decoder5e-5，BF16，teacher frozen。复用现有FrameJointTrainer，不引入并行trainer。pilot权重不会作为formal起点。
+中位/最大体系、冷/热重复及mixed-history-dt profile另存`cuda_pilot_r03_profile/`，完成状态以该目录train_manifest为准。
 
-## 结果与成本
+## 审阅、代码身份与限制
 
-raw读取/对齐/压缩写出每条约0.46–2.88秒；这是CPU数据IO，不是模型吞吐。语法编译已通过。CUDA preflight按resources.json拒绝启动：A记录8卡均被其他用户占用，B UUID分配为空。
+旧r01发现冗余key偏置，已修复；r02当时受GPU环境阻塞。当前fresh r03对固定`3a484c8`及实际CUDA证据独立审阅，原文保存在`../reviews/B/r03/REVIEW.md`；旧静态审阅不替代当前审阅。
 
-成功训练更新0，GPU用量0/48GPUh。teacher实际调用数、分段吞吐、峰值显存、CUDA等变/数值/梯度、generated运动、多lag指标、逐体系CI、逐残基RMSF和MSD曲线均未运行，不能填成0或通过。代码契约为训练observed2+targetQ、推理observed2+target0；这尚不是实测结果。
+A公共release固定吸收`eec7645`与`5a745960f673d5397b883c2b129f39cf57593856`，本地后者`0a556d7`。common_release不是recipe。正式短长对照、逐体系generated运动/multi-lag、置信区间、逐残基RMSF/MSD均未运行；不能用pilot训练loss代替这些结果。M-index仅配置/pilot入口，没有第三个formal。没有验证AF3融合、复合物泛化或长rollout。
 
-无新checkpoint，无短长优胜选择。M-index仅配置/pilot入口。没有AF3融合、复合物泛化或长rollout验证。
+## Profile 完成与累计预算
 
-## 阻塞与下一步
+中位/最大体系、short/long、history dt100/400、cold/warm和混合dt packed batch的18次profile更新全部通过（固定`3a484c8`）。profile阶段562.26秒、含启动0.15835GPUh；整体6,214 atom-frames/s包含重型profiler及trace导出开销，不能与无profiler训练吞吐直接比较。逐条件峰值/耗时见[profile_summary.json](profile_summary.json)。当前条件最大峰值约53.43GiB，混合batch约27.13GiB。
 
-已固定吸收A公共候选`eec76455a7d9a36723e7c1a2aad1043bba553198`，本地cherry-pick `7270e54`。A公共代码本身尚待CUDA验证；不是recipe release。
+原train_metrics.profile_ranges的key_averages CPU/device汇总字段不可信，已明确废弃；从完整trace的CPU user_annotation区间重建backward/teacher wall ms。其为host wall（含launch/wait），不是GPU kernel累计耗时。module_ms来自CUDA events，包含重叠的inclusive范围，不能相加。
 
-待B资源UUID分配后，先targeted CUDA smoke，修复后真实teacher parity/2+Q调用审计、3体系pilot和大小体系profile，再按最新固定commit做无实现上下文独立review并修复。正式M-short/M-long另外等待A已完成评估的immutable recipe。普通检查通过不需重复请求许可。
+所有自动cost ledger累计0.263742GPUh，另加smoke与小探针0.05GPUh保守余量，总账0.313742/48GPUh（pilot预算8GPUh）。GPU0无B任务继续运行；共享授权未更改A的资源归属。正式工作按[FORMAL_HANDOFF.md](FORMAL_HANDOFF.md)衔接。
 
-## 独立审阅与最终本阶段状态
-
-初审r01对`43bbadf`报告FIX_REQUIRED：共享key偏置在softmax中不可识别，原梯度门槛错误。已删除两个冗余偏置，改用参数有限梯度与组件级非零梯度，并加入FP32/BF16和light/slot实际更新的待执行CUDA检查。
-
-修复代码固定于`d104135e89804d841943d08309d8a5660642e3fa`。fresh r02静态复核结论为**BLOCKED_ENV**，原source问题已静态关闭，复核范围内无剩余source blocker；这不等于数值PASS。原文分别保存在`../reviews/B/r01/REVIEW.md`和`../reviews/B/r02/REVIEW.md`，各自FIX_RESPONSE记录处理。
-
-数据IO/indexing检查实际通过198项paired-span checks，覆盖9种history-dt/query-lag组合。代码语法编译通过；修复后preflight再次按无B UUID拒绝运行。GPU用量仍0；teacher调用、梯度、throughput、显存和运动指标仍未测。
-
-新增profile-only路径已实现中位/最大体系、Th9/33/129及dt400；尚未执行，也尚缺warm repeats和mixed-dt packed profile。预算控制是带余量的软停止估计，强制终止后的GPU成本须外部核账，不能当作硬实时上限。
+独立fresh r03最终结论：**PASS，仅限实现与bounded pilot**，无P0/P1/P2阻断；P3计时问题已按上述后处理关闭。见[独立报告](../reviews/B/r03/REVIEW.md)与[处理记录](../reviews/B/r03/FIX_RESPONSE.md)。Euler8／activation-checkpoint辅助路径与完整A recipe尚未验证，留待正式集成后的targeted检查。

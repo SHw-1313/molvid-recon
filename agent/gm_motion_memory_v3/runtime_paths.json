@@ -7,11 +7,12 @@
   "raw_atlas": "/data1/repo/BioKinema/data_atlas",
   "container_entry": "enter-container",
   "conda_environment": "torch-ito",
-  "gpu_uuid": null,
-  "gpu_allocation_status": "resources.json: waiting_for_free_gpus; B=[]",
-  "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
+  "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+  "gpu_allocation_status": "user_authorized_shared; A resources assignments unchanged",
+  "common_commit": "5a745960f673d5397b883c2b129f39cf57593856",
   "recipe_release": null,
-  "common_local_cherry_pick": "7270e54",
-  "common_status": "integration_candidate_cuda_validation_pending",
-  "reviewed_code_commit": "d104135e89804d841943d08309d8a5660642e3fa"
+  "common_local_cherry_pick": "0a556d7abc339f50f30472528a6e512b42e8858a",
+  "common_status": "fixed common release absorbed; not evaluated recipe",
+  "reviewed_code_commit": "3a484c88252ab8a6b953dd3616d8b130e183bd2d",
+  "gpu_index": 0
 }

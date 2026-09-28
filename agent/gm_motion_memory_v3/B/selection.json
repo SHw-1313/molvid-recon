@@ -1,1 +1,7 @@
-{"status":"not_evaluated","selected_arm":null,"reason":"CUDA slot unavailable; no B training or generation; evaluated A recipe absent","AF3_integration_validated":false,"long_rollout_validated":false}
+{
+  "status": "not_evaluated",
+  "selected_arm": null,
+  "reason": "CUDA pilot is numerical/throughput evidence; formal paired comparison waits for A evaluated recipe",
+  "AF3_integration_validated": false,
+  "long_rollout_validated": false
+}

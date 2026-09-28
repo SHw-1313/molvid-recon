@@ -1,7 +1,6 @@
 {
-  "status": "resolved_from_verified_parent_not_yet_trained",
-  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
-  "contracts.loss": {
+  "scope": "base_loss_only_pilot",
+  "weights": {
     "bond_enabled": true,
     "generated_bond": 0.051707249134778976,
     "clean_coordinate": 1.0,
@@ -14,69 +13,5 @@
   "flow": 1.0,
   "flow_h_fraction": 0.5,
   "flow_v_fraction": 0.5,
-  "sampled_auxiliary": "not enabled in base pilot; formal awaits A recipe",
-  "branches": [
-    {
-      "name": "flow",
-      "weight": 1.0,
-      "source": "repeat(last observed normalized teacher latent)+unit Gaussian",
-      "target": "future teacher latent minus source",
-      "condition": "observed raw memory plus geometry anchors",
-      "gradient": [
-        "learned history",
-        "DiT/G"
-      ],
-      "flow_time": "s uniform [0,1]"
-    },
-    {
-      "name": "clean_coordinate",
-      "weight": 1.0,
-      "input": "decode clean frozen target latent",
-      "target": "future coordinates",
-      "gradient": [
-        "decoder"
-      ]
-    },
-    {
-      "name": "clean_bond",
-      "weight": 0.1,
-      "input": "decode clean frozen target latent",
-      "target": "future covalent bond lengths",
-      "gradient": [
-        "decoder"
-      ]
-    },
-    {
-      "name": "near_coordinate",
-      "weight": 0.1,
-      "input": "decode detached endpoint",
-      "target": "future coordinates",
-      "gradient": [
-        "decoder"
-      ],
-      "active": "s>=0.9"
-    },
-    {
-      "name": "near_bond",
-      "weight": 0.01,
-      "input": "decode detached endpoint",
-      "target": "future covalent bond lengths",
-      "gradient": [
-        "decoder"
-      ],
-      "active": "s>=0.9"
-    },
-    {
-      "name": "generated_bond",
-      "weight": 0.051707249134778976,
-      "input": "target-interpolated endpoint, not actual-source trajectory",
-      "target": "future covalent bond lengths",
-      "gradient": [
-        "learned history",
-        "DiT/G",
-        "decoder"
-      ],
-      "active": "s>=0.75"
-    }
-  ]
+  "actual_source_auxiliary": "not enabled before evaluated A recipe"
 }

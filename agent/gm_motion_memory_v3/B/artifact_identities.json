@@ -125,5 +125,13 @@
       "generated_bond_min_flow_time": 0.75,
       "near_min_flow_time": 0.9
     }
+  },
+  "cuda_evidence": {
+    "runs/learned_memory_v1/cuda_pilot_r03/code_identity.json": "ae9b169873fd0980f708652f0b666ef892aae602f2b7a688ed90ef944f83f828",
+    "runs/learned_memory_v1/cuda_pilot_r03/train_manifest.json": "6e36331ac1b30bad1a944136896a2441b9f86dda8109ffbf07982ad07428fdd0",
+    "runs/learned_memory_v1/cuda_pilot_r03/teacher_checks.json": "18adddc65f5026e1278acac875ee68f3382f190ffddfed94bbc707d3ab48924c",
+    "runs/learned_memory_v1/cuda_pilot_r03/train_metrics.jsonl": "740ba3e1538619e5bd0dd990f5b12aa3d4d3a9cfa12d8d95762ed05ccb4f38ed",
+    "runs/learned_memory_v1/cuda_pilot_r03/load_report.json": "d9d93257dca5d7788af862b64cf627129a0d2b0ec1de8f8a86cad21526edd66c",
+    "runs/learned_memory_v1/execution_r01/checks.json": "d02792ac67f2f642e4cb3a579815ed02044e82f1d61f576472deb8d0b767e1da"
   }
 }

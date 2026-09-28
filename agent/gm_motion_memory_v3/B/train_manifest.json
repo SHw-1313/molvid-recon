@@ -1,20 +1,115 @@
 {
-  "status": "blocked_no_allocated_cuda_slot",
-  "successful_updates": 0,
-  "gpu_hours_used": 0,
+  "status": "pilot_completed",
+  "successful_updates": 243,
+  "training_seconds": 343.7224178169854,
+  "gpu_hours_including_setup_checks": 0.09765476297884662,
+  "effective_atom_frames_per_second": 46200.923119467414,
+  "teacher_observed_frames_per_prefix": 2,
+  "teacher_target_frames_per_prefix": 12,
+  "formal": false,
+  "profile_banks_training": false,
+  "size_profile": {
+    "status": "pilot_completed",
+    "successful_updates": 18,
+    "training_seconds": 562.2607971047983,
+    "gpu_hours_including_setup_checks": 0.15834543816602994,
+    "effective_atom_frames_per_second": 6213.913575320445,
+    "teacher_observed_frames_per_prefix": 2,
+    "teacher_target_frames_per_prefix": 12,
+    "formal": false,
+    "profile_banks_training": true,
+    "size_profile": "cold/warm median/largest and mixed-dt packed train-step profiles complete",
+    "module_timings": "inclusive; graph_and_pack is encoder entry to backbone entry; do not sum overlapping ranges"
+  },
+  "module_timings": "inclusive; graph_and_pack is encoder entry to backbone entry; do not sum overlapping ranges",
   "budget_gpu_hours": 48,
   "pilot_budget_gpu_hours": 8,
-  "cuda_smoke": "not_run",
-  "teacher_frames_measured": null,
-  "throughput_measured": null,
-  "peak_vram_measured": null,
-  "formal_M_short": "not_run",
-  "formal_M_long": "not_run",
-  "formal_M_index": "not_authorized_by_default",
+  "cuda_smoke": "6 passed",
+  "formal_M_short": "not_run_waiting_A_evaluated_recipe",
+  "formal_M_long": "not_run_waiting_A_evaluated_recipe",
+  "formal_M_index": "not_default",
   "A_evaluated_recipe": null,
   "CPU_model_fallback": false,
-  "resource_evidence": "/workspace/molvid-gm-memory-v3-coordination/resources.json",
-  "reviewed_code_commit": "d104135e89804d841943d08309d8a5660642e3fa",
-  "independent_static_review": "r02 BLOCKED_ENV; original source issue closed",
-  "data_paired_checks": 198
+  "data_paired_checks": 198,
+  "training_code_commit": "52617d23f79f743fd585e9fe9e143ca3e2768199",
+  "execution_code_commit": "3a484c88252ab8a6b953dd3616d8b130e183bd2d",
+  "execution_checks": {
+    "status": "pass",
+    "code_commit": "3a484c88252ab8a6b953dd3616d8b130e183bd2d",
+    "config_sha256": "596f4ce7a3dc013b374a14b6065d96d4e67cd5e56eb3aabbe3afe589f2eba806",
+    "pilot_checkpoint_sha256": "49f630f8183bd1abd2205c95159d4ca0631a41238b539d8523813818d12ccbb8",
+    "inference": {
+      "memory": 1,
+      "teacher_frames": 2,
+      "dit": 16
+    },
+    "inference_steps": 16,
+    "future_mutation_exact": true,
+    "training_actual_source_calls": {
+      "memory": 1,
+      "teacher_frames": 0,
+      "dit": 9
+    },
+    "draws": 2,
+    "euler_steps": 4,
+    "memory_gradient_norms": {
+      "light_encoder.": 8.461335182189941,
+      "queries": 0.21018345654010773,
+      "label_key.": 5.847559452056885,
+      "scalar_output.": 4.39884614944458,
+      "vector_output.": 3.0439183712005615
+    },
+    "teacher_gradients": false,
+    "optimizer_updates": 0,
+    "scope": "numerical path check; no A-recipe or motion-quality conclusion"
+  },
+  "gpu_cost_ledgers": [
+    {
+      "path": "runs/learned_memory_v1/cuda_pilot_r02/cost_ledger.json",
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "gpu_hours_including_setup_checks": 0.0023749397472581928,
+      "code_commit": "0a556d7abc339f50f30472528a6e512b42e8858a",
+      "config_sha256": "2a62838c91166a23448fc5181fba0a868bde2450952527bc0a71e4078f05e5d7",
+      "mode": "pilot"
+    },
+    {
+      "path": "runs/learned_memory_v1/cuda_pilot_r01/cost_ledger.json",
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "gpu_hours_including_setup_checks": 0.0014219883077829663,
+      "code_commit": "62997a1bd029c7a9fd8f2461d8255710ca0c3ae1",
+      "config_sha256": "608d8d037eb2d11dc3e23cde649df8e4269c042c167533c91b283d8c951598bf",
+      "mode": "pilot"
+    },
+    {
+      "path": "runs/learned_memory_v1/cuda_pilot_r03/cost_ledger.json",
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "gpu_hours_including_setup_checks": 0.0977382237616823,
+      "code_commit": "52617d23f79f743fd585e9fe9e143ca3e2768199",
+      "config_sha256": "596f4ce7a3dc013b374a14b6065d96d4e67cd5e56eb3aabbe3afe589f2eba806",
+      "mode": "pilot"
+    },
+    {
+      "path": "runs/learned_memory_v1/cuda_pilot_r03_profile/cost_ledger.json",
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "gpu_hours_including_setup_checks": 0.15842348161502742,
+      "code_commit": "3a484c88252ab8a6b953dd3616d8b130e183bd2d",
+      "config_sha256": "596f4ce7a3dc013b374a14b6065d96d4e67cd5e56eb3aabbe3afe589f2eba806",
+      "mode": "profile"
+    },
+    {
+      "path": "runs/learned_memory_v1/execution_r01/cost_ledger.json",
+      "gpu_hours_including_setup_checks": 0.003783459784204347,
+      "mode": "execution_checks",
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0"
+    }
+  ],
+  "gpu_hours_metered": 0.2637420932159552,
+  "smoke_and_small_probes_allowance_gpu_hours": 0.05,
+  "accounted_gpu_hours_with_allowance": 0.3137420932159552,
+  "independent_review": {
+    "status": "PASS_pilot_scope",
+    "path": "agent/gm_motion_memory_v3/reviews/B/r03/REVIEW.md",
+    "code_commit": "3a484c88252ab8a6b953dd3616d8b130e183bd2d",
+    "finding": "P3 profiler summary repaired through trace CPU wall postprocessing"
+  }
 }
