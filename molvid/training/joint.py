@@ -25,6 +25,7 @@ from ..losses.distribution import (
     sampled_auxiliary_loss,
 )
 from ..losses.geometry import FutureBondLoss, future_bond_distance_loss
+from ..losses.sampled_physical import PhysicalAuxiliaryConfig, physical_auxiliary_loss
 from ..model import FrameJointModel, FrameJointOutput
 from ..runtime import sha256_file
 from .batches import PreparedFrameJointBatch
@@ -99,6 +100,7 @@ class SampledAuxiliaryConfig:
     energy_weight: float = 0.0
     observed_bond_weight: float = 0.0
     feature_scales: SampledFeatureScales | None = None
+    physical: PhysicalAuxiliaryConfig | None = None
 
     @classmethod
     def resolve(cls, value: Mapping[str, Any] | None) -> "SampledAuxiliaryConfig":
@@ -108,6 +110,7 @@ class SampledAuxiliaryConfig:
             "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
             "energy_weight", "observed_bond_weight", "feature_scales",
             "source", "target_used_as_condition",
+            "physical",
         }
         unknown = sorted(set(value) - allowed)
         if unknown:
@@ -147,6 +150,9 @@ class SampledAuxiliaryConfig:
         scales = None if raw_scales is None else SampledFeatureScales.resolve(raw_scales)
         if enabled and weights["energy_weight"] > 0 and scales is None:
             raise ValueError("enabled sampled auxiliary requires fixed train-only feature scales")
+        physical = None if value.get("physical") is None else PhysicalAuxiliaryConfig.resolve(value["physical"])
+        if physical is not None and any(weights.values()):
+            raise ValueError("A physical objectives cannot be combined with historical J1 objectives")
         return cls(
             enabled=enabled,
             cadence=cadence,
@@ -154,6 +160,7 @@ class SampledAuxiliaryConfig:
             euler_steps=steps,
             activation_checkpoint=bool(value.get("activation_checkpoint", True)),
             feature_scales=scales,
+            physical=physical,
             **weights,
         )
 
@@ -170,6 +177,7 @@ class SampledAuxiliaryConfig:
             "energy_weight": self.energy_weight,
             "observed_bond_weight": self.observed_bond_weight,
             "feature_scales": None if self.feature_scales is None else self.feature_scales.contract(),
+            "physical": None if self.physical is None else self.physical.contract(),
             "source": "repeat(last_observed_normalized_latent)+N(0,I)",
             "target_used_as_condition": False,
         }
@@ -315,6 +323,17 @@ def frame_joint_loss(
         raw["near_bond"] = diagnostics["near_bond"].loss
         applicable_samples["near_bond"] = diagnostics["near_bond"].applicable_count
     sampled_config = sampled_config or SampledAuxiliaryConfig()
+    physical_weights = {}
+    if sampled_config.physical is not None:
+        physical = sampled_config.physical
+        physical_weights = {
+            "sampled_clash": physical.clash_weight,
+            "sampled_rmsf": physical.rmsf_weight,
+            "sampled_displacement": physical.displacement_weight,
+            "sampled_bond_band": physical.bond_band_weight,
+        }
+        raw.update({name: zero for name in physical_weights})
+        applicable_samples.update({name: zero_count for name in physical_weights})
     if output.sampled:
         if not sampled_config.enabled:
             raise ValueError("model returned actual samples while sampled auxiliary is disabled")
@@ -335,6 +354,13 @@ def frame_joint_loss(
             "draws": len(output.sampled),
             "euler_steps": sampled_config.euler_steps,
         }
+        if sampled_config.physical is not None:
+            physical_raw, physical_counts, physical_diagnostics = physical_auxiliary_loss(
+                tuple(item.coordinates for item in output.sampled), batch, sampled_config.physical,
+            )
+            raw.update(physical_raw)
+            applicable_samples.update(physical_counts)
+            sampled_diagnostics.update(physical_diagnostics)
 
     active_flow = stage in {"flow_start", "joint", "continuation", "frozen_decoder"}
     active_clean = stage in {"decoder_warmup", "joint", "continuation"}
@@ -355,6 +381,8 @@ def frame_joint_loss(
             else 0.0
         ),
     }
+    weights.update({name: value if active_joint and sampled_config.enabled else 0.0
+                    for name, value in physical_weights.items()})
     weighted = {name: raw[name] * weight for name, weight in weights.items()}
     return JointStepLoss(
         total=sum(weighted.values(), zero),
