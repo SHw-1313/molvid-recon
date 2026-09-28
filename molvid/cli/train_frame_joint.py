@@ -32,6 +32,7 @@ from ..latent.statistics import FrameLatentStatistics
 from ..model import FrameJointModel
 from ..runtime import atomic_write_json, canonical_hash, configure_device, seed_all, sha256_file
 from ..training.batches import prepare_batch_then_to_device, prepare_frame_joint_batch
+from ..training.execution import EXECUTION_SCHEMA, execution_manifest, execution_schedule
 from ..training.joint import (
     FrameJointTrainer,
     JointLossConfig,
@@ -238,14 +239,14 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     _reject_unknown(sampled, _SAMPLED_AUXILIARY_KEYS, "sampled_auxiliary")
     for name in ("enabled", "activation_checkpoint"):
         _require_bool(sampled, name, "sampled_auxiliary")
-    for name, frozen in (("cadence", 8), ("draws", 2), ("euler_steps", 4)):
+    for name, allowed in (("cadence", (8,)), ("draws", (2,)), ("euler_steps", (4, 8))):
         if name in sampled:
             _require_number(
                 sampled[name], f"sampled_auxiliary.{name}", integer=True, positive=True
             )
-            if int(sampled[name]) != frozen:
+            if int(sampled[name]) not in allowed:
                 raise ValueError(
-                    "sampled auxiliary is frozen at cadence=8, K=2, Euler steps=4"
+                    "sampled auxiliary requires cadence=8, K=2, Euler steps=4 or 8"
                 )
     if "calibration_batches" in sampled:
         _require_number(
@@ -776,7 +777,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not histories or any(value < 1 for value in histories):
             raise ValueError("history_order must contain positive H values")
         schedule_contract = {
-            "schema_version": "molvid.frame_joint.schedule.v1",
+            "schema_version": "molvid.frame_joint.schedule.v2",
+            "execution_schema": EXECUTION_SCHEMA,
+            "execution_seed": seed,
+            "auxiliary_cadence": 8,
             "stages": [
                 {
                     "name": str(stage["name"]),
@@ -828,7 +832,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif inherit_parent_loss:
             if parent_preview is None:
                 raise ValueError("loss.inherit_parent requires a continuation parent or warm start")
-            loss_mapping = dict(parent_preview["contracts"]["loss"])
+            # Explicit terms override inherited terms independently. In
+            # particular endpoint=0 must not disable clean/near bond losses.
+            inherited = dict(parent_preview["contracts"]["loss"])
+            overrides = dict(loss_mapping)
+            loss_mapping = {**inherited, **overrides}
+            print(json.dumps({"loss_resolution": "parent_plus_explicit_terms",
+                              "overrides": overrides, "resolved": loss_mapping}, sort_keys=True))
         calibration_requested = loss_mapping.get("generated_bond") in (None, "calibrate")
         if resume_payload is None and calibration_requested:
             loss_mapping["generated_bond"] = 0.0
@@ -956,6 +966,23 @@ def main(argv: Sequence[str] | None = None) -> int:
                 expected_sha256=args.warm_start_sha256,
             )
         output_root = Path(training["output_root"])
+        def build_execution():
+            global_batches = sampler.global_batches
+            if sampler.drop_last:
+                global_batches = global_batches[:len(global_batches) // world * world]
+            entries = execution_schedule(
+                global_batches, sampler.specs, histories=histories, seed=seed,
+                epoch=sampler.epoch, cadence=8,
+            )
+            manifest = execution_manifest(entries)
+            if rank == 0:
+                atomic_write_json(output_root / f"execution_epoch_{sampler.epoch:04d}.json", manifest)
+            return entries, manifest["sha256"]
+
+        execution, execution_hash = build_execution()
+        if args.resume or args.continuation_parent:
+            if cursor.get("execution_schedule_hash") != execution_hash:
+                raise ValueError("execution H/aux schedule differs; use model-only warm start for new objectives")
         sampled_scale_diagnostics: dict[str, Any] | None = None
         sampled_weight_diagnostics: dict[str, Any] | None = None
         if sampled_scale_fitting or sampled_weight_calibration:
@@ -1014,6 +1041,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         )
                     ),
                     checkpoint_sampled_steps=trainer.sampled_config.activation_checkpoint,
+                    euler_steps=trainer.sampled_config.euler_steps,
                 )
             trainer.sampled_config = SampledAuxiliaryConfig.resolve({
                 "enabled": True,
@@ -1108,17 +1136,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 batch_index = 0
                 sampler.set_epoch(epoch)
                 batches = list(iter(sampler))
+                execution, execution_hash = build_execution()
             indices = batches[batch_index]
+            entry = execution[batch_index * world + rank]
+            if tuple(indices) != entry.indices:
+                raise RuntimeError("execution schedule and sampler cursor disagree")
             cpu_batch = collate_clip_records([train[index] for index in indices])
             buckets = set(str(value) for value in cpu_batch.time_bucket_id)
             if len(buckets) != 1:
                 raise RuntimeError("Frame Joint sampler produced a mixed time-bucket batch")
             bucket = next(iter(buckets))
             fixed_history = bucket.startswith("fixed_history_dt_")
-            if fixed_history:
-                history = 4
-            else:
-                history = histories[ordinary_batch_index % len(histories)]
+            history = entry.history_frames
+            if not fixed_history:
                 ordinary_batch_index += 1
             if history >= cpu_batch.frames:
                 raise ValueError("sampled history must leave future query frames")
@@ -1166,8 +1196,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                 prepared,
                 generator=generator,
                 sampled_generator=sampled_generator,
+                auxiliary_active=entry.auxiliary,
             )
             last.update({
+                "execution_schedule_hash": execution_hash,
+                "scheduled_auxiliary": entry.auxiliary,
                 "epoch": epoch,
                 "batch_index": batch_index,
                 "history_frames": history,
@@ -1204,6 +1237,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "ordinary_batch_index": ordinary_batch_index,
                     "sampler_state": sampler.state_dict(),
                     "global_batch_schedule_hash": canonical_hash(sampler.global_batches),
+                    "execution_schedule_hash": execution_hash,
                 }
                 local_state = {
                     "cursor": cursor,

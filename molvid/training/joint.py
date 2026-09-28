@@ -135,8 +135,8 @@ class SampledAuxiliaryConfig:
         cadence = int(integer_values["cadence"])
         draws = int(integer_values["draws"])
         steps = int(integer_values["euler_steps"])
-        if cadence != 8 or draws != 2 or steps != 4:
-            raise ValueError("sampled auxiliary is frozen at cadence=8, K=2, Euler steps=4")
+        if cadence != 8 or draws != 2 or steps not in (4, 8):
+            raise ValueError("sampled auxiliary requires cadence=8, K=2, Euler steps=4 or 8")
         weights = {
             "energy_weight": float(value.get("energy_weight", 0.0)),
             "observed_bond_weight": float(value.get("observed_bond_weight", 0.0)),
@@ -145,7 +145,7 @@ class SampledAuxiliaryConfig:
             raise ValueError("sampled auxiliary weights must be finite and non-negative")
         raw_scales = value.get("feature_scales")
         scales = None if raw_scales is None else SampledFeatureScales.resolve(raw_scales)
-        if enabled and scales is None:
+        if enabled and weights["energy_weight"] > 0 and scales is None:
             raise ValueError("enabled sampled auxiliary requires fixed train-only feature scales")
         return cls(
             enabled=enabled,
@@ -315,13 +315,15 @@ def frame_joint_loss(
         applicable_samples["near_bond"] = diagnostics["near_bond"].applicable_count
     sampled_config = sampled_config or SampledAuxiliaryConfig()
     if output.sampled:
-        if not sampled_config.enabled or sampled_config.feature_scales is None:
+        if not sampled_config.enabled:
             raise ValueError("model returned actual samples while sampled auxiliary is disabled")
         sampled_loss: SampledAuxiliaryLoss = sampled_auxiliary_loss(
             tuple(item.coordinates for item in output.sampled),
             batch.target_coordinates,
             batch,
             sampled_config.feature_scales,
+            compute_energy=sampled_config.energy_weight > 0,
+            compute_bond=sampled_config.observed_bond_weight > 0 and config.bond_enabled,
         )
         raw["sampled_energy"] = sampled_loss.energy_score
         raw["sampled_observed_bond"] = sampled_loss.observed_bond
@@ -489,6 +491,7 @@ def calibrate_sampled_auxiliary_weights(
     energy_target_ratio: float = 0.05,
     observed_bond_target_ratio: float = 0.05,
     checkpoint_sampled_steps: bool = True,
+    euler_steps: int = 4,
 ) -> tuple[tuple[float, float], dict[str, Any]]:
     """Match each actual-sample auxiliary to 0.05 of the main DiT flow gradient."""
 
@@ -527,7 +530,7 @@ def calibrate_sampled_auxiliary_weights(
             query=batch.query,
             flow_time=flow_sample.flow_time,
             sampled_sources=sources,
-            sampled_steps=4,
+            sampled_steps=euler_steps,
             checkpoint_sampled_steps=checkpoint_sampled_steps,
         )
         flow_loss = objective.loss(output.velocity, flow_sample.target_velocity).total
@@ -749,6 +752,7 @@ class FrameJointTrainer:
         *,
         generator: torch.Generator,
         sampled_generator: torch.Generator | None = None,
+        auxiliary_active: bool | None = None,
     ) -> dict[str, Any]:
         self.model.train()
         self.base_model.target_teacher.eval()
@@ -759,7 +763,10 @@ class FrameJointTrainer:
         )
         need_clean = self.stage in {"decoder_warmup", "joint", "continuation"}
         need_joint = self.stage in {"joint", "continuation", "frozen_decoder"}
-        sampled_active = need_joint and self.sampled_config.active_at(self.successful_updates)
+        sampled_active = need_joint and self.sampled_config.enabled and (
+            self.sampled_config.active_at(self.successful_updates)
+            if auxiliary_active is None else auxiliary_active
+        )
         sampled_sources: tuple[FrameLatentBatch, ...] | None = None
         if sampled_active:
             if sampled_generator is None:

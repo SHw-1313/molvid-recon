@@ -28,11 +28,12 @@ from molvid.evaluation.temporal import (
     system_mean_rmsf_summary,
     temporal_metrics_v3,
 )
+from molvid.evaluation.families import METRIC_FAMILY_SCHEMA, metric_family
 from molvid.runtime import atomic_write_json, configure_device, sha256_file
 
 
-ROW_SCHEMA = "molvid.frame_gm.metric_row.v3"
-SUMMARY_SCHEMA = "molvid.frame_gm.metric_summary.v3"
+ROW_SCHEMA = "molvid.frame_gm.metric_row.v4"
+SUMMARY_SCHEMA = "molvid.frame_gm.metric_summary.v4"
 
 
 def _args() -> argparse.Namespace:
@@ -122,6 +123,9 @@ def _flat_metrics(record: Mapping[str, Any]) -> dict[str, float | None]:
 
 
 def _aggregate(rows: Sequence[Mapping[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    families = {row.get("metric_family", {}).get("family") for row in rows}
+    if len(families) > 1:
+        raise ValueError("aggregate each metric family separately")
     by_anchor: dict[tuple[Any, ...], list[dict[str, float | None]]] = defaultdict(list)
     for row in rows:
         meta = row["meta"]
@@ -188,7 +192,7 @@ def _aggregate(rows: Sequence[Mapping[str, Any]]) -> tuple[list[dict[str, Any]],
 
 
 def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
-    fields = ["path", "clock", "lag_ps", "history_frames", "system", "replica_count", *SCALARS]
+    fields = ["family", "path", "clock", "lag_ps", "history_frames", "system", "replica_count", *SCALARS]
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
@@ -212,7 +216,10 @@ def main() -> int:
     output_rows_path = args.output / "rows.jsonl"
     completed: set[str] = set()
     if args.resume and output_rows_path.is_file():
-        completed = {str(row["row_key"]) for row in _read_jsonl(output_rows_path)}
+        prior = _read_jsonl(output_rows_path)
+        if any(row.get("schema") != ROW_SCHEMA or "metric_family" not in row for row in prior):
+            raise ValueError("resume metric schema differs; use a new output directory")
+        completed = {str(row["row_key"]) for row in prior}
     dataset = ClipMMapDataset(args.paired_store)
     by_id = {str(row[0]): index for index, row in enumerate(dataset._index)}
     written = 0
@@ -250,6 +257,8 @@ def main() -> int:
             }
             combined_metrics = dict(result.metrics)
             combined_metrics["geometry"] = geometry
+            query_count = int(batch.frame_mask[0, int(meta["history_frames"]):].sum())
+            family = metric_family(record, query_frames=query_count)
             profile_name = hashlib.sha1(row_key.encode()).hexdigest() + ".npz"
             np.savez_compressed(
                 profiles_root / profile_name,
@@ -258,6 +267,7 @@ def main() -> int:
             output_row = {
                 "schema": ROW_SCHEMA,
                 "metric_schema": TEMPORAL_METRIC_SCHEMA,
+                "metric_family": family,
                 "row_key": row_key,
                 "path": source_row["path"],
                 "clock": source_row["clock"],
@@ -284,7 +294,26 @@ def main() -> int:
     selected_rows = [row for row in all_rows if str(row["row_key"]) in expected_keys]
     if len(selected_rows) != len(expected_keys):
         raise RuntimeError("metrics v3 rows are incomplete; resume before aggregating")
-    per_system, buckets = _aggregate(selected_rows)
+    family_summaries = {}
+    per_system = []
+    for family_name in ("ordinary", "fixed_history"):
+        family_rows = [row for row in selected_rows if row.get("metric_family", {}).get("family") == family_name]
+        if not family_rows:
+            continue
+        systems, summary = _aggregate(family_rows)
+        eligible = [row for row in family_rows if row["metric_family"]["main_rmsf_available"]]
+        _, main_summary = _aggregate(eligible) if eligible else ([], {})
+        family_summaries[family_name] = {
+            "all_diagnostic_metrics": summary,
+            "main_rmsf": main_summary,
+            "main_rmsf_available": bool(eligible),
+            "main_rmsf_reason": "ordinary_Q>=8" if eligible else "family_or_Q_ineligible",
+        }
+        per_system.extend({**row, "family": family_name} for row in systems)
+    if not per_system:
+        raise RuntimeError("metric rows have no family; regenerate with the current schema")
+    buckets = {f"{family}|{key}": value for family, summaries in family_summaries.items()
+               for key, value in summaries["all_diagnostic_metrics"].items()}
     _write_csv(args.output / "per_system.csv", per_system)
     metrics = {
         "schema": SUMMARY_SCHEMA,
@@ -295,6 +324,8 @@ def main() -> int:
         "paired_store_index_sha256": sha256_file(args.paired_store / "index.txt"),
         "aggregation": "draw/seed mean -> anchor mean -> replica mean -> system equal",
         "bucket_summary": buckets,
+        "metric_family_schema": METRIC_FAMILY_SCHEMA,
+        "family_summary": family_summaries,
         "historical_rows_mutated": False,
         "test_opened": False,
     }
