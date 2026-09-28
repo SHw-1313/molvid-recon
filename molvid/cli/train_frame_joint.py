@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import time
 from typing import Any, Mapping, Sequence
 
 import torch
@@ -64,6 +65,7 @@ _SECTION_KEYS = {
         "device", "deterministic", "precision", "seed", "max_atom_frames_per_gpu",
         "clips_per_trajectory", "time_bucket_weights", "history_order", "weight_decay",
         "grad_clip", "output_root", "stages",
+        "gradient_diagnostics_every",
     },
 }
 _DERIVED_KEYS = {"store", "manifest", "manifest_sha256", "store_index_sha256", "record_count"}
@@ -202,6 +204,8 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     for name in ("weight_decay", "grad_clip"):
         if name in training:
             _require_number(training[name], f"training.{name}", nonnegative=True)
+    if "gradient_diagnostics_every" in training:
+        _require_number(training["gradient_diagnostics_every"], "training.gradient_diagnostics_every", integer=True, nonnegative=True)
     if training.get("precision", "fp32") not in {"fp32", "bf16"}:
         raise ValueError("training.precision must be fp32 or bf16")
     histories = training.get("history_order", (4, 8))
@@ -1140,7 +1144,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             total_updates = min(total_updates, trainer.step + 1)
         last: dict[str, Any] = {}
         calibration_done = not calibration_requested or not loss_config.bond_enabled or loss_config.generated_bond > 0
+        gradient_diagnostics_every = int(training.get("gradient_diagnostics_every", 0))
         while trainer.step < total_updates:
+            update_started = time.perf_counter()
             batches = list(iter(sampler))
             if batch_index >= len(batches):
                 epoch += 1
@@ -1152,7 +1158,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             entry = execution[batch_index * world + rank]
             if tuple(indices) != entry.indices:
                 raise RuntimeError("execution schedule and sampler cursor disagree")
+            io_started = time.perf_counter()
             cpu_batch = collate_clip_records([train[index] for index in indices])
+            io_seconds = time.perf_counter() - io_started
             buckets = set(str(value) for value in cpu_batch.time_bucket_id)
             if len(buckets) != 1:
                 raise RuntimeError("Frame Joint sampler produced a mixed time-bucket batch")
@@ -1197,6 +1205,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     resolved_config["resolved"]["loss_contract"] = trainer.loss_config.contract()
                     atomic_write_json(output_root / "resolved_config.json", resolved_config)
             trainer.set_learning_rates(_scheduled_rates(stage, stage_position))
+            prepare_started = time.perf_counter()
             prepared = prepare_frame_joint_batch(
                 model.target_teacher,
                 cpu_batch,
@@ -1204,13 +1213,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                 normalizer=model,
                 history_frames=history,
             )
+            torch.cuda.synchronize(device)
+            prepare_seconds = time.perf_counter() - prepare_started
+            train_started = time.perf_counter()
             last = trainer.train_step(
                 prepared,
                 generator=generator,
                 sampled_generator=sampled_generator,
                 auxiliary_active=entry.auxiliary,
+                diagnose_gradients=bool(gradient_diagnostics_every and (trainer.step + 1) % gradient_diagnostics_every == 0),
             )
             last.update({
+                "io_seconds": io_seconds,
+                "prepare_seconds": prepare_seconds,
+                "train_seconds": time.perf_counter() - train_started,
+                "update_seconds": time.perf_counter() - update_started,
+                "peak_allocated_bytes": int(torch.cuda.max_memory_allocated(device)),
                 "execution_schedule_hash": execution_hash,
                 "scheduled_auxiliary": entry.auxiliary,
                 "epoch": epoch,
@@ -1242,7 +1260,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 with (output_root / "train_metrics.jsonl").open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps(last, sort_keys=True) + "\n")
             save_now = args.checkpoint_every and trainer.step % args.checkpoint_every == 0
-            if save_now or trainer.step == total_updates:
+            if save_now or trainer.step == total_updates or batch_index == len(batches):
                 cursor = {
                     "epoch": epoch,
                     "batch_index": batch_index,

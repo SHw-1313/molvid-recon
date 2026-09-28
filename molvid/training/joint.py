@@ -781,6 +781,7 @@ class FrameJointTrainer:
         generator: torch.Generator,
         sampled_generator: torch.Generator | None = None,
         auxiliary_active: bool | None = None,
+        diagnose_gradients: bool = False,
     ) -> dict[str, Any]:
         self.model.train()
         self.base_model.target_teacher.eval()
@@ -829,6 +830,22 @@ class FrameJointTrainer:
             )
         if not torch.isfinite(losses.total):
             raise FloatingPointError("non-finite Frame Joint loss")
+        gradient_diagnostics = {}
+        if diagnose_gradients:
+            parameters = [p for p in self.base_model.dit.parameters() if p.requires_grad]
+            reference = torch.autograd.grad(losses.raw["flow"], parameters, retain_graph=True, allow_unused=True)
+            reference_norm = sum((g.float().square().sum() for g in reference if g is not None), losses.total.new_zeros(())).sqrt()
+            for name, loss in losses.raw.items():
+                if int(losses.applicable_samples[name]) == 0 or not loss.requires_grad:
+                    gradient_diagnostics[name] = {"active": False}
+                    continue
+                gradients = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+                norm = sum((g.float().square().sum() for g in gradients if g is not None), losses.total.new_zeros(())).sqrt()
+                dot = sum(((g.float() * ref.float()).sum() for g, ref in zip(gradients, reference)
+                           if g is not None and ref is not None), losses.total.new_zeros(()))
+                gradient_diagnostics[name] = {"active": True, "dit_raw_norm": float(norm),
+                    "flow_cosine": float(dot / (norm * reference_norm)) if float(norm * reference_norm) > 0 else None,
+                    "flow_norm": float(reference_norm)}
         self.optimizer.zero_grad(set_to_none=True)
         scaled = self._distributed_total(losses)
         scaled.backward()
@@ -855,6 +872,8 @@ class FrameJointTrainer:
         result.update({f"weighted_{name}": float(value.detach()) for name, value in losses.weighted.items()})
         if losses.sampled_diagnostics:
             result["sampled_diagnostics"] = dict(losses.sampled_diagnostics)
+        if diagnose_gradients:
+            result["gradient_diagnostics"] = gradient_diagnostics
         return result
 
     def contracts(self) -> dict[str, Any]:
