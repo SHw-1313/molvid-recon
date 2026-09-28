@@ -4,7 +4,7 @@
   "seed": 20260928,
   "analysis_mode": "physical",
   "resources": "/workspace/molvid-gm-memory-v3-coordination/resources.json",
-  "output": "runs/learned_memory_v1/cuda_pilot_r01",
+  "output": "runs/learned_memory_v1/cuda_pilot_r02",
   "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
   "raw_data_card_sha256": "235a671c01f48b367656733f0174d45aaad9a28ed774ebc311b01e85afe42a3c",
   "learning_rates": {
@@ -77,5 +77,6 @@
   "raw_data_card": "runs/learned_memory_v1/raw_pilot_r01/data_card.json",
   "max_gpu_hours": 7.5,
   "budget_root": "runs/learned_memory_v1",
-  "pilot_budget_gpu_hours": 8
+  "pilot_budget_gpu_hours": 8,
+  "deterministic": true
 }

@@ -78,6 +78,12 @@ def main():
     if sha256_file(config['raw_data_card'])!=config['raw_data_card_sha256']:
         raise ValueError('raw data card identity differs')
     torch.manual_seed(config['seed']); torch.cuda.manual_seed_all(config['seed'])
+    if config.get('deterministic',False):
+        if os.environ.get('CUBLAS_WORKSPACE_CONFIG') not in (':4096:8', ':16:8'):
+            raise ValueError('deterministic CUDA pilot requires CUBLAS_WORKSPACE_CONFIG')
+        torch.use_deterministic_algorithms(True)
+        torch.backends.cuda.matmul.allow_tf32=False
+        torch.backends.cudnn.allow_tf32=False
     artifact=load_codec_artifact(config['teacher']['path'],expected_sha256=config['teacher']['sha256'],device=device)
     stats=FrameLatentStatistics.from_state_dict(torch.load(config['statistics']['path'],map_location='cpu',weights_only=False))
     if stats.hash!=config['statistics']['semantic_hash']:
@@ -114,7 +120,8 @@ def main():
     joined=replace(anchors,x=torch.cat((anchors.x,future.x)),bpos=torch.cat((anchors.bpos,future.bpos)),
                    frame_mask=torch.cat((anchors.frame_mask,future.frame_mask),1),time_ps=torch.cat((anchors.time_ps,future.time_ps),1),
                    delta_time_ps=torch.diff(torch.cat((anchors.time_ps,future.time_ps),1),dim=1))
-    full,_=model.target_teacher(prepare_batch_then_to_device(model.target_teacher,joined,device))
+    full,_=model.target_teacher(prepare_batch_then_to_device(model.target_teacher,joined,device),
+                               reference_origin=prepared.observed_context.sample_origin)
     torch.testing.assert_close(prepared.observed_context.latent.h,full.h[:2],atol=1e-5,rtol=1e-5)
     torch.testing.assert_close(prepared.observed_context.latent.v,full.v[:2],atol=1e-5,rtol=1e-5)
     torch.testing.assert_close(prepared.target_future.h,full.h[2:],atol=1e-5,rtol=1e-5)
