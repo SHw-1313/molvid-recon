@@ -69,8 +69,9 @@ def main():
             print(json.dumps({'smoke_trajectory':index+1,'sample_id':spec.sample_id}),flush=True)
         # Generation output/condition must remain equal after actual future-coordinate mutation.
         mutated=replace(cpu,x=cpu.x.clone(),bpos=cpu.bpos.clone())
-        mutation=torch.randn(cpu.x[4:].shape,generator=torch.Generator().manual_seed(17))*10.0
-        mutated.x[4:]+=mutation; mutated.bpos[4:]+=mutation
+        future_rng=torch.Generator().manual_seed(17)
+        mutated.x[4:]+=torch.randn(cpu.x[4:].shape,generator=future_rng)*10.0
+        mutated.bpos[4:]+=torch.randn(cpu.bpos[4:].shape,generator=future_rng)*10.0
         changed=prepare_frame_joint_batch(model.target_teacher,mutated,device=device,normalizer=model,history_frames=4)
         with torch.no_grad():
             first,_=forward_samples(model,batch,seed=4321,steps=4)
