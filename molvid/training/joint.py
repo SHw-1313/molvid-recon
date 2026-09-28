@@ -855,7 +855,8 @@ class FrameJointTrainer:
             reference = torch.autograd.grad(losses.raw["flow"], parameters, retain_graph=True, allow_unused=True)
             reference_norm = sum((g.float().square().sum() for g in reference if g is not None), losses.total.new_zeros(())).sqrt()
             for name, loss in losses.raw.items():
-                if int(losses.applicable_samples[name]) == 0 or not loss.requires_grad:
+                applicable_name = "flow" if name in {"flow_h", "flow_v"} else name
+                if int(losses.applicable_samples[applicable_name]) == 0 or not loss.requires_grad:
                     gradient_diagnostics[name] = {"active": False}
                     continue
                 gradients = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
