@@ -287,8 +287,9 @@ class LearnedHistoryMemory(nn.Module):
         self.analysis = PhysicalScaleAnalysis(mode=analysis_mode)
         self.queries = nn.Parameter(torch.randn(slots, memory_scalar) / math.sqrt(memory_scalar))
         self.anchor_query = nn.Linear(scalar_width, memory_scalar)
-        self.key = nn.Linear(scalar_width, memory_scalar)
-        self.label_key = nn.Sequential(nn.Linear(5, memory_scalar), nn.SiLU(), nn.Linear(memory_scalar, memory_scalar))
+        # A shared additive key bias cancels in softmax and is unidentifiable.
+        self.key = nn.Linear(scalar_width, memory_scalar, bias=False)
+        self.label_key = nn.Sequential(nn.Linear(5, memory_scalar), nn.SiLU(), nn.Linear(memory_scalar, memory_scalar, bias=False))
         self.scalar_value = nn.Linear(scalar_width, memory_scalar)
         self.vector_value = AxisPreservingLinear(vector_width, memory_vector)
         self.scalar_interaction = nn.Sequential(nn.Linear(memory_scalar, memory_scalar), nn.SiLU(), nn.Linear(memory_scalar, memory_scalar))

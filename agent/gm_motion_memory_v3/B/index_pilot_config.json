@@ -73,5 +73,9 @@
       "path": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
       "sha256": "707d4acba6523f460de75e9ecc0cd6d34315bb56c8d39439ad7bb88865d51c64"
     }
-  ]
+  ],
+  "raw_data_card": "runs/learned_memory_v1/raw_pilot_r01/data_card.json",
+  "max_gpu_hours": 0.25,
+  "budget_root": "runs/learned_memory_v1",
+  "pilot_budget_gpu_hours": 8
 }

@@ -804,7 +804,8 @@ class FrameJointTrainer:
             raise FloatingPointError("non-finite Frame Joint loss")
         self.optimizer.zero_grad(set_to_none=True)
         scaled = self._distributed_total(losses)
-        scaled.backward()
+        with torch.profiler.record_function("frame_joint.backward"):
+            scaled.backward()
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
         grad_norm = torch.nn.utils.clip_grad_norm_(active, self.grad_clip)
         if not torch.isfinite(torch.as_tensor(grad_norm)):

@@ -1,0 +1,17 @@
+{
+  "status": "blocked_no_allocated_cuda_slot",
+  "successful_updates": 0,
+  "gpu_hours_used": 0,
+  "budget_gpu_hours": 48,
+  "pilot_budget_gpu_hours": 8,
+  "cuda_smoke": "not_run",
+  "teacher_frames_measured": null,
+  "throughput_measured": null,
+  "peak_vram_measured": null,
+  "formal_M_short": "not_run",
+  "formal_M_long": "not_run",
+  "formal_M_index": "not_authorized_by_default",
+  "A_evaluated_recipe": null,
+  "CPU_model_fallback": false,
+  "resource_evidence": "/workspace/molvid-gm-memory-v3-coordination/resources.json"
+}

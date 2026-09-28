@@ -1,0 +1,15 @@
+{
+  "status": "source_contract_only_cuda_not_run",
+  "history_backend": "learned_memory",
+  "future_representation": "per_frame_hv_128",
+  "dit": {"depth": 4, "scalar_width": 256, "vector_width": 128, "heads": 8, "G": true, "old_M": false},
+  "teacher": {"frozen": true, "observed_anchor_times_ps": [-800, 0], "observed_frames_planned": 2, "target_frames_training_planned": 12, "origin": "centroid of first observed geometry anchor reused for future"},
+  "light_encoder": {"layers": 2, "scalar": 64, "vector": 32, "edges": "covalent only", "pool": "protein residue; ligand atom interface unvalidated"},
+  "analysis": {"scales_ps": [400,800,1600,3200,6400], "max_centers": 4, "recent_frames": 4, "min_points": 4, "min_each_half": 2, "minimum_coverage": 0.75, "maximum_gap_fraction": 0.5, "preserve_amplitude": true},
+  "memory": {"slots_per_group": 8, "scalar": 128, "vector": 64, "readout": "local atom-to-group gather", "prepared_per_prefix": 1, "detach_training": false},
+  "trainable": ["history_encoder (LightHistoryEncoder plus learned memory/readout)", "DiT and G", "coordinate decoder"],
+  "retired_parent_weights": ["legacy history_encoder.*", "motion_encoder.*", "dit.blocks.*.motion_context.*"],
+  "reused_time_decay": true,
+  "parameter_count_measured": null,
+  "optimizer_membership_cuda_verified": false
+}

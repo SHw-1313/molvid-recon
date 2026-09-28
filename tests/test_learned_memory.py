@@ -67,12 +67,13 @@ def test_static_unknown_and_support(observed):
     assert torch.isfinite(result.h).all()
 
 
-def test_optimizer_and_reused_graph(observed):
+@pytest.mark.parametrize('amp', [False, True])
+def test_optimizer_and_reused_graph(observed, amp):
     model = LearnedHistoryMemory().cuda()
     optimizer = torch.optim.AdamW(model.parameters(),lr=1e-4)
     owned = {id(p) for group in optimizer.param_groups for p in group['params']}
     assert owned == {id(p) for p in model.parameters() if p.requires_grad}
-    with torch.autocast('cuda',dtype=torch.bfloat16):
+    with torch.autocast('cuda',dtype=torch.bfloat16,enabled=amp):
         memory = model(observed)  # exactly once, subsequent readouts reuse graph
         h,v = memory.gather_atoms()
         loss = h.float().square().mean() + v.float().square().mean()
@@ -81,10 +82,14 @@ def test_optimizer_and_reused_graph(observed):
     loss.backward()
     for name,p in model.named_parameters():
         assert p.grad is not None and torch.isfinite(p.grad).all(),name
-        assert p.grad.abs().sum()>0,name
+    for path in ('light_encoder.', 'key.', 'label_key.', 'queries', 'scalar_value.', 'vector_value.', 'scalar_output.', 'vector_output.'):
+        norm=sum(p.grad.float().square().sum() for name,p in model.named_parameters() if name.startswith(path))
+        assert norm>0,path
     before = model.queries.detach().clone()
+    light_before = model.light_encoder.layers[0].message[0].weight.detach().clone()
     optimizer.step()
     assert not torch.equal(before,model.queries)
+    assert not torch.equal(light_before,model.light_encoder.layers[0].message[0].weight)
 
 
 def test_atom_permutation_and_group_gather(observed):

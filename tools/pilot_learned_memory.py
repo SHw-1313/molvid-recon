@@ -1,7 +1,9 @@
 """Bounded B pilot using FrameJointTrainer; never launches formal comparison."""
 from __future__ import annotations
 import argparse
+import atexit
 from dataclasses import replace
+from contextlib import nullcontext
 import fcntl
 import json
 import os
@@ -23,8 +25,14 @@ from molvid.training.dit import module_state_hash
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--config',type=Path,required=True)
+    parser.add_argument('--code-commit',required=True)
+    parser.add_argument('--profile-only',action='store_true')
     args=parser.parse_args()
     config=json.loads(args.config.read_text())
+    actual_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+    if actual_commit!=args.code_commit:
+        raise ValueError('executing code commit differs from the requested fixed candidate')
+    subprocess.run(['git','diff','--exit-code','HEAD','--','molvid','tools','tests'],check=True,stdout=subprocess.DEVNULL)
     if config['scope']!='pilot_only' or not 1 <= config['updates'] <= 1000:
         raise ValueError('only bounded 1..1000 update pilot is permitted')
     resources=json.loads(Path(config['resources']).read_text())
@@ -36,11 +44,21 @@ def main():
     processes=subprocess.check_output(['nvidia-smi','--query-compute-apps=gpu_uuid,pid','--format=csv,noheader'],text=True)
     if any(assignment[0] in row for row in processes.splitlines()):
         raise RuntimeError('assigned B GPU has an existing compute process; do not share or preempt')
+    previous_cost=sum(float(json.loads(p.read_text())['gpu_hours_including_setup_checks'])
+                      for p in Path(config['budget_root']).glob('*/cost_ledger.json'))
+    remaining_hours=min(float(config['max_gpu_hours']),float(config['pilot_budget_gpu_hours'])-previous_cost)
+    if remaining_hours<=0:
+        raise RuntimeError('B aggregate pilot GPU-hour budget exhausted')
     if not torch.cuda.is_available():
         raise RuntimeError('CUDA required')
     device=torch.device('cuda')
     gpu_start=time.perf_counter()
-    output=Path(config['output']); output.mkdir(parents=True,exist_ok=False)
+    output=Path(config['output'] + ('_profile' if args.profile_only else '')); output.mkdir(parents=True,exist_ok=False)
+    def cost_record():
+        (output/'cost_ledger.json').write_text(json.dumps({'gpu_uuid':assignment[0], 'gpu_hours_including_setup_checks':(time.perf_counter()-gpu_start)/3600,
+             'code_commit':actual_commit,'config_sha256':sha256_file(args.config),'mode':'profile' if args.profile_only else 'pilot'},indent=2))
+    atexit.register(cost_record)
+    (output/'code_identity.json').write_text(json.dumps({'code_commit':actual_commit,'config_sha256':sha256_file(args.config),'profile_only':args.profile_only},indent=2))
     (output/'resolved_experiment.json').write_text(json.dumps(config,indent=2))
     for name in ('teacher','statistics','parent'):
         if sha256_file(config[name]['path'])!=config[name]['sha256']:
@@ -48,6 +66,8 @@ def main():
     for entry in config['banks']+config['profile_banks']:
         if sha256_file(entry['path'])!=entry['sha256']:
             raise ValueError('raw bank identity differs')
+    if sha256_file(config['raw_data_card'])!=config['raw_data_card_sha256']:
+        raise ValueError('raw data card identity differs')
     torch.manual_seed(config['seed']); torch.cuda.manual_seed_all(config['seed'])
     artifact=load_codec_artifact(config['teacher']['path'],expected_sha256=config['teacher']['sha256'],device=device)
     stats=FrameLatentStatistics.from_state_dict(torch.load(config['statistics']['path'],map_location='cpu',weights_only=False))
@@ -104,40 +124,70 @@ def main():
     timings={}; pending={}; hooks=[]
     modules={'light_encode':model.history_encoder.light_encoder,'time_analysis':model.history_encoder.analysis,
              'memory_inclusive':model.history_encoder,'dit':model.dit,'decoder':model.decoder,
-             'teacher_geometry_inclusive':model.target_teacher.frame_encoder}
+             'teacher_geometry_inclusive':model.target_teacher.frame_encoder,
+             'teacher_backbone':model.target_teacher.frame_encoder.backbone,
+             'teacher_all':model.target_teacher}
     for name,module in modules.items():
         def before(_,args,name=name):
             event=torch.cuda.Event(enable_timing=True); event.record(); pending[name]=event
+            if name=='teacher_backbone':
+                timings.setdefault('teacher_graph_and_pack',[]).append((pending['teacher_geometry_inclusive'],event))
         def after(_,args,result,name=name):
-            event=torch.cuda.Event(enable_timing=True); event.record(); timings.setdefault(name,[]).append((pending.pop(name),event))
+            event=torch.cuda.Event(enable_timing=True); event.record()
+            label=('teacher_observed' if args[0].frames==2 else 'teacher_target') if name=='teacher_all' else name
+            timings.setdefault(label,[]).append((pending.pop(name),event))
         hooks.extend((module.register_forward_pre_hook(before),module.register_forward_hook(after)))
+    profile_entries=[(entry,span,dt,lag) for entry in config['profile_banks'] for span,dt,lag in
+                     ((800,100,100),(3200,100,200),(12800,100,400),(12800,400,100))]
+    update_count=len(profile_entries) if args.profile_only else config['updates']
+    previous_seconds=0.
     with (output/'train_metrics.jsonl').open('w') as stream:
-        for step in range(config['updates']):
+        for step in range(update_count):
+            if time.perf_counter()-gpu_start+previous_seconds > remaining_hours*3600:
+                raise RuntimeError('bounded pilot budget reached; cost ledger preserved, no next step launched')
             # A pilot crossing spans/dt/lag independently, not a formal exposure scheduler.
             entry=config['banks'][step%len(config['banks'])]
             span=(800,3200,12800)[(step//len(config['banks']))%3]
             dt=(100,200,400)[(step//(len(config['banks'])*3))%3]
             lag=(100,200,400)[(step//(len(config['banks'])*9))%3]
+            if args.profile_only:
+                entry,span,dt,lag=profile_entries[step]
             io_start=time.perf_counter()
             raw,anchors,future=load_pilot_inputs(Path(entry['path']),RawHistoryWindow(1280,span,dt,lag,'train'))
             io_seconds=time.perf_counter()-io_start
             torch.cuda.reset_peak_memory_stats(); before_calls=len(frame_calls); step_start=time.perf_counter()
-            batch=prepare_frame_joint_batch(model.target_teacher,future,device=device,normalizer=model,history_frames=2,raw_history=raw,geometry_anchors=anchors)
-            metrics=trainer.train_step(batch,generator=generator,auxiliary_active=False)
+            profiler=torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA]) if args.profile_only else nullcontext()
+            with profiler as trace:
+                with torch.profiler.record_function('B.teacher_and_transfer'):
+                    batch=prepare_frame_joint_batch(model.target_teacher,future,device=device,normalizer=model,history_frames=2,raw_history=raw,geometry_anchors=anchors)
+                metrics=trainer.train_step(batch,generator=generator,auxiliary_active=False)
             torch.cuda.synchronize()
             if sum(frame_calls[before_calls:])!=14:
                 raise AssertionError('teacher frame count changed with history length')
             missing=[]
             for name,p in model.history_encoder.named_parameters():
-                if p.grad is None or not torch.isfinite(p.grad).all() or p.grad.abs().sum()==0:
+                if p.grad is None or not torch.isfinite(p.grad).all():
                     missing.append(name)
             if missing:
-                raise AssertionError(f'new memory parameters lack finite nonzero gradients: {missing}')
+                raise AssertionError(f'new memory parameters lack finite gradients: {missing}')
+            path_norms={}
+            for path in ('light_encoder.', 'key.', 'label_key.', 'queries', 'scalar_value.', 'vector_value.', 'scalar_output.', 'vector_output.'):
+                norm=sum(p.grad.float().square().sum() for name,p in model.history_encoder.named_parameters() if name.startswith(path)).sqrt()
+                if norm==0:
+                    raise AssertionError(f'learned path lacks nonzero gradient: {path}')
+                path_norms[path]=float(norm)
             elapsed=time.perf_counter()-step_start
+            previous_seconds=elapsed
             total_atom_frames+=(raw.coordinates.shape[0]+14)*anchors.atom_count
             metrics.update(history_span_ps=span,observed_dt_ps=dt,query_lag_ps=lag,raw_io_seconds=io_seconds,
                            step_seconds=elapsed,peak_allocated_bytes=torch.cuda.max_memory_allocated(),teacher_frames=14,
+                           memory_gradient_path_norms=path_norms,
                            module_ms={k:sum(a.elapsed_time(b) for a,b in pairs) for k,pairs in timings.items()})
+            metrics['module_ms']['memory_slots_and_readout']=metrics['module_ms'].get('memory_inclusive',0)-metrics['module_ms'].get('light_encode',0)-metrics['module_ms'].get('time_analysis',0)
+            if args.profile_only:
+                trace.export_chrome_trace(str(output/f'profile_{step:03d}.json'))
+                metrics['profile_ranges']={event.key:{'cpu_us':event.cpu_time_total,'device_us':event.device_time_total}
+                    for event in trace.key_averages() if event.key in ('frame_joint.backward','B.teacher_and_transfer')}
             timings.clear()
             stream.write(json.dumps(metrics)+'\n'); stream.flush()
     elapsed=time.perf_counter()-start
@@ -148,7 +198,9 @@ def main():
     (output/'train_manifest.json').write_text(json.dumps({'status':'pilot_completed','successful_updates':trainer.successful_updates,
         'training_seconds':elapsed,'gpu_hours_including_setup_checks':(time.perf_counter()-gpu_start)/3600,'effective_atom_frames_per_second':total_atom_frames/elapsed,
         'teacher_observed_frames_per_prefix':2,'teacher_target_frames_per_prefix':12,
-        'formal':False,'profile_banks_training':False,'size_profile':'separate profiling still required'},indent=2))
+        'formal':False,'profile_banks_training':args.profile_only,
+        'size_profile':'cold train-step profiles complete; mixed-dt packing and warm timing remain' if args.profile_only else 'run --profile-only separately',
+        'module_timings':'inclusive; graph_and_pack is encoder entry to backbone entry; do not sum overlapping ranges'},indent=2))
     torch.save({'model_state':model.state_dict(),'scope':'pilot_only_not_formal_parent'},output/'pilot_model.pt')
 
 

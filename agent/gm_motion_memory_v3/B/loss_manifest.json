@@ -1,0 +1,18 @@
+{
+  "status": "resolved_from_verified_parent_not_yet_trained",
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "contracts.loss": {
+    "bond_enabled": true,
+    "generated_bond": 0.051707249134778976,
+    "clean_coordinate": 1.0,
+    "clean_bond": 0.1,
+    "near_coordinate": 0.1,
+    "near_bond": 0.01,
+    "generated_bond_min_flow_time": 0.75,
+    "near_min_flow_time": 0.9
+  },
+  "flow": 1.0,
+  "flow_h_fraction": 0.5,
+  "flow_v_fraction": 0.5,
+  "sampled_auxiliary": "not enabled in base pilot; formal awaits A recipe"
+}
