@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import json
 import os
 from pathlib import Path
+import struct
 import time
 from typing import Any
 
@@ -26,8 +27,6 @@ def _args() -> argparse.Namespace:
 
 
 def _build_one(task: tuple[str, str, int]) -> dict[str, Any]:
-    from mdtraj.formats import XTCTrajectoryFile
-
     xtc_value, sidecar_value, minimum_frames = task
     xtc = Path(xtc_value)
     sidecar = Path(sidecar_value)
@@ -48,8 +47,38 @@ def _build_one(task: tuple[str, str, int]) -> dict[str, Any]:
                 "reused": True,
             }
     started = time.perf_counter()
-    with XTCTrajectoryFile(str(xtc), "r") as handle:
-        offsets = np.asarray(handle.offsets, dtype=np.int64).copy()
+    # MDTraj's offset scanner performs one small seek/read per frame.  On the
+    # cold ATLAS filesystem that turns a 100 ns trajectory into minutes of
+    # random I/O.  Reading the XTC bytes sequentially and applying MDTraj's
+    # published frame-size recurrence yields the identical byte offsets.
+    payload = xtc.read_bytes()
+    if len(payload) < 8:
+        raise ValueError(f"truncated XTC header: {xtc}")
+    magic, atoms = struct.unpack_from(">ii", payload, 0)
+    if magic != 1995 or atoms < 1:
+        raise ValueError(f"invalid XTC magic/atom count: {xtc}")
+    if atoms <= 9:
+        frame_bytes = 56 + 12 * atoms
+        if len(payload) % frame_bytes:
+            raise ValueError(f"short-atom XTC size is not frame aligned: {xtc}")
+        offsets = np.arange(0, len(payload), frame_bytes, dtype=np.int64)
+    else:
+        values: list[int] = []
+        position = 0
+        while position + 92 <= len(payload):
+            frame_magic, frame_atoms = struct.unpack_from(">ii", payload, position)
+            if frame_magic != 1995 or frame_atoms != atoms:
+                raise ValueError(f"XTC frame header differs at byte {position}: {xtc}")
+            compressed_bytes = struct.unpack_from(">i", payload, position + 88)[0]
+            if compressed_bytes < 0:
+                raise ValueError(f"negative XTC compressed block size: {xtc}")
+            padded_bytes = compressed_bytes + 3 - ((compressed_bytes + 3) % 4)
+            values.append(position)
+            position += 92 + padded_bytes
+        if position != len(payload):
+            raise ValueError(f"XTC frames do not end at file size: {xtc}")
+        offsets = np.asarray(values, dtype=np.int64)
+    del payload
     if offsets.size < minimum_frames or offsets.ndim != 1:
         raise ValueError(f"XTC offset scan is shorter than frozen evidence: {xtc}")
     sidecar.parent.mkdir(parents=True, exist_ok=True)
