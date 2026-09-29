@@ -26,9 +26,14 @@ from .learned_memory_schedule import (
     learned_memory_execution_manifest,
     learned_memory_execution_schedule,
 )
+from .formal_budget import PairedFormalBudget
 
 
 SCHEMA = "molvid.learned_memory.train.v1"
+
+
+class FormalBudgetExceeded(RuntimeError):
+    """Raised only after a checkpoint-safe stop of the paired formal run."""
 
 
 def _commit() -> str:
@@ -41,6 +46,48 @@ def _commit() -> str:
 
 def _trajectory(sample_id: str) -> str:
     return str(sample_id).rsplit("_w", 1)[0]
+
+
+def _paired_formal_contract_hash(raw: Mapping[str, Any]) -> str:
+    normalized = json.loads(json.dumps(raw))
+    normalized.pop("arm")
+    normalized["training"].pop("output_root")
+    return canonical_hash(normalized)
+
+
+def _model_only_parent_contract(
+    path: str | Path,
+    *,
+    expected_sha256: str,
+    statistics_hash: str,
+    teacher_artifact_sha256: str,
+) -> dict[str, Any]:
+    """Recreate the immutable warm-start record before strict resume checks."""
+
+    actual_sha256 = sha256_file(path)
+    if actual_sha256 != str(expected_sha256):
+        raise ValueError("warm-start parent SHA-256 mismatch")
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    contracts = payload.get("contracts") if isinstance(payload, Mapping) else None
+    if (
+        not isinstance(payload, Mapping)
+        or payload.get("schema_version") != "molvid.training.checkpoint.v1"
+        or not isinstance(contracts, Mapping)
+        or contracts.get("statistics_hash") != str(statistics_hash)
+        or contracts.get("teacher_artifact_sha256") != str(teacher_artifact_sha256)
+        or not isinstance(contracts.get("data_hash"), str)
+        or int(payload.get("step", -1)) < 0
+    ):
+        raise ValueError("warm-start parent contract differs")
+    return {
+        "mode": "model_only_warm_start",
+        "sha256": actual_sha256,
+        "step": int(payload["step"]),
+        "source_data_hash": contracts["data_hash"],
+        "optimizer_restored": False,
+        "cursor_restored": False,
+        "rng_restored": False,
+    }
 
 
 def _scheduled_rates(base: Mapping[str, float], position: int, updates: int) -> dict[str, float]:
@@ -76,6 +123,15 @@ def _validate_config(raw: Mapping[str, Any]) -> None:
         raise ValueError("B formal exposure requires24 clips per trajectory per epoch")
     if str(training["precision"]) != "bf16" or str(training["device"]) != "cuda":
         raise ValueError("released B recipe requires CUDA BF16")
+    if training["max_updates"] is not None and int(training["max_updates"]) < 1:
+        raise ValueError("bounded pilot update limit must be positive")
+    budget = raw["budget"]
+    expected_budget_keys = {
+        "evaluation_gpu_hours", "formal_fallback", "formal_gpu_hours",
+        "lane_total_gpu_hours", "pilot_gpu_hours",
+    }
+    if set(budget) != expected_budget_keys or float(budget["formal_gpu_hours"]) != 32.0:
+        raise ValueError("B paired formal GPU budget contract differs")
     model = raw["model"]
     expected_model = {
         "history_backend": "learned_memory", "analysis_mode": "physical",
@@ -143,7 +199,10 @@ def run_learned_memory_training(
     checkpoint_every: int = 1000,
 ) -> dict[str, Any]:
     invocation_started = time.perf_counter()
+    invocation_started_unix = time.time()
     raw = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    config_sha = sha256_file(config_path)
+    code_commit = _commit()
     _validate_config(raw)
     releases = _verify_release(raw)
     training = raw["training"]
@@ -200,6 +259,13 @@ def run_learned_memory_training(
         parameter.requires_grad_(False)
     statistics_cfg = {**raw["statistics"], "codec_sha256": codec_cfg["sha256"]}
     statistics = _load_statistics(statistics_cfg, device)
+    parent = raw["parent"]
+    continuation_parent = _model_only_parent_contract(
+        parent["path"],
+        expected_sha256=parent["sha256"],
+        statistics_hash=statistics.hash,
+        teacher_artifact_sha256=codec_cfg["sha256"],
+    )
     model_cfg = raw["model"]
     seed_all(seed)
     model = FrameJointModel.from_codec(
@@ -246,23 +312,40 @@ def run_learned_memory_training(
         teacher_artifact_sha256=codec_cfg["sha256"],
         schedule_contract=schedule_contract,
         sampled_config=SampledAuxiliaryConfig.resolve(raw["sampled_auxiliary"]),
+        continuation_parent=continuation_parent,
     )
     generator = torch.Generator(device=device).manual_seed(seed + 1000)
     sampled_generator = torch.Generator(device=device).manual_seed(seed + 2000)
     output = Path(training["output_root"])
     output.mkdir(parents=True, exist_ok=resume is not None)
+    formal_budget: PairedFormalBudget | None = None
+    if training["max_updates"] is None:
+        formal_budget = PairedFormalBudget.start(
+            output.parent / "paired_formal_cost_ledger.json",
+            pair_contract_hash=_paired_formal_contract_hash(raw),
+            arm=raw["arm"],
+            config_sha256=config_sha,
+            code_commit=code_commit,
+            cap_gpu_hours=float(raw["budget"]["formal_gpu_hours"]),
+            planned_updates=total_updates,
+            resume_checkpoint_sha256=resume_sha256 if resume is not None else None,
+            started_unix=invocation_started_unix,
+        )
     epoch = batch_index = 0
     trajectories: Counter[str] = Counter()
     conditions: Counter[str] = Counter()
     raw_atom_frames = teacher_atom_frames = 0
     resume_cursor: Mapping[str, Any] | None = None
     if resume is None:
-        parent = raw["parent"]
         report = trainer.load_warm_start(
             parent["path"], expected_sha256=parent["sha256"]
         )
+        if trainer.continuation_parent != continuation_parent:
+            raise RuntimeError("warm-start continuation-parent contract changed")
         atomic_write_json(output / "warm_start_report.json", report.as_dict())
     else:
+        if resume_sha256 is None:
+            raise ValueError("strict formal resume requires checkpoint SHA-256")
         loaded = trainer.load_checkpoint(
             resume,
             generator=generator,
@@ -273,7 +356,10 @@ def run_learned_memory_training(
         cursor = loaded["cursor"]
         resume_cursor = cursor
         epoch, batch_index = int(cursor["epoch"]), int(cursor["batch_index"])
-        exposure = loaded["extra_state"]["rank_states"]["0"]["exposure_state"]
+        rank_state = loaded["extra_state"]["rank_states"]["0"]
+        if formal_budget is not None:
+            formal_budget.validate_resume_state(rank_state.get("formal_budget_state"))
+        exposure = rank_state["exposure_state"]
         trajectories.update(exposure["trajectory_clip_exposure"])
         conditions.update(exposure["condition_clip_exposure"])
         raw_atom_frames = int(exposure["raw_valid_atom_frames"])
@@ -291,11 +377,10 @@ def run_learned_memory_training(
     memory_hook = model.history_encoder.register_forward_pre_hook(
         lambda _module, _args: memory_calls.append(1)
     )
-    config_sha = sha256_file(config_path)
     atomic_write_json(output / "resolved_config.json", {
         **raw,
         "resolved": {
-            "code_commit": _commit(),
+            "code_commit": code_commit,
             "config_sha256": config_sha,
             "data": dataset.identity,
             "total_updates": total_updates,
@@ -312,7 +397,7 @@ def run_learned_memory_training(
     atomic_write_json(output / "target_encoder_provenance.json", frame_target_provenance(
         artifact,
         source_path=codec_cfg["checkpoint"],
-        code_commit=_commit(),
+        code_commit=code_commit,
     ))
     peak = 0
     last: dict[str, Any] = {}
@@ -342,10 +427,99 @@ def run_learned_memory_training(
             or not 0 <= batch_index <= len(batches)
         ):
             raise ValueError("resume cursor differs from the frozen execution schedule")
+
+    def save_current_checkpoint() -> Path:
+        cursor = {
+            "epoch": epoch,
+            "batch_index": batch_index,
+            "sampler_state": sampler.state_dict(),
+            "execution_schedule_hash": execution_manifest["sha256"],
+            "paired_schedule_hash": execution_manifest["paired_schedule_sha256"],
+            "arm": raw["arm"],
+        }
+        exposure = _exposure_state(
+            trajectories,
+            conditions,
+            successful_updates=trainer.successful_updates,
+            raw_atom_frames=raw_atom_frames,
+            teacher_atom_frames=teacher_atom_frames,
+        )
+        local_state = {
+            "cursor": cursor,
+            "rng_state": capture_rng_state(),
+            "training_generator_state": generator.get_state().detach().cpu(),
+            "sampled_generator_state": sampled_generator.get_state().detach().cpu(),
+            "exposure_state": exposure,
+            "formal_budget_state": (
+                None if formal_budget is None else formal_budget.checkpoint_state()
+            ),
+        }
+        path = output / f"frame_joint_step_{trainer.step:08d}.pt"
+        trainer.save_checkpoint(
+            path,
+            cursor=cursor,
+            generator=generator,
+            sampled_generator=sampled_generator,
+            rank_states={"0": local_state},
+        )
+        return path
+
     completed = False
+    budget_exhausted = False
+    cost_finalized = False
     failure: dict[str, str] | None = None
+
+    def finalize_cost(status: str) -> dict[str, Any] | None:
+        nonlocal cost_finalized
+        invocation_elapsed = time.perf_counter() - invocation_started
+        maximum_peak = max(peak, int(torch.cuda.max_memory_allocated()))
+        if formal_budget is None:
+            atomic_write_json(output / "cost_ledger.json", {
+                "schema": "molvid.learned_memory.cost_ledger.v1",
+                "status": status,
+                "arm": raw["arm"],
+                "successful_updates": trainer.successful_updates,
+                "invocation_seconds": invocation_elapsed,
+                "gpu_hours": invocation_elapsed / 3600.0,
+                "peak_allocated_bytes": maximum_peak,
+                "failure": failure,
+                "budget_bucket": "pilot",
+            })
+            cost_finalized = True
+            return None
+        snapshot = formal_budget.finish(
+            status=status,
+            successful_updates=trainer.successful_updates,
+            failure=failure,
+        )
+        atomic_write_json(output / "cost_ledger.json", {
+            "schema": "molvid.learned_memory.cost_ledger.v2",
+            "status": status,
+            "arm": raw["arm"],
+            "successful_updates": trainer.successful_updates,
+            "invocation_seconds": invocation_elapsed,
+            "gpu_hours_this_invocation": invocation_elapsed / 3600.0,
+            "cumulative_paired_gpu_hours": snapshot["cumulative_gpu_hours"],
+            "formal_cap_gpu_hours": formal_budget.cap_gpu_hours,
+            "paired_status": snapshot["pair_status"],
+            "paired_ledger": str(formal_budget.path),
+            "paired_ledger_sha256": snapshot["ledger_sha256"],
+            "invocation_id": formal_budget.invocation_id,
+            "peak_allocated_bytes": maximum_peak,
+            "failure": failure,
+            "budget_bucket": "formal",
+        })
+        cost_finalized = True
+        return snapshot
+
     try:
         while trainer.step < total_updates:
+            if formal_budget is not None and formal_budget.exhausted():
+                save_current_checkpoint()
+                budget_exhausted = True
+                raise FormalBudgetExceeded(
+                    "paired formal GPU-hour cap reached at a checkpoint-safe boundary"
+                )
             if batch_index >= len(batches):
                 epoch += 1
                 batch_index = 0
@@ -441,37 +615,15 @@ def run_learned_memory_training(
             with (output / "train_metrics.jsonl").open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(last, sort_keys=True) + "\n")
             batch_index += 1
+            if formal_budget is not None and formal_budget.exhausted():
+                save_current_checkpoint()
+                budget_exhausted = True
+                raise FormalBudgetExceeded(
+                    "paired formal GPU-hour cap reached at a checkpoint-safe boundary"
+                )
             save_now = checkpoint_every and trainer.step % checkpoint_every == 0
             if save_now or trainer.step == total_updates:
-                cursor = {
-                    "epoch": epoch,
-                    "batch_index": batch_index,
-                    "sampler_state": sampler.state_dict(),
-                    "execution_schedule_hash": execution_manifest["sha256"],
-                    "paired_schedule_hash": execution_manifest["paired_schedule_sha256"],
-                    "arm": raw["arm"],
-                }
-                exposure = _exposure_state(
-                    trajectories,
-                    conditions,
-                    successful_updates=trainer.successful_updates,
-                    raw_atom_frames=raw_atom_frames,
-                    teacher_atom_frames=teacher_atom_frames,
-                )
-                local_state = {
-                    "cursor": cursor,
-                    "rng_state": capture_rng_state(),
-                    "training_generator_state": generator.get_state().detach().cpu(),
-                    "sampled_generator_state": sampled_generator.get_state().detach().cpu(),
-                    "exposure_state": exposure,
-                }
-                trainer.save_checkpoint(
-                    output / f"frame_joint_step_{trainer.step:08d}.pt",
-                    cursor=cursor,
-                    generator=generator,
-                    sampled_generator=sampled_generator,
-                    rank_states={"0": local_state},
-                )
+                save_current_checkpoint()
         if module_state_hash(model.target_teacher) != teacher_hash:
             raise RuntimeError("frozen teacher parameters changed")
         elapsed = time.perf_counter() - invocation_started
@@ -489,7 +641,7 @@ def run_learned_memory_training(
             "memory_preparations_per_prefix": 1,
             "parent_sha256": raw["parent"]["sha256"],
             "config_sha256": config_sha,
-            "code_commit": _commit(),
+            "code_commit": code_commit,
             "data_hash": dataset.identity["data_hash"],
             "checkpoint": str(output / f"frame_joint_step_{trainer.step:08d}.pt"),
             "checkpoint_sha256": sha256_file(output / f"frame_joint_step_{trainer.step:08d}.pt"),
@@ -506,6 +658,12 @@ def run_learned_memory_training(
             teacher_atom_frames=teacher_atom_frames,
         ))
         completed = True
+        budget_snapshot = finalize_cost("completed")
+        if budget_snapshot is not None:
+            result["cumulative_paired_gpu_hours"] = budget_snapshot["cumulative_gpu_hours"]
+            result["paired_cost_ledger"] = str(formal_budget.path)
+            result["paired_cost_ledger_sha256"] = budget_snapshot["ledger_sha256"]
+            atomic_write_json(output / "train_manifest.json", result)
         return result
     except BaseException as error:
         failure = {"type": type(error).__name__, "message": str(error)}
@@ -513,15 +671,9 @@ def run_learned_memory_training(
     finally:
         teacher_hook.remove()
         memory_hook.remove()
-        invocation_elapsed = time.perf_counter() - invocation_started
-        atomic_write_json(output / "cost_ledger.json", {
-            "schema": "molvid.learned_memory.cost_ledger.v1",
-            "status": "completed" if completed else "failed_or_interrupted",
-            "arm": raw["arm"],
-            "successful_updates": trainer.successful_updates,
-            "invocation_seconds": invocation_elapsed,
-            "gpu_hours": invocation_elapsed / 3600.0,
-            "peak_allocated_bytes": max(peak, int(torch.cuda.max_memory_allocated())),
-            "failure": failure,
-            "budget_bucket": "pilot" if training["max_updates"] is not None else "formal",
-        })
+        if not cost_finalized:
+            finalize_cost(
+                "completed" if completed else (
+                    "budget_exhausted" if budget_exhausted else "failed_or_interrupted"
+                )
+            )

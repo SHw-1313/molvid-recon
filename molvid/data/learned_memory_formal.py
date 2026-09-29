@@ -69,6 +69,7 @@ class RawMemoryDataset:
         self.manifest_root = Path(manifest_root).resolve()
         self.raw_root = Path(raw_root).resolve()
         self.offset_root = Path(offset_root).resolve() if offset_root is not None else None
+        self._offset_paths: dict[str, Path] = {}
         self.split = split
         manifest_path = self.manifest_root / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -195,9 +196,50 @@ class RawMemoryDataset:
             if not offset_manifest.is_file():
                 raise FileNotFoundError(offset_manifest)
             offset_identity = json.loads(offset_manifest.read_text(encoding="utf-8"))
+            if offset_identity.get("schema") != "molvid.raw_xtc_offset_cache.v1":
+                raise ValueError("unsupported XTC offset cache schema")
+            if Path(offset_identity.get("raw_root", "")).resolve() != self.raw_root:
+                raise ValueError("XTC offset cache raw root differs")
+            if Path(offset_identity.get("manifest_root", "")).resolve() != self.manifest_root:
+                raise ValueError("XTC offset cache source manifest differs")
             available = set(offset_identity.get("splits", ()))
             if split not in available:
                 raise ValueError(f"XTC offset cache does not cover {split!r}")
+            records = offset_identity.get("records")
+            if (
+                not isinstance(records, list)
+                or len(records) != int(offset_identity.get("trajectories", -1))
+            ):
+                raise ValueError("XTC offset cache records are incomplete")
+            by_xtc: dict[str, Mapping[str, Any]] = {}
+            for record in records:
+                if not isinstance(record, Mapping) or not isinstance(record.get("xtc"), str):
+                    raise ValueError("XTC offset cache record is invalid")
+                key = str(Path(record["xtc"]).resolve())
+                if key in by_xtc:
+                    raise ValueError(f"duplicate XTC offset cache record: {key}")
+                by_xtc[key] = record
+            required: dict[str, RawMemoryItem] = {}
+            maximum_required: dict[str, int] = {}
+            for item in self.items:
+                key = str(item.xtc.resolve())
+                required.setdefault(key, item)
+                maximum_required[key] = max(
+                    maximum_required.get(key, -1), item.maximum_evidenced_raw_index
+                )
+            for key, item in sorted(required.items()):
+                record = by_xtc.get(key)
+                if record is None or split not in set(record.get("splits", ())):
+                    raise ValueError(f"XTC offset cache does not bind {split} trajectory {key}")
+                sidecar = self.offset_root / item.system / f"{item.xtc.name}.offsets.npz"
+                _validate_offset_sidecar(
+                    xtc=item.xtc,
+                    sidecar=sidecar,
+                    offset_root=self.offset_root,
+                    record=record,
+                    minimum_frames=maximum_required[key] + 1,
+                )
+                self._offset_paths[key] = sidecar
             self.identity["xtc_offset_cache"] = {
                 "root": str(self.offset_root),
                 "manifest": str(offset_manifest),
@@ -233,11 +275,80 @@ class RawMemoryDataset:
                     query_lag_ps,
                     self.split,
                 ),
-                offset_root=self.offset_root,
+                offset_path=self._offset_paths.get(
+                    str(self.items[int(index)].xtc.resolve())
+                ),
             )
             for index in indices
         ]
         return pack_pilot_inputs(values)
+
+
+def _validate_offset_sidecar(
+    *,
+    xtc: Path,
+    sidecar: Path,
+    offset_root: Path,
+    record: Mapping[str, Any],
+    minimum_frames: int,
+) -> None:
+    """Bind one mutable sidecar byte-for-byte to its frozen manifest record."""
+
+    expected_keys = {
+        "frames", "sidecar", "sidecar_sha256", "splits", "xtc",
+        "xtc_mtime_ns", "xtc_size",
+    }
+    if set(record) != expected_keys:
+        raise ValueError("XTC offset cache record keys differ")
+    xtc = Path(xtc).resolve()
+    sidecar = Path(sidecar).resolve()
+    offset_root = Path(offset_root).resolve()
+    if Path(str(record["xtc"])).resolve() != xtc:
+        raise ValueError("XTC offset record trajectory path differs")
+    declared_sidecar = Path(str(record["sidecar"]))
+    if declared_sidecar.is_absolute():
+        sidecar_matches = declared_sidecar.resolve() == sidecar
+    else:
+        relative = sidecar.relative_to(offset_root)
+        suffix = (offset_root.name, *relative.parts)
+        sidecar_matches = tuple(declared_sidecar.parts[-len(suffix):]) == suffix
+    if not sidecar_matches:
+        raise ValueError("XTC offset record sidecar path differs")
+    source = xtc.stat()
+    if (
+        int(record["xtc_size"]) != int(source.st_size)
+        or int(record["xtc_mtime_ns"]) != int(source.st_mtime_ns)
+    ):
+        raise ValueError("XTC offset record source identity differs")
+    if not sidecar.is_file():
+        raise FileNotFoundError(sidecar)
+    if sha256_file(sidecar) != str(record["sidecar_sha256"]):
+        raise ValueError("XTC offset sidecar SHA-256 differs")
+    with np.load(sidecar, allow_pickle=False) as cache:
+        if set(cache.files) != {"offsets", "xtc_size", "xtc_mtime_ns"}:
+            raise ValueError("XTC offset sidecar fields differ")
+        offsets = np.asarray(cache["offsets"])
+        cached_size = np.asarray(cache["xtc_size"])
+        cached_mtime = np.asarray(cache["xtc_mtime_ns"])
+    if (
+        offsets.dtype != np.int64
+        or offsets.ndim != 1
+        or offsets.size != int(record["frames"])
+        or offsets.size < int(minimum_frames)
+        or offsets.size == 0
+        or int(offsets[0]) != 0
+        or np.any(np.diff(offsets) <= 0)
+        or np.any(offsets % 4)
+        or int(offsets[-1]) >= int(source.st_size)
+    ):
+        raise ValueError("XTC offset sidecar offsets are invalid")
+    if (
+        cached_size.shape != ()
+        or cached_mtime.shape != ()
+        or int(cached_size) != int(record["xtc_size"])
+        or int(cached_mtime) != int(record["xtc_mtime_ns"])
+    ):
+        raise ValueError("XTC offset sidecar embedded source identity differs")
 
 
 @lru_cache(maxsize=256)
@@ -342,7 +453,7 @@ def _load_item(
     item: RawMemoryItem,
     window: RawHistoryWindow,
     *,
-    offset_root: Path | None = None,
+    offset_path: Path | None = None,
 ):
     """Read one strided XTC range and split observed/anchor/target objects."""
     import torch
@@ -355,9 +466,7 @@ def _load_item(
     maximum = int(window.future_indices[-1])
     if minimum % 10 or maximum % 10 or (maximum - minimum) % 10:
         raise ValueError("formal B windows must lie on the100 ps read grid")
-    offset_path = None
-    if offset_root is not None:
-        offset_path = offset_root / item.system / f"{item.xtc.name}.offsets.npz"
+    if offset_path is not None:
         if not offset_path.is_file():
             raise FileNotFoundError(offset_path)
     requested = np.unique(np.concatenate(
