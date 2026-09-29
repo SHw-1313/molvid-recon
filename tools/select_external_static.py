@@ -94,6 +94,18 @@ def main() -> int:
         internal_atoms = np.asarray([entry.atoms for entry in internal], dtype=np.int64)
     finally:
         close()
+    # The frozen split manifest exposes sealed-test system identities without
+    # materializing or reading any test trajectory.  Exact PDB-chain overlap is
+    # excluded even though the user waived broader near-homology filtering.
+    manifest_path = Path(raw["data"]["manifest_root"]) / "manifest.json"
+    split_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if split_manifest.get("metadata", {}).get("test_opened") is not False:
+        raise ValueError("dynamic split manifest does not keep test trajectories sealed")
+    sealed_test_systems = {
+        str(value).removeprefix("atlas_")
+        for value in split_manifest["source_splits"]["test"]["selected_systems"]
+    }
+    dynamic_systems.update(sealed_test_systems)
     if len(internal) != 576:
         raise ValueError("released dynamic data did not yield the 576-trajectory pool")
 
@@ -185,9 +197,15 @@ def main() -> int:
             "external_atom_mean": float(np.mean([row["atoms"] for row in selected_rows])),
         },
         "direct_overlap_excluded": True,
-        "direct_overlap_definition": "exact PDB-chain origin match to released A train or valid system ID",
+        "direct_overlap_definition": "exact PDB-chain origin match to released A train, valid, or sealed-test manifest system ID",
         "direct_overlap_candidates_rejected": direct_overlap_count,
         "dynamic_system_id_count": len(dynamic_systems),
+        "sealed_test_identity_metadata": {
+            "manifest": str(manifest_path.resolve()),
+            "manifest_sha256": sha256_file(manifest_path),
+            "system_count": len(sealed_test_systems),
+            "trajectory_payloads_opened": False,
+        },
         "near_homology_policy": "waived_by_user_20260929",
         "near_homology_excluded": False,
         "near_homology_authorization": "explicit user waiver on 2026-09-29 for this bounded pilot",

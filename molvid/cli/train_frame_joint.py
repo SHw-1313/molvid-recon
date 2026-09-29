@@ -1022,7 +1022,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError(
                     "a changed static objective requires model-only warm start, not exact continuation"
                 )
-            if not args.warm_start or not args.warm_start_sha256:
+            if args.resume:
+                resumed_static = resume_payload["contracts"].get(
+                    "static_decoder_auxiliary"
+                )
+                if not isinstance(resumed_static, Mapping):
+                    raise ValueError("static resume checkpoint lacks its contract")
+            elif not args.warm_start or not args.warm_start_sha256:
                 raise ValueError(
                     "formal static auxiliary requires an explicit released-A1 model-only warm start"
                 )
@@ -1057,7 +1063,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError("formal static gamma was not calibrated from released A1")
             if static_gamma_report.get("parent_sha256") != gamma_identity["parent_sha256"]:
                 raise ValueError("static gamma parent identity differs")
-            if args.warm_start_sha256 != gamma_identity["parent_sha256"]:
+            if args.resume:
+                resumed_parent = resume_payload["contracts"].get("continuation_parent")
+                if not isinstance(resumed_parent, Mapping) or resumed_parent.get(
+                    "sha256"
+                ) != gamma_identity["parent_sha256"]:
+                    raise ValueError("static resume does not descend from the gamma parent")
+            elif args.warm_start_sha256 != gamma_identity["parent_sha256"]:
                 raise ValueError("formal warm start differs from static gamma parent")
             if gamma_identity["code_commit"] != _git_commit():
                 raise ValueError("formal static code differs from gamma calibration")
