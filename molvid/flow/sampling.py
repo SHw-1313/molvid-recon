@@ -144,6 +144,7 @@ def euler_sample_frames(
     query: QuerySpec,
     steps: int = 16,
     seed: int,
+    prepared_condition: object | None = None,
 ) -> tuple[FrameLatentBatch, dict[str, Any]]:
     """Jointly update every future frame at each Euler flow step."""
 
@@ -154,7 +155,10 @@ def euler_sample_frames(
     current, _ = sample_frame_source(
         center, generator=_make_generator(context.latent.h.device, seed)
     )
-    prepared_condition = model.prepare_condition(context)
+    condition = (
+        model.prepare_condition(context)
+        if prepared_condition is None else prepared_condition
+    )
     was_training = model.training
     model.eval()
     for step in range(int(steps)):
@@ -169,7 +173,7 @@ def euler_sample_frames(
             query=query,
             noisy_future=current,
             flow_time=flow_time,
-            prepared_condition=prepared_condition,
+            prepared_condition=condition,
         )
         velocity = output.velocity
         current = current.with_features(
@@ -186,4 +190,5 @@ def euler_sample_frames(
         "joint_query_update": True,
         "statistics_hash": model.statistics_hash,
         "future_fields": ["h", "v"],
+        "condition_prepared_by_caller": prepared_condition is not None,
     }

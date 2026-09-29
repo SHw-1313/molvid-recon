@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any, Mapping, Sequence
@@ -26,8 +27,8 @@ from .raw_history import RawHistoryWindow, pack_pilot_inputs
 from .sampling import ClipItemSpec, ClipSpecTable
 
 
-_DT100_ID = re.compile(
-    r"^atlas_(?P<system>.+)_(?P<replica>R[123])_dt_100ps_w(?P<window>[0-9]+)$"
+_DT_ID = re.compile(
+    r"^atlas_(?P<system>.+)_(?P<replica>R[123])_dt_(?P<dt>100|300)ps_w(?P<window>[0-9]+)$"
 )
 _RAW_ID = re.compile(
     r"^atlas_(?P<system>.+)_(?P<replica>R[123])_w(?P<window>[0-9]+)$"
@@ -60,12 +61,14 @@ class RawMemoryDataset:
         *,
         manifest_root: Path,
         raw_root: Path,
+        offset_root: Path | None = None,
         split: str = "train",
     ) -> None:
         if split not in {"train", "valid"}:
             raise ValueError("raw learned-memory dataset supports train/valid only")
         self.manifest_root = Path(manifest_root).resolve()
         self.raw_root = Path(raw_root).resolve()
+        self.offset_root = Path(offset_root).resolve() if offset_root is not None else None
         self.split = split
         manifest_path = self.manifest_root / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -86,8 +89,11 @@ class RawMemoryDataset:
         with index_path.open(encoding="utf-8") as handle:
             for line in handle:
                 fields = line.rstrip("\n").split("\t")
-                match = _DT100_ID.fullmatch(fields[0])
+                match = _DT_ID.fullmatch(fields[0])
                 if match is None:
+                    continue
+                expected_index_dt = 100 if split == "train" else 300
+                if int(match.group("dt")) != expected_index_dt:
                     continue
                 system = match.group("system")
                 if system not in selected:
@@ -109,12 +115,21 @@ class RawMemoryDataset:
             maximum = ordered[-1][0]
             atoms = ordered[0][1]
             available = {window for window, _ in ordered}
-            # The dt100 store uses source_stride=10 and window_stride=16.
-            # w>=8 supplies 1280 raw past frames.  w<=max-3 ensures that the
-            # raw XTC prefix already evidenced by the store covers +480 frames.
-            eligible = [window for window in sorted(available) if 8 <= window <= maximum - 3]
-            if len(eligible) < 24:
-                raise ValueError(f"trajectory {system}/{replica} has fewer than24 eligible anchors")
+            # The frozen train index is dt100 (160 raw frames per window); the
+            # validation index is dt300 (480 raw frames per window).  Both only
+            # select anchors with 12.8 ns raw past and 4.8 ns raw future.
+            window_stride_raw = 160 if split == "train" else 480
+            minimum_window = math.ceil(1280 / window_stride_raw)
+            maximum_window = maximum - math.ceil(480 / window_stride_raw)
+            eligible = [
+                window for window in sorted(available)
+                if minimum_window <= window <= maximum_window
+            ]
+            minimum_anchors = 24 if split == "train" else 2
+            if len(eligible) < minimum_anchors:
+                raise ValueError(
+                    f"trajectory {system}/{replica} has fewer than{minimum_anchors} eligible anchors"
+                )
             pdb = self.raw_root / system / f"{system}.pdb"
             xtc = self.raw_root / system / f"{system}_prod_{replica}_fit.xtc"
             for path in (pdb, xtc):
@@ -133,8 +148,11 @@ class RawMemoryDataset:
                 items.append(
                     RawMemoryItem(
                         index=len(items), system=system, replica=replica,
-                        window_index=window, anchor_raw_index=window * 160,
-                        maximum_evidenced_raw_index=maximum * 160 + 150,
+                        window_index=window,
+                        anchor_raw_index=window * window_stride_raw,
+                        maximum_evidenced_raw_index=(
+                            maximum * window_stride_raw + window_stride_raw - 10
+                        ),
                         atoms=atoms, sample_id=sample_id, xtc=xtc, pdb=pdb,
                     )
                 )
@@ -165,10 +183,27 @@ class RawMemoryDataset:
             "systems": expected_systems,
             "trajectories": expected_trajectories,
             "eligible_anchors": len(self.items),
-            "anchor_rule": "dt100_window_start=w*160; w>=8; w<=maximum_w-3",
+            "anchor_rule": (
+                f"dt{100 if split == 'train' else 300}_window_start="
+                f"w*{160 if split == 'train' else 480}; past>=1280raw; future>=480raw"
+            ),
             "raw_inventory_hash": canonical_hash(inventory),
             "test_opened": False,
         }
+        if self.offset_root is not None:
+            offset_manifest = self.offset_root / "manifest.json"
+            if not offset_manifest.is_file():
+                raise FileNotFoundError(offset_manifest)
+            offset_identity = json.loads(offset_manifest.read_text(encoding="utf-8"))
+            available = set(offset_identity.get("splits", ()))
+            if split not in available:
+                raise ValueError(f"XTC offset cache does not cover {split!r}")
+            self.identity["xtc_offset_cache"] = {
+                "root": str(self.offset_root),
+                "manifest": str(offset_manifest),
+                "manifest_sha256": sha256_file(offset_manifest),
+                "cache_hash": offset_identity.get("cache_hash"),
+            }
         self.identity["data_hash"] = canonical_hash(self.identity)
 
     def __len__(self) -> int:
@@ -198,6 +233,7 @@ class RawMemoryDataset:
                     query_lag_ps,
                     self.split,
                 ),
+                offset_root=self.offset_root,
             )
             for index in indices
         ]
@@ -214,6 +250,7 @@ def _read_100ps_window(
     atom_source_index: tuple[int, ...],
     minimum_raw_index: int,
     maximum_raw_index: int,
+    offset_path: str | None = None,
 ):
     """Decode only the requested raw-XTC interval on the 100 ps grid.
 
@@ -230,6 +267,15 @@ def _read_100ps_window(
         raise ValueError("raw XTC interval must lie on the100 ps grid")
     count = (maximum_raw_index - minimum_raw_index) // 10 + 1
     with XTCTrajectoryFile(xtc, "r") as handle:
+        if offset_path is not None:
+            with np.load(offset_path, allow_pickle=False) as cache:
+                source = Path(xtc).stat()
+                if (
+                    int(cache["xtc_size"]) != int(source.st_size)
+                    or int(cache["xtc_mtime_ns"]) != int(source.st_mtime_ns)
+                ):
+                    raise ValueError("XTC offset sidecar source identity differs")
+                handle.offsets = np.asarray(cache["offsets"], dtype=np.int64)
         handle.seek(minimum_raw_index)
         coordinates_nm, absolute_time_ps, _step, _box = handle.read(
             n_frames=count,
@@ -279,7 +325,12 @@ def _align_to_observed_batched(
     return aligned.astype(coordinates.dtype)
 
 
-def _load_item(item: RawMemoryItem, window: RawHistoryWindow):
+def _load_item(
+    item: RawMemoryItem,
+    window: RawHistoryWindow,
+    *,
+    offset_root: Path | None = None,
+):
     """Read one strided XTC range and split observed/anchor/target objects."""
     import torch
     from ..codec.learned_memory import ChemicalMapping, RawHistoryObservation
@@ -291,11 +342,17 @@ def _load_item(item: RawMemoryItem, window: RawHistoryWindow):
     maximum = int(window.future_indices[-1])
     if minimum % 10 or maximum % 10 or (maximum - minimum) % 10:
         raise ValueError("formal B windows must lie on the100 ps read grid")
+    offset_path = None
+    if offset_root is not None:
+        offset_path = offset_root / item.system / f"{item.xtc.name}.offsets.npz"
+        if not offset_path.is_file():
+            raise FileNotFoundError(offset_path)
     coordinates_nm, absolute_time_ps, read_indices = _read_100ps_window(
         str(item.xtc),
         tuple(int(value) for value in atom_source_index.tolist()),
         minimum,
         maximum,
+        str(offset_path) if offset_path is not None else None,
     )
     requested = np.unique(np.concatenate(
         (window.history_indices, window.anchor_indices, window.future_indices)

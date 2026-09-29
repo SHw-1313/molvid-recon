@@ -23,6 +23,7 @@ def main() -> None:
     parser.add_argument("--a1-config", type=Path, required=True)
     parser.add_argument("--manifest-root", type=Path, required=True)
     parser.add_argument("--raw-root", type=Path, required=True)
+    parser.add_argument("--xtc-offset-root", type=Path, required=True)
     parser.add_argument("--codec", type=Path, required=True)
     parser.add_argument("--statistics", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -46,6 +47,7 @@ def main() -> None:
     dataset = RawMemoryDataset(
         manifest_root=args.manifest_root,
         raw_root=args.raw_root,
+        offset_root=args.xtc_offset_root,
         split="train",
     )
     training = {
@@ -69,6 +71,10 @@ def main() -> None:
         "data": {
             "manifest_root": str(args.manifest_root.resolve()),
             "raw_root": str(args.raw_root.resolve()),
+            "xtc_offset_root": str(args.xtc_offset_root.resolve()),
+            "xtc_offset_manifest_sha256": sha256_file(
+                args.xtc_offset_root / "manifest.json"
+            ),
             "data_hash": dataset.identity["data_hash"],
         },
         "codec": {

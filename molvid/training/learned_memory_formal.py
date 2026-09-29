@@ -142,6 +142,7 @@ def run_learned_memory_training(
     resume_sha256: str | None = None,
     checkpoint_every: int = 1000,
 ) -> dict[str, Any]:
+    invocation_started = time.perf_counter()
     raw = json.loads(Path(config_path).read_text(encoding="utf-8"))
     _validate_config(raw)
     releases = _verify_release(raw)
@@ -156,8 +157,14 @@ def run_learned_memory_training(
     dataset = RawMemoryDataset(
         manifest_root=Path(raw["data"]["manifest_root"]),
         raw_root=Path(raw["data"]["raw_root"]),
+        offset_root=Path(raw["data"]["xtc_offset_root"]),
         split="train",
     )
+    if (
+        dataset.identity["xtc_offset_cache"]["manifest_sha256"]
+        != raw["data"]["xtc_offset_manifest_sha256"]
+    ):
+        raise ValueError("frozen XTC offset manifest identity differs")
     expected_data_hash = raw["data"]["data_hash"]
     if expected_data_hash and expected_data_hash != dataset.identity["data_hash"]:
         raise ValueError("frozen raw-memory data hash differs")
@@ -248,6 +255,7 @@ def run_learned_memory_training(
     trajectories: Counter[str] = Counter()
     conditions: Counter[str] = Counter()
     raw_atom_frames = teacher_atom_frames = 0
+    resume_cursor: Mapping[str, Any] | None = None
     if resume is None:
         parent = raw["parent"]
         report = trainer.load_warm_start(
@@ -263,6 +271,7 @@ def run_learned_memory_training(
             rank=0,
         )
         cursor = loaded["cursor"]
+        resume_cursor = cursor
         epoch, batch_index = int(cursor["epoch"]), int(cursor["batch_index"])
         exposure = loaded["extra_state"]["rank_states"]["0"]["exposure_state"]
         trajectories.update(exposure["trajectory_clip_exposure"])
@@ -305,7 +314,6 @@ def run_learned_memory_training(
         source_path=codec_cfg["checkpoint"],
         code_commit=_commit(),
     ))
-    started = time.perf_counter()
     peak = 0
     last: dict[str, Any] = {}
 
@@ -325,6 +333,17 @@ def run_learned_memory_training(
         return batches, entries, manifest
 
     batches, execution, execution_manifest = build_execution(epoch)
+    if resume_cursor is not None:
+        if (
+            resume_cursor.get("arm") != raw["arm"]
+            or resume_cursor.get("execution_schedule_hash") != execution_manifest["sha256"]
+            or resume_cursor.get("paired_schedule_hash")
+            != execution_manifest["paired_schedule_sha256"]
+            or not 0 <= batch_index <= len(batches)
+        ):
+            raise ValueError("resume cursor differs from the frozen execution schedule")
+    completed = False
+    failure: dict[str, str] | None = None
     try:
         while trainer.step < total_updates:
             if batch_index >= len(batches):
@@ -455,7 +474,7 @@ def run_learned_memory_training(
                 )
         if module_state_hash(model.target_teacher) != teacher_hash:
             raise RuntimeError("frozen teacher parameters changed")
-        elapsed = time.perf_counter() - started
+        elapsed = time.perf_counter() - invocation_started
         result = {
             "schema": "molvid.learned_memory.train_manifest.v1",
             "status": "completed",
@@ -486,7 +505,23 @@ def run_learned_memory_training(
             raw_atom_frames=raw_atom_frames,
             teacher_atom_frames=teacher_atom_frames,
         ))
+        completed = True
         return result
+    except BaseException as error:
+        failure = {"type": type(error).__name__, "message": str(error)}
+        raise
     finally:
         teacher_hook.remove()
         memory_hook.remove()
+        invocation_elapsed = time.perf_counter() - invocation_started
+        atomic_write_json(output / "cost_ledger.json", {
+            "schema": "molvid.learned_memory.cost_ledger.v1",
+            "status": "completed" if completed else "failed_or_interrupted",
+            "arm": raw["arm"],
+            "successful_updates": trainer.successful_updates,
+            "invocation_seconds": invocation_elapsed,
+            "gpu_hours": invocation_elapsed / 3600.0,
+            "peak_allocated_bytes": max(peak, int(torch.cuda.max_memory_allocated())),
+            "failure": failure,
+            "budget_bucket": "pilot" if training["max_updates"] is not None else "formal",
+        })
