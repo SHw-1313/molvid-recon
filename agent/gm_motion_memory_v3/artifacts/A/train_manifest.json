@@ -1,6 +1,6 @@
 {
   "schema": "molvid.A.train_manifest.v1",
-  "status": "blocked_no_free_gpu",
+  "status": "A0_A1_formal_completed_A2_A3_pending",
   "seed": 20260928,
   "precision": "bf16",
   "optimizer": "AdamW",
@@ -12,19 +12,25 @@
   "cosine_final_lr_fraction": 0.1,
   "processes_per_arm": 1,
   "max_lane_gpus": 2,
-  "assigned_gpu_uuids": [],
-  "proposed_effective_epochs": 2,
+  "assigned_gpu_uuids": ["GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0"],
+  "proposed_effective_epochs": 1,
   "proposed_updates_by_epoch": [10606,10598],
-  "proposed_total_updates": 21204,
+  "proposed_total_updates": 10606,
   "proposed_clips_per_epoch": 13824,
   "max_atom_frames_per_gpu_provisional": 40000,
-  "exposure_frozen": false,
-  "profile_completed": false,
-  "actual_successful_updates": 0,
-  "actual_valid_atom_frames": 0,
-  "actual_gpu_hours": 0.0,
+  "exposure_frozen": true,
+  "profile_completed": true,
+  "actual_successful_updates": 21212,
+  "actual_valid_atom_frames": 680625180,
+  "actual_gpu_hours": 15.175738758775923,
   "gpu_hours_budget": 80,
   "pilot_checkpoint_used_as_parent": false,
-  "formal_runs": [],
-  "formal_candidate_review_pass": false
+  "formal_runs": [
+    {"arm":"A0","updates":10606,"gpu_hours":6.472515347732438,"checkpoint_sha256":"f459f1d3f55f6404ee8afbd898c669f071dfe053cb8ab5f337e7528c88523bc7","config_sha256":"2d15e38c51b7c81123fe57f8cbec018a7b21aa2ad25be2f671e892d590564da4"},
+    {"arm":"A1","updates":10606,"gpu_hours":8.703223411043485,"checkpoint_sha256":"52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9","config_sha256":"15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce"}
+  ],
+  "formal_candidate_review_pass": true,
+  "reviewed_commit": "af60c05aa02ce46872edbad0711833317773436e",
+  "review_path": "agent/gm_motion_memory_v3/reviews/A/formal_r02/REVIEW.md",
+  "test_opened": false
 }

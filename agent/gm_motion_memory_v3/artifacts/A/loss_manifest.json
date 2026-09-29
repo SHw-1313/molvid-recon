@@ -1,6 +1,6 @@
 {
   "schema": "molvid.A.loss_manifest.v1",
-  "status": "base_verified_auxiliary_not_calibrated",
+  "status": "calibrated_frozen_A0_A3_A1_formal_evaluated",
   "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
   "source": "actual torch.load checkpoint contracts.loss; enter-container/torch-ito CPU deserialization only",
   "teacher_trainable": false,
@@ -13,16 +13,16 @@
     {"name":"near_coordinate","weight":0.1,"input":"decoded detached single-step endpoint","target":"true future coordinates","min_flow_time":0.9,"gradient":"decoder"},
     {"name":"near_bond","weight":0.01,"input":"decoded detached single-step endpoint","target":"true future bond lengths","min_flow_time":0.9,"gradient":"decoder"},
     {"name":"generated_bond","weight":0.051707249134778976,"input":"decoded target-interpolated single-step endpoint; not actual-source sample","target":"true future bond lengths","min_flow_time":0.75,"gradient":"DiT/history/M/decoder"},
-    {"name":"sampled_clash","weight":null,"arms":["A1","A2","A3"],"input":"K2 actual-source decoded trajectories","target":"frozen train-validated vdW/topology thresholds; no future","gradient":"DiT/history/M/decoder; detached neighbor indices, differentiable distance"},
-    {"name":"sampled_rmsf","weight":null,"arms":["A2","A3"],"input":"K2 actual-source observed-reference aligned residue RMSF","target":"detached future RMSF","eligibility":"ordinary Q>=8 only","gradient":"DiT/history/M/decoder; detached FP32 Kabsch rotation"},
-    {"name":"sampled_displacement","weight":null,"arms":["A2","A3"],"input":"K2 actual-source MSD and adjacent squared displacement in A^2","target":"detached future features","eligibility":"all families Q>=1","gradient":"DiT/history/M/decoder; detached FP32 Kabsch rotation"},
-    {"name":"sampled_bond_band","weight":null,"arms":["A3"],"input":"K2 actual-source bond lengths","target":"last observed bond lengths plus frozen train-only widths","gradient":"DiT/history/M/decoder"}
+    {"name":"sampled_clash","weight":0.0010638914903412656,"arms":["A1","A2","A3"],"input":"K2 actual-source decoded trajectories","target":"frozen train-validated vdW/topology thresholds; no future","gradient":"DiT/history/M/decoder; detached neighbor indices, differentiable distance"},
+    {"name":"sampled_rmsf","weight":0.0037894484312085723,"arms":["A2","A3"],"input":"K2 actual-source observed-reference aligned residue RMSF","target":"detached future RMSF","eligibility":"ordinary Q>=8 only","gradient":"DiT/history/M/decoder; detached FP32 Kabsch rotation"},
+    {"name":"sampled_displacement","weight":0.002193553424286401,"arms":["A2","A3"],"input":"K2 actual-source MSD and adjacent squared displacement in A^2","target":"detached future features","eligibility":"all families Q>=1","gradient":"DiT/history/M/decoder; detached FP32 Kabsch rotation"},
+    {"name":"sampled_bond_band","weight":0.005290786076012187,"arms":["A3"],"input":"K2 actual-source bond lengths","target":"last observed bond lengths plus frozen train-only widths","gradient":"DiT/history/M/decoder"}
   ],
   "auxiliary_cadence": "rounded 1/8 per view/lag/H stratum; same list even for A0",
-  "auxiliary_euler_steps": null,
+  "auxiliary_euler_steps": 8,
   "allowed_auxiliary_euler_steps": [4,8],
-  "feature_scales": null,
-  "threshold_tables": null,
-  "weight_calibration": "not_run_no_free_gpu",
+  "feature_scales": {"rmsf_A":1.2989751036755146,"displacement_A2":6.790559953979887},
+  "threshold_tables": "runs/gm_motion_memory_v3/A/r04/physical_tables.json",
+  "weight_calibration": "runs/gm_motion_memory_v3/A/r04/resolved_auxiliary.json; 24 train-only batches; model unchanged",
   "no_formal_run_may_use_null_weights": true
 }

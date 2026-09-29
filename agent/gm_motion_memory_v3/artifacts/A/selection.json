@@ -1,8 +1,13 @@
 {
-  "status": "not_evaluated",
-  "selected_arm": null,
-  "reason": "No formal A0-A3 checkpoints or evaluations exist.",
-  "capacity_release_eligible": false,
-  "recipe_release_eligible": false,
-  "keep_release_trigger_evaluated": false
+  "status": "interim_A1_formal_evaluated_A2_A3_pending",
+  "selected_arm": "A1",
+  "reason": "A1 passes motion guardrails and gives a consistent modest clash/severity reduction versus paired A0; the ideal 30 percent clash target was not reached. This is an interim capacity/recipe release, not final A0-A3 selection.",
+  "capacity_release_eligible": true,
+  "recipe_release_eligible": true,
+  "keep_release_trigger_evaluated": false,
+  "comparison_path": "runs/gm_motion_memory_v3/A/r20/a0_a1_analysis/selection.json",
+  "comparison_sha256": "456237ffc91e1b8d58c18aa96473ca29e355cb5e4c69cf3d0bec9435fb59cfe0",
+  "A1_checkpoint_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+  "guardrail_pass": true,
+  "test_opened": false
 }
