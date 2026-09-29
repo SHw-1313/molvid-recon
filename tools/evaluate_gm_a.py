@@ -32,11 +32,27 @@ SCALARS.update({
 })
 
 
+def _evaluation_paths(seeds: list[int]) -> tuple[tuple[str, int | None], ...]:
+    if not seeds:
+        raise ValueError("at least one generated seed is required")
+    if any(seed < 0 for seed in seeds):
+        raise ValueError("generated seeds must be non-negative")
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("generated seeds must be unique")
+    return (
+        ("persistence", None),
+        ("oracle", None),
+        *(("generated", seed) for seed in seeds),
+    )
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('checkpoint','recipe','store','manifest','output'):p.add_argument('--'+name,type=Path,required=True)
     p.add_argument('--checkpoint-sha256',required=True);p.add_argument('--limit',type=int);p.add_argument('--resume',action='store_true')
+    p.add_argument('--seeds',type=int,nargs='+',default=[0,1,2],help='generated-path RNG seeds; persistence and oracle are always evaluated')
     args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
+    paths=_evaluation_paths(args.seeds)
     for name in ('coordinates','profiles'): (args.output/name).mkdir(exist_ok=True)
     start=time.time();device=configure_device('cuda',deterministic=True)
     raw=load_config('configs/frame_gm_p2_formal_GM_260923.yaml',schema='molvid.frame_joint.train.v1')
@@ -46,7 +62,7 @@ def main():
     ds=ClipMMapDataset(args.store)
     protocol={'schema':'molvid.A.evaluation.v1','checkpoint_sha256':args.checkpoint_sha256,'recipe_sha256':sha256_file(args.recipe),
               'store_index_sha256':sha256_file(args.store/'index.txt'),'manifest_sha256':sha256_file(args.manifest),
-              'steps':16,'seeds':[0,1,2],'limit':args.limit,'test_opened':False,'precision':'fp32',
+              'steps':16,'seeds':args.seeds,'limit':args.limit,'test_opened':False,'precision':'fp32',
               'conditioning':'observed prefix/topology/query times only','aggregation':'draw -> anchor -> replica -> system equal'}
     protocol_path=args.output/'protocol.json'
     if protocol_path.exists():
@@ -67,7 +83,7 @@ def main():
             target=batch.coordinate_batch.x.float()
             frames=[history+i for i in torch.where(batch.query.frame_mask[0])[0].tolist()]
             family=metric_family(record,query_frames=len(frames))
-            for path,seed in (('persistence',None),('oracle',None),('generated',0),('generated',1),('generated',2)):
+            for path,seed in paths:
                 key=f'{sid}|H{history}|{path}|seed={seed}'
                 if key in completed:continue
                 with torch.no_grad():
@@ -93,7 +109,8 @@ def main():
                 with rows_path.open('a') as handle:handle.write(json.dumps(row,sort_keys=True)+'\n')
                 rows.append(row);completed.add(key)
             if (position+1)%8==0:print(json.dumps({'records':position+1,'total':len(ids),'rows':len(rows)}),flush=True)
-        if len(rows)!=len(ids)*5:raise RuntimeError('evaluation row coverage mismatch')
+        expected_rows=len(ids)*len(paths)
+        if len(rows)!=expected_rows:raise RuntimeError(f'evaluation row coverage mismatch: expected {expected_rows}, got {len(rows)}')
         per_system,buckets=_aggregate(rows)
         for row in per_system:row['family']=rows[0]['metric_family']['family']
         _write_csv(args.output/'per_system.csv',per_system)
