@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace
+import gc
 import json
 from pathlib import Path
 import re
@@ -80,25 +81,31 @@ def _system_replica(record: Mapping[str, Any]) -> tuple[str, str]:
 
 
 def _select_three_system_grid(dataset: Any) -> tuple[list[Mapping[str, Any]], list[dict[str, Any]]]:
-    selected_systems: list[str] = []
-    indices: dict[tuple[str, str], int] = {}
+    # Select complete systems by their largest replica atom count.  Gradient
+    # calibration exercises the full dynamic objective, so choosing the
+    # cheapest auditable grid keeps this nominally static probe a low-memory
+    # neighbour on a shared GPU without changing any scientific contract.
+    candidates: dict[str, dict[str, tuple[int, int]]] = {}
     for item in get_clip_specs(dataset):
         match = re.match(r"^atlas_(.+)_(R[123])_", item.sample_id)
         if match is None:
             continue
         system, replica = match.groups()
-        if system not in selected_systems:
-            if len(selected_systems) == 3:
-                continue
-            selected_systems.append(system)
-        if system in selected_systems:
-            key = (system, replica)
-            indices.setdefault(key, int(item.index))
-        if len(selected_systems) == 3 and all(
-            (system_id, f"R{replica_id}") in indices
-            for system_id in selected_systems for replica_id in (1, 2, 3)
-        ):
-            break
+        candidates.setdefault(system, {}).setdefault(
+            replica, (int(item.index), int(item.atoms))
+        )
+    complete = [
+        (max(value[replica][1] for replica in ("R1", "R2", "R3")), system)
+        for system, value in candidates.items()
+        if all(replica in value for replica in ("R1", "R2", "R3"))
+    ]
+    selected_systems = [system for _, system in sorted(complete)[:3]]
+    if len(selected_systems) != 3:
+        raise RuntimeError("train data did not provide three complete 3-replica systems")
+    indices: dict[tuple[str, str], int] = {}
+    for system in selected_systems:
+        for replica in ("R1", "R2", "R3"):
+            indices[(system, replica)] = candidates[system][replica][0]
     expected = [(system, f"R{replica}") for system in selected_systems for replica in (1, 2, 3)]
     if len(selected_systems) != 3 or any(key not in indices for key in expected):
         raise RuntimeError("train data did not provide a complete 3-system x 3-replica grid")
@@ -131,6 +138,20 @@ def _select_three_system_grid(dataset: Any) -> tuple[list[Mapping[str, Any]], li
             }
         )
     return ordered, provenance
+
+
+def _release_unused_cuda_cache(device: torch.device) -> dict[str, int]:
+    """Release completed phase workspaces while preserving live model state."""
+
+    gc.collect()
+    torch.cuda.synchronize(device)
+    before = int(torch.cuda.memory_reserved(device))
+    torch.cuda.empty_cache()
+    return {
+        "allocated_bytes": int(torch.cuda.memory_allocated(device)),
+        "reserved_bytes_before_release": before,
+        "reserved_bytes_after_release": int(torch.cuda.memory_reserved(device)),
+    }
 
 
 def _static_records(
@@ -298,6 +319,7 @@ def _calibrate_gamma(
     seed: int,
     physical_config: PhysicalAuxiliaryConfig,
 ) -> tuple[float, dict[str, Any]]:
+    torch.cuda.reset_peak_memory_stats(device)
     dynamic_generator = torch.Generator(device=device).manual_seed(seed + 101)
     static_generator = torch.Generator(device=device).manual_seed(seed + 202)
     dynamic_norms = []
@@ -327,6 +349,9 @@ def _calibrate_gamma(
     report["clash_weight"] = physical_config.clash_weight
     report["clash_rule"] = "A1 released topology-aware physical clash"
     report["clash_table_provenance"] = dict(physical_config.table_provenance or {})
+    report["peak_allocated_bytes"] = int(torch.cuda.max_memory_allocated(device))
+    report["allocated_bytes_at_end"] = int(torch.cuda.memory_allocated(device))
+    report["reserved_bytes_at_end"] = int(torch.cuda.memory_reserved(device))
     return gamma, report
 
 
@@ -555,6 +580,11 @@ def main() -> int:
             )
             for amp in (False, True)
         ]
+        phase_cache_releases = {
+            "after_gradient_calibration_and_precision_smoke": (
+                _release_unused_cuda_cache(device)
+            )
+        }
         _, largest_model, largest_dynamic, _ = _make_model(
             raw,
             device=device,
@@ -571,6 +601,10 @@ def main() -> int:
             gamma=gamma,
             seed=args.seed,
             physical_config=physical_config,
+        )
+        del largest_model, largest_dynamic
+        phase_cache_releases["after_largest_sample_profile"] = (
+            _release_unused_cuda_cache(device)
         )
         pilot = None
         if args.mode == "pilot":
@@ -589,11 +623,14 @@ def main() -> int:
             static_generator = torch.Generator(device=device).manual_seed(args.seed + 404)
             metrics_path = output / "pilot_metrics.jsonl"
             pilot_started = time.perf_counter()
+            pilot_peak_allocated = int(torch.cuda.memory_allocated(device))
+            pilot_peak_reserved = int(torch.cuda.memory_reserved(device))
+            cpu_static_batch = collate_clip_records(static_records)
             with metrics_path.open("w", encoding="utf-8") as handle:
                 for update in range(args.updates):
                     prepared = prepare_static_decoder_batch(
                         calibration_model.target_teacher,
-                        collate_clip_records(static_records),
+                        cpu_static_batch,
                         device=device,
                         generator=static_generator,
                         perturbation=StaticPerturbationConfig(
@@ -603,6 +640,15 @@ def main() -> int:
                     )
                     row = static_trainer.train_step(prepared)
                     row["update_index"] = update
+                    del prepared
+                    row["cuda_allocated_bytes"] = int(torch.cuda.memory_allocated(device))
+                    row["cuda_reserved_bytes"] = int(torch.cuda.memory_reserved(device))
+                    pilot_peak_allocated = max(
+                        pilot_peak_allocated, row["cuda_allocated_bytes"]
+                    )
+                    pilot_peak_reserved = max(
+                        pilot_peak_reserved, row["cuda_reserved_bytes"]
+                    )
                     handle.write(json.dumps(row, sort_keys=True) + "\n")
                     handle.flush()
             torch.cuda.synchronize(device)
@@ -624,6 +670,8 @@ def main() -> int:
             pilot = {
                 "successful_static_updates": args.updates,
                 "seconds": time.perf_counter() - pilot_started,
+                "peak_allocated_bytes": pilot_peak_allocated,
+                "peak_reserved_bytes": pilot_peak_reserved,
                 "checkpoint": str(checkpoint),
                 "checkpoint_sha256": sha256_file(checkpoint),
                 "formal_parent_allowed": False,
@@ -658,6 +706,7 @@ def main() -> int:
             "warm_start_initialized": len(warm.initialized),
             "smoke": smoke,
             "largest_profile": largest,
+            "phase_cache_releases": phase_cache_releases,
             "pilot": pilot,
             "elapsed_seconds": time.perf_counter() - started,
             "test_opened": False,
