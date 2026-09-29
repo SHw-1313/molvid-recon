@@ -209,29 +209,44 @@ def _metadata(pdb: str) -> Mapping[str, Any]:
     return topology_metadata(read_topology(Path(pdb)), complex_topology=False)
 
 
-@lru_cache(maxsize=None)
-def _trajectory_100ps_grid(
+def _read_100ps_window(
     xtc: str,
     atom_source_index: tuple[int, ...],
+    minimum_raw_index: int,
     maximum_raw_index: int,
 ):
-    """Decode the evidenced 100 ps grid once per trajectory in this process."""
+    """Decode only the requested raw-XTC interval on the 100 ps grid.
+
+    Formal epochs touch every physical trajectory but only a small part of
+    each 100 ns file at a time.  Reading and retaining the complete evidenced
+    prefix makes the first step for a cold file scan almost the entire XTC and
+    leaves CUDA idle for minutes.  XTC seek is indexed, so a bounded interval
+    preserves the raw-coordinate contract while keeping I/O proportional to
+    the actual history and future requested by this update.
+    """
     from mdtraj.formats import XTCTrajectoryFile
 
-    count = maximum_raw_index // 10 + 1
+    if minimum_raw_index % 10 or maximum_raw_index % 10:
+        raise ValueError("raw XTC interval must lie on the100 ps grid")
+    count = (maximum_raw_index - minimum_raw_index) // 10 + 1
     with XTCTrajectoryFile(xtc, "r") as handle:
-        handle.seek(0)
+        handle.seek(minimum_raw_index)
         coordinates_nm, absolute_time_ps, _step, _box = handle.read(
             n_frames=count,
             stride=10,
             atom_indices=np.asarray(atom_source_index, dtype=np.int64),
         )
     if coordinates_nm.shape[0] != count:
-        raise ValueError("raw XTC ended before its frozen store evidence")
-    raw_indices = np.arange(0, maximum_raw_index + 1, 10, dtype=np.int64)
+        raise ValueError("raw XTC ended before the requested formal interval")
+    raw_indices = np.arange(
+        minimum_raw_index, maximum_raw_index + 1, 10, dtype=np.int64
+    )
     times = np.asarray(absolute_time_ps, dtype=np.float64)
-    if not np.allclose(times - times[0], raw_indices * 10, rtol=0.0, atol=1e-3):
-        raise ValueError("cached raw XTC grid differs from native10 ps time")
+    if not np.allclose(
+        times - times[0], (raw_indices - raw_indices[0]) * 10,
+        rtol=0.0, atol=1e-3,
+    ):
+        raise ValueError("raw XTC interval differs from native10 ps time")
     return np.asarray(coordinates_nm, dtype=np.float32), times, raw_indices
 
 
@@ -276,16 +291,12 @@ def _load_item(item: RawMemoryItem, window: RawHistoryWindow):
     maximum = int(window.future_indices[-1])
     if minimum % 10 or maximum % 10 or (maximum - minimum) % 10:
         raise ValueError("formal B windows must lie on the100 ps read grid")
-    cached_coordinates, cached_times, cached_indices = _trajectory_100ps_grid(
+    coordinates_nm, absolute_time_ps, read_indices = _read_100ps_window(
         str(item.xtc),
         tuple(int(value) for value in atom_source_index.tolist()),
-        item.maximum_evidenced_raw_index,
+        minimum,
+        maximum,
     )
-    read_start = int(np.searchsorted(cached_indices, minimum))
-    read_end = int(np.searchsorted(cached_indices, maximum, side="right"))
-    coordinates_nm = cached_coordinates[read_start:read_end]
-    absolute_time_ps = cached_times[read_start:read_end]
-    read_indices = cached_indices[read_start:read_end]
     requested = np.unique(np.concatenate(
         (window.history_indices, window.anchor_indices, window.future_indices)
     ))
