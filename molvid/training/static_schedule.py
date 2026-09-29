@@ -26,13 +26,18 @@ class StaticSourceEntry:
     system_id: str
     replica: str
     source_kind: str
+    supervised_atoms: int
 
     def contract(self) -> dict[str, Any]:
         return asdict(self)
 
 
-def internal_md_static_pool(dataset: Any) -> tuple[StaticSourceEntry, ...]:
-    """Select one midpoint frame for every unique ATLAS train trajectory."""
+def internal_md_static_pool(
+    dataset: Any,
+    *,
+    max_source_atoms: int | None = None,
+) -> tuple[StaticSourceEntry, ...]:
+    """Select one midpoint frame from each eligible ATLAS train trajectory."""
 
     selected: dict[tuple[str, str], StaticSourceEntry] = {}
     for item in get_clip_specs(dataset):
@@ -41,6 +46,15 @@ def internal_md_static_pool(dataset: Any) -> tuple[StaticSourceEntry, ...]:
             continue
         system, replica = match.groups()
         key = system, replica
+        if max_source_atoms is not None and int(item.atoms) > int(max_source_atoms):
+            continue
+        if key in selected:
+            continue
+        record = dataset[int(item.index)]
+        loss_mask = torch.as_tensor(record["loss_mask"], dtype=torch.bool)
+        supervised_atoms = int(loss_mask.sum())
+        if loss_mask.shape != (int(item.atoms),) or supervised_atoms < 1:
+            raise ValueError("internal static source has an invalid loss mask")
         selected.setdefault(
             key,
             StaticSourceEntry(
@@ -51,6 +65,7 @@ def internal_md_static_pool(dataset: Any) -> tuple[StaticSourceEntry, ...]:
                 system_id=system,
                 replica=replica,
                 source_kind="internal_md_train",
+                supervised_atoms=supervised_atoms,
             ),
         )
     entries = tuple(selected[key] for key in sorted(selected))
@@ -82,6 +97,11 @@ def external_static_pool(
         coordinates = torch.as_tensor(record["x"])
         if coordinates.ndim != 3 or int(coordinates.shape[0]) != 1:
             raise ValueError("external static eligibility selected a non-static record")
+        supervised_atoms = int(
+            torch.as_tensor(record["loss_mask"], dtype=torch.bool).sum()
+        )
+        if supervised_atoms < 1 or supervised_atoms > int(coordinates.shape[1]):
+            raise ValueError("external static eligibility selected an invalid loss mask")
         entries.append(
             StaticSourceEntry(
                 dataset_index=index,
@@ -91,6 +111,7 @@ def external_static_pool(
                 system_id=str(record.get("legacy_id", "external")),
                 replica="not_applicable",
                 source_kind="external_static",
+                supervised_atoms=supervised_atoms,
             )
         )
     return tuple(entries)
@@ -108,6 +129,8 @@ def materialize_static_records(
         if entry.source_kind == "internal_md_train":
             if str(record.get("sample_id", "")) != entry.source_sample_id:
                 raise RuntimeError("internal static dataset index changed sample identity")
+            if int(torch.as_tensor(record["loss_mask"], dtype=torch.bool).sum()) != entry.supervised_atoms:
+                raise RuntimeError("internal static dataset index changed supervised atom count")
             result.append(
                 trajectory_record_to_static(
                     record,
@@ -125,6 +148,8 @@ def materialize_static_records(
                 raise RuntimeError("external static dataset index changed sample identity")
             if int(record["x"].shape[1]) != entry.atoms:
                 raise RuntimeError("external static dataset index changed atom count")
+            if int(torch.as_tensor(record["loss_mask"], dtype=torch.bool).sum()) != entry.supervised_atoms:
+                raise RuntimeError("external static dataset index changed supervised atom count")
             result.append(record)
     return result
 
@@ -152,6 +177,7 @@ class StaticBatchSchedule:
         self.successful_static_updates = 0
         self.exposed_samples = 0
         self.exposed_atoms = 0
+        self.exposed_supervised_atoms = 0
         self._batches = self._build_epoch(self.epoch)
         self._pending_indices: tuple[int, ...] | None = None
 
@@ -195,12 +221,41 @@ class StaticBatchSchedule:
         self.successful_static_updates += 1
         self.exposed_samples += len(entries)
         self.exposed_atoms += sum(entry.atoms for entry in entries)
+        self.exposed_supervised_atoms += sum(entry.supervised_atoms for entry in entries)
+
+    def preview_exposure(self, updates: int) -> dict[str, int]:
+        """Return the deterministic exposure without advancing this schedule."""
+
+        if isinstance(updates, bool) or int(updates) < 1:
+            raise ValueError("static exposure preview requires positive updates")
+        epoch = 0
+        batch_index = 0
+        batches = self._build_epoch(epoch)
+        samples = atoms = supervised_atoms = 0
+        for _ in range(int(updates)):
+            if batch_index >= len(batches):
+                epoch += 1
+                batch_index = 0
+                batches = self._build_epoch(epoch)
+            indices = batches[batch_index]
+            batch_index += 1
+            samples += len(indices)
+            atoms += sum(self.entries[index].atoms for index in indices)
+            supervised_atoms += sum(
+                self.entries[index].supervised_atoms for index in indices
+            )
+        return {
+            "static_updates": int(updates),
+            "samples": samples,
+            "atoms": atoms,
+            "supervised_atoms": supervised_atoms,
+        }
 
     def state_dict(self) -> dict[str, Any]:
         if self._pending_indices is not None:
             raise RuntimeError("cannot checkpoint an uncommitted static batch")
         return {
-            "schema": "molvid.static_decoder.schedule.v1",
+            "schema": "molvid.static_decoder.schedule.v2",
             "seed": self.seed,
             "max_atoms_per_update": self.max_atoms_per_update,
             "pool_hash": self.pool_hash,
@@ -209,12 +264,13 @@ class StaticBatchSchedule:
             "successful_static_updates": self.successful_static_updates,
             "exposed_samples": self.exposed_samples,
             "exposed_atoms": self.exposed_atoms,
+            "exposed_supervised_atoms": self.exposed_supervised_atoms,
             "epoch_batch_hash": canonical_hash(self._batches),
         }
 
     def load_state_dict(self, state: Mapping[str, Any]) -> None:
         expected = {
-            "schema": "molvid.static_decoder.schedule.v1",
+            "schema": "molvid.static_decoder.schedule.v2",
             "seed": self.seed,
             "max_atoms_per_update": self.max_atoms_per_update,
             "pool_hash": self.pool_hash,
@@ -227,6 +283,7 @@ class StaticBatchSchedule:
         self.successful_static_updates = int(state["successful_static_updates"])
         self.exposed_samples = int(state["exposed_samples"])
         self.exposed_atoms = int(state["exposed_atoms"])
+        self.exposed_supervised_atoms = int(state["exposed_supervised_atoms"])
         self._batches = self._build_epoch(self.epoch)
         self._pending_indices = None
         if state.get("epoch_batch_hash") != canonical_hash(self._batches):
@@ -242,7 +299,37 @@ class StaticBatchSchedule:
             "pool_hash": self.pool_hash,
             "pool_size": len(self.entries),
             "source_kind": sorted({entry.source_kind for entry in self.entries}),
+            "supervision": "loss_mask atoms only",
         }
+
+
+def validate_static_exposure_plan(
+    plan: Mapping[str, int],
+    target: Mapping[str, int],
+) -> None:
+    """Fail closed unless a planned arm meets the shared exposure target."""
+
+    expected_keys = {
+        "static_updates", "samples", "atoms", "supervised_atoms",
+        "sample_tolerance", "atom_tolerance", "supervised_atom_tolerance",
+    }
+    if set(target) != expected_keys:
+        raise ValueError("static exposure target keys differ from the frozen contract")
+    for name, value in target.items():
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"static exposure target {name} must be a non-negative integer")
+    if target["static_updates"] < 1:
+        raise ValueError("static exposure target requires positive static updates")
+    if int(plan["static_updates"]) != target["static_updates"]:
+        raise ValueError("static update exposure differs from the shared target")
+    checks = (
+        ("samples", "sample_tolerance"),
+        ("atoms", "atom_tolerance"),
+        ("supervised_atoms", "supervised_atom_tolerance"),
+    )
+    for name, tolerance in checks:
+        if abs(int(plan[name]) - target[name]) > target[tolerance]:
+            raise ValueError(f"static {name} exposure differs from the shared target")
 
 
 class StaticRNGStreams:

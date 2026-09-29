@@ -588,6 +588,7 @@ class StaticDecoderAuxiliaryTrainer:
             "decoder_grad_norm": float(torch.as_tensor(grad_norm).detach()),
             "batch_size": batch.observed_context.latent.batch_size,
             "atom_count": batch.observed_context.latent.num_atoms,
+            "supervised_atom_count": int(batch.input_batch.loss_mask.sum()),
             "motion_available": False,
             "physical_lag_applicable": False,
             "nominal_sigma_per_axis_angstrom": [

@@ -10,6 +10,7 @@ from molvid.training.static_schedule import (
     StaticBatchSchedule,
     external_static_pool,
     internal_md_static_pool,
+    validate_static_exposure_plan,
 )
 
 
@@ -35,6 +36,10 @@ class _SpecDataset:
     def clip_spec_table(self) -> ClipSpecTable:
         return self._specs
 
+    def __getitem__(self, index: int):
+        atoms = 100 + index
+        return {"loss_mask": torch.ones(atoms, dtype=torch.bool)}
+
 
 def test_internal_pool_selects_one_midpoint_per_complete_trajectory() -> None:
     entries = internal_md_static_pool(_SpecDataset())
@@ -46,6 +51,7 @@ def test_internal_pool_selects_one_midpoint_per_complete_trajectory() -> None:
     }
     assert all(entry.frame_index == 8 for entry in entries)
     assert all(entry.source_sample_id.endswith("w000") for entry in entries)
+    assert all(entry.supervised_atoms == entry.atoms for entry in entries)
 
 
 def test_static_schedule_commits_only_success_and_resumes_exactly() -> None:
@@ -73,6 +79,26 @@ def test_static_schedule_commits_only_success_and_resumes_exactly() -> None:
         )
 
 
+def test_static_exposure_preview_and_target_gate_include_supervised_atoms() -> None:
+    entries = internal_md_static_pool(_SpecDataset())
+    schedule = StaticBatchSchedule(entries, seed=17, max_atoms_per_update=250)
+    plan = schedule.preview_exposure(8)
+    assert plan["static_updates"] == 8
+    assert plan["atoms"] == plan["supervised_atoms"]
+    target = {
+        **plan,
+        "sample_tolerance": 0,
+        "atom_tolerance": 0,
+        "supervised_atom_tolerance": 0,
+    }
+    validate_static_exposure_plan(plan, target)
+    with pytest.raises(ValueError, match="supervised_atoms"):
+        validate_static_exposure_plan(
+            plan,
+            {**target, "supervised_atoms": target["supervised_atoms"] + 1},
+        )
+
+
 def test_external_pool_opens_only_the_preselected_records() -> None:
     class Dataset:
         def __init__(self) -> None:
@@ -84,6 +110,7 @@ def test_external_pool_opens_only_the_preselected_records() -> None:
                 "x": torch.zeros((1, 10 + index % 3, 3)),
                 "sample_id": f"static_pdb_train_{index:08d}",
                 "legacy_id": f"pdb_{index:08d}",
+                "loss_mask": torch.ones(10 + index % 3, dtype=torch.bool),
             }
 
     dataset = Dataset()

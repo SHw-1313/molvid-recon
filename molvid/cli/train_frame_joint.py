@@ -57,6 +57,7 @@ from ..training.static_schedule import (
     external_static_pool,
     internal_md_static_pool,
     materialize_static_records,
+    validate_static_exposure_plan,
 )
 
 
@@ -94,7 +95,8 @@ _SAMPLED_AUXILIARY_KEYS = {
 }
 _STATIC_AUXILIARY_KEYS = {
     "enabled", "source", "cadence", "seed", "max_atoms_per_update",
-    "expected_pool_size", "perturbation", "loss", "gamma_calibration", "external",
+    "max_source_atoms", "expected_pool_size", "exposure_target", "perturbation",
+    "loss", "gamma_calibration", "external",
 }
 _STATIC_GAMMA_KEYS = {
     "path", "sha256", "parent_sha256", "code_commit",
@@ -102,9 +104,16 @@ _STATIC_GAMMA_KEYS = {
     "auxiliary_recipe_sha256",
 }
 _STATIC_EXTERNAL_KEYS = {
-    "store", "store_index_sha256", "source", "split",
+    "store", "store_index_sha256", "store_data_sha256", "source", "split",
+    "selection_report", "selection_report_sha256", "selected_count",
+    "selected_indices_hash", "selection_seed", "code_commit",
     "eligibility_manifest", "eligibility_sha256", "near_homology_policy",
 }
+_STATIC_EXPOSURE_TARGET_KEYS = {
+    "static_updates", "samples", "atoms", "supervised_atoms",
+    "sample_tolerance", "atom_tolerance", "supervised_atom_tolerance",
+}
+_EXPERIMENT_WARM_START_KEYS = {"path", "sha256", "code_commit", "mode"}
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
     "view_history_clip_exposure", "valid_atom_frames",
@@ -155,7 +164,10 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
 
     _reject_unknown(
         raw,
-        {"schema", "sampled_auxiliary", "static_decoder_auxiliary", *_SECTION_KEYS},
+        {
+            "schema", "sampled_auxiliary", "static_decoder_auxiliary",
+            "experiment_warm_start", *_SECTION_KEYS,
+        },
         "root",
     )
     for section, allowed in _SECTION_KEYS.items():
@@ -337,6 +349,27 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     if any(calibrated_weights) and not all(calibrated_weights):
         raise ValueError("sampled auxiliary weights must be calibrated together")
 
+    experiment_parent = raw.get("experiment_warm_start")
+    if experiment_parent is not None:
+        experiment_parent = _require_mapping(
+            experiment_parent, "experiment_warm_start"
+        )
+        _reject_unknown(
+            experiment_parent,
+            _EXPERIMENT_WARM_START_KEYS,
+            "experiment_warm_start",
+        )
+        if set(experiment_parent) != _EXPERIMENT_WARM_START_KEYS:
+            raise ValueError("experiment warm-start identity is incomplete")
+        for name in _EXPERIMENT_WARM_START_KEYS:
+            _require_string(
+                experiment_parent[name], f"experiment_warm_start.{name}"
+            )
+        if experiment_parent["mode"] != (
+            "model_only_warm_start_with_optimizer_scheduler_cursor_rng_reset"
+        ):
+            raise ValueError("experiment warm-start mode differs from the paired contract")
+
     static = _require_mapping(
         raw.get("static_decoder_auxiliary", {}), "static_decoder_auxiliary"
     )
@@ -352,7 +385,10 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
         raise ValueError(f"static_decoder_auxiliary missing keys: {missing}")
     if static["source"] not in {"internal_md", "external_static"}:
         raise ValueError("static decoder source must be internal_md or external_static")
-    for name in ("cadence", "seed", "max_atoms_per_update", "expected_pool_size"):
+    for name in (
+        "cadence", "seed", "max_atoms_per_update", "max_source_atoms",
+        "expected_pool_size",
+    ):
         _require_number(
             static[name],
             f"static_decoder_auxiliary.{name}",
@@ -361,6 +397,27 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
         )
     if int(static["cadence"]) != 4:
         raise ValueError("static decoder auxiliary cadence is frozen at four dynamic updates")
+    if int(static["max_source_atoms"]) > int(static["max_atoms_per_update"]):
+        raise ValueError("static source atom cap exceeds the per-update atom cap")
+    exposure_target = _require_mapping(
+        static["exposure_target"], "static_decoder_auxiliary.exposure_target"
+    )
+    _reject_unknown(
+        exposure_target,
+        _STATIC_EXPOSURE_TARGET_KEYS,
+        "static_decoder_auxiliary.exposure_target",
+    )
+    if set(exposure_target) != _STATIC_EXPOSURE_TARGET_KEYS:
+        raise ValueError("static exposure target identity is incomplete")
+    for name, value in exposure_target.items():
+        _require_number(
+            value,
+            f"static_decoder_auxiliary.exposure_target.{name}",
+            integer=True,
+            nonnegative=True,
+        )
+    if int(exposure_target["static_updates"]) < 1:
+        raise ValueError("static exposure target requires positive static updates")
     StaticPerturbationConfig.resolve(
         _require_mapping(static["perturbation"], "static_decoder_auxiliary.perturbation")
     )
@@ -376,8 +433,8 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     for name in _STATIC_GAMMA_KEYS:
         _require_string(gamma[name], f"static_decoder_auxiliary.gamma_calibration.{name}")
     if static["source"] == "internal_md":
-        if int(static["expected_pool_size"]) != 576:
-            raise ValueError("released A internal static pool must contain 576 trajectories")
+        if int(static["expected_pool_size"]) % 3:
+            raise ValueError("internal static pool must contain complete three-replica systems")
         if "external" in static:
             raise ValueError("internal static source cannot define an external store")
     else:
@@ -387,8 +444,17 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
         _reject_unknown(external, _STATIC_EXTERNAL_KEYS, "static_decoder_auxiliary.external")
         if set(external) != _STATIC_EXTERNAL_KEYS:
             raise ValueError("external static source identity is incomplete")
-        for name in _STATIC_EXTERNAL_KEYS:
+        for name in _STATIC_EXTERNAL_KEYS - {"selected_count", "selection_seed"}:
             _require_string(external[name], f"static_decoder_auxiliary.external.{name}")
+        for name in ("selected_count", "selection_seed"):
+            _require_number(
+                external[name],
+                f"static_decoder_auxiliary.external.{name}",
+                integer=True,
+                positive=name == "selected_count",
+            )
+        if int(external["selected_count"]) != int(static["expected_pool_size"]):
+            raise ValueError("external selected count differs from the expected pool size")
         if external["near_homology_policy"] not in {
             "excluded",
             "waived_by_user_20260929",
@@ -816,10 +882,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("continuation parent requires its SHA-256")
     if args.warm_start and not args.warm_start_sha256:
         raise ValueError("warm start requires its SHA-256")
+    if args.resume and not args.resume_sha256:
+        raise ValueError("resume requires its SHA-256")
     if args.fit_statistics_only:
         args.fit_statistics = True
     raw = load_config(args.config, schema=SCHEMA)
     _validate_frame_joint_config(raw)
+    experiment_parent = raw.get("experiment_warm_start")
+    if experiment_parent is not None:
+        if experiment_parent["code_commit"] != _git_commit():
+            raise ValueError("paired experiment code differs from the frozen commit")
+        if args.continuation_parent:
+            raise ValueError("paired experiment requires model-only warm start, not continuation")
+        if not args.resume:
+            if not args.warm_start or not args.warm_start_sha256:
+                raise ValueError("paired experiment requires its frozen warm-start parent")
+            if Path(args.warm_start).resolve() != Path(experiment_parent["path"]).resolve():
+                raise ValueError("paired experiment warm-start path differs")
+            if args.warm_start_sha256 != experiment_parent["sha256"]:
+                raise ValueError("paired experiment warm-start SHA-256 differs")
     training = dict(raw["training"])
     if args.output_root is not None:
         training["output_root"] = str(args.output_root)
@@ -903,7 +984,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "history_order": list(histories),
             "learning_rate_schedule": "linear_warmup_5pct_cosine_to_0.1.v1",
         }
-        total_updates = sum(int(stage["updates"]) for stage in stages)
+        configured_total_updates = sum(int(stage["updates"]) for stage in stages)
+        total_updates = configured_total_updates
         if args.max_steps is not None:
             total_updates = min(total_updates, int(args.max_steps))
         initial_stage = stages[0]
@@ -911,6 +993,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         parent_preview = None
         if args.resume:
             resume_payload = torch.load(args.resume, map_location="cpu", weights_only=False)
+            if experiment_parent is not None:
+                resumed_parent = resume_payload.get("contracts", {}).get(
+                    "continuation_parent"
+                )
+                if not isinstance(resumed_parent, Mapping) or resumed_parent.get(
+                    "sha256"
+                ) != experiment_parent["sha256"]:
+                    raise ValueError("paired resume does not descend from the frozen parent")
             initial_stage = {**stages[0], "name": str(resume_payload["contracts"]["stage"])}
         elif args.continuation_parent:
             parent_preview = torch.load(
@@ -1117,13 +1207,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             if int(static_gamma_report.get("dynamic_sampled_active_count", 0)) < 1:
                 raise ValueError("static gamma denominator omitted A actual-source clash")
             if static_raw["source"] == "internal_md":
-                entries = internal_md_static_pool(train)
+                entries = internal_md_static_pool(
+                    train,
+                    max_source_atoms=int(static_raw["max_source_atoms"]),
+                )
                 static_source_dataset = train
             else:
                 external = static_raw["external"]
                 store = Path(external["store"])
                 if sha256_file(store / "index.txt") != external["store_index_sha256"]:
                     raise ValueError("external static store index SHA-256 differs")
+                if sha256_file(store / "data.bin") != external["store_data_sha256"]:
+                    raise ValueError("external static store payload SHA-256 differs")
+                selection_report = Path(external["selection_report"])
+                if sha256_file(selection_report) != external["selection_report_sha256"]:
+                    raise ValueError("external static selection report SHA-256 differs")
                 eligibility_path = Path(external["eligibility_manifest"])
                 if sha256_file(eligibility_path) != external["eligibility_sha256"]:
                     raise ValueError("external static eligibility SHA-256 differs")
@@ -1132,6 +1230,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "schema": "molvid.static_decoder.external_eligibility.v1",
                     "status": "eligible",
                     "store_index_sha256": external["store_index_sha256"],
+                    "store_data_sha256": external["store_data_sha256"],
+                    "source": external["source"],
+                    "split": external["split"],
+                    "store": str(store.resolve()),
+                    "selection_report": str(selection_report.resolve()),
+                    "selection_report_sha256": external["selection_report_sha256"],
+                    "selected_count": int(external["selected_count"]),
+                    "selected_indices_hash": external["selected_indices_hash"],
+                    "selection_seed": int(external["selection_seed"]),
+                    "code_commit": external["code_commit"],
+                    "dynamic_data_hash": data_hash,
+                    "normalization_source_data_hash": normalization_data_hash,
                     "direct_overlap_excluded": True,
                     "near_homology_policy": external["near_homology_policy"],
                     "sealed_test_trajectories_opened": False,
@@ -1139,6 +1249,20 @@ def main(argv: Sequence[str] | None = None) -> int:
                 for name, value in required_eligibility.items():
                     if eligibility.get(name) != value:
                         raise ValueError(f"external eligibility differs at {name}")
+                selected_indices = eligibility.get("selected_indices")
+                if (
+                    not isinstance(selected_indices, list)
+                    or any(isinstance(value, bool) or not isinstance(value, int) for value in selected_indices)
+                    or len(selected_indices) != int(external["selected_count"])
+                    or canonical_hash(selected_indices) != external["selected_indices_hash"]
+                ):
+                    raise ValueError("external eligibility selected indices differ")
+                quality = eligibility.get("quality_requirements", {})
+                if (
+                    quality.get("maximum_atoms") != int(static_raw["max_source_atoms"])
+                    or quality.get("all_atoms_supervised_by_loss_mask") is not True
+                ):
+                    raise ValueError("external eligibility supervision/atom cap differs")
                 if external["near_homology_policy"] == "excluded":
                     if eligibility.get("near_homology_excluded") is not True:
                         raise ValueError("external eligibility lacks near-homology exclusion")
@@ -1153,7 +1277,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
                 entries = external_static_pool(
                     static_external_dataset,
-                    eligibility.get("selected_indices", ()),
+                    selected_indices,
                 )
                 static_source_dataset = static_external_dataset
             if len(entries) != int(static_raw["expected_pool_size"]):
@@ -1163,6 +1287,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 entries,
                 seed=int(static_raw["seed"]),
                 max_atoms_per_update=int(static_raw["max_atoms_per_update"]),
+            )
+            if configured_total_updates % int(static_raw["cadence"]):
+                raise ValueError("dynamic budget is not divisible by static cadence")
+            planned_static_updates = configured_total_updates // int(static_raw["cadence"])
+            static_exposure_plan = static_schedule.preview_exposure(
+                planned_static_updates
+            )
+            validate_static_exposure_plan(
+                static_exposure_plan,
+                static_raw["exposure_target"],
             )
             static_rng = StaticRNGStreams(
                 device=device,
@@ -1180,6 +1314,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "resolved_gamma": float(static_gamma_report["resolved_gamma"]),
                 },
                 "schedule": static_schedule.contract(),
+                "exposure_target": dict(static_raw["exposure_target"]),
+                "planned_exposure": static_exposure_plan,
                 "dynamic_rng_isolation": "torch.random.fork_rng plus independent generators",
                 "scheduler_advanced_by_static_updates": False,
                 "teacher_history_motion_dit_updated_by_static": False,
@@ -1624,6 +1760,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                         "static_update_seconds": time.perf_counter() - static_started,
                         "static_exposed_samples_total": static_schedule.exposed_samples,
                         "static_exposed_atoms_total": static_schedule.exposed_atoms,
+                        "static_exposed_supervised_atoms_total": (
+                            static_schedule.exposed_supervised_atoms
+                        ),
                     }
                 )
                 last["static_auxiliary_applied"] = True
@@ -1705,11 +1844,25 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "world_size": world,
             })
             if static_enabled:
+                actual_static_exposure = {
+                    "static_updates": static_schedule.successful_static_updates,
+                    "samples": static_schedule.exposed_samples,
+                    "atoms": static_schedule.exposed_atoms,
+                    "supervised_atoms": static_schedule.exposed_supervised_atoms,
+                }
+                if trainer.step == configured_total_updates:
+                    validate_static_exposure_plan(
+                        actual_static_exposure,
+                        static_raw["exposure_target"],
+                    )
                 atomic_write_json(
                     output_root / "static_exposure.json",
                     {
                         "schema": "molvid.static_decoder.exposure.v1",
                         **static_schedule.state_dict(),
+                        "target": dict(static_raw["exposure_target"]),
+                        "planned": static_exposure_plan,
+                        "actual": actual_static_exposure,
                         "cadence_dynamic_updates": int(static_raw["cadence"]),
                         "test_opened": False,
                     },

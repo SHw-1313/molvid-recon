@@ -25,6 +25,7 @@ def _commit() -> str:
 def _dynamic_contract(raw: Mapping[str, Any]) -> dict[str, Any]:
     result = deepcopy(dict(raw))
     result.pop("static_decoder_auxiliary", None)
+    result.pop("experiment_warm_start", None)
     training = result["training"]
     training["output_root"] = "<arm-output>"
     for stage in training["stages"]:
@@ -37,8 +38,8 @@ def _static_shared_contract(raw: Mapping[str, Any]) -> dict[str, Any]:
     return {
         name: static[name]
         for name in (
-            "cadence", "seed", "max_atoms_per_update", "perturbation", "loss",
-            "gamma_calibration",
+            "cadence", "seed", "max_atoms_per_update", "max_source_atoms",
+            "exposure_target", "perturbation", "loss", "gamma_calibration",
         )
     }
 
@@ -77,6 +78,20 @@ def main() -> int:
         raise ValueError("internal arm source differs")
     if configs["external_pdb"]["static_decoder_auxiliary"]["source"] != "external_static":
         raise ValueError("external arm source differs")
+    experiment_parents = {
+        name: raw.get("experiment_warm_start") for name, raw in configs.items()
+    }
+    if any(not isinstance(value, Mapping) for value in experiment_parents.values()):
+        raise ValueError("every paired arm must freeze its warm-start parent")
+    if len({canonical_hash(value) for value in experiment_parents.values()}) != 1:
+        raise ValueError("paired arms differ in their warm-start parent")
+    frozen_parent = next(iter(experiment_parents.values()))
+    if Path(frozen_parent["path"]).resolve() != args.parent.resolve():
+        raise ValueError("config warm-start path differs from the paired parent")
+    if frozen_parent["sha256"] != args.parent_sha256:
+        raise ValueError("config warm-start SHA-256 differs from the paired parent")
+    if frozen_parent["code_commit"] != _commit():
+        raise ValueError("config warm-start code identity differs from the current commit")
 
     dynamic_hashes = {
         name: canonical_hash(_dynamic_contract(raw)) for name, raw in configs.items()
@@ -92,6 +107,11 @@ def main() -> int:
     }
     if len(set(totals.values())) != 1 or next(iter(totals.values())) not in {500, 1000}:
         raise ValueError("paired arms require a uniform frozen 500/1000 update budget")
+    target_updates = next(iter(totals.values())) // 4
+    for name in ("internal_md", "external_pdb"):
+        target = configs[name]["static_decoder_auxiliary"]["exposure_target"]
+        if int(target["static_updates"]) != target_updates:
+            raise ValueError("static exposure target differs from the frozen dynamic budget")
     shared = {
         name: canonical_hash(_static_shared_contract(configs[name]))
         for name in ("internal_md", "external_pdb")
@@ -126,6 +146,23 @@ def main() -> int:
         "same_dynamic_order_and_rng_seed": True,
         "same_dynamic_lr_progress": True,
         "same_static_update_count": True,
+        "same_static_sample_atom_and_supervised_atom_target": True,
+        "launch_contract": {
+            name: {
+                "argv": [
+                    "python", "-m", "molvid.cli.train_frame_joint",
+                    "--config", str(path.resolve()),
+                    "--warm-start", str(args.parent.resolve()),
+                    "--warm-start-sha256", args.parent_sha256,
+                    "--checkpoint-every", "500",
+                ],
+                "code_commit": _commit(),
+                "config_sha256": sha256_file(path),
+                "output_root": configs[name]["training"]["output_root"],
+                "resume_requires_checkpoint_sha256": True,
+            }
+            for name, path in paths.items()
+        },
         "sealed_test_trajectories_opened": False,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

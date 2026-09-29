@@ -105,7 +105,13 @@ def test_static_auxiliary_config_is_strict_and_internal_pool_is_frozen():
         "cadence": 4,
         "seed": 20260929,
         "max_atoms_per_update": 5000,
-        "expected_pool_size": 576,
+        "max_source_atoms": 1000,
+        "expected_pool_size": 186,
+        "exposure_target": {
+            "static_updates": 250, "samples": 1000, "atoms": 800000,
+            "supervised_atoms": 800000, "sample_tolerance": 20,
+            "atom_tolerance": 20000, "supervised_atom_tolerance": 20000,
+        },
         "perturbation": {
             "sigma_per_axis_angstrom": [0.05, 0.10, 0.20],
             "clean_probability": 0.20,
@@ -126,8 +132,8 @@ def test_static_auxiliary_config_is_strict_and_internal_pool_is_frozen():
     with pytest.raises(ValueError, match="cadence"):
         _validate_frame_joint_config(raw)
     raw["static_decoder_auxiliary"]["cadence"] = 4
-    raw["static_decoder_auxiliary"]["expected_pool_size"] = 575
-    with pytest.raises(ValueError, match="576"):
+    raw["static_decoder_auxiliary"]["expected_pool_size"] = 185
+    with pytest.raises(ValueError, match="three-replica"):
         _validate_frame_joint_config(raw)
 
 
@@ -140,7 +146,13 @@ def test_external_static_config_requires_a_complete_eligibility_identity():
         "cadence": 4,
         "seed": 20260929,
         "max_atoms_per_update": 5000,
+        "max_source_atoms": 1000,
         "expected_pool_size": 2000,
+        "exposure_target": {
+            "static_updates": 250, "samples": 1000, "atoms": 800000,
+            "supervised_atoms": 800000, "sample_tolerance": 20,
+            "atom_tolerance": 20000, "supervised_atom_tolerance": 20000,
+        },
         "perturbation": {},
         "loss": {"gamma": 0.01},
         "gamma_calibration": {

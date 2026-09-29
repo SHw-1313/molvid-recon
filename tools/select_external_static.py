@@ -55,6 +55,8 @@ def _quality(record: Mapping[str, Any], *, max_atoms: int) -> tuple[bool, str]:
         return False, "degenerate_coordinates"
     if loss_mask.shape != (atoms,) or not bool(loss_mask.any()):
         return False, "empty_loss_mask"
+    if not bool(loss_mask.all()):
+        return False, "partial_loss_mask"
     if atype.shape != (atoms,) or int(atype.min()) < 0 or int(atype.max()) > 117:
         return False, "unsupported_atom_type"
     if bonds.ndim != 2 or bonds.shape[0] != 2 or bonds.shape[1] == 0:
@@ -90,7 +92,7 @@ def main() -> int:
             for system in [_system_id(item.sample_id)]
             if system is not None
         }
-        internal = internal_md_static_pool(train)
+        internal = internal_md_static_pool(train, max_source_atoms=args.max_atoms)
         internal_atoms = np.asarray([entry.atoms for entry in internal], dtype=np.int64)
     finally:
         close()
@@ -106,8 +108,8 @@ def main() -> int:
         for value in split_manifest["source_splits"]["test"]["selected_systems"]
     }
     dynamic_systems.update(sealed_test_systems)
-    if len(internal) != 576:
-        raise ValueError("released dynamic data did not yield the 576-trajectory pool")
+    if not 3 <= len(internal) <= 576 or len(internal) % 3:
+        raise ValueError("released dynamic data did not yield complete eligible trajectories")
 
     # Coarsely match external atom-count exposure to the internal source while
     # retaining a seeded random selection within each bin.
@@ -170,6 +172,7 @@ def main() -> int:
         "split": args.split,
         "store": str(args.store.resolve()),
         "store_index_sha256": sha256_file(args.store / "index.txt"),
+        "store_data_sha256": sha256_file(args.store / "data.bin"),
         "selection_report": str(args.selection_report.resolve()),
         "selection_report_sha256": sha256_file(args.selection_report),
         "selected_indices": selected,
@@ -183,6 +186,7 @@ def main() -> int:
             "finite_x_and_bpos": True,
             "maximum_atoms": args.max_atoms,
             "nonempty_loss_mask": True,
+            "all_atoms_supervised_by_loss_mask": True,
             "nonempty_covalent_topology": True,
             "supported_atom_type_ids": [0, 117],
             "record_wide_degenerate_coordinate_fill_allowed": False,
@@ -195,6 +199,12 @@ def main() -> int:
             "external_bin_counts": accepted_by_bin.tolist(),
             "internal_atom_mean": float(internal_atoms.mean()),
             "external_atom_mean": float(np.mean([row["atoms"] for row in selected_rows])),
+            "internal_supervised_atom_mean": float(
+                np.mean([entry.supervised_atoms for entry in internal])
+            ),
+            "external_supervised_atom_mean": float(
+                np.mean([row["loss_atoms"] for row in selected_rows])
+            ),
         },
         "direct_overlap_excluded": True,
         "direct_overlap_definition": "exact PDB-chain origin match to released A train, valid, or sealed-test manifest system ID",
