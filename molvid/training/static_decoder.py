@@ -22,6 +22,7 @@ from ..data.batch import ClipBatch, STATIC_TASK
 from ..data.static import STATIC_DECODER_TASK_TYPE
 from ..latent.types import ObservedContext
 from ..losses.geometry import FutureBondLoss, future_bond_distance_loss
+from ..losses.sampled_physical import PhysicalAuxiliaryConfig, packed_clash_loss
 from ..model import FrameJointModel
 from .batches import prepare_batch_then_to_device
 
@@ -273,6 +274,39 @@ class StaticClashLoss:
 
 
 StaticClashLossFunction = Callable[[Tensor, PreparedStaticDecoderBatch], StaticClashLoss]
+
+
+def static_clash_loss_function(
+    physical_config: PhysicalAuxiliaryConfig,
+) -> StaticClashLossFunction:
+    """Bind A's frozen reviewed clash rule to the static batch interface."""
+
+    if physical_config.clash_weight <= 0.0:
+        raise ValueError("static clash requires A's active released clash configuration")
+
+    def evaluate(
+        coordinates: Tensor,
+        batch: PreparedStaticDecoderBatch,
+    ) -> StaticClashLoss:
+        result = packed_clash_loss(
+            coordinates,
+            topology=batch.observed_context.topology,
+            loss_mask=batch.observed_context.loss_mask,
+            frame_mask=batch.observed_context.latent.frame_mask,
+            config=physical_config,
+        )
+        return StaticClashLoss(
+            loss=result.loss,
+            applicable_count=result.applicable_count,
+            diagnostics={
+                "enabled": True,
+                "source": "A1 released PhysicalAuxiliaryConfig",
+                "table_provenance": dict(physical_config.table_provenance or {}),
+                **result.diagnostics(),
+            },
+        )
+
+    return evaluate
 
 
 @dataclass(frozen=True)
@@ -559,4 +593,3 @@ class StaticDecoderAuxiliaryTrainer:
             "amp_bfloat16": self.amp,
             "grad_clip": self.grad_clip,
         }
-

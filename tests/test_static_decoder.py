@@ -15,6 +15,7 @@ from molvid.data.batch import collate_clip_records
 from molvid.dit.frame import FrameDiT
 from molvid.latent.adapter import FrameLatentAdapter
 from molvid.latent.statistics import FrameLatentStatistics
+from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
 from molvid.model import FrameJointModel
 from molvid.training.batches import prepare_frame_joint_batch
 from molvid.training.static_decoder import (
@@ -23,6 +24,7 @@ from molvid.training.static_decoder import (
     StaticPerturbationConfig,
     prepare_static_decoder_batch,
     resolve_static_gamma,
+    static_clash_loss_function,
     static_decoder_loss,
 )
 
@@ -192,6 +194,27 @@ def test_static_batch_is_target_isolated_and_updates_only_decoder_on_cuda(amp: b
             prepared,
             StaticDecoderLossConfig(clash=1.0),
         )
+    physical = PhysicalAuxiliaryConfig.resolve(
+        {
+            "clash_weight": 0.01,
+            "vdw_radii_A": {"5": 2.0, "6": 2.0},
+            "allowed_overlap_A": 0.8,
+            "one_four_overlap_A": 1.2,
+            "table_provenance": {"split": "train", "source_hash": "fixture"},
+            "distance_chunk_size": 2,
+        }
+    )
+    reviewed_clash = static_decoder_loss(
+        model.decoder(prepared.observed_context),
+        prepared,
+        StaticDecoderLossConfig(clash=physical.clash_weight),
+        clash_loss_function=static_clash_loss_function(physical),
+    )
+    assert torch.isfinite(reviewed_clash.raw["clash"])
+    assert int(reviewed_clash.applicable_samples["clash"]) == 2
+    assert reviewed_clash.clash_diagnostics["source"] == (
+        "A1 released PhysicalAuxiliaryConfig"
+    )
 
     trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
     optimizer = torch.optim.AdamW(trainable, lr=1.0e-3, weight_decay=0.1)

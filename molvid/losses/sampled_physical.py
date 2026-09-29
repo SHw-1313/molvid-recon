@@ -74,6 +74,25 @@ class PhysicalAuxiliaryConfig:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class PackedClashLoss:
+    """A's raw topology-aware clash loss reduced equally over packed samples."""
+
+    loss: Tensor
+    applicable_count: Tensor
+    exact_overlap_pair_frames: int
+    backend: str = "chunked_cuda_distance_correctness_reference_no_neighbor_cap"
+
+    def diagnostics(self) -> dict[str, Any]:
+        return {
+            "exact_overlap_pair_frames": self.exact_overlap_pair_frames,
+            "exact_overlap_note": (
+                "finite zero subgradient; cannot guarantee separation at exact coincidence"
+            ),
+            "clash_backend": self.backend,
+        }
+
+
 def motion_features(coordinates: Tensor, batch: Any, sample: int, *,
                     rmsf: bool, displacement: bool) -> dict[str, Tensor]:
     """Features for one condition, aligned to its last observed reference.
@@ -121,10 +140,8 @@ def _topological_distances(topology: Any) -> tuple[dict[int, set[int]], dict[int
     return excluded, one_four
 
 
-def _clash_condition(coordinates: Tensor, batch: Any, sample: int,
-                     config: PhysicalAuxiliaryConfig, distances) -> tuple[Tensor, int]:
-    nodes, _, _, frames, _ = _sample_metadata(batch, sample)
-    topology = batch.observed_context.topology
+def _clash_nodes(coordinates: Tensor, topology: Any, nodes: Tensor, frames: Tensor,
+                 config: PhysicalAuxiliaryConfig, distances) -> tuple[Tensor, int]:
     atom_ids = nodes.detach().cpu().tolist()
     atom_types = topology.atom_type.index_select(0, nodes).detach().cpu().tolist()
     radii = coordinates.new_tensor([config.vdw_radii_A[str(t)] for t in atom_types], dtype=torch.float32)
@@ -160,6 +177,77 @@ def _clash_condition(coordinates: Tensor, batch: Any, sample: int,
             total = total + (minimum[ii, jj] - distance).relu().square().sum()
     # Each pair once; average by valid frames and atoms, never violation count.
     return total / (len(frames) * len(nodes)), overlaps
+
+
+def _clash_condition(coordinates: Tensor, batch: Any, sample: int,
+                     config: PhysicalAuxiliaryConfig, distances) -> tuple[Tensor, int]:
+    nodes, _, _, frames, _ = _sample_metadata(batch, sample)
+    return _clash_nodes(
+        coordinates,
+        batch.observed_context.topology,
+        nodes,
+        frames,
+        config,
+        distances,
+    )
+
+
+def packed_clash_loss(
+    coordinates: Tensor,
+    *,
+    topology: Any,
+    loss_mask: Tensor,
+    frame_mask: Tensor,
+    config: PhysicalAuxiliaryConfig,
+) -> PackedClashLoss:
+    """Apply A's reviewed clash rule to arbitrary packed coordinate frames.
+
+    This is the shared raw physical loss used by the static decoder task.  It
+    preserves A's exclusions, 1--4 allowance, thresholds, per-frame/per-atom
+    normalization, sample-equal reduction, detached candidate search, and
+    differentiable selected distances.  No physical-time meaning is attached.
+    """
+
+    if coordinates.device.type != "cuda":
+        raise RuntimeError("packed clash loss requires CUDA; no CPU fallback")
+    if coordinates.ndim != 3 or coordinates.shape[-1] != 3:
+        raise ValueError("packed clash coordinates must have shape [T,N,3]")
+    if int(coordinates.shape[1]) != int(topology.num_atoms):
+        raise ValueError("packed clash coordinates and topology atom axes differ")
+    if config.clash_weight <= 0.0:
+        raise ValueError("packed clash loss requires an active reviewed clash configuration")
+    mask = torch.as_tensor(loss_mask, device=coordinates.device, dtype=torch.bool).flatten()
+    frames = torch.as_tensor(frame_mask, device=coordinates.device, dtype=torch.bool)
+    if mask.shape != (topology.num_atoms,):
+        raise ValueError("packed clash loss_mask must have shape [N]")
+    if frames.shape != (topology.batch_size, coordinates.shape[0]):
+        raise ValueError("packed clash frame_mask must have shape [B,T]")
+    distances = _topological_distances(topology)
+    values = []
+    overlaps = 0
+    for sample in range(topology.batch_size):
+        nodes = torch.nonzero(
+            (topology.abid == sample) & mask, as_tuple=False
+        ).flatten()
+        valid_frames = torch.nonzero(frames[sample], as_tuple=False).flatten()
+        if nodes.numel() == 0 or valid_frames.numel() == 0:
+            continue
+        value, count = _clash_nodes(
+            coordinates,
+            topology,
+            nodes,
+            valid_frames,
+            config,
+            distances,
+        )
+        values.append(value)
+        overlaps += count
+    zero = coordinates.sum() * 0.0
+    return PackedClashLoss(
+        loss=torch.stack(values).mean() if values else zero,
+        applicable_count=zero.new_tensor(len(values), dtype=torch.long),
+        exact_overlap_pair_frames=overlaps,
+    )
 
 
 def _band_condition(coordinates: Tensor, batch: Any, sample: int,

@@ -24,6 +24,7 @@ from molvid.data.batch import collate_clip_records
 from molvid.data.sampling import get_clip_specs
 from molvid.data.static import trajectory_record_to_static
 from molvid.flow.objective import FrameRectifiedFlowObjective
+from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
 from molvid.model import FrameJointModel
 from molvid.runtime import atomic_write_json, configure_device, seed_all, sha256_file
 from molvid.training.batches import prepare_frame_joint_batch
@@ -40,6 +41,7 @@ from molvid.training.static_decoder import (
     parameter_gradient_norm,
     prepare_static_decoder_batch,
     resolve_static_gamma,
+    static_clash_loss_function,
     static_decoder_loss,
 )
 
@@ -49,6 +51,7 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--parent", type=Path, required=True)
     parser.add_argument("--parent-sha256", required=True)
+    parser.add_argument("--auxiliary-recipe", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", choices=("smoke", "pilot"), required=True)
     parser.add_argument("--updates", type=int, default=128)
@@ -105,7 +108,14 @@ def _select_three_system_grid(dataset: Any) -> tuple[list[Mapping[str, Any]], li
         actual_system, actual_replica = _system_replica(record)
         if (actual_system, actual_replica) != key:
             raise RuntimeError("clip index metadata disagrees with decoded record provenance")
-        valid_frames = int(torch.as_tensor(record["frame_mask"]).sum())
+        # On-disk clips are unpadded and may omit ``frame_mask``; validation
+        # materializes the all-valid default only when the record is consumed.
+        source_frames = int(torch.as_tensor(record["x"]).shape[0])
+        valid_frames = int(
+            torch.as_tensor(
+                record.get("frame_mask", torch.ones(source_frames, dtype=torch.bool))
+            ).sum()
+        )
         frame = max(0, valid_frames // 2)
         if frame >= valid_frames:
             frame = valid_frames - 1
@@ -242,6 +252,7 @@ def _static_decoder_gradient_norm(
     *,
     device: torch.device,
     generator: torch.Generator,
+    physical_config: PhysicalAuxiliaryConfig,
 ) -> tuple[float, dict[str, Any]]:
     prepared = prepare_static_decoder_batch(
         model.target_teacher,
@@ -257,7 +268,13 @@ def _static_decoder_gradient_norm(
     losses = static_decoder_loss(
         output,
         prepared,
-        StaticDecoderLossConfig(coordinate=1.0, bond=0.1, clash=0.0, gamma=1.0),
+        StaticDecoderLossConfig(
+            coordinate=1.0,
+            bond=0.1,
+            clash=physical_config.clash_weight,
+            gamma=1.0,
+        ),
+        clash_loss_function=static_clash_loss_function(physical_config),
     )
     norm = parameter_gradient_norm(losses.unscaled_total, tuple(model.decoder.parameters()))
     return float(norm), {
@@ -279,6 +296,7 @@ def _calibrate_gamma(
     *,
     device: torch.device,
     seed: int,
+    physical_config: PhysicalAuxiliaryConfig,
 ) -> tuple[float, dict[str, Any]]:
     dynamic_generator = torch.Generator(device=device).manual_seed(seed + 101)
     static_generator = torch.Generator(device=device).manual_seed(seed + 202)
@@ -300,13 +318,15 @@ def _calibrate_gamma(
             static_record,
             device=device,
             generator=static_generator,
+            physical_config=physical_config,
         )
         static_norms.append(norm)
         perturbation_rows.append(row)
     gamma, report = resolve_static_gamma(dynamic_norms, static_norms, target_ratio=0.075)
     report["perturbation_diagnostics"] = perturbation_rows
-    report["clash_weight"] = 0.0
-    report["clash_reason"] = "A reviewed clash code is not yet in an immutable recipe release"
+    report["clash_weight"] = physical_config.clash_weight
+    report["clash_rule"] = "A1 released topology-aware physical clash"
+    report["clash_table_provenance"] = dict(physical_config.table_provenance or {})
     return gamma, report
 
 
@@ -338,6 +358,7 @@ def _one_precision_smoke(
     gamma: float,
     amp: bool,
     seed: int,
+    physical_config: PhysicalAuxiliaryConfig,
 ) -> dict[str, Any]:
     artifact, model, dynamic, warm = _make_model(
         raw,
@@ -373,11 +394,15 @@ def _one_precision_smoke(
     static_trainer = StaticDecoderAuxiliaryTrainer(
         model,
         loss_config=StaticDecoderLossConfig(
-            coordinate=1.0, bond=0.1, clash=0.0, gamma=gamma
+            coordinate=1.0,
+            bond=0.1,
+            clash=physical_config.clash_weight,
+            gamma=gamma,
         ),
         optimizer=dynamic.optimizer,
         grad_clip=float(raw["training"].get("grad_clip", 1.0)),
         amp=amp,
+        clash_loss_function=static_clash_loss_function(physical_config),
     )
     off_after = model.decoder(prepared.observed_context).coordinates.detach()
     disabled_path_max_abs = float((off_before - off_after).abs().max())
@@ -429,6 +454,7 @@ def _largest_profile(
     device: torch.device,
     gamma: float,
     seed: int,
+    physical_config: PhysicalAuxiliaryConfig,
 ) -> dict[str, Any]:
     largest = max(get_clip_specs(dataset), key=lambda item: (item.atoms, item.sample_id))
     record = dataset[int(largest.index)]
@@ -447,10 +473,14 @@ def _largest_profile(
     trainer = StaticDecoderAuxiliaryTrainer(
         model,
         loss_config=StaticDecoderLossConfig(
-            coordinate=1.0, bond=0.1, clash=0.0, gamma=gamma
+            coordinate=1.0,
+            bond=0.1,
+            clash=physical_config.clash_weight,
+            gamma=gamma,
         ),
         optimizer=optimizer,
         amp=True,
+        clash_loss_function=static_clash_loss_function(physical_config),
     )
     torch.cuda.reset_peak_memory_stats(device)
     started = time.perf_counter()
@@ -473,6 +503,12 @@ def main() -> int:
         raise ValueError("engineering pilot requires 100--200 successful updates")
     raw = load_config(args.config, schema="molvid.frame_joint.train.v1")
     _validate_frame_joint_config(raw)
+    auxiliary_recipe = json.loads(args.auxiliary_recipe.read_text(encoding="utf-8"))
+    if auxiliary_recipe.get("schema") != "molvid.A.resolved_auxiliary.v1":
+        raise ValueError("auxiliary recipe is not A's frozen resolved recipe")
+    if auxiliary_recipe.get("parent_sha256") != args.parent_sha256:
+        raise ValueError("engineering parent differs from A auxiliary calibration parent")
+    physical_config = PhysicalAuxiliaryConfig.resolve(auxiliary_recipe["physical"])
     device = configure_device(args.device, deterministic=True)
     if device.type != "cuda":
         raise RuntimeError("static decoder smoke/pilot requires CUDA")
@@ -500,6 +536,7 @@ def main() -> int:
             static_records,
             device=device,
             seed=args.seed,
+            physical_config=physical_config,
         )
         atomic_write_json(output / "gamma_calibration.json", calibration)
         smoke = [
@@ -514,6 +551,7 @@ def main() -> int:
                 gamma=gamma,
                 amp=amp,
                 seed=args.seed,
+                physical_config=physical_config,
             )
             for amp in (False, True)
         ]
@@ -532,16 +570,21 @@ def main() -> int:
             device=device,
             gamma=gamma,
             seed=args.seed,
+            physical_config=physical_config,
         )
         pilot = None
         if args.mode == "pilot":
             static_trainer = StaticDecoderAuxiliaryTrainer(
                 calibration_model,
                 loss_config=StaticDecoderLossConfig(
-                    coordinate=1.0, bond=0.1, clash=0.0, gamma=gamma
+                    coordinate=1.0,
+                    bond=0.1,
+                    clash=physical_config.clash_weight,
+                    gamma=gamma,
                 ),
                 optimizer=dynamic.optimizer,
                 amp=True,
+                clash_loss_function=static_clash_loss_function(physical_config),
             )
             static_generator = torch.Generator(device=device).manual_seed(args.seed + 404)
             metrics_path = output / "pilot_metrics.jsonl"
@@ -594,6 +637,8 @@ def main() -> int:
             "cuda_device_name": torch.cuda.get_device_name(device),
             "parent": str(args.parent.resolve()),
             "parent_sha256": args.parent_sha256,
+            "auxiliary_recipe": str(args.auxiliary_recipe.resolve()),
+            "auxiliary_recipe_sha256": sha256_file(args.auxiliary_recipe),
             "teacher_sha256": artifact.report.source_sha256,
             "data_hash": data_hash,
             "normalization_source_data_hash": normalization_hash,
@@ -603,7 +648,10 @@ def main() -> int:
             "static_sources": provenance,
             "perturbation": StaticPerturbationConfig().contract(),
             "loss": StaticDecoderLossConfig(
-                coordinate=1.0, bond=0.1, clash=0.0, gamma=gamma
+                coordinate=1.0,
+                bond=0.1,
+                clash=physical_config.clash_weight,
+                gamma=gamma,
             ).contract(),
             "gamma_calibration": str(output / "gamma_calibration.json"),
             "warm_start_loaded": len(warm.loaded),
@@ -614,8 +662,8 @@ def main() -> int:
             "elapsed_seconds": time.perf_counter() - started,
             "test_opened": False,
             "limitations": [
-                "engineering parent is historical P2-GM, not the future formal A recipe release",
-                "clash disabled until A publishes reusable reviewed code and thresholds",
+                "engineering parent is historical P2-GM, not the released A1 formal checkpoint",
+                "static clash reuses the released A1 thresholds and normalization",
                 "engineering pilot checkpoint is prohibited as a formal three-arm parent",
             ],
         }
