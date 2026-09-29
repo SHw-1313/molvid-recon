@@ -245,14 +245,13 @@ def _metadata(pdb: str) -> Mapping[str, Any]:
     return topology_metadata(read_topology(Path(pdb)), complex_topology=False)
 
 
-def _read_100ps_window(
+def _read_raw_frames(
     xtc: str,
     atom_source_index: tuple[int, ...],
-    minimum_raw_index: int,
-    maximum_raw_index: int,
+    raw_indices: np.ndarray,
     offset_path: str | None = None,
 ):
-    """Decode only the requested raw-XTC interval on the 100 ps grid.
+    """Decode only the requested raw-XTC frames using persistent byte offsets.
 
     Formal epochs touch every physical trajectory but only a small part of
     each 100 ns file at a time.  Reading and retaining the complete evidenced
@@ -263,9 +262,16 @@ def _read_100ps_window(
     """
     from mdtraj.formats import XTCTrajectoryFile
 
-    if minimum_raw_index % 10 or maximum_raw_index % 10:
-        raise ValueError("raw XTC interval must lie on the100 ps grid")
-    count = (maximum_raw_index - minimum_raw_index) // 10 + 1
+    raw_indices = np.asarray(raw_indices, dtype=np.int64)
+    if (
+        raw_indices.ndim != 1
+        or raw_indices.size == 0
+        or np.any(np.diff(raw_indices) <= 0)
+        or np.any(raw_indices % 10)
+    ):
+        raise ValueError("requested raw XTC indices must be sorted unique 100 ps points")
+    coordinates: list[np.ndarray] = []
+    times: list[np.ndarray] = []
     with XTCTrajectoryFile(xtc, "r") as handle:
         if offset_path is not None:
             with np.load(offset_path, allow_pickle=False) as cache:
@@ -275,19 +281,26 @@ def _read_100ps_window(
                     or int(cache["xtc_mtime_ns"]) != int(source.st_mtime_ns)
                 ):
                     raise ValueError("XTC offset sidecar source identity differs")
-                handle.offsets = np.asarray(cache["offsets"], dtype=np.int64)
-        handle.seek(minimum_raw_index)
-        coordinates_nm, absolute_time_ps, _step, _box = handle.read(
-            n_frames=count,
-            stride=10,
-            atom_indices=np.asarray(atom_source_index, dtype=np.int64),
-        )
-    if coordinates_nm.shape[0] != count:
-        raise ValueError("raw XTC ended before the requested formal interval")
-    raw_indices = np.arange(
-        minimum_raw_index, maximum_raw_index + 1, 10, dtype=np.int64
-    )
-    times = np.asarray(absolute_time_ps, dtype=np.float64)
+                offsets = np.asarray(cache["offsets"], dtype=np.int64)
+                if int(raw_indices[-1]) >= offsets.size:
+                    raise ValueError("XTC offset sidecar ends before requested frame")
+                # MDTraj's offsets setter does not update its private n_frames.
+                # Exact stride-1 reads avoid the broken len(self) path used by
+                # efficient striding while still making seek use the sidecar.
+                handle.offsets = offsets
+        for raw_index in raw_indices.tolist():
+            handle.seek(int(raw_index))
+            xyz, absolute_time_ps, _step, _box = handle.read(
+                n_frames=1,
+                stride=1,
+                atom_indices=np.asarray(atom_source_index, dtype=np.int64),
+            )
+            if xyz.shape[0] != 1:
+                raise ValueError("raw XTC ended before a requested formal frame")
+            coordinates.append(xyz)
+            times.append(absolute_time_ps)
+    coordinates_nm = np.concatenate(coordinates, axis=0)
+    times = np.concatenate(times).astype(np.float64, copy=False)
     if not np.allclose(
         times - times[0], (raw_indices - raw_indices[0]) * 10,
         rtol=0.0, atol=1e-3,
@@ -347,16 +360,15 @@ def _load_item(
         offset_path = offset_root / item.system / f"{item.xtc.name}.offsets.npz"
         if not offset_path.is_file():
             raise FileNotFoundError(offset_path)
-    coordinates_nm, absolute_time_ps, read_indices = _read_100ps_window(
-        str(item.xtc),
-        tuple(int(value) for value in atom_source_index.tolist()),
-        minimum,
-        maximum,
-        str(offset_path) if offset_path is not None else None,
-    )
     requested = np.unique(np.concatenate(
         (window.history_indices, window.anchor_indices, window.future_indices)
     ))
+    coordinates_nm, absolute_time_ps, read_indices = _read_raw_frames(
+        str(item.xtc),
+        tuple(int(value) for value in atom_source_index.tolist()),
+        requested,
+        str(offset_path) if offset_path is not None else None,
+    )
     selected = np.searchsorted(read_indices, requested)
     if not np.array_equal(read_indices[selected], requested):
         raise ValueError("requested formal frames do not lie on the100 ps read grid")
