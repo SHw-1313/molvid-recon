@@ -96,10 +96,14 @@ _STATIC_AUXILIARY_KEYS = {
     "enabled", "source", "cadence", "seed", "max_atoms_per_update",
     "expected_pool_size", "perturbation", "loss", "gamma_calibration", "external",
 }
-_STATIC_GAMMA_KEYS = {"path", "sha256", "parent_sha256"}
+_STATIC_GAMMA_KEYS = {
+    "path", "sha256", "parent_sha256", "code_commit",
+    "reference_config_sha256", "recipe_release_sha256",
+    "auxiliary_recipe_sha256",
+}
 _STATIC_EXTERNAL_KEYS = {
     "store", "store_index_sha256", "source", "split",
-    "eligibility_manifest", "eligibility_sha256",
+    "eligibility_manifest", "eligibility_sha256", "near_homology_policy",
 }
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
@@ -385,6 +389,11 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
             raise ValueError("external static source identity is incomplete")
         for name in _STATIC_EXTERNAL_KEYS:
             _require_string(external[name], f"static_decoder_auxiliary.external.{name}")
+        if external["near_homology_policy"] not in {
+            "excluded",
+            "waived_by_user_20260929",
+        }:
+            raise ValueError("external near-homology policy is unsupported")
 
 
 def _verified_derived_identity(
@@ -1013,6 +1022,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError(
                     "a changed static objective requires model-only warm start, not exact continuation"
                 )
+            if not args.warm_start or not args.warm_start_sha256:
+                raise ValueError(
+                    "formal static auxiliary requires an explicit released-A1 model-only warm start"
+                )
             if sampled_config.physical is None:
                 raise ValueError("static clash requires the released A physical recipe")
             static_loss_config = StaticDecoderLossConfig.resolve(static_raw["loss"])
@@ -1044,8 +1057,37 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError("formal static gamma was not calibrated from released A1")
             if static_gamma_report.get("parent_sha256") != gamma_identity["parent_sha256"]:
                 raise ValueError("static gamma parent identity differs")
-            if args.warm_start and args.warm_start_sha256 != gamma_identity["parent_sha256"]:
+            if args.warm_start_sha256 != gamma_identity["parent_sha256"]:
                 raise ValueError("formal warm start differs from static gamma parent")
+            if gamma_identity["code_commit"] != _git_commit():
+                raise ValueError("formal static code differs from gamma calibration")
+            identity_checks = {
+                "code_commit": gamma_identity["code_commit"],
+                "source_config_sha256": gamma_identity["reference_config_sha256"],
+                "recipe_release_sha256": gamma_identity["recipe_release_sha256"],
+                "auxiliary_recipe_sha256": gamma_identity["auxiliary_recipe_sha256"],
+                "dynamic_data_hash": data_hash,
+                "normalization_source_data_hash": normalization_data_hash,
+                "statistics_sha256": sha256_file(stats_path),
+                "statistics_hash": statistics.hash,
+                "teacher_sha256": artifact.report.source_sha256,
+            }
+            for name, expected in identity_checks.items():
+                if static_gamma_report.get(name) != expected:
+                    raise ValueError(f"static gamma identity differs at {name}")
+            contract_checks = {
+                "dynamic_model_contract": model.contract(),
+                "dynamic_loss_contract": loss_config.contract(),
+                "sampled_auxiliary_contract": sampled_config.contract(),
+                "static_perturbation_contract": static_perturbation.contract(),
+                "static_loss_contract_before_gamma": {
+                    **static_loss_config.contract(),
+                    "gamma": 1.0,
+                },
+            }
+            for name, expected in contract_checks.items():
+                if canonical_hash(static_gamma_report.get(name)) != canonical_hash(expected):
+                    raise ValueError(f"static gamma contract differs at {name}")
             if not math.isclose(
                 float(static_gamma_report["resolved_gamma"]),
                 static_loss_config.gamma,
@@ -1079,12 +1121,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "status": "eligible",
                     "store_index_sha256": external["store_index_sha256"],
                     "direct_overlap_excluded": True,
-                    "near_homology_excluded": True,
+                    "near_homology_policy": external["near_homology_policy"],
                     "sealed_test_trajectories_opened": False,
                 }
                 for name, value in required_eligibility.items():
                     if eligibility.get(name) != value:
                         raise ValueError(f"external eligibility differs at {name}")
+                if external["near_homology_policy"] == "excluded":
+                    if eligibility.get("near_homology_excluded") is not True:
+                        raise ValueError("external eligibility lacks near-homology exclusion")
+                elif eligibility.get("near_homology_authorization") != (
+                    "explicit user waiver on 2026-09-29 for this bounded pilot"
+                ):
+                    raise ValueError("external near-homology waiver identity differs")
                 static_external_dataset = StaticClipDataset(
                     store,
                     source=external["source"],
@@ -1123,6 +1172,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "scheduler_advanced_by_static_updates": False,
                 "teacher_history_motion_dit_updated_by_static": False,
             }
+            if static_raw["source"] == "external_static":
+                static_contract["external_identity"] = {
+                    **dict(static_raw["external"]),
+                    "store": str(Path(static_raw["external"]["store"]).resolve()),
+                    "eligibility_manifest": str(
+                        Path(
+                            static_raw["external"]["eligibility_manifest"]
+                        ).resolve()
+                    ),
+                }
         base_rates = {
             name: max(float(stage["learning_rates"][name]) for stage in stages)
             for name in ("history_encoder", "dit", "decoder")

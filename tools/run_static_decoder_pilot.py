@@ -643,8 +643,34 @@ def main() -> int:
         )
         calibration["parent_role"] = parent_role
         calibration["parent_sha256"] = args.parent_sha256
+        calibration["code_commit"] = _commit()
+        calibration["source_config_sha256"] = sha256_file(args.config)
         calibration["recipe_release_sha256"] = (
             None if args.recipe_release is None else sha256_file(args.recipe_release)
+        )
+        calibration["auxiliary_recipe_sha256"] = sha256_file(
+            args.auxiliary_recipe
+        )
+        calibration["dynamic_data_hash"] = data_hash
+        calibration["normalization_source_data_hash"] = normalization_hash
+        calibration["statistics_sha256"] = sha256_file(raw["statistics"]["path"])
+        calibration["statistics_hash"] = calibration_model.statistics_hash
+        calibration["teacher_sha256"] = artifact.report.source_sha256
+        calibration["dynamic_model_contract"] = calibration_model.contract()
+        calibration["dynamic_loss_contract"] = dynamic.loss_config.contract()
+        calibration["sampled_auxiliary_contract"] = (
+            dynamic.sampled_config.contract()
+        )
+        calibration["static_perturbation_contract"] = (
+            StaticPerturbationConfig().contract()
+        )
+        calibration["static_loss_contract_before_gamma"] = (
+            StaticDecoderLossConfig(
+                coordinate=1.0,
+                bond=0.1,
+                clash=physical_config.clash_weight,
+                gamma=1.0,
+            ).contract()
         )
         atomic_write_json(output / "gamma_calibration.json", calibration)
         smoke = [

@@ -69,30 +69,30 @@ def external_static_pool(
     dataset: Any,
     selected_indices: Sequence[int],
 ) -> tuple[StaticSourceEntry, ...]:
-    """Register a pre-audited external T=1 selection without opening targets."""
+    """Register only the pre-audited external records selected for training."""
 
-    specs = get_clip_specs(dataset)
+    indices = tuple(int(value) for value in selected_indices)
+    if not 2000 <= len(indices) <= 5000:
+        raise ValueError("external static selection must contain 2000--5000 structures")
+    if len(set(indices)) != len(indices):
+        raise ValueError("external static selection contains duplicate indices")
     entries = []
-    for raw_index in selected_indices:
-        index = int(raw_index)
-        spec = specs[index]
-        if int(spec.frames) != 1:
+    for index in indices:
+        record = dataset[index]
+        coordinates = torch.as_tensor(record["x"])
+        if coordinates.ndim != 3 or int(coordinates.shape[0]) != 1:
             raise ValueError("external static eligibility selected a non-static record")
         entries.append(
             StaticSourceEntry(
                 dataset_index=index,
-                source_sample_id=str(spec.sample_id or f"external_{index:08d}"),
-                atoms=int(spec.atoms),
+                source_sample_id=str(record.get("sample_id", f"external_{index:08d}")),
+                atoms=int(coordinates.shape[1]),
                 frame_index=0,
-                system_id="external",
+                system_id=str(record.get("legacy_id", "external")),
                 replica="not_applicable",
                 source_kind="external_static",
             )
         )
-    if not 2000 <= len(entries) <= 5000:
-        raise ValueError("external static selection must contain 2000--5000 structures")
-    if len({entry.dataset_index for entry in entries}) != len(entries):
-        raise ValueError("external static selection contains duplicate indices")
     return tuple(entries)
 
 
@@ -121,6 +121,10 @@ def materialize_static_records(
         else:
             if int(record["x"].shape[0]) != 1:
                 raise RuntimeError("external static source is not T=1")
+            if str(record.get("sample_id", "")) != entry.source_sample_id:
+                raise RuntimeError("external static dataset index changed sample identity")
+            if int(record["x"].shape[1]) != entry.atoms:
+                raise RuntimeError("external static dataset index changed atom count")
             result.append(record)
     return result
 

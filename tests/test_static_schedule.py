@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import pytest
+import torch
 
 from molvid.data.sampling import ClipItemSpec, ClipSpecTable
 from molvid.training.static_schedule import (
     StaticBatchSchedule,
+    external_static_pool,
     internal_md_static_pool,
 )
 
@@ -69,3 +71,28 @@ def test_static_schedule_commits_only_success_and_resumes_exactly() -> None:
         StaticBatchSchedule(entries, seed=17, max_atoms_per_update=250).load_state_dict(
             changed
         )
+
+
+def test_external_pool_opens_only_the_preselected_records() -> None:
+    class Dataset:
+        def __init__(self) -> None:
+            self.opened = []
+
+        def __getitem__(self, index: int):
+            self.opened.append(index)
+            return {
+                "x": torch.zeros((1, 10 + index % 3, 3)),
+                "sample_id": f"static_pdb_train_{index:08d}",
+                "legacy_id": f"pdb_{index:08d}",
+            }
+
+    dataset = Dataset()
+    indices = tuple(range(2000))
+    entries = external_static_pool(dataset, indices)
+    assert dataset.opened == list(indices)
+    assert len(entries) == 2000
+    assert entries[0].source_kind == "external_static"
+    assert entries[0].system_id == "pdb_00000000"
+
+    with pytest.raises(ValueError, match="duplicate"):
+        external_static_pool(dataset, (0,) * 2000)

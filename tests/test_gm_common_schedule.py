@@ -115,6 +115,10 @@ def test_static_auxiliary_config_is_strict_and_internal_pool_is_frozen():
             "path": "train-only-gamma.json",
             "sha256": "gamma-sha256",
             "parent_sha256": "released-parent-sha256",
+            "code_commit": "code-commit",
+            "reference_config_sha256": "reference-config-sha256",
+            "recipe_release_sha256": "recipe-release-sha256",
+            "auxiliary_recipe_sha256": "auxiliary-recipe-sha256",
         },
     }
     _validate_frame_joint_config(raw)
@@ -143,6 +147,10 @@ def test_external_static_config_requires_a_complete_eligibility_identity():
             "path": "train-only-gamma.json",
             "sha256": "gamma-sha256",
             "parent_sha256": "released-parent-sha256",
+            "code_commit": "code-commit",
+            "reference_config_sha256": "reference-config-sha256",
+            "recipe_release_sha256": "recipe-release-sha256",
+            "auxiliary_recipe_sha256": "auxiliary-recipe-sha256",
         },
         "external": {
             "store": "static-store",
@@ -150,6 +158,7 @@ def test_external_static_config_requires_a_complete_eligibility_identity():
             "source": "pdb",
             "split": "train",
             "eligibility_manifest": "eligibility.json",
+            "near_homology_policy": "waived_by_user_20260929",
         },
     }
     with pytest.raises(ValueError, match="identity is incomplete"):
