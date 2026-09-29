@@ -95,8 +95,9 @@ _SAMPLED_AUXILIARY_KEYS = {
 }
 _STATIC_AUXILIARY_KEYS = {
     "enabled", "source", "cadence", "seed", "max_atoms_per_update",
-    "max_source_atoms", "expected_pool_size", "exposure_target", "perturbation",
-    "loss", "gamma_calibration", "external",
+    "max_samples_per_update", "min_source_atoms", "max_source_atoms",
+    "expected_pool_size", "exposure_target", "perturbation", "loss",
+    "gamma_calibration", "external",
 }
 _STATIC_GAMMA_KEYS = {
     "path", "sha256", "parent_sha256", "code_commit",
@@ -386,8 +387,8 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     if static["source"] not in {"internal_md", "external_static"}:
         raise ValueError("static decoder source must be internal_md or external_static")
     for name in (
-        "cadence", "seed", "max_atoms_per_update", "max_source_atoms",
-        "expected_pool_size",
+        "cadence", "seed", "max_atoms_per_update", "max_samples_per_update",
+        "min_source_atoms", "max_source_atoms", "expected_pool_size",
     ):
         _require_number(
             static[name],
@@ -397,8 +398,12 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
         )
     if int(static["cadence"]) != 4:
         raise ValueError("static decoder auxiliary cadence is frozen at four dynamic updates")
-    if int(static["max_source_atoms"]) > int(static["max_atoms_per_update"]):
-        raise ValueError("static source atom cap exceeds the per-update atom cap")
+    if not (
+        int(static["min_source_atoms"])
+        <= int(static["max_source_atoms"])
+        <= int(static["max_atoms_per_update"])
+    ):
+        raise ValueError("static source atom bounds differ from the per-update atom cap")
     exposure_target = _require_mapping(
         static["exposure_target"], "static_decoder_auxiliary.exposure_target"
     )
@@ -1209,6 +1214,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if static_raw["source"] == "internal_md":
                 entries = internal_md_static_pool(
                     train,
+                    min_source_atoms=int(static_raw["min_source_atoms"]),
                     max_source_atoms=int(static_raw["max_source_atoms"]),
                 )
                 static_source_dataset = train
@@ -1259,6 +1265,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     raise ValueError("external eligibility selected indices differ")
                 quality = eligibility.get("quality_requirements", {})
                 if (
+                    quality.get("minimum_atoms") != int(static_raw["min_source_atoms"])
+                    or
                     quality.get("maximum_atoms") != int(static_raw["max_source_atoms"])
                     or quality.get("all_atoms_supervised_by_loss_mask") is not True
                 ):
@@ -1279,6 +1287,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                     static_external_dataset,
                     selected_indices,
                 )
+                if any(
+                    not int(static_raw["min_source_atoms"])
+                    <= entry.atoms
+                    <= int(static_raw["max_source_atoms"])
+                    for entry in entries
+                ):
+                    raise ValueError("external static pool violates frozen atom bounds")
                 static_source_dataset = static_external_dataset
             if len(entries) != int(static_raw["expected_pool_size"]):
                 raise ValueError("static pool size differs from the frozen config")
@@ -1287,6 +1302,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 entries,
                 seed=int(static_raw["seed"]),
                 max_atoms_per_update=int(static_raw["max_atoms_per_update"]),
+                max_samples_per_update=int(static_raw["max_samples_per_update"]),
             )
             if configured_total_updates % int(static_raw["cadence"]):
                 raise ValueError("dynamic budget is not divisible by static cadence")

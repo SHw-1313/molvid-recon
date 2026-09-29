@@ -38,7 +38,12 @@ def _legacy_origin(legacy_id: str) -> str:
     return prefix if separator and suffix.isdigit() else str(legacy_id)
 
 
-def _quality(record: Mapping[str, Any], *, max_atoms: int) -> tuple[bool, str]:
+def _quality(
+    record: Mapping[str, Any],
+    *,
+    min_atoms: int,
+    max_atoms: int,
+) -> tuple[bool, str]:
     coordinates = np.asarray(record["x"])
     bpos = np.asarray(record["bpos"])
     atype = np.asarray(record["atype"])
@@ -47,7 +52,7 @@ def _quality(record: Mapping[str, Any], *, max_atoms: int) -> tuple[bool, str]:
     atoms = int(coordinates.shape[1]) if coordinates.ndim == 3 else 0
     if coordinates.shape != (1, atoms, 3) or bpos.shape != coordinates.shape:
         return False, "shape"
-    if not 1 <= atoms <= int(max_atoms):
+    if not int(min_atoms) <= atoms <= int(max_atoms):
         return False, "atom_count"
     if not np.isfinite(coordinates).all() or not np.isfinite(bpos).all():
         return False, "nonfinite_coordinates"
@@ -73,6 +78,7 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--count", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=20260929)
     parser.add_argument("--max-atoms", type=int, default=5000)
+    parser.add_argument("--min-atoms", type=int, default=303)
     parser.add_argument("--source", default="pdb")
     parser.add_argument("--split", default="train")
     return parser.parse_args()
@@ -92,7 +98,11 @@ def main() -> int:
             for system in [_system_id(item.sample_id)]
             if system is not None
         }
-        internal = internal_md_static_pool(train, max_source_atoms=args.max_atoms)
+        internal = internal_md_static_pool(
+            train,
+            min_source_atoms=args.min_atoms,
+            max_source_atoms=args.max_atoms,
+        )
         internal_atoms = np.asarray([entry.atoms for entry in internal], dtype=np.int64)
     finally:
         close()
@@ -136,7 +146,11 @@ def main() -> int:
                 direct_overlap_count += 1
                 continue
             record = dataset[index]
-            eligible, reason = _quality(record, max_atoms=args.max_atoms)
+            eligible, reason = _quality(
+                record,
+                min_atoms=args.min_atoms,
+                max_atoms=args.max_atoms,
+            )
             if not eligible:
                 rejected[reason] += 1
                 continue
@@ -184,6 +198,7 @@ def main() -> int:
         "quality_requirements": {
             "coordinate_unit": "angstrom",
             "finite_x_and_bpos": True,
+            "minimum_atoms": args.min_atoms,
             "maximum_atoms": args.max_atoms,
             "nonempty_loss_mask": True,
             "all_atoms_supervised_by_loss_mask": True,

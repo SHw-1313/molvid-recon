@@ -56,7 +56,9 @@ def test_internal_pool_selects_one_midpoint_per_complete_trajectory() -> None:
 
 def test_static_schedule_commits_only_success_and_resumes_exactly() -> None:
     entries = internal_md_static_pool(_SpecDataset())
-    schedule = StaticBatchSchedule(entries, seed=17, max_atoms_per_update=250)
+    schedule = StaticBatchSchedule(
+        entries, seed=17, max_atoms_per_update=250, max_samples_per_update=3
+    )
     first = schedule.next_entries()
     with pytest.raises(RuntimeError, match="uncommitted"):
         schedule.next_entries()
@@ -68,20 +70,24 @@ def test_static_schedule_commits_only_success_and_resumes_exactly() -> None:
     state = schedule.state_dict()
     expected_next = schedule.next_entries()
 
-    restored = StaticBatchSchedule(entries, seed=17, max_atoms_per_update=250)
+    restored = StaticBatchSchedule(
+        entries, seed=17, max_atoms_per_update=250, max_samples_per_update=3
+    )
     restored.load_state_dict(state)
     assert restored.next_entries() == expected_next
     with pytest.raises(ValueError, match="pool_hash"):
         changed = dict(state)
         changed["pool_hash"] = "different"
-        StaticBatchSchedule(entries, seed=17, max_atoms_per_update=250).load_state_dict(
-            changed
-        )
+        StaticBatchSchedule(
+            entries, seed=17, max_atoms_per_update=250, max_samples_per_update=3
+        ).load_state_dict(changed)
 
 
 def test_static_exposure_preview_and_target_gate_include_supervised_atoms() -> None:
     entries = internal_md_static_pool(_SpecDataset())
-    schedule = StaticBatchSchedule(entries, seed=17, max_atoms_per_update=250)
+    schedule = StaticBatchSchedule(
+        entries, seed=17, max_atoms_per_update=250, max_samples_per_update=3
+    )
     plan = schedule.preview_exposure(8)
     assert plan["static_updates"] == 8
     assert plan["atoms"] == plan["supervised_atoms"]

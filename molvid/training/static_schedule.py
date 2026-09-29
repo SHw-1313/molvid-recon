@@ -35,6 +35,7 @@ class StaticSourceEntry:
 def internal_md_static_pool(
     dataset: Any,
     *,
+    min_source_atoms: int | None = None,
     max_source_atoms: int | None = None,
 ) -> tuple[StaticSourceEntry, ...]:
     """Select one midpoint frame from each eligible ATLAS train trajectory."""
@@ -46,6 +47,8 @@ def internal_md_static_pool(
             continue
         system, replica = match.groups()
         key = system, replica
+        if min_source_atoms is not None and int(item.atoms) < int(min_source_atoms):
+            continue
         if max_source_atoms is not None and int(item.atoms) > int(max_source_atoms):
             continue
         if key in selected:
@@ -163,11 +166,17 @@ class StaticBatchSchedule:
         *,
         seed: int,
         max_atoms_per_update: int,
+        max_samples_per_update: int,
     ) -> None:
         self.entries = tuple(entries)
         self.seed = int(seed)
         self.max_atoms_per_update = int(max_atoms_per_update)
-        if not self.entries or self.max_atoms_per_update < 1:
+        self.max_samples_per_update = int(max_samples_per_update)
+        if (
+            not self.entries
+            or self.max_atoms_per_update < 1
+            or self.max_samples_per_update < 1
+        ):
             raise ValueError("static schedule requires entries and a positive atom bound")
         if max(entry.atoms for entry in self.entries) > self.max_atoms_per_update:
             raise ValueError("static atom bound is smaller than an eligible source")
@@ -191,7 +200,10 @@ class StaticBatchSchedule:
         atoms = 0
         for index in order:
             count = self.entries[index].atoms
-            if current and atoms + count > self.max_atoms_per_update:
+            if current and (
+                atoms + count > self.max_atoms_per_update
+                or len(current) >= self.max_samples_per_update
+            ):
                 batches.append(tuple(current))
                 current, atoms = [], 0
             current.append(index)
@@ -258,6 +270,7 @@ class StaticBatchSchedule:
             "schema": "molvid.static_decoder.schedule.v2",
             "seed": self.seed,
             "max_atoms_per_update": self.max_atoms_per_update,
+            "max_samples_per_update": self.max_samples_per_update,
             "pool_hash": self.pool_hash,
             "epoch": self.epoch,
             "batch_index": self.batch_index,
@@ -273,6 +286,7 @@ class StaticBatchSchedule:
             "schema": "molvid.static_decoder.schedule.v2",
             "seed": self.seed,
             "max_atoms_per_update": self.max_atoms_per_update,
+            "max_samples_per_update": self.max_samples_per_update,
             "pool_hash": self.pool_hash,
         }
         for name, value in expected.items():
@@ -296,6 +310,7 @@ class StaticBatchSchedule:
             "schema": "molvid.static_decoder.schedule_contract.v1",
             "seed": self.seed,
             "max_atoms_per_update": self.max_atoms_per_update,
+            "max_samples_per_update": self.max_samples_per_update,
             "pool_hash": self.pool_hash,
             "pool_size": len(self.entries),
             "source_kind": sorted({entry.source_kind for entry in self.entries}),

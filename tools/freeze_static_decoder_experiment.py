@@ -38,8 +38,9 @@ def _static_shared_contract(raw: Mapping[str, Any]) -> dict[str, Any]:
     return {
         name: static[name]
         for name in (
-            "cadence", "seed", "max_atoms_per_update", "max_source_atoms",
-            "exposure_target", "perturbation", "loss", "gamma_calibration",
+            "cadence", "seed", "max_atoms_per_update", "max_samples_per_update",
+            "min_source_atoms", "max_source_atoms", "exposure_target",
+            "perturbation", "loss", "gamma_calibration",
         )
     }
 

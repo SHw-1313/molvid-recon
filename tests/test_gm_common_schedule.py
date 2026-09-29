@@ -105,6 +105,8 @@ def test_static_auxiliary_config_is_strict_and_internal_pool_is_frozen():
         "cadence": 4,
         "seed": 20260929,
         "max_atoms_per_update": 5000,
+        "max_samples_per_update": 6,
+        "min_source_atoms": 303,
         "max_source_atoms": 1000,
         "expected_pool_size": 186,
         "exposure_target": {
@@ -146,6 +148,8 @@ def test_external_static_config_requires_a_complete_eligibility_identity():
         "cadence": 4,
         "seed": 20260929,
         "max_atoms_per_update": 5000,
+        "max_samples_per_update": 6,
+        "min_source_atoms": 303,
         "max_source_atoms": 1000,
         "expected_pool_size": 2000,
         "exposure_target": {
