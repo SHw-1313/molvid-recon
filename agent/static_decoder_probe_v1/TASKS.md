@@ -1,26 +1,31 @@
 # Static decoder probe v1 status
 
-- [x] Read task prompt, repository handoff/migration documents, A/B/C task
-  specifications, and coordination release/resource files.
-- [x] Create isolated `feat/static-decoder-probe-v1` worktree from
-  `cc74a385577e57c64c9623111e0db86e54e48770`.
-- [x] Replay A's published common commits, then the independently reviewed A
-  stable source through local `cc1809d`; never edit A's worktree.
-- [x] Implement static record selection, perturbation-consistent input batch,
-  decoder-only loss/update, gradient calibration, and explicit contracts.
-- [x] Run targeted CUDA FP32/BF16/largest-sample smoke and the 128-update P2
-  engineering pilot.
-- [x] Preserve a fresh-context independent review of fixed commit `73ba705`.
-- [x] Implement responses to its orchestration, gamma, optimizer/RNG, external
-  eligibility, and traceability findings; fixed-candidate review is pending.
-- [x] Lock evaluated A1 recipe release and audit external-static availability.
-- [ ] Run A1 gamma/smoke evidence and obtain independent PASS on the fixed
-  candidate.
-- [ ] Run matched three-arm short screen within eight GPU-hours.
-- [ ] Evaluate and deliver manifests, figures, costs, and `report.md`.
+- [x] Create and use the independent worktree without modifying A/B/C.
+- [x] Integrate the released, independently reviewed A1 code/recipe/parent.
+- [x] Implement T=1 perturbed-input static decoding, clean-target-only losses,
+  decoder-only optimization, A clash reuse, and train-only gamma calibration.
+- [x] Complete the 128-update engineering pilot and final released-A1
+  FP32/BF16/largest-sample CUDA smoke.
+- [x] Preserve the first fresh-context independent review and implement every
+  code, optimizer, RNG, resume, traceability, and orchestration response.
+- [x] Reuse the processed PDB train store authorized by the user; exclude exact
+  A split overlaps, enforce compatible 303--1,000-atom fully supervised
+  records, and record the explicit near-homology waiver.
+- [x] Freeze three symmetric 500-dynamic-step configs, A1 parent launch
+  contract, and matched sample/total/effective-atom exposure target.
+- [x] Pass 29 focused metadata/contract tests, four GPU1 CUDA tests, three
+  8-step preflights, and an internal step-4 to step-8 strict resume.
+- [x] Preserve the independent PASS for the original 1,000-step identities.
+- [x] Obtain the required delta verdict for the uniformly budget-reduced
+  500-step identities.
+- [x] On `PASS`, run the three frozen short arms sequentially on GPU1.
+- [x] Independently review the one-common-seed dynamic evaluator, run six
+  preflights, and complete ordinary/fixed-history evaluation.
+- [x] Independently review and repair the fail-closed held-out static evaluator,
+  preserve its failed legacy-record preflight, and complete all three arms.
+- [x] Deliver manifests, actual commands, figures, costs, review trail and final
+  report.
 
-Current gate: A1 is released and evaluated.  The existing PDB-derived static
-store lacks allowed near-homology exclusion metadata against A validation and
-sealed-test identities, so the external arm is fail-closed.  Under the task
-specification the baseline/internal paired screen may proceed after A1 CUDA
-evidence and independent re-review; no external result will be fabricated.
+Final status: complete. `keep_release_trigger=false`; no arm is promoted as a
+new release. The external PDB arm improves static reconstruction but does not
+show consistent dynamic geometry transfer in this bounded screen.

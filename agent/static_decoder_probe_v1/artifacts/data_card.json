@@ -1,0 +1,82 @@
+{
+  "schema": "molvid.static_decoder.data_card.v1",
+  "created_cst": "2026-09-29",
+  "dynamic_data": {
+    "source": "released A1 ATLAS train/valid split",
+    "derived_data_hash": "8b972def15babf848015699e527e28bc53fc195292ce446bda8555d86aaed0b1",
+    "normalization_source_data_hash": "54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0",
+    "train_systems": 192,
+    "train_trajectories": 576,
+    "valid_systems": 8,
+    "split_changed": false
+  },
+  "internal_static": {
+    "status": "eligible",
+    "source": "the same released A1 train trajectories only",
+    "selection": "first indexed clip per unique system/replica; one midpoint frame from that clip",
+    "expected_structures": 186,
+    "strata": "62 eligible train systems x R1/R2/R3; 303--1000 atoms",
+    "task": "T=1 geometry reconstruction/denoising; no physical lag or motion label",
+    "clean_coordinates_role": "target/loss only",
+    "condition_coordinates_role": "all coordinate-derived conditions are rebuilt from the perturbed frame",
+    "provenance_fields": [
+      "dataset_index",
+      "source_sample_id",
+      "system_id",
+      "replica",
+      "frame_index"
+    ]
+  },
+  "external_static": {
+    "status": "eligible_with_explicit_near_homology_waiver",
+    "candidate_store": "/data4/users/sihao/data/pvb_cross_dataset_20260810/pdb_phase12_half/train",
+    "candidate_store_index_records": 70533,
+    "candidate_store_index_sha256": "01075c0c3c3b9600f42537282538231ae87fc572808b69ed18f7283d6587f732",
+    "candidate_store_data_sha256": "4bc777a52643e2d34dac1d9e0b5af66ae52a85657d1303660c7fb617ebcc2513",
+    "selection_report_sha256": "bf827e3485090269edee27d088e2fd11b7fe1210d711f323686ac0d397d545a5",
+    "split_manifests": {
+      "train": {
+        "origins": 42323,
+        "sha256": "138bbf0c09bf847a0b431637591d6644ba7141d22f4949da40e2a422cb2c2718"
+      },
+      "valid": {
+        "origins": 2267,
+        "sha256": "e6441528d3be1d937f245e697744af0ff33b7cc5a6ed0c9fe42f119e38e9be80"
+      },
+      "test": {
+        "origins": 2267,
+        "sha256": "94349249a67479ffc5474c63685f35fafa07c470238714b814b027b372466026"
+      }
+    },
+    "eligibility_manifest_sha256": "971aee0b385fa50e28f35d63a3890adfe3d61734814a909510367841781e1e69",
+    "selected_structures": 3000,
+    "selected_indices_hash": "d92d4d951d78e07fc0cf594ba0edea3df6978c4ed6564a13bbd61da414b98906",
+    "atom_range": [303, 998],
+    "all_atoms_supervised_by_loss_mask": true,
+    "direct_overlap_policy": "exclude exact PDB-chain origins matching released A train, valid, or sealed-test manifest IDs",
+    "near_homology_policy": "waived_by_user_20260929",
+    "near_homology_excluded": false,
+    "training_used": true,
+    "reason": "The user explicitly authorized this bounded version without strict homology filtering. Exact identity overlap and representation/quality gates remain fail-closed."
+  },
+  "heldout_static_evaluation": {
+    "source": "released A1 ordinary validation store",
+    "systems": 8,
+    "replicas_per_system": 3,
+    "records_per_arm": 24,
+    "rows_per_arm": 96,
+    "selection": "anchor_window_300=0 and middle valid frame",
+    "sigmas_per_axis_A": [0.0, 0.05, 0.1, 0.2],
+    "same_record_local_noise_across_arms": true,
+    "manifest_sha256": "af91cd50aa2db1a6501ea0a1fa522a421a276b446f434b73f5a41c906bd066cd",
+    "store_index_sha256": "c89f870d9bf087ee7bf983613012210af35c30199309dd1e63c0496887eef71e",
+    "external_vs_internal_output_mse_result": "external PDB lower at all four sigmas; paired system-bootstrap CI95 below zero",
+    "net_denoising_relative_to_perturbed_input": false
+  },
+  "sealed_test_trajectories_opened": false,
+  "limitations": [
+    "The internal source tests an extra decoder task on a size-matched subset of dynamic train systems.",
+    "No sequence- or structure-level near-homology filtering is applied to the external corpus in this bounded version.",
+    "PDB structures provide geometry supervision only; they are not treated as Boltzmann population or motion-label samples."
+  ]
+}

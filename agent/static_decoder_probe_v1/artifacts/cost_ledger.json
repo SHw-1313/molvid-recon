@@ -1,0 +1,42 @@
+{
+  "schema": "molvid.static_decoder.cost_ledger.v1",
+  "unit": "GPU-hours on GPU1",
+  "formal_training": {
+    "baseline_success": 0.513374,
+    "internal_md_success": 0.63309,
+    "external_pdb_success": 0.564506,
+    "successful_subtotal": 1.71097,
+    "baseline_coexistence_oom": 0.18730,
+    "subtotal_including_oom": 1.89827
+  },
+  "dynamic_evaluation": {
+    "baseline_ordinary": 0.4772169609864553,
+    "baseline_fixed_history": 0.21954686794016096,
+    "internal_md_ordinary": 0.49408943865034316,
+    "internal_md_fixed_history": 0.22427031815052031,
+    "external_pdb_ordinary": 0.4885318755441242,
+    "external_pdb_fixed_history": 0.24023116032282513,
+    "formal_subtotal": 2.143886621594429,
+    "six_preflights": 0.02231684,
+    "subtotal": 2.16620346
+  },
+  "heldout_static_evaluation": {
+    "baseline": 0.04605851868788401,
+    "internal_md": 0.052304937707053294,
+    "external_pdb": 0.043548391660054524,
+    "formal_subtotal": 0.14191184805499183,
+    "failed_missing_frame_mask_preflight": 0.0036594,
+    "subtotal": 0.14557125
+  },
+  "earlier_cuda_smoke_pilot_and_preflights_conservative": 0.27,
+  "unlogged_interruption_and_test_allowance": 0.25,
+  "known_measured_subtotal": 4.210044,
+  "conservative_all_in_total": 4.73,
+  "authorized_cap": 8.0,
+  "conservative_margin": 3.27,
+  "notes": [
+    "The failed baseline launch was retained; two pre-existing GPU1 jobs were not stopped or signalled.",
+    "The restart changed only the CUDA expandable-segments allocator setting and reproduced deterministic early values.",
+    "Conservative all-in accounting intentionally rounds upward and retains a 0.25 GPU-hour unlogged allowance."
+  ]
+}

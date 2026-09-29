@@ -1,0 +1,96 @@
+{
+  "arms": {
+    "baseline": {
+      "config": "/workspace/molvid-recon-static-decoder-probe-v1/agent/static_decoder_probe_v1/configs/formal_baseline_500.json",
+      "config_sha256": "576bde56ebd26650a26fe4804ae9246e86ba94dbeb806dcd300ab43a536343fe",
+      "output_root": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/formal_500/baseline",
+      "static_source": null
+    },
+    "external_pdb": {
+      "config": "/workspace/molvid-recon-static-decoder-probe-v1/agent/static_decoder_probe_v1/configs/formal_external_pdb_500.json",
+      "config_sha256": "4d0815adb6c405108b9e37f62df520f43b6e4f49bb438a85539969740e29d5e7",
+      "output_root": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/formal_500/external_pdb",
+      "static_source": "external_static"
+    },
+    "internal_md": {
+      "config": "/workspace/molvid-recon-static-decoder-probe-v1/agent/static_decoder_probe_v1/configs/formal_internal_md_500.json",
+      "config_sha256": "be6fefec137aca42e65858f286353c164c6ce70a706f8b1e1adffd2350e09f39",
+      "output_root": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/formal_500/internal_md",
+      "static_source": "internal_md"
+    }
+  },
+  "code_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+  "dynamic_contract_hash": "510938f7606011382784e0112e6608abc8c32de8e2d0e7c2e393979d6bbd26fc",
+  "dynamic_updates_per_arm": 500,
+  "launch_contract": {
+    "baseline": {
+      "argv": [
+        "python",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-static-decoder-probe-v1/agent/static_decoder_probe_v1/configs/formal_baseline_500.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
+        "--warm-start-sha256",
+        "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+        "--checkpoint-every",
+        "500"
+      ],
+      "code_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+      "config_sha256": "576bde56ebd26650a26fe4804ae9246e86ba94dbeb806dcd300ab43a536343fe",
+      "output_root": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/formal_500/baseline",
+      "resume_requires_checkpoint_sha256": true
+    },
+    "external_pdb": {
+      "argv": [
+        "python",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-static-decoder-probe-v1/agent/static_decoder_probe_v1/configs/formal_external_pdb_500.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
+        "--warm-start-sha256",
+        "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+        "--checkpoint-every",
+        "500"
+      ],
+      "code_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+      "config_sha256": "4d0815adb6c405108b9e37f62df520f43b6e4f49bb438a85539969740e29d5e7",
+      "output_root": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/formal_500/external_pdb",
+      "resume_requires_checkpoint_sha256": true
+    },
+    "internal_md": {
+      "argv": [
+        "python",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-static-decoder-probe-v1/agent/static_decoder_probe_v1/configs/formal_internal_md_500.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
+        "--warm-start-sha256",
+        "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+        "--checkpoint-every",
+        "500"
+      ],
+      "code_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+      "config_sha256": "be6fefec137aca42e65858f286353c164c6ce70a706f8b1e1adffd2350e09f39",
+      "output_root": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/formal_500/internal_md",
+      "resume_requires_checkpoint_sha256": true
+    }
+  },
+  "parent": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
+  "parent_mode": "model_only_warm_start_with_optimizer_scheduler_cursor_rng_reset",
+  "parent_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+  "reference_A1_config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal_A1.json",
+  "reference_A1_config_sha256": "15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce",
+  "same_dynamic_lr_progress": true,
+  "same_dynamic_order_and_rng_seed": true,
+  "same_static_sample_atom_and_supervised_atom_target": true,
+  "same_static_update_count": true,
+  "schema": "molvid.static_decoder.paired_experiment.v1",
+  "sealed_test_trajectories_opened": false,
+  "static_shared_contract_hash": "5a2a7ce9d8cef0d52511226d824d14aefec3cb377598e291a814d2681ebd14b8"
+}
