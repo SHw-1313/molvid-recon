@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import pytest
 
 from tools.evaluate_static_decoder import (
@@ -7,6 +8,7 @@ from tools.evaluate_static_decoder import (
     EXPECTED_STORE_INDEX_SHA256,
     _aggregate,
     _noise_seed,
+    _normalize_source_and_middle_frame,
     _require_identity,
     _select_source_records,
     _validate_row_coverage,
@@ -76,6 +78,35 @@ def test_noise_seed_is_record_local_and_stable():
     assert _noise_seed(7, "sample", 8, 0.1) == _noise_seed(7, "sample", 8, 0.1)
     assert _noise_seed(7, "sample", 8, 0.1) != _noise_seed(7, "sample", 8, 0.2)
     assert _noise_seed(7, "sample", 8, 0.1) != _noise_seed(7, "other", 8, 0.1)
+
+
+def test_legacy_valid_source_without_frame_mask_uses_middle_frame():
+    frames, atoms = 4, 2
+    coordinates = np.arange(frames * atoms * 3, dtype=np.float32).reshape(frames, atoms, 3)
+    source, frame_index = _normalize_source_and_middle_frame(
+        {
+            "schema_version": "pvb.clip.v1",
+            "sample_id": "legacy_valid",
+            "task": "trajectory",
+            "time_bucket_id": "dt_300ps",
+            "time_ps": np.arange(frames, dtype=np.float32) * 300,
+            "delta_time_ps": np.full(frames - 1, 300, dtype=np.float32),
+            "x": coordinates,
+            "bpos": coordinates.copy(),
+            "atype": np.arange(atoms, dtype=np.int64),
+            "btype": np.arange(atoms, dtype=np.int64),
+            "block_id": np.arange(atoms, dtype=np.int64),
+            "component_id": np.zeros(atoms, dtype=np.int64),
+            "atom_source_index": np.arange(atoms, dtype=np.int64),
+            "atom_identity": [f"A:{index}" for index in range(atoms)],
+            "edge_mask": np.zeros(atoms, dtype=np.int64),
+            "loss_mask": np.ones(atoms, dtype=np.bool_),
+            "align_mask": np.ones(atoms, dtype=np.bool_),
+            "bond_index": np.asarray([[0], [1]], dtype=np.int64),
+        }
+    )
+    assert source["frame_mask"].tolist() == [True, True, True, True]
+    assert frame_index == 2
 
 
 def test_sigma_validation_rejects_invalid_values():

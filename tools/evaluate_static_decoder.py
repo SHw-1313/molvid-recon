@@ -22,7 +22,7 @@ import torch
 
 from molvid.checkpoints import load_frame_joint_inference
 from molvid.config import load_config
-from molvid.data.batch import collate_clip_records
+from molvid.data.batch import collate_clip_records, validate_clip_record
 from molvid.data.static import trajectory_record_to_static
 from molvid.data.store import ClipMMapDataset
 from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
@@ -141,6 +141,16 @@ def _select_source_records(
 def _noise_seed(base_seed: int, sample_id: str, frame_index: int, sigma: float) -> int:
     identity = f"{int(base_seed)}|{sample_id}|{int(frame_index)}|{float(sigma):.9g}"
     return int.from_bytes(hashlib.sha256(identity.encode()).digest()[:8], "big") % (2**63 - 1)
+
+
+def _normalize_source_and_middle_frame(
+    record: Mapping[str, Any],
+) -> tuple[dict[str, Any], int]:
+    """Normalize legacy-valid clips before reading the optional frame mask."""
+
+    source = validate_clip_record(record)
+    valid_frames = np.flatnonzero(source["frame_mask"])
+    return source, int(valid_frames[len(valid_frames) // 2])
 
 
 def _mean_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, float]:
@@ -326,9 +336,7 @@ def main() -> int:
             source_id = str(selected["source_sample_id_300"])
             if source_id not in by_id:
                 raise ValueError(f"selected held-out source is absent from store: {source_id}")
-            record = dataset[by_id[source_id]]
-            valid_frames = np.flatnonzero(np.asarray(record["frame_mask"], dtype=np.bool_))
-            frame_index = int(valid_frames[len(valid_frames) // 2])
+            record, frame_index = _normalize_source_and_middle_frame(dataset[by_id[source_id]])
             static_record = trajectory_record_to_static(
                 record,
                 frame_index=frame_index,
