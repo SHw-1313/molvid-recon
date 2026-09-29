@@ -28,7 +28,7 @@ from ..data.sampling import (
     TrajectoryCappedBatchSampler,
     get_clip_specs,
 )
-from ..data.store import ClipMMapDataset
+from ..data.store import ClipMMapDataset, StaticClipDataset
 from ..latent.statistics import FrameLatentStatistics
 from ..losses.sampled_physical import PhysicalAuxiliaryConfig
 from ..model import FrameJointModel
@@ -43,6 +43,20 @@ from ..training.joint import (
     calibrate_generated_bond_weight,
     calibrate_sampled_auxiliary_weights,
     fit_sampled_feature_scales,
+)
+from ..training.static_decoder import (
+    StaticDecoderAuxiliaryTrainer,
+    StaticDecoderLossConfig,
+    StaticPerturbationConfig,
+    prepare_static_decoder_batch,
+    static_clash_loss_function,
+)
+from ..training.static_schedule import (
+    StaticBatchSchedule,
+    StaticRNGStreams,
+    external_static_pool,
+    internal_md_static_pool,
+    materialize_static_records,
 )
 
 
@@ -77,6 +91,15 @@ _SAMPLED_AUXILIARY_KEYS = {
     "calibration_batches", "energy_gradient_target_ratio",
     "observed_bond_gradient_target_ratio",
     "physical", "streamed_atom_frames_threshold",
+}
+_STATIC_AUXILIARY_KEYS = {
+    "enabled", "source", "cadence", "seed", "max_atoms_per_update",
+    "expected_pool_size", "perturbation", "loss", "gamma_calibration", "external",
+}
+_STATIC_GAMMA_KEYS = {"path", "sha256", "parent_sha256"}
+_STATIC_EXTERNAL_KEYS = {
+    "store", "store_index_sha256", "source", "split",
+    "eligibility_manifest", "eligibility_sha256",
 }
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
@@ -126,7 +149,11 @@ def _require_number(
 def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     """Reject unknown or mistyped training settings before data or CUDA setup."""
 
-    _reject_unknown(raw, {"schema", "sampled_auxiliary", *_SECTION_KEYS}, "root")
+    _reject_unknown(
+        raw,
+        {"schema", "sampled_auxiliary", "static_decoder_auxiliary", *_SECTION_KEYS},
+        "root",
+    )
     for section, allowed in _SECTION_KEYS.items():
         value = _require_mapping(raw.get(section), section)
         _reject_unknown(value, allowed, section)
@@ -252,7 +279,8 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
             )
             if int(sampled[name]) not in allowed:
                 raise ValueError(
-                    "sampled auxiliary requires cadence=8, K=2, Euler steps=4 or 8"
+                    "sampled auxiliary schedule is frozen at cadence=8, K=2, "
+                    "Euler steps=4 or 8"
                 )
     if "streamed_atom_frames_threshold" in sampled:
         _require_number(
@@ -304,6 +332,59 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     ]
     if any(calibrated_weights) and not all(calibrated_weights):
         raise ValueError("sampled auxiliary weights must be calibrated together")
+
+    static = _require_mapping(
+        raw.get("static_decoder_auxiliary", {}), "static_decoder_auxiliary"
+    )
+    _reject_unknown(static, _STATIC_AUXILIARY_KEYS, "static_decoder_auxiliary")
+    _require_bool(static, "enabled", "static_decoder_auxiliary")
+    if not bool(static.get("enabled", False)):
+        if set(static) - {"enabled"}:
+            raise ValueError("disabled static decoder auxiliary accepts only enabled=false")
+        return
+    required = _STATIC_AUXILIARY_KEYS - {"enabled", "external"}
+    missing = sorted(required - set(static))
+    if missing:
+        raise ValueError(f"static_decoder_auxiliary missing keys: {missing}")
+    if static["source"] not in {"internal_md", "external_static"}:
+        raise ValueError("static decoder source must be internal_md or external_static")
+    for name in ("cadence", "seed", "max_atoms_per_update", "expected_pool_size"):
+        _require_number(
+            static[name],
+            f"static_decoder_auxiliary.{name}",
+            integer=True,
+            positive=name != "seed",
+        )
+    if int(static["cadence"]) != 4:
+        raise ValueError("static decoder auxiliary cadence is frozen at four dynamic updates")
+    StaticPerturbationConfig.resolve(
+        _require_mapping(static["perturbation"], "static_decoder_auxiliary.perturbation")
+    )
+    StaticDecoderLossConfig.resolve(
+        _require_mapping(static["loss"], "static_decoder_auxiliary.loss")
+    )
+    gamma = _require_mapping(
+        static["gamma_calibration"], "static_decoder_auxiliary.gamma_calibration"
+    )
+    _reject_unknown(gamma, _STATIC_GAMMA_KEYS, "static_decoder_auxiliary.gamma_calibration")
+    if set(gamma) != _STATIC_GAMMA_KEYS:
+        raise ValueError("static gamma calibration identity is incomplete")
+    for name in _STATIC_GAMMA_KEYS:
+        _require_string(gamma[name], f"static_decoder_auxiliary.gamma_calibration.{name}")
+    if static["source"] == "internal_md":
+        if int(static["expected_pool_size"]) != 576:
+            raise ValueError("released A internal static pool must contain 576 trajectories")
+        if "external" in static:
+            raise ValueError("internal static source cannot define an external store")
+    else:
+        external = _require_mapping(
+            static.get("external"), "static_decoder_auxiliary.external"
+        )
+        _reject_unknown(external, _STATIC_EXTERNAL_KEYS, "static_decoder_auxiliary.external")
+        if set(external) != _STATIC_EXTERNAL_KEYS:
+            raise ValueError("external static source identity is incomplete")
+        for name in _STATIC_EXTERNAL_KEYS:
+            _require_string(external[name], f"static_decoder_auxiliary.external.{name}")
 
 
 def _verified_derived_identity(
@@ -745,6 +826,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     seed_all(seed + rank)
     train, valid, data_hash, normalization_data_hash, data_relationship, close_data = _open_data(raw["data"])
     del valid  # Validation is opened for identity only; this command never opens test.
+    static_external_dataset: StaticClipDataset | None = None
     try:
         codec_config = raw["codec"]
         artifact = load_codec_artifact(
@@ -912,6 +994,135 @@ def main(argv: Sequence[str] | None = None) -> int:
             sampled_config = SampledAuxiliaryConfig.resolve(provisional)
         else:
             sampled_config = SampledAuxiliaryConfig()
+        static_raw = dict(raw.get("static_decoder_auxiliary", {}))
+        static_enabled = bool(static_raw.get("enabled", False))
+        static_source_dataset: Any | None = None
+        static_schedule: StaticBatchSchedule | None = None
+        static_rng: StaticRNGStreams | None = None
+        static_loss_config: StaticDecoderLossConfig | None = None
+        static_perturbation: StaticPerturbationConfig | None = None
+        static_contract: dict[str, Any] | None = None
+        static_gamma_report: Mapping[str, Any] | None = None
+        static_entries: Sequence[Any] = ()
+        if static_enabled:
+            if world != 1:
+                raise ValueError(
+                    "formal static auxiliary currently requires one CUDA rank"
+                )
+            if args.continuation_parent:
+                raise ValueError(
+                    "a changed static objective requires model-only warm start, not exact continuation"
+                )
+            if sampled_config.physical is None:
+                raise ValueError("static clash requires the released A physical recipe")
+            static_loss_config = StaticDecoderLossConfig.resolve(static_raw["loss"])
+            static_perturbation = StaticPerturbationConfig.resolve(
+                static_raw["perturbation"]
+            )
+            if not math.isclose(
+                static_loss_config.bond,
+                loss_config.clean_bond,
+                rel_tol=0.0,
+                abs_tol=0.0,
+            ):
+                raise ValueError("static bond coefficient differs from A clean_bond")
+            if not math.isclose(
+                static_loss_config.clash,
+                sampled_config.physical.clash_weight,
+                rel_tol=0.0,
+                abs_tol=0.0,
+            ):
+                raise ValueError("static clash coefficient differs from released A clash")
+            gamma_identity = static_raw["gamma_calibration"]
+            gamma_path = Path(gamma_identity["path"])
+            if sha256_file(gamma_path) != str(gamma_identity["sha256"]):
+                raise ValueError("static gamma calibration SHA-256 differs")
+            static_gamma_report = json.loads(gamma_path.read_text(encoding="utf-8"))
+            if static_gamma_report.get("schema") != "molvid.static_decoder.gamma_calibration.v1":
+                raise ValueError("static gamma calibration schema differs")
+            if static_gamma_report.get("parent_role") != "released_A1":
+                raise ValueError("formal static gamma was not calibrated from released A1")
+            if static_gamma_report.get("parent_sha256") != gamma_identity["parent_sha256"]:
+                raise ValueError("static gamma parent identity differs")
+            if args.warm_start and args.warm_start_sha256 != gamma_identity["parent_sha256"]:
+                raise ValueError("formal warm start differs from static gamma parent")
+            if not math.isclose(
+                float(static_gamma_report["resolved_gamma"]),
+                static_loss_config.gamma,
+                rel_tol=0.0,
+                abs_tol=0.0,
+            ):
+                raise ValueError("static gamma config differs from calibration")
+            if not math.isclose(
+                float(static_gamma_report.get("static_clean_probability", -1.0)),
+                static_perturbation.clean_probability,
+                rel_tol=0.0,
+                abs_tol=0.0,
+            ):
+                raise ValueError("static gamma clean mixture differs from training")
+            if int(static_gamma_report.get("dynamic_sampled_active_count", 0)) < 1:
+                raise ValueError("static gamma denominator omitted A actual-source clash")
+            if static_raw["source"] == "internal_md":
+                entries = internal_md_static_pool(train)
+                static_source_dataset = train
+            else:
+                external = static_raw["external"]
+                store = Path(external["store"])
+                if sha256_file(store / "index.txt") != external["store_index_sha256"]:
+                    raise ValueError("external static store index SHA-256 differs")
+                eligibility_path = Path(external["eligibility_manifest"])
+                if sha256_file(eligibility_path) != external["eligibility_sha256"]:
+                    raise ValueError("external static eligibility SHA-256 differs")
+                eligibility = json.loads(eligibility_path.read_text(encoding="utf-8"))
+                required_eligibility = {
+                    "schema": "molvid.static_decoder.external_eligibility.v1",
+                    "status": "eligible",
+                    "store_index_sha256": external["store_index_sha256"],
+                    "direct_overlap_excluded": True,
+                    "near_homology_excluded": True,
+                    "sealed_test_trajectories_opened": False,
+                }
+                for name, value in required_eligibility.items():
+                    if eligibility.get(name) != value:
+                        raise ValueError(f"external eligibility differs at {name}")
+                static_external_dataset = StaticClipDataset(
+                    store,
+                    source=external["source"],
+                    split=external["split"],
+                )
+                entries = external_static_pool(
+                    static_external_dataset,
+                    eligibility.get("selected_indices", ()),
+                )
+                static_source_dataset = static_external_dataset
+            if len(entries) != int(static_raw["expected_pool_size"]):
+                raise ValueError("static pool size differs from the frozen config")
+            static_entries = entries
+            static_schedule = StaticBatchSchedule(
+                entries,
+                seed=int(static_raw["seed"]),
+                max_atoms_per_update=int(static_raw["max_atoms_per_update"]),
+            )
+            static_rng = StaticRNGStreams(
+                device=device,
+                seed=int(static_raw["seed"]) + 1,
+            )
+            static_contract = {
+                "schema": "molvid.static_decoder.formal_auxiliary.v1",
+                "enabled": True,
+                "source": static_raw["source"],
+                "cadence_dynamic_updates": int(static_raw["cadence"]),
+                "perturbation": static_perturbation.contract(),
+                "loss": static_loss_config.contract(),
+                "gamma_calibration": {
+                    **dict(gamma_identity),
+                    "resolved_gamma": float(static_gamma_report["resolved_gamma"]),
+                },
+                "schedule": static_schedule.contract(),
+                "dynamic_rng_isolation": "torch.random.fork_rng plus independent generators",
+                "scheduler_advanced_by_static_updates": False,
+                "teacher_history_motion_dit_updated_by_static": False,
+            }
         base_rates = {
             name: max(float(stage["learning_rates"][name]) for stage in stages)
             for name in ("history_encoder", "dit", "decoder")
@@ -933,6 +1144,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 else None
             ),
             sampled_config=sampled_config,
+            static_auxiliary_contract=static_contract,
+        )
+        static_trainer = (
+            None
+            if not static_enabled
+            else StaticDecoderAuxiliaryTrainer(
+                model,
+                loss_config=static_loss_config,
+                optimizer=trainer.optimizer,
+                grad_clip=float(training.get("grad_clip", 1.0)),
+                amp=str(training.get("precision", "fp32")) == "bf16",
+                clash_loss_function=static_clash_loss_function(sampled_config.physical),
+            )
         )
         generator = torch.Generator(device=device).manual_seed(seed + 1000 + rank)
         sampled_generator = torch.Generator(device=device).manual_seed(
@@ -959,6 +1183,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 rank_state.get("exposure_state") if isinstance(rank_state, Mapping) else None,
                 successful_updates=trainer.successful_updates,
             )
+            if static_enabled:
+                static_state = rank_state.get("static_auxiliary_state")
+                if not isinstance(static_state, Mapping):
+                    raise ValueError("static auxiliary resume lacks rank-local state")
+                static_schedule.load_state_dict(static_state.get("schedule", {}))
+                static_rng.load_state_dict(static_state.get("rng", {}))
+                static_trainer.successful_updates = (
+                    static_schedule.successful_static_updates
+                )
             epoch, batch_index = int(cursor["epoch"]), int(cursor["batch_index"])
             ordinary_batch_index = int(cursor.get("ordinary_batch_index", trainer.step))
             sampler.set_epoch(epoch)
@@ -1093,6 +1326,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     if trainer.sampled_config.enabled
                     else None
                 ),
+                "static_decoder_auxiliary_contract": static_contract,
             },
         }
         if rank == 0:
@@ -1109,6 +1343,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 atomic_write_json(
                     output_root / "sampled_auxiliary_gradient_calibration.json",
                     sampled_weight_diagnostics,
+                )
+            if static_enabled:
+                atomic_write_json(
+                    output_root / "static_source_pool.json",
+                    {
+                        "schema": "molvid.static_decoder.source_pool.v1",
+                        "contract": static_schedule.contract(),
+                        "entries": [entry.contract() for entry in static_entries],
+                        "test_opened": False,
+                    },
                 )
             specs = get_clip_specs(train)
             by_index = {int(item.index): item for item in specs}
@@ -1262,6 +1506,65 @@ def main(argv: Sequence[str] | None = None) -> int:
                 cpu_batch.frame_mask.index_select(0, cpu_batch.abid).transpose(0, 1).sum()
             )
             batch_index += 1
+            if (
+                static_enabled
+                and trainer.successful_updates % int(static_raw["cadence"]) == 0
+            ):
+                if trainer.stage != "continuation":
+                    raise RuntimeError("formal static auxiliary is valid only in continuation")
+                source_entries = static_schedule.next_entries()
+                static_io_started = time.perf_counter()
+                cpu_static_batch = collate_clip_records(
+                    materialize_static_records(static_source_dataset, source_entries)
+                )
+                static_io_seconds = time.perf_counter() - static_io_started
+                global_cpu_rng = torch.random.get_rng_state().clone()
+                global_cuda_rng = torch.cuda.get_rng_state(device).clone()
+                static_started = time.perf_counter()
+                with static_rng.model_random_context():
+                    prepared_static = prepare_static_decoder_batch(
+                        model.target_teacher,
+                        cpu_static_batch,
+                        device=device,
+                        generator=static_rng.perturbation,
+                        perturbation=static_perturbation,
+                    )
+                    static_metrics = static_trainer.train_step(prepared_static)
+                if not torch.equal(torch.random.get_rng_state(), global_cpu_rng):
+                    raise RuntimeError("static update changed the dynamic CPU RNG stream")
+                if not torch.equal(torch.cuda.get_rng_state(device), global_cuda_rng):
+                    raise RuntimeError("static update changed the dynamic CUDA RNG stream")
+                static_schedule.record_success(source_entries)
+                static_metrics.update(
+                    {
+                        "dynamic_step": trainer.step,
+                        "source": static_raw["source"],
+                        "source_pool_hash": static_schedule.pool_hash,
+                        "source_sample_ids": [
+                            entry.source_sample_id for entry in source_entries
+                        ],
+                        "source_dataset_indices": [
+                            entry.dataset_index for entry in source_entries
+                        ],
+                        "source_frame_indices": [
+                            entry.frame_index for entry in source_entries
+                        ],
+                        "static_io_seconds": static_io_seconds,
+                        "static_update_seconds": time.perf_counter() - static_started,
+                        "static_exposed_samples_total": static_schedule.exposed_samples,
+                        "static_exposed_atoms_total": static_schedule.exposed_atoms,
+                    }
+                )
+                last["static_auxiliary_applied"] = True
+                last["static_successful_updates"] = (
+                    static_schedule.successful_static_updates
+                )
+                last["update_seconds"] = time.perf_counter() - update_started
+                if rank == 0:
+                    with (output_root / "static_metrics.jsonl").open(
+                        "a", encoding="utf-8"
+                    ) as handle:
+                        handle.write(json.dumps(static_metrics, sort_keys=True) + "\n")
             if rank == 0:
                 with (output_root / "train_metrics.jsonl").open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps(last, sort_keys=True) + "\n")
@@ -1290,6 +1593,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                         valid_atom_frames=valid_atom_frames,
                     ),
                 }
+                if static_enabled:
+                    local_state["static_auxiliary_state"] = {
+                        "schedule": static_schedule.state_dict(),
+                        "rng": static_rng.state_dict(),
+                    }
                 states: list[Any] = [None for _ in range(world)]
                 if world > 1:
                     dist.all_gather_object(states, local_state)
@@ -1325,10 +1633,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "clips_per_trajectory_per_epoch": int(training["clips_per_trajectory"]),
                 "world_size": world,
             })
+            if static_enabled:
+                atomic_write_json(
+                    output_root / "static_exposure.json",
+                    {
+                        "schema": "molvid.static_decoder.exposure.v1",
+                        **static_schedule.state_dict(),
+                        "cadence_dynamic_updates": int(static_raw["cadence"]),
+                        "test_opened": False,
+                    },
+                )
             print(json.dumps({"step": trainer.step, "metrics": last, "output_root": str(output_root)}, sort_keys=True))
         return 0
     finally:
         close_data()
+        if static_external_dataset is not None:
+            del static_external_dataset
         if world > 1 and dist.is_initialized():
             dist.destroy_process_group()
 

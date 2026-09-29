@@ -686,6 +686,7 @@ class FrameJointTrainer:
         optimizer: torch.optim.Optimizer | None = None,
         scheduler: Any = None,
         sampled_config: SampledAuxiliaryConfig | None = None,
+        static_auxiliary_contract: Mapping[str, Any] | None = None,
     ) -> None:
         self.model = model
         self.base_model = model.module if hasattr(model, "module") else model
@@ -695,6 +696,11 @@ class FrameJointTrainer:
             raise RuntimeError("target teacher must be frozen")
         self.loss_config = loss_config
         self.sampled_config = sampled_config or SampledAuxiliaryConfig()
+        self.static_auxiliary_contract = (
+            None
+            if static_auxiliary_contract is None
+            else dict(static_auxiliary_contract)
+        )
         self.learning_rates = {name: float(learning_rates[name]) for name in ("history_encoder", "dit", "decoder")}
         self.weight_decay = float(weight_decay)
         self.grad_clip = float(grad_clip)
@@ -869,6 +875,14 @@ class FrameJointTrainer:
         scaled = self._distributed_total(losses)
         scaled.backward()
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
+        decoder_grad_norm = sum(
+            (
+                parameter.grad.float().square().sum()
+                for parameter in self.base_model.decoder.parameters()
+                if parameter.grad is not None
+            ),
+            losses.total.new_zeros(()),
+        ).sqrt()
         grad_norm = torch.nn.utils.clip_grad_norm_(active, self.grad_clip)
         if not torch.isfinite(torch.as_tensor(grad_norm)):
             raise FloatingPointError("non-finite Frame Joint gradient norm")
@@ -882,6 +896,7 @@ class FrameJointTrainer:
             "stage": self.stage,
             "loss": float(losses.total.detach()),
             "grad_norm": float(torch.as_tensor(grad_norm).detach()),
+            "decoder_grad_norm": float(decoder_grad_norm.detach()),
             "flow_time_mean": float(sample.flow_time.mean().detach()),
             "batch_size": batch.observed_context.latent.batch_size,
             "sampled_branch_active": sampled_active,
@@ -975,6 +990,14 @@ class FrameJointTrainer:
             branch_total.backward()
             del generated, coordinates, branch_raw, branch_total
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
+        decoder_grad_norm = sum(
+            (
+                parameter.grad.float().square().sum()
+                for parameter in self.base_model.decoder.parameters()
+                if parameter.grad is not None
+            ),
+            losses.total.new_zeros(()),
+        ).sqrt()
         grad_norm = torch.nn.utils.clip_grad_norm_(active, self.grad_clip)
         if not torch.isfinite(torch.as_tensor(grad_norm)):
             raise FloatingPointError("non-finite streamed Frame Joint gradient norm")
@@ -991,6 +1014,7 @@ class FrameJointTrainer:
             "step": self.step, "stage": self.stage,
             "loss": float(sum(weighted.values()).detach()),
             "grad_norm": float(torch.as_tensor(grad_norm).detach()),
+            "decoder_grad_norm": float(decoder_grad_norm.detach()),
             "flow_time_mean": float(sample.flow_time.mean().detach()),
             "batch_size": batch.observed_context.latent.batch_size,
             "sampled_branch_active": True,
@@ -1034,6 +1058,10 @@ class FrameJointTrainer:
         }
         if self.sampled_config.enabled:
             result["sampled_auxiliary"] = self.sampled_config.contract()
+        if self.static_auxiliary_contract is not None:
+            result["static_decoder_auxiliary"] = dict(
+                self.static_auxiliary_contract
+            )
         return result
 
     def save_checkpoint(

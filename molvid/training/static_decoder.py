@@ -501,6 +501,37 @@ class StaticDecoderAuxiliaryTrainer:
         self._decoder_ids = decoder_ids
         self.successful_updates = 0
 
+    def _inactive_optimizer_signature(self) -> tuple[Any, ...]:
+        """Track weights and optimizer slots that a static step must not touch."""
+
+        rows: list[Any] = []
+        for name, parameter in self.model.named_parameters():
+            if id(parameter) in self._decoder_ids:
+                continue
+            state_rows = []
+            for key, value in sorted(
+                self.optimizer.state.get(parameter, {}).items(),
+                key=lambda item: str(item[0]),
+            ):
+                if isinstance(value, Tensor):
+                    state_rows.append(
+                        (
+                            str(key),
+                            "tensor",
+                            id(value),
+                            int(value._version),
+                            tuple(value.shape),
+                            str(value.dtype),
+                            str(value.device),
+                        )
+                    )
+                else:
+                    state_rows.append((str(key), "value", repr(value)))
+            rows.append(
+                (name, id(parameter), int(parameter._version), tuple(state_rows))
+            )
+        return tuple(rows)
+
     def _autocast(self):
         parameter = next(self.model.decoder.parameters())
         if self.amp and parameter.device.type != "cuda":
@@ -510,6 +541,7 @@ class StaticDecoderAuxiliaryTrainer:
     def train_step(self, batch: PreparedStaticDecoderBatch) -> dict[str, Any]:
         self.model.target_teacher.eval()
         self.model.decoder.train()
+        inactive_optimizer_before = self._inactive_optimizer_signature()
         self.optimizer.zero_grad(set_to_none=True)
         with self._autocast():
             output = self.model.decoder(batch.observed_context)
@@ -541,6 +573,10 @@ class StaticDecoderAuxiliaryTrainer:
         if not torch.isfinite(torch.as_tensor(grad_norm)):
             raise FloatingPointError("non-finite static decoder gradient norm")
         self.optimizer.step()
+        if self._inactive_optimizer_signature() != inactive_optimizer_before:
+            raise RuntimeError(
+                "static optimizer changed an inactive parameter or pre-existing optimizer slot"
+            )
         if any(not bool(torch.isfinite(parameter).all()) for parameter in decoder_parameters):
             raise FloatingPointError("static optimizer produced non-finite decoder parameters")
         self.successful_updates += 1

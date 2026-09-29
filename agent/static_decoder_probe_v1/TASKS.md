@@ -4,18 +4,23 @@
   specifications, and coordination release/resource files.
 - [x] Create isolated `feat/static-decoder-probe-v1` worktree from
   `cc74a385577e57c64c9623111e0db86e54e48770`.
-- [x] Replay only A's published common commits (`a681da6`, `228592c` in this
-  branch); do not import the active A loss candidate.
-- [ ] Implement static record selection, perturbation-consistent input batch,
+- [x] Replay A's published common commits, then the independently reviewed A
+  stable source through local `cc1809d`; never edit A's worktree.
+- [x] Implement static record selection, perturbation-consistent input batch,
   decoder-only loss/update, gradient calibration, and explicit contracts.
-- [ ] Run targeted CUDA FP32/BF16/largest-sample smoke and 100--200-update pilot.
-- [ ] Commit fixed candidate and preserve independent review request/report.
-- [ ] Resolve review findings and rerun affected checks.
-- [ ] Lock A recipe release and external-static data availability.
+- [x] Run targeted CUDA FP32/BF16/largest-sample smoke and the 128-update P2
+  engineering pilot.
+- [x] Preserve a fresh-context independent review of fixed commit `73ba705`.
+- [x] Implement responses to its orchestration, gamma, optimizer/RNG, external
+  eligibility, and traceability findings; fixed-candidate review is pending.
+- [x] Lock evaluated A1 recipe release and audit external-static availability.
+- [ ] Run A1 gamma/smoke evidence and obtain independent PASS on the fixed
+  candidate.
 - [ ] Run matched three-arm short screen within eight GPU-hours.
 - [ ] Evaluate and deliver manifests, figures, costs, and `report.md`.
 
-Current dependency: A reports `formal_A1_training_running` and
-`recipe_release_ready=false`.  This blocks only the formal matched screen, not
-implementation, internal-data pilot, profiling, or review preparation.
-
+Current gate: A1 is released and evaluated.  The existing PDB-derived static
+store lacks allowed near-homology exclusion metadata against A validation and
+sealed-test identities, so the external arm is fail-closed.  Under the task
+specification the baseline/internal paired screen may proceed after A1 CUDA
+evidence and independent re-review; no external result will be fabricated.

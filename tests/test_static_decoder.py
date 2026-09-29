@@ -27,6 +27,7 @@ from molvid.training.static_decoder import (
     static_clash_loss_function,
     static_decoder_loss,
 )
+from molvid.training.static_schedule import StaticRNGStreams
 
 
 def _static_record(sample_id: str, offset: float = 0.0) -> dict:
@@ -218,6 +219,13 @@ def test_static_batch_is_target_isolated_and_updates_only_decoder_on_cuda(amp: b
 
     trainable = [parameter for parameter in model.parameters() if parameter.requires_grad]
     optimizer = torch.optim.AdamW(trainable, lr=1.0e-3, weight_decay=0.1)
+    # Prime realistic AdamW state for every dynamic component.  The following
+    # static step must leave both inactive weights and these existing moments
+    # bitwise unchanged.
+    for parameter in trainable:
+        parameter.grad = torch.ones_like(parameter)
+    optimizer.step()
+    optimizer.zero_grad(set_to_none=True)
     trainer = StaticDecoderAuxiliaryTrainer(
         model,
         loss_config=loss_config,
@@ -225,6 +233,14 @@ def test_static_batch_is_target_isolated_and_updates_only_decoder_on_cuda(amp: b
         amp=amp,
     )
     before = {name: parameter.detach().clone() for name, parameter in model.named_parameters()}
+    optimizer_before = {
+        name: {
+            key: value.detach().clone() if isinstance(value, torch.Tensor) else value
+            for key, value in optimizer.state[parameter].items()
+        }
+        for name, parameter in model.named_parameters()
+        if not name.startswith("decoder.")
+    }
     metrics = trainer.train_step(prepared)
     assert np.isfinite(metrics["loss"])
     assert metrics["decoder_grad_norm"] > 0.0
@@ -237,11 +253,14 @@ def test_static_batch_is_target_isolated_and_updates_only_decoder_on_cuda(amp: b
             assert torch.equal(parameter.detach(), before[name]), name
             assert parameter.grad is None, name
     assert changed
-    inactive_parameters = {
-        parameter for name, parameter in model.named_parameters()
-        if not name.startswith("decoder.")
-    }
-    assert all(parameter not in optimizer.state for parameter in inactive_parameters)
+    for name, expected in optimizer_before.items():
+        state = optimizer.state[dict(model.named_parameters())[name]]
+        assert state.keys() == expected.keys()
+        for key, value in expected.items():
+            if isinstance(value, torch.Tensor):
+                torch.testing.assert_close(state[key], value, rtol=0, atol=0)
+            else:
+                assert state[key] == value
 
     # The dynamic preparation contract remains strict; no fake future is made.
     with pytest.raises(ValueError, match="leave at least one future"):
@@ -252,3 +271,28 @@ def test_static_batch_is_target_isolated_and_updates_only_decoder_on_cuda(amp: b
             normalizer=model,
             history_frames=1,
         )
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
+def test_static_rng_streams_do_not_advance_global_cuda_rng() -> None:
+    device = torch.device("cuda")
+    torch.cuda.manual_seed(9001)
+    global_before = torch.cuda.get_rng_state(device).clone()
+    streams = StaticRNGStreams(device=device, seed=77)
+    assert torch.equal(torch.cuda.get_rng_state(device), global_before)
+
+    with streams.model_random_context():
+        first = torch.rand((8,), device=device)
+    assert torch.equal(torch.cuda.get_rng_state(device), global_before)
+    saved = streams.state_dict()
+    with streams.model_random_context():
+        second = torch.rand((8,), device=device)
+    assert not torch.equal(first, second)
+    assert torch.equal(torch.cuda.get_rng_state(device), global_before)
+
+    restored = StaticRNGStreams(device=device, seed=77)
+    restored.load_state_dict(saved)
+    with restored.model_random_context():
+        repeated_second = torch.rand((8,), device=device)
+    torch.testing.assert_close(repeated_second, second, rtol=0, atol=0)
+    assert torch.equal(torch.cuda.get_rng_state(device), global_before)

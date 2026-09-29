@@ -24,7 +24,7 @@ from molvid.config import load_config
 from molvid.data.batch import collate_clip_records
 from molvid.data.sampling import get_clip_specs
 from molvid.data.static import trajectory_record_to_static
-from molvid.flow.objective import FrameRectifiedFlowObjective
+from molvid.flow.source import sample_frame_source
 from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
 from molvid.model import FrameJointModel
 from molvid.runtime import atomic_write_json, configure_device, seed_all, sha256_file
@@ -33,6 +33,7 @@ from molvid.training.dit import module_state_hash
 from molvid.training.joint import (
     FrameJointTrainer,
     JointLossConfig,
+    SampledAuxiliaryConfig,
     frame_joint_loss,
 )
 from molvid.training.static_decoder import (
@@ -53,6 +54,7 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--parent", type=Path, required=True)
     parser.add_argument("--parent-sha256", required=True)
     parser.add_argument("--auxiliary-recipe", type=Path, required=True)
+    parser.add_argument("--recipe-release", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", choices=("smoke", "pilot"), required=True)
     parser.add_argument("--updates", type=int, default=128)
@@ -212,6 +214,7 @@ def _make_model(
         data_hash=data_hash,
         teacher_artifact_sha256=artifact.report.source_sha256,
         schedule_contract={"engineering_pilot_only": True},
+        sampled_config=SampledAuxiliaryConfig.resolve(raw.get("sampled_auxiliary")),
     )
     warm = dynamic.load_warm_start(parent, expected_sha256=parent_sha256)
     return artifact, model, dynamic, warm
@@ -219,52 +222,81 @@ def _make_model(
 
 def _dynamic_decoder_gradient_norm(
     model: FrameJointModel,
-    loss_config: JointLossConfig,
+    trainer: FrameJointTrainer,
     record: Mapping[str, Any],
     *,
     device: torch.device,
     generator: torch.Generator,
-) -> float:
+    sampled_generator: torch.Generator,
+    history_frames: int,
+    auxiliary_active: bool,
+) -> tuple[float, dict[str, Any]]:
     batch = collate_clip_records([record])
-    history = 4 if str(record["time_bucket_id"]).startswith("fixed_history_") else min(8, batch.frames - 1)
     prepared = prepare_frame_joint_batch(
         model.target_teacher,
         batch,
         device=device,
         normalizer=model,
-        history_frames=history,
+        history_frames=min(int(history_frames), batch.frames - 1),
     )
-    objective = FrameRectifiedFlowObjective()
-    sample = objective.sample(
+    sample = trainer.flow.sample(
         prepared.normalized_target,
         prepared.source_center,
         generator=generator,
     )
-    output = model(
-        sample.interpolated,
-        context=prepared.observed_context,
-        query=prepared.query,
-        flow_time=sample.flow_time,
-        clean_future=prepared.target_future,
-        decode_generated=True,
-        decode_clean=True,
-        decode_near=True,
-    )
-    flow = objective.loss(output.velocity, sample.target_velocity)
-    losses = frame_joint_loss(
-        output,
-        flow,
-        prepared,
-        sample.flow_time,
-        stage="continuation",
-        config=loss_config,
-    )
-    return float(
-        parameter_gradient_norm(
-            losses.total,
-            tuple(model.decoder.parameters()),
+    sampled_sources = None
+    if auxiliary_active:
+        sampled_sources = tuple(
+            sample_frame_source(prepared.source_center, generator=sampled_generator)[0]
+            for _ in range(trainer.sampled_config.draws)
         )
-    )
+    model.train()
+    model.target_teacher.eval()
+    with torch.autocast("cuda", dtype=torch.bfloat16):
+        output = model(
+            sample.interpolated,
+            context=prepared.observed_context,
+            query=prepared.query,
+            flow_time=sample.flow_time,
+            clean_future=prepared.target_future,
+            decode_generated=True,
+            decode_clean=True,
+            decode_near=True,
+            sampled_sources=sampled_sources,
+            sampled_steps=trainer.sampled_config.euler_steps,
+            checkpoint_sampled_steps=trainer.sampled_config.activation_checkpoint,
+        )
+        flow = trainer.flow.loss(output.velocity, sample.target_velocity)
+        losses = frame_joint_loss(
+            output,
+            flow,
+            prepared,
+            sample.flow_time,
+            stage="continuation",
+            config=trainer.loss_config,
+            sampled_config=trainer.sampled_config,
+        )
+    decoder_parameters = tuple(model.decoder.parameters())
+    term_norms = {
+        name: float(parameter_gradient_norm(value, decoder_parameters, retain_graph=True))
+        if value.requires_grad and int(losses.applicable_samples[name]) > 0
+        else 0.0
+        for name, value in losses.weighted.items()
+    }
+    total_norm = parameter_gradient_norm(losses.total, decoder_parameters)
+    return float(total_norm), {
+        "sample_id": str(record["sample_id"]),
+        "history_frames": min(int(history_frames), batch.frames - 1),
+        "sampled_auxiliary_active": auxiliary_active,
+        "raw": {name: float(value.detach()) for name, value in losses.raw.items()},
+        "weighted": {
+            name: float(value.detach()) for name, value in losses.weighted.items()
+        },
+        "decoder_gradient_norm_by_weighted_term": term_norms,
+        "zero_decoder_gradient_terms": sorted(
+            name for name, value in term_norms.items() if value == 0.0
+        ),
+    }
 
 
 def _static_decoder_gradient_norm(
@@ -282,7 +314,7 @@ def _static_decoder_gradient_norm(
         generator=generator,
         perturbation=StaticPerturbationConfig(
             sigma_per_axis_angstrom=(0.05, 0.10, 0.20),
-            clean_probability=0.0,
+            clean_probability=0.20,
         ),
     )
     output = model.decoder(prepared.observed_context)
@@ -297,13 +329,28 @@ def _static_decoder_gradient_norm(
         ),
         clash_loss_function=static_clash_loss_function(physical_config),
     )
-    norm = parameter_gradient_norm(losses.unscaled_total, tuple(model.decoder.parameters()))
+    decoder_parameters = tuple(model.decoder.parameters())
+    term_norms = {
+        name: float(parameter_gradient_norm(value, decoder_parameters, retain_graph=True))
+        if value.requires_grad
+        else 0.0
+        for name, value in losses.weighted.items()
+    }
+    norm = parameter_gradient_norm(losses.unscaled_total, decoder_parameters)
     return float(norm), {
         "sample_id": record["sample_id"],
         "nominal_sigma_per_axis_angstrom": float(prepared.nominal_sigma_per_axis_angstrom[0]),
         "realized_rms_displacement_angstrom": float(prepared.realized_rms_displacement_angstrom[0]),
         "raw_coordinate_mse": float(losses.raw["coordinate_mse"].detach()),
         "raw_bond_distance": float(losses.raw["bond_distance"].detach()),
+        "raw_clash": float(losses.raw["clash"].detach()),
+        "weighted_before_gamma": {
+            name: float(value.detach()) for name, value in losses.weighted.items()
+        },
+        "decoder_gradient_norm_by_weighted_term": term_norms,
+        "zero_decoder_gradient_terms": sorted(
+            name for name, value in term_norms.items() if value == 0.0
+        ),
         "bpos_exact_anchor_count": prepared.bpos_exact_anchor_count,
         "bpos_fallback_count": prepared.bpos_fallback_count,
     }
@@ -311,7 +358,7 @@ def _static_decoder_gradient_norm(
 
 def _calibrate_gamma(
     model: FrameJointModel,
-    dynamic_loss: JointLossConfig,
+    dynamic_trainer: FrameJointTrainer,
     dynamic_records: Sequence[Mapping[str, Any]],
     static_records: Sequence[Mapping[str, Any]],
     *,
@@ -321,20 +368,27 @@ def _calibrate_gamma(
 ) -> tuple[float, dict[str, Any]]:
     torch.cuda.reset_peak_memory_stats(device)
     dynamic_generator = torch.Generator(device=device).manual_seed(seed + 101)
+    sampled_generator = torch.Generator(device=device).manual_seed(seed + 151)
     static_generator = torch.Generator(device=device).manual_seed(seed + 202)
     dynamic_norms = []
     static_norms = []
     perturbation_rows = []
-    for dynamic_record, static_record in zip(dynamic_records, static_records):
-        dynamic_norms.append(
-            _dynamic_decoder_gradient_norm(
+    dynamic_rows = []
+    for index, (dynamic_record, static_record) in enumerate(
+        zip(dynamic_records, static_records)
+    ):
+        norm, dynamic_row = _dynamic_decoder_gradient_norm(
                 model,
-                dynamic_loss,
+                dynamic_trainer,
                 dynamic_record,
                 device=device,
                 generator=dynamic_generator,
+                sampled_generator=sampled_generator,
+                history_frames=(4, 8)[index % 2],
+                auxiliary_active=dynamic_trainer.sampled_config.active_at(index),
             )
-        )
+        dynamic_norms.append(norm)
+        dynamic_rows.append(dynamic_row)
         norm, row = _static_decoder_gradient_norm(
             model,
             static_record,
@@ -346,6 +400,11 @@ def _calibrate_gamma(
         perturbation_rows.append(row)
     gamma, report = resolve_static_gamma(dynamic_norms, static_norms, target_ratio=0.075)
     report["perturbation_diagnostics"] = perturbation_rows
+    report["dynamic_loss_diagnostics"] = dynamic_rows
+    report["dynamic_sampled_active_count"] = sum(
+        bool(row["sampled_auxiliary_active"]) for row in dynamic_rows
+    )
+    report["static_clean_probability"] = 0.20
     report["clash_weight"] = physical_config.clash_weight
     report["clash_rule"] = "A1 released topology-aware physical clash"
     report["clash_table_provenance"] = dict(physical_config.table_provenance or {})
@@ -531,8 +590,27 @@ def main() -> int:
     auxiliary_recipe = json.loads(args.auxiliary_recipe.read_text(encoding="utf-8"))
     if auxiliary_recipe.get("schema") != "molvid.A.resolved_auxiliary.v1":
         raise ValueError("auxiliary recipe is not A's frozen resolved recipe")
+    recipe_release = None
+    parent_role = "engineering_p2"
     if auxiliary_recipe.get("parent_sha256") != args.parent_sha256:
-        raise ValueError("engineering parent differs from A auxiliary calibration parent")
+        if args.recipe_release is None:
+            raise ValueError(
+                "non-P2 calibration requires the reviewed A recipe release"
+            )
+        recipe_release = json.loads(args.recipe_release.read_text(encoding="utf-8"))
+        if recipe_release.get("schema") != "molvid.gm_memory.recipe_release.v1":
+            raise ValueError("recipe release schema differs")
+        if recipe_release.get("review", {}).get("verdict") != "PASS":
+            raise ValueError("released A recipe lacks an independent PASS review")
+        if recipe_release.get("A1_checkpoint", {}).get("sha256") != args.parent_sha256:
+            raise ValueError("calibration parent is not the released A1 checkpoint")
+        if recipe_release.get("configuration", {}).get("sha256") != sha256_file(args.config):
+            raise ValueError("calibration config is not the released A1 config")
+        if recipe_release.get("auxiliary_recipe", {}).get("sha256") != sha256_file(
+            args.auxiliary_recipe
+        ):
+            raise ValueError("calibration auxiliary recipe differs from A release")
+        parent_role = "released_A1"
     physical_config = PhysicalAuxiliaryConfig.resolve(auxiliary_recipe["physical"])
     device = configure_device(args.device, deterministic=True)
     if device.type != "cuda":
@@ -556,12 +634,17 @@ def main() -> int:
         )
         gamma, calibration = _calibrate_gamma(
             calibration_model,
-            dynamic.loss_config,
+            dynamic,
             records,
             static_records,
             device=device,
             seed=args.seed,
             physical_config=physical_config,
+        )
+        calibration["parent_role"] = parent_role
+        calibration["parent_sha256"] = args.parent_sha256
+        calibration["recipe_release_sha256"] = (
+            None if args.recipe_release is None else sha256_file(args.recipe_release)
         )
         atomic_write_json(output / "gamma_calibration.json", calibration)
         smoke = [
@@ -608,28 +691,37 @@ def main() -> int:
         )
         pilot = None
         if args.mode == "pilot":
+            _, pilot_model, pilot_dynamic, _ = _make_model(
+                raw,
+                device=device,
+                normalization_hash=normalization_hash,
+                parent=args.parent,
+                parent_sha256=args.parent_sha256,
+                data_hash=data_hash,
+            )
             static_trainer = StaticDecoderAuxiliaryTrainer(
-                calibration_model,
+                pilot_model,
                 loss_config=StaticDecoderLossConfig(
                     coordinate=1.0,
                     bond=0.1,
                     clash=physical_config.clash_weight,
                     gamma=gamma,
                 ),
-                optimizer=dynamic.optimizer,
+                optimizer=pilot_dynamic.optimizer,
                 amp=True,
                 clash_loss_function=static_clash_loss_function(physical_config),
             )
             static_generator = torch.Generator(device=device).manual_seed(args.seed + 404)
             metrics_path = output / "pilot_metrics.jsonl"
             pilot_started = time.perf_counter()
-            pilot_peak_allocated = int(torch.cuda.memory_allocated(device))
-            pilot_peak_reserved = int(torch.cuda.memory_reserved(device))
+            pilot_peak_post_step_allocated = int(torch.cuda.memory_allocated(device))
+            pilot_peak_post_step_reserved = int(torch.cuda.memory_reserved(device))
+            torch.cuda.reset_peak_memory_stats(device)
             cpu_static_batch = collate_clip_records(static_records)
             with metrics_path.open("w", encoding="utf-8") as handle:
                 for update in range(args.updates):
                     prepared = prepare_static_decoder_batch(
-                        calibration_model.target_teacher,
+                        pilot_model.target_teacher,
                         cpu_static_batch,
                         device=device,
                         generator=static_generator,
@@ -643,11 +735,11 @@ def main() -> int:
                     del prepared
                     row["cuda_allocated_bytes"] = int(torch.cuda.memory_allocated(device))
                     row["cuda_reserved_bytes"] = int(torch.cuda.memory_reserved(device))
-                    pilot_peak_allocated = max(
-                        pilot_peak_allocated, row["cuda_allocated_bytes"]
+                    pilot_peak_post_step_allocated = max(
+                        pilot_peak_post_step_allocated, row["cuda_allocated_bytes"]
                     )
-                    pilot_peak_reserved = max(
-                        pilot_peak_reserved, row["cuda_reserved_bytes"]
+                    pilot_peak_post_step_reserved = max(
+                        pilot_peak_post_step_reserved, row["cuda_reserved_bytes"]
                     )
                     handle.write(json.dumps(row, sort_keys=True) + "\n")
                     handle.flush()
@@ -660,8 +752,8 @@ def main() -> int:
                     "parent_sha256": args.parent_sha256,
                     "code_commit": _commit(),
                     "successful_static_updates": args.updates,
-                    "decoder_state": calibration_model.decoder.state_dict(),
-                    "optimizer_state": dynamic.optimizer.state_dict(),
+                    "decoder_state": pilot_model.decoder.state_dict(),
+                    "optimizer_state": pilot_dynamic.optimizer.state_dict(),
                     "static_contract": static_trainer.contract(),
                     "static_generator_state": static_generator.get_state().cpu(),
                 },
@@ -670,8 +762,9 @@ def main() -> int:
             pilot = {
                 "successful_static_updates": args.updates,
                 "seconds": time.perf_counter() - pilot_started,
-                "peak_allocated_bytes": pilot_peak_allocated,
-                "peak_reserved_bytes": pilot_peak_reserved,
+                "cuda_peak_allocated_bytes": int(torch.cuda.max_memory_allocated(device)),
+                "peak_post_step_allocated_bytes": pilot_peak_post_step_allocated,
+                "peak_post_step_reserved_bytes": pilot_peak_post_step_reserved,
                 "checkpoint": str(checkpoint),
                 "checkpoint_sha256": sha256_file(checkpoint),
                 "formal_parent_allowed": False,
@@ -685,6 +778,13 @@ def main() -> int:
             "cuda_device_name": torch.cuda.get_device_name(device),
             "parent": str(args.parent.resolve()),
             "parent_sha256": args.parent_sha256,
+            "parent_role": parent_role,
+            "recipe_release": (
+                None if args.recipe_release is None else str(args.recipe_release.resolve())
+            ),
+            "recipe_release_sha256": (
+                None if args.recipe_release is None else sha256_file(args.recipe_release)
+            ),
             "auxiliary_recipe": str(args.auxiliary_recipe.resolve()),
             "auxiliary_recipe_sha256": sha256_file(args.auxiliary_recipe),
             "teacher_sha256": artifact.report.source_sha256,
@@ -711,7 +811,11 @@ def main() -> int:
             "elapsed_seconds": time.perf_counter() - started,
             "test_opened": False,
             "limitations": [
-                "engineering parent is historical P2-GM, not the released A1 formal checkpoint",
+                *(
+                    ["engineering parent is historical P2-GM, not the released A1 formal checkpoint"]
+                    if parent_role != "released_A1"
+                    else []
+                ),
                 "static clash reuses the released A1 thresholds and normalization",
                 "engineering pilot checkpoint is prohibited as a formal three-arm parent",
             ],

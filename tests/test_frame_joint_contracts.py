@@ -174,7 +174,7 @@ def test_sampled_auxiliary_config_is_explicit_and_frozen() -> None:
     for name, value in (
         ("cadence", 7),
         ("draws", 3),
-        ("euler_steps", 8),
+        ("euler_steps", 6),
         ("calibration_batches", 7),
         ("energy_gradient_target_ratio", 0.1),
     ):
