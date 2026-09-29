@@ -47,6 +47,18 @@ METRIC_NAMES = (
     "realized_rms_displacement_A",
 )
 
+EXPECTED_SIGMAS = (0.0, 0.05, 0.10, 0.20)
+EXPECTED_SYSTEM_COUNT = 8
+EXPECTED_REPLICAS = ("R1", "R2", "R3")
+EXPECTED_RECORD_COUNT = EXPECTED_SYSTEM_COUNT * len(EXPECTED_REPLICAS)
+EXPECTED_ROW_COUNT = EXPECTED_RECORD_COUNT * len(EXPECTED_SIGMAS)
+EXPECTED_ANCHOR_WINDOW = 0
+EXPECTED_MANIFEST_SHA256 = "af91cd50aa2db1a6501ea0a1fa522a421a276b446f434b73f5a41c906bd066cd"
+EXPECTED_STORE_INDEX_SHA256 = "c89f870d9bf087ee7bf983613012210af35c30199309dd1e63c0496887eef71e"
+EXPECTED_RECIPE_SHA256 = "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3"
+EXPECTED_STATIC_CONFIG_SHA256 = "be6fefec137aca42e65858f286353c164c6ce70a706f8b1e1adffd2350e09f39"
+EXPECTED_MODEL_CONFIG_SHA256 = "7c67c5e3da8e4cb29da5560c4c8ddcb53683ae9463357a6b077848ea552a79df"
+
 
 def _git_commit() -> str:
     return subprocess.check_output(
@@ -64,7 +76,16 @@ def _validate_sigmas(values: Sequence[float]) -> tuple[float, ...]:
         raise ValueError("static evaluation sigmas must be finite and non-negative")
     if len(set(sigmas)) != len(sigmas):
         raise ValueError("static evaluation sigmas must be unique")
+    if sigmas != EXPECTED_SIGMAS:
+        raise ValueError(f"static evaluation sigmas must equal {EXPECTED_SIGMAS}")
     return sigmas
+
+
+def _require_identity(actual: str, expected: str, label: str) -> None:
+    if not actual:
+        raise ValueError(f"{label} identity is required")
+    if actual != expected:
+        raise ValueError(f"{label} identity differs from the frozen diagnostic")
 
 
 def _select_source_records(
@@ -74,11 +95,25 @@ def _select_source_records(
 
     if manifest.get("test_opened") is not False:
         raise ValueError("held-out static evaluation requires test_opened=false")
+    if anchor_window != EXPECTED_ANCHOR_WINDOW:
+        raise ValueError(f"held-out static anchor window must equal {EXPECTED_ANCHOR_WINDOW}")
+    _require_identity(
+        str(manifest.get("source_valid_index_sha256", "")),
+        EXPECTED_STORE_INDEX_SHA256,
+        "source validation index",
+    )
+    source_store = str(manifest.get("source_valid_store", ""))
+    if not source_store or Path(source_store).name != "valid":
+        raise ValueError("held-out static source contract must declare its validation store")
     systems = tuple(str(value) for value in manifest.get("systems", ()))
     replicas = tuple(str(value) for value in manifest.get("replicas", ()))
     records = manifest.get("selected_records")
     if not systems or not replicas or not isinstance(records, list):
         raise ValueError("evaluation manifest lacks systems, replicas, or selected_records")
+    if len(systems) != EXPECTED_SYSTEM_COUNT or len(set(systems)) != EXPECTED_SYSTEM_COUNT:
+        raise ValueError(f"held-out static evaluation requires {EXPECTED_SYSTEM_COUNT} systems")
+    if replicas != EXPECTED_REPLICAS:
+        raise ValueError(f"held-out static replicas must equal {EXPECTED_REPLICAS}")
     selected: dict[tuple[str, str], dict[str, Any]] = {}
     for value in records:
         if not isinstance(value, Mapping) or int(value.get("anchor_window_300", -1)) != anchor_window:
@@ -95,6 +130,11 @@ def _select_source_records(
         missing = sorted(expected - set(selected))
         extra = sorted(set(selected) - expected)
         raise ValueError(f"held-out static selection differs: missing={missing}, extra={extra}")
+    if len(selected) != EXPECTED_RECORD_COUNT:
+        raise ValueError(f"held-out static evaluation requires {EXPECTED_RECORD_COUNT} records")
+    source_ids = [str(row["source_sample_id_300"]) for row in selected.values()]
+    if len(set(source_ids)) != EXPECTED_RECORD_COUNT:
+        raise ValueError("held-out static source sample ids must be unique")
     return [selected[key] for key in sorted(selected)]
 
 
@@ -150,6 +190,32 @@ def _aggregate(rows: Sequence[Mapping[str, Any]]) -> tuple[list[dict[str, Any]],
     return per_system, summary
 
 
+def _validate_row_coverage(rows: Sequence[Mapping[str, Any]]) -> None:
+    if len(rows) != EXPECTED_ROW_COUNT:
+        raise RuntimeError(f"held-out static evaluation requires {EXPECTED_ROW_COUNT} rows")
+    if len({str(row["row_key"]) for row in rows}) != EXPECTED_ROW_COUNT:
+        raise RuntimeError("held-out static evaluation row keys must be unique")
+    systems = {str(row["system"]) for row in rows}
+    if len(systems) != EXPECTED_SYSTEM_COUNT:
+        raise RuntimeError("held-out static evaluation system coverage differs")
+    expected = {
+        (system, replica, sigma)
+        for system in systems
+        for replica in EXPECTED_REPLICAS
+        for sigma in EXPECTED_SIGMAS
+    }
+    actual = {
+        (str(row["system"]), str(row["replica"]), float(row["sigma_per_axis_A"]))
+        for row in rows
+    }
+    if actual != expected:
+        raise RuntimeError("held-out static system/replica/sigma coverage differs")
+    for sigma in EXPECTED_SIGMAS:
+        count = sum(float(row["sigma_per_axis_A"]) == sigma for row in rows)
+        if count != EXPECTED_RECORD_COUNT:
+            raise RuntimeError(f"held-out static sigma {sigma} coverage differs")
+
+
 def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("checkpoint", "recipe", "static-config", "store", "manifest", "output"):
@@ -160,7 +226,6 @@ def _arguments() -> argparse.Namespace:
     )
     parser.add_argument("--sigmas", type=float, nargs="+", default=[0.0, 0.05, 0.10, 0.20])
     parser.add_argument("--seed", type=int, default=20260930)
-    parser.add_argument("--anchor-window", type=int, default=0)
     return parser.parse_args()
 
 
@@ -171,6 +236,15 @@ def main() -> int:
         raise FileExistsError(f"refusing to reuse non-empty output directory: {args.output}")
     args.output.mkdir(parents=True, exist_ok=True)
     started = time.time()
+    frozen_files = (
+        (args.manifest, EXPECTED_MANIFEST_SHA256, "validation manifest"),
+        (args.store / "index.txt", EXPECTED_STORE_INDEX_SHA256, "source validation index"),
+        (args.recipe, EXPECTED_RECIPE_SHA256, "released physical recipe"),
+        (args.static_config, EXPECTED_STATIC_CONFIG_SHA256, "static loss config"),
+        (args.model_config, EXPECTED_MODEL_CONFIG_SHA256, "model config"),
+    )
+    for path, expected, label in frozen_files:
+        _require_identity(sha256_file(path), expected, label)
     device = configure_device("cuda", deterministic=True)
     model_config = load_config(args.model_config, schema="molvid.frame_joint.train.v1")
     loaded = load_frame_joint_inference(
@@ -187,10 +261,15 @@ def main() -> int:
     auxiliary = static_config.get("static_decoder_auxiliary")
     if not isinstance(auxiliary, Mapping) or not isinstance(auxiliary.get("loss"), Mapping):
         raise ValueError("static config lacks the resolved static decoder loss")
+    _require_identity(
+        str(auxiliary.get("gamma_calibration", {}).get("auxiliary_recipe_sha256", "")),
+        EXPECTED_RECIPE_SHA256,
+        "static gamma calibration recipe",
+    )
     loss_config = StaticDecoderLossConfig.resolve(auxiliary["loss"])
     clash_function = static_clash_loss_function(physical_config)
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    selection = _select_source_records(manifest, anchor_window=args.anchor_window)
+    selection = _select_source_records(manifest, anchor_window=EXPECTED_ANCHOR_WINDOW)
     selection_identity = [
         {
             "system": row["system"],
@@ -201,9 +280,17 @@ def main() -> int:
         for row in selection
     ]
     store_index_sha256 = sha256_file(args.store / "index.txt")
-    declared_store_hash = manifest.get("source_valid_index_sha256")
-    if declared_store_hash and store_index_sha256 != declared_store_hash:
-        raise ValueError("source validation store index differs from its manifest")
+    _require_identity(
+        str(manifest["source_valid_index_sha256"]),
+        store_index_sha256,
+        "manifest/source validation index",
+    )
+    declared_store = Path(str(manifest["source_valid_store"])).resolve()
+    if args.store.resolve() != declared_store:
+        raise ValueError("opened validation store path differs from the frozen source contract")
+    source_split = declared_store.name
+    if source_split != "valid":
+        raise ValueError("frozen held-out static source is not the validation split")
     protocol = {
         "schema": "molvid.static_decoder.heldout_evaluation.v1",
         "checkpoint_sha256": args.checkpoint_sha256,
@@ -219,7 +306,7 @@ def main() -> int:
         "manifest_sha256": sha256_file(args.manifest),
         "selection_sha256": canonical_hash(selection_identity),
         "selection": selection_identity,
-        "selection_rule": "manifest anchor_window_300 match, one clip per system/replica; middle valid frame",
+        "selection_rule": "manifest anchor_window_300=0, one clip per 8 systems x 3 replicas; middle valid frame",
         "sigmas_per_axis_A": list(sigmas),
         "sigma_definition": "independent Gaussian standard deviation per Cartesian axis",
         "noise_seed": int(args.seed),
@@ -227,7 +314,7 @@ def main() -> int:
         "loss": loss_config.contract(),
         "aggregation": "replica mean within system, then system-equal mean",
         "precision": "fp32",
-        "split": "valid",
+        "split": source_split,
         "test_opened": False,
     }
     atomic_write_json(args.output / "protocol.json", protocol)
@@ -310,9 +397,7 @@ def main() -> int:
             print(json.dumps({"completed_records": len(rows) // len(sigmas), "rows": len(rows)}), flush=True)
     finally:
         dataset.close()
-    expected_rows = len(selection) * len(sigmas)
-    if len(rows) != expected_rows or len({row["row_key"] for row in rows}) != expected_rows:
-        raise RuntimeError("held-out static evaluation row coverage differs")
+    _validate_row_coverage(rows)
     rows_path = args.output / "rows.jsonl"
     rows_path.write_text(
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows), encoding="utf-8"
