@@ -908,9 +908,10 @@ class FrameJointTrainer:
         """Accumulate the same K=2 physical gradient one source at a time.
 
         The other source is a fixed coordinate value during each derivative.
-        We recompute observed-only conditions for each draw so that neither
-        source's Euler graph, nor the base branch graph, survives the next
-        backward. This changes memory scheduling, not the loss definition.
+        The observed condition is prepared exactly once and its compact graph
+        is retained across the base and two sequential source backwards.  Only
+        one Euler graph is live at a time; learned memory is never detached or
+        recomputed inside the prefix update.
         """
         if len(sources) != 2 or self.sampled_config.physical is None:
             raise ValueError("streaming requires K=2 A physical auxiliaries")
@@ -923,13 +924,15 @@ class FrameJointTrainer:
             "sampled_displacement": physical.displacement_weight,
             "sampled_bond_band": physical.bond_band_weight,
         }
+        with self._autocast():
+            condition = self.base_model.prepare_condition(batch.observed_context)
         # Detached draw values give the exact two-sample loss and let each
         # subsequent backward differentiate only its own source trajectory.
         with torch.no_grad(), self._autocast():
             detached = tuple(
                 self.base_model.sample_source(
                     source, context=batch.observed_context, query=batch.query,
-                    condition=self.base_model.prepare_condition(batch.observed_context),
+                    condition=condition,
                     steps=self.sampled_config.euler_steps,
                     checkpoint_steps=False,
                 ).coordinates.detach()
@@ -944,6 +947,7 @@ class FrameJointTrainer:
                 sample.interpolated, context=batch.observed_context, query=batch.query,
                 flow_time=sample.flow_time, clean_future=batch.target_future,
                 decode_generated=True, decode_clean=True, decode_near=True,
+                prepared_condition=condition,
             )
             flow_loss = self.flow.loss(output.velocity, sample.target_velocity)
             losses = frame_joint_loss(
@@ -952,13 +956,13 @@ class FrameJointTrainer:
             )
         if not torch.isfinite(losses.total):
             raise FloatingPointError("non-finite streamed base loss")
-        losses.total.backward()
+        losses.total.backward(retain_graph=True)
         del output
         for index, source in enumerate(sources):
             with self._autocast():
                 generated = self.base_model.sample_source(
                     source, context=batch.observed_context, query=batch.query,
-                    condition=self.base_model.prepare_condition(batch.observed_context),
+                    condition=condition,
                     steps=self.sampled_config.euler_steps,
                     checkpoint_steps=self.sampled_config.activation_checkpoint,
                 ).coordinates
@@ -974,7 +978,7 @@ class FrameJointTrainer:
                 )
             if not torch.isfinite(branch_total):
                 raise FloatingPointError("non-finite streamed sampled loss")
-            branch_total.backward()
+            branch_total.backward(retain_graph=index + 1 < len(sources))
             del generated, coordinates, branch_raw, branch_total
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
         grad_norm = torch.nn.utils.clip_grad_norm_(active, self.grad_clip)
@@ -1003,6 +1007,7 @@ class FrameJointTrainer:
                 "draws": len(sources),
                 "euler_steps": self.sampled_config.euler_steps,
                 "backward": "sequential_per_source_exact_K2_objective",
+                "condition_preparations_per_prefix": 1,
             },
         }
         result.update({f"raw_{name}": float(value.detach()) for name, value in raw.items()})
