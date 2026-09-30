@@ -1,0 +1,165 @@
+{
+  "artifact_branch": "artifacts/learned-memory-v1-step5394",
+  "base_code_commit": "5092dcbe0e70f8864d72e0d13d3301db7d46929c",
+  "claims_excluded": [
+    "AF3 fusion validation",
+    "long rollout validation",
+    "completed M-short/M-long comparison"
+  ],
+  "files": [
+    {
+      "bytes": 2712,
+      "path": "agent/gm_motion_memory_v3/runtime_paths.json",
+      "sha256": "de9648d05eaa4fd6d54ed29e7f76f482d064ba817973f0afa77a21c1a30a2a96"
+    },
+    {
+      "bytes": 1949,
+      "path": "agent/gm_motion_memory_v3/reviews/B/formal_r02/HEAD_ADDENDUM.md",
+      "sha256": "8ffc915f47c2032567be0148b38a4f7bf5222e1f309ecba876720f507f6035e2"
+    },
+    {
+      "bytes": 2047,
+      "path": "agent/gm_motion_memory_v3/reviews/B/formal_r03/REQUEST.md",
+      "sha256": "8789cdb5147a0791eb2dc58c980415d37be01872afb560319f1e241b25aea53f"
+    },
+    {
+      "bytes": 9936,
+      "path": "agent/gm_motion_memory_v3/reviews/B/formal_r03/REVIEW.md",
+      "sha256": "403099b1f40b5ed6f8511c0aa364b9a4f9ac565b4a1461a0cc064752829d54e0"
+    },
+    {
+      "bytes": 1411,
+      "path": "runs/learned_memory_v1/formal_r02/budget_decision.json",
+      "sha256": "9db1e69ec2ee53cc747bdc22dec7c4cef11efa59b05432b4cc09ac94c8f97136"
+    },
+    {
+      "bytes": 6755,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal_M-short.json",
+      "sha256": "7d103a90dbd80dfd013c5953c9aaae8982eb5a2c32b778c2057850ea939f608d"
+    },
+    {
+      "bytes": 6753,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal_M-long.json",
+      "sha256": "5a18ff4210e600c40d1f69121785bd37ae5407aaca50f2f03ca440d895282321"
+    },
+    {
+      "bytes": 3772,
+      "path": "runs/learned_memory_v1/formal_r02/configs/frozen_configs.json",
+      "sha256": "7917b420ddb3d1ffd83a2a1dd9b6e551d4e206dd81757620b4d519a2f7d5f875"
+    },
+    {
+      "bytes": 295,
+      "path": "runs/learned_memory_v1/formal_r02/configs/pilot/M-short/cost_ledger.json",
+      "sha256": "6ede0018730d9aae70d5274bb052533e44e25a59b22414834b5a1d262f94b0b8"
+    },
+    {
+      "bytes": 4841,
+      "path": "runs/learned_memory_v1/formal_r02/configs/pilot/M-short/exposure.json",
+      "sha256": "0a8270bf2d40a5060d4f060670e1cc475198a0352077de3d390bd56fbffac2b2"
+    },
+    {
+      "bytes": 1079,
+      "path": "runs/learned_memory_v1/formal_r02/configs/pilot/M-short/train_manifest.json",
+      "sha256": "b276a0966cbfd208f283dfa1f59aaea457baea8532e0114665db34a06729ac12"
+    },
+    {
+      "bytes": 294,
+      "path": "runs/learned_memory_v1/formal_r02/configs/pilot/M-long/cost_ledger.json",
+      "sha256": "655d46102e06306dd16641b69dd17833143425e2d68a2d3f3ea282f39670767a"
+    },
+    {
+      "bytes": 5765,
+      "path": "runs/learned_memory_v1/formal_r02/configs/pilot/M-long/exposure.json",
+      "sha256": "cc184a910315fbdfa2491dc7fea0ca676d8f16c9c5d72f7d3f2cb0f289350e41"
+    },
+    {
+      "bytes": 1077,
+      "path": "runs/learned_memory_v1/formal_r02/configs/pilot/M-long/train_manifest.json",
+      "sha256": "d87abbea32502eaa5acbf18b76096fc4c73682f252c653b7bd354d841783c179"
+    },
+    {
+      "bytes": 581,
+      "path": "runs/learned_memory_v1/formal_r02/eval_profile_M-long_36/checks.json",
+      "sha256": "8e1952861678eb76b3210b35cbb613b3823fdb2526f570a4979862006196b9f5"
+    },
+    {
+      "bytes": 15028,
+      "path": "runs/learned_memory_v1/formal_r02/eval_profile_M-long_36/protocol.json",
+      "sha256": "e00cdb8245746227e78dcfe92993dcd03047b3bc369a1e8c0cb7454b0615ff3a"
+    },
+    {
+      "bytes": 332136,
+      "path": "runs/learned_memory_v1/formal_r02/eval_profile_M-long_36/summary.json",
+      "sha256": "366071b74cf19ec6b0dc0a2fb3f54278f9645a4b37d3c200a942f81a80a0a8ee"
+    },
+    {
+      "bytes": 2343,
+      "path": "runs/learned_memory_v1/formal_r02/safety_evidence_5ec8726.json",
+      "sha256": "1487f838f7264ef64287951d0f4af0c40f5754581df70066b0c9c09af5b69d90"
+    },
+    {
+      "bytes": 5239,
+      "path": "runs/learned_memory_v1/formal_r02/resume_validation_5ec8726/resume_equivalence.json",
+      "sha256": "bba7910bc3e7e493738c5acb5ace2dc1672c997ba803ba043968f6ca989908ce"
+    },
+    {
+      "bytes": 1895,
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_verification_5092dcbe.json",
+      "sha256": "eef5a51e4bf9fbeeaac070cff308dfe684710643dc53dded1c5d4ca5582cef48"
+    },
+    {
+      "bytes": 36823,
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_profile_5092dcbe_gpu2/profile.json",
+      "sha256": "ec1a8f9bbf36ae42d70903853703a8657560e2444c13b8d5623771476e577f43"
+    },
+    {
+      "bytes": 35783,
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_threshold_profile_5092dcbe_gpu2/profile.json",
+      "sha256": "05bed3987ebd3746d87539dc434bd98429dc0d258d4ce9e7edd2ec6e94061ee0"
+    },
+    {
+      "bytes": 650,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short_failed_gpu3_0af49b1_step00000194/archive_identity.json",
+      "sha256": "5b519d16948d6af0a1db906271d783289dfec3ef25d00503e3433f84836ae564"
+    },
+    {
+      "bytes": 1343,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short_failed_gpu3_0af49b1_step00000194/cost_ledger.json",
+      "sha256": "4189902d3e519ca0c98d10fb179a00a80e113a58482399a741d283e26e8bea1f"
+    },
+    {
+      "bytes": 1516,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short_failed_gpu3_0af49b1_step00000194/failure_archive_manifest.json",
+      "sha256": "315259d6fb435a6348fb428c4773d22246c7a8e0fff27b826a0e49fd377e7224"
+    },
+    {
+      "bytes": 1274,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short/data_card.json",
+      "sha256": "d3542a4a31cdb120a61105c43200f5c5fc9fad7458f046c6f4548001947ebbe3"
+    },
+    {
+      "bytes": 15720,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short/resolved_config.json",
+      "sha256": "fe49638a41e144e651c1478ed4c419b8b714eb5709673a2baae241bb0dcf9d5f"
+    },
+    {
+      "bytes": 2319,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short/target_encoder_provenance.json",
+      "sha256": "30f0d40c8e13bff519056937b2555c8e50abf14d56f2ca38d7a8c9d0ce036dca"
+    },
+    {
+      "bytes": 31661,
+      "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short/warm_start_report.json",
+      "sha256": "bcf7b3ac7baa33b46fb2a39f95740bc6224f1435d7bff0e2dbeff85c74367c6f"
+    },
+    {
+      "bytes": 5064,
+      "path": "runs/learned_memory_v1/formal_r02/status_snapshot_running_M-short.json",
+      "sha256": "978d9f7a615b5bbbfa0016fcb0f0bad898b97e8afd9b17ece1c0a724e711528a"
+    }
+  ],
+  "formal_status_at_snapshot": "M-short running at 5394/9741; not a completed formal result",
+  "schema": "molvid.learned_memory.artifact_commit_manifest.v1",
+  "selection": "lightweight identities, manifests, summaries, safety/review evidence, and one running snapshot; excludes checkpoints, coordinates, profiles NPZ, and JSONL rows",
+  "test_opened": false
+}

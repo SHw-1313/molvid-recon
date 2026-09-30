@@ -1,0 +1,52 @@
+{
+  "budget_guard": {
+    "checkpoint": "runs/learned_memory_v1/formal_r02/budget_guard_validation_5ec8726/M-short/frame_joint_step_00000000.pt",
+    "checkpoint_sha256": "4e9019e9cbb5c5fc8f6fbdf2a4f0adee0e3f61aba0596ddf7c45ca4495a45602",
+    "expected_exit_code": 1,
+    "local_ledger": "runs/learned_memory_v1/formal_r02/budget_guard_validation_5ec8726/M-short/cost_ledger.json",
+    "local_ledger_sha256": "ad5995b1a52aec88f5bdbb49d2d7b4b82eb00c9894851152dd523698815c5f33",
+    "paired_ledger": "runs/learned_memory_v1/formal_r02/budget_guard_validation_5ec8726/paired_formal_cost_ledger.json",
+    "paired_ledger_sha256": "333e942260cf448e85b7a1fe9fbf81593663af78d797d3f09f648af73319420b",
+    "status": "budget_exhausted",
+    "successful_updates": 0
+  },
+  "code_commit": "5ec8726950aa2be04d8ed7d23d837f7f00c3e8d6",
+  "resume_equivalence": {
+    "passed": true,
+    "path": "runs/learned_memory_v1/formal_r02/resume_validation_5ec8726/resume_equivalence.json",
+    "sha256": "bba7910bc3e7e493738c5acb5ace2dc1672c997ba803ba043968f6ca989908ce"
+  },
+  "review_r01": {
+    "path": "agent/gm_motion_memory_v3/reviews/B/formal_r01/REVIEW.md",
+    "sha256": "1f109fb461c40da10a45227989c26fe3b95167b016b1630c72d453507aad0e8c",
+    "verdict": "FAIL before fixes"
+  },
+  "schema": "molvid.learned_memory.formal_safety_evidence.v1",
+  "sidecar_audit": {
+    "manifest": "runs/learned_memory_v1/xtc_offsets_v1/manifest.json",
+    "manifest_sha256": "21c3dc05271b7c018278b3e4e6972b29987a4b513bc21ac122adfaf9ceda0e3f",
+    "splits": {
+      "train": {
+        "data_hash": "a62c60ba76a86093fa563bec8549d831e66db17d8be86ea574c12814675ce3ae",
+        "eligible_anchors": 29376,
+        "seconds": 3.5070768781006336,
+        "trajectories_verified": 576
+      },
+      "valid": {
+        "data_hash": "7704a2634ece890f80f9ffb83927d2df261e84a66c02de39392f66a7b01ae843",
+        "eligible_anchors": 384,
+        "seconds": 0.16257084999233484,
+        "trajectories_verified": 24
+      }
+    },
+    "total_trajectories_verified": 600,
+    "uniform_shift_corruption_test": "passed",
+    "wall_seconds": 3.6706136013381183
+  },
+  "targeted_tests": {
+    "command": "python -m pytest -q tests/test_learned_memory.py tests/test_gm_common_schedule.py tests/test_learned_memory_formal_safety.py",
+    "failed": 0,
+    "passed": 13
+  },
+  "test_opened": false
+}

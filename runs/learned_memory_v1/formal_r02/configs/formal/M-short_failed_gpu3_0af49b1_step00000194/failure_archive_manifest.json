@@ -1,0 +1,47 @@
+{
+  "schema": "molvid.learned_memory.failed_formal_archive.v1",
+  "arm": "M-short",
+  "status": "failed_or_interrupted",
+  "successful_updates": 194,
+  "source_code_commit": "0af49b1f893a851af951f86394fe94a43f506179",
+  "reviewed_source_commit": "5ec8726950aa2be04d8ed7d23d837f7f00c3e8d6",
+  "failed_gpu_uuid": "GPU-8432facc-587b-383d-88ac-b61ae60aa7ff",
+  "paired_ledger_preserved_at_parent": true,
+  "files": [
+    {
+      "path": "cost_ledger.json",
+      "bytes": 1343,
+      "sha256": "4189902d3e519ca0c98d10fb179a00a80e113a58482399a741d283e26e8bea1f"
+    },
+    {
+      "path": "data_card.json",
+      "bytes": 1274,
+      "sha256": "d3542a4a31cdb120a61105c43200f5c5fc9fad7458f046c6f4548001947ebbe3"
+    },
+    {
+      "path": "execution_epoch_0000.json",
+      "bytes": 2003365,
+      "sha256": "c7862ee08e795b2f8d9987552a0639453e5c9042ac9039b16c16afd80d38a540"
+    },
+    {
+      "path": "resolved_config.json",
+      "bytes": 15720,
+      "sha256": "4b123f98366b31be533175f264bb2f1576e7d21a4f48e53760a87bf7a2c4c64b"
+    },
+    {
+      "path": "target_encoder_provenance.json",
+      "bytes": 2319,
+      "sha256": "5bc692aec7ca2ee5508981de9bf4be91cad0849f46a8b07afc0accf20d646c8a"
+    },
+    {
+      "path": "train_metrics.jsonl",
+      "bytes": 395123,
+      "sha256": "6de38afcdadb8a474f3040a44cd483e3b68755ab91a602a20e12b4189fecb1c8"
+    },
+    {
+      "path": "warm_start_report.json",
+      "bytes": 31661,
+      "sha256": "bcf7b3ac7baa33b46fb2a39f95740bc6224f1435d7bff0e2dbeff85c74367c6f"
+    }
+  ]
+}

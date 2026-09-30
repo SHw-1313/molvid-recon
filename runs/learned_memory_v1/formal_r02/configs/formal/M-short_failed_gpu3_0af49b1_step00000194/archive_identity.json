@@ -1,0 +1,10 @@
+{
+  "schema": "molvid.learned_memory.failed_formal_archive_identity.v1",
+  "archive": "runs/learned_memory_v1/formal_r02/configs/formal/M-short_failed_gpu3_0af49b1_step00000194",
+  "archive_manifest_sha256": "315259d6fb435a6348fb428c4773d22246c7a8e0fff27b826a0e49fd377e7224",
+  "formal_log_sha256": "19d971e7ece9623780aa49c20f8d6fa7ae078d7dc8cbfac666f250b7630edaf6",
+  "paired_ledger_path": "runs/learned_memory_v1/formal_r02/configs/formal/paired_formal_cost_ledger.json",
+  "paired_ledger_sha256_before_and_after_archive": "eb1c58f4eddfad67c8cee7b764ca854c7d8937ec7c696105681aa6a8ea28628e",
+  "lossless_rename": true,
+  "successful_updates": 194
+}

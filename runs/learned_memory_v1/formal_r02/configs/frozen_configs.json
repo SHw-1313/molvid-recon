@@ -1,0 +1,69 @@
+{
+  "A1_configuration_sha256": "15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce",
+  "arms": {
+    "M-long": {
+      "formal": {
+        "config": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/formal_M-long.json",
+        "config_sha256": "5a18ff4210e600c40d1f69121785bd37ae5407aaca50f2f03ca440d895282321",
+        "output_root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/formal/M-long"
+      },
+      "pilot": {
+        "config": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot_M-long.json",
+        "config_sha256": "50037141ffbc1ed01e002617ebf32e28574e12c602071549fd348ee87f642192",
+        "output_root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot/M-long"
+      }
+    },
+    "M-short": {
+      "formal": {
+        "config": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/formal_M-short.json",
+        "config_sha256": "7d103a90dbd80dfd013c5953c9aaae8982eb5a2c32b778c2057850ea939f608d",
+        "output_root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/formal/M-short"
+      },
+      "pilot": {
+        "config": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot_M-short.json",
+        "config_sha256": "cd45627e08267bcb2b2fabba0fd97c7e46c16739c462b998fd5f302c17dbde3b",
+        "output_root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot/M-short"
+      }
+    }
+  },
+  "capacity_release_sha256": "eaa6cb42de10a732654fce4421746e85067987af95f7dc2db644d96c4aebb342",
+  "data": {
+    "anchor_rule": "dt100_window_start=w*160; past>=1280raw; future>=480raw",
+    "data_hash": "a62c60ba76a86093fa563bec8549d831e66db17d8be86ea574c12814675ce3ae",
+    "eligible_anchors": 29376,
+    "manifest": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/manifest.json",
+    "manifest_sha256": "5664cd9fc9f1a328427e5732f2ce10751fa4dc9e7295ac28d97236b2d05e4233",
+    "raw_inventory_hash": "cf08b29b7404713489f85bb127e09152c02ccc56efd7cd050e4eb3561fa971ec",
+    "raw_root": "/data1/repo/BioKinema/data_atlas",
+    "schema": "molvid.learned_memory.raw_dataset.v1",
+    "split": "train",
+    "store_index": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/clip_store/train/index.txt",
+    "store_index_sha256": "02f28b0532944799c189d52037745d57d17f1077fccb36f2371b6a07944bc41b",
+    "systems": 192,
+    "test_opened": false,
+    "trajectories": 576,
+    "xtc_offset_cache": {
+      "cache_hash": "e838a1fe024b73e9dd66404186e148dbf991868944b9e842f6722117350876ca",
+      "manifest": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/xtc_offsets_v1/manifest.json",
+      "manifest_sha256": "21c3dc05271b7c018278b3e4e6972b29987a4b513bc21ac122adfaf9ceda0e3f",
+      "root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/xtc_offsets_v1"
+    }
+  },
+  "effective_epochs": 1,
+  "formal_total_updates": 9741,
+  "paired_epochs": {
+    "0": {
+      "long_execution_sha256": "04c8d8799b3bb3841a77c629c9ff767a4dfcee143b337335287a3e84c7923d4a",
+      "paired_schedule_sha256": "604ef984a13f2e065ee7049518dc2f48e349bc13206b8ef081b5fcf94eb9627c",
+      "short_execution_sha256": "b684a7852bef7aad6beff0539e0b6aa73bc4f8fbddd884f30d0ff2bb41d9beee",
+      "updates": 9741
+    }
+  },
+  "parent_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+  "recipe_release_sha256": "38702552fd847f79cf5a6e9c3f0d4b2a104ef7c590316ac6c5395ec2c94626f2",
+  "schema": "molvid.learned_memory.frozen_configs.v1",
+  "test_opened": false,
+  "updates_per_epoch": [
+    9741
+  ]
+}

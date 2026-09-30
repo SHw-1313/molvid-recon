@@ -1,0 +1,52 @@
+{
+  "schema": "molvid.learned_memory.oom_fix_verification.v1",
+  "code_commit": "5092dcbe0e70f8864d72e0d13d3301db7d46929c",
+  "gpu_uuid": "GPU-4172773f-10fa-ce97-72e6-1c582bdcb615",
+  "formal_config": "runs/learned_memory_v1/formal_r02/configs/formal_M-short.json",
+  "formal_config_sha256": "7d103a90dbd80dfd013c5953c9aaae8982eb5a2c32b778c2057850ea939f608d",
+  "tests": {
+    "command": "PYTHONPATH=. pytest -q tests/test_learned_memory.py tests/test_gm_common_schedule.py tests/test_learned_memory_formal_safety.py",
+    "result": "15 passed",
+    "seconds": 10.84,
+    "cuda_required": true
+  },
+  "profiles": [
+    {
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_profile_5092dcbe_gpu2/profile.json",
+      "sha256": "ec1a8f9bbf36ae42d70903853703a8657560e2444c13b8d5623771476e577f43",
+      "elapsed_seconds": 65.9018462439999,
+      "batches": [142, 194, 900]
+    },
+    {
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_threshold_profile_5092dcbe_gpu2/profile.json",
+      "sha256": "05bed3987ebd3746d87539dc434bd98429dc0d258d4ce9e7edd2ec6e94061ee0",
+      "elapsed_seconds": 46.95169285591692,
+      "batches": [142, 3274]
+    }
+  ],
+  "profile_gpu_hours": 0.03134820530553245,
+  "profile_budget_bucket": "pilot",
+  "observations": {
+    "original_oom_batch": {
+      "batch_index": 194,
+      "atoms": 4219,
+      "old_peak_allocated_bytes": 70522501632,
+      "fixed_peak_allocated_bytes": 44493530112
+    },
+    "largest_atom_batch": {
+      "batch_index": 900,
+      "atoms": 4975,
+      "fixed_peak_allocated_bytes": 52400179712
+    },
+    "largest_nonstreamed_batch": {
+      "batch_index": 3274,
+      "atoms": 4125,
+      "fixed_peak_allocated_bytes": 75267871232
+    },
+    "teacher_frame_calls_each": [2, 12],
+    "memory_preparations_each": 1,
+    "history_gradients_finite_each": true
+  },
+  "formal_exposure_counted": false,
+  "test_split_opened": false
+}

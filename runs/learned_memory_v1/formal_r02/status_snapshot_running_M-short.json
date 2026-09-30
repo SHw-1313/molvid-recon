@@ -1,0 +1,135 @@
+{
+  "arm": "M-short",
+  "checkpoint_snapshot": {
+    "count": 5,
+    "latest_bytes": 189602570,
+    "latest_path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short/frame_joint_step_00005000.pt",
+    "latest_sha256": "237e140fc46cc5426b31f561fe921657ef008e2f3cf11e0fc783f18709b221f6",
+    "latest_step": 5000
+  },
+  "code_commit": "5092dcbe0e70f8864d72e0d13d3301db7d46929c",
+  "container_pid": 363571,
+  "contracts": {
+    "loss_and_grad_finite": true,
+    "memory_preparations_each": 1,
+    "teacher_frame_calls_each": [
+      2,
+      12
+    ],
+    "test_opened": false
+  },
+  "exposure_snapshot": {
+    "auxiliary_updates": 643,
+    "raw_valid_atom_frames": 71999217,
+    "streamed_auxiliary_updates": 31,
+    "teacher_atom_frames": 178391206
+  },
+  "gpu_observation": [
+    "2, GPU-4172773f-10fa-ce97-72e6-1c582bdcb615, 81920, 73083, 8070, 212.50, 60"
+  ],
+  "gpu_uuid": "GPU-4172773f-10fa-ce97-72e6-1c582bdcb615",
+  "host_process_observation": [
+    "GPU-4172773f-10fa-ce97-72e6-1c582bdcb615, 3929309, [Not Found], 73074"
+  ],
+  "last_batch_index": 5393,
+  "limitations": [
+    "running snapshot, not a completed formal result",
+    "M-long and full validation evaluation not started",
+    "no AF3 fusion or long-rollout claim"
+  ],
+  "loss_snapshot": {
+    "first_grad_norm": 3.3306100368499756,
+    "first_total": 1.3238404989242554,
+    "last_grad_norm": 0.794038712978363,
+    "last_raw": {
+      "raw_clean_bond": 0.0008463223930448294,
+      "raw_clean_coordinate": 0.0006290653254836798,
+      "raw_flow": 0.20018711686134338,
+      "raw_flow_h": 0.31873947381973267,
+      "raw_flow_v": 0.0816347599029541,
+      "raw_generated_bond": 0.009424873627722263,
+      "raw_near_bond": 0.009424873627722263,
+      "raw_near_coordinate": 0.010627937503159046,
+      "raw_sampled_bond_band": 0.0,
+      "raw_sampled_clash": 0.0,
+      "raw_sampled_displacement": 0.0,
+      "raw_sampled_energy": 0.0,
+      "raw_sampled_observed_bond": 0.0,
+      "raw_sampled_rmsf": 0.0
+    },
+    "last_total": 0.2025451958179474,
+    "last_weighted": {
+      "weighted_clean_bond": 8.46322436700575e-05,
+      "weighted_clean_coordinate": 0.0006290653254836798,
+      "weighted_flow": 0.20018711686134338,
+      "weighted_generated_bond": 0.00048733429866842926,
+      "weighted_near_bond": 9.424873132957146e-05,
+      "weighted_near_coordinate": 0.001062793773598969,
+      "weighted_sampled_bond_band": 0.0,
+      "weighted_sampled_clash": 0.0,
+      "weighted_sampled_displacement": 0.0,
+      "weighted_sampled_energy": 0.0,
+      "weighted_sampled_observed_bond": 0.0,
+      "weighted_sampled_rmsf": 0.0
+    }
+  },
+  "memory_snapshot": {
+    "maximum_peak_allocated_bytes": 75536860160,
+    "maximum_peak_sample_ids": [
+      "atlas_6b1z_A_R1_w000017"
+    ],
+    "maximum_peak_step": 3258
+  },
+  "metrics_prefix": {
+    "bytes": 11059785,
+    "path": "runs/learned_memory_v1/formal_r02/configs/formal/M-short/train_metrics.jsonl",
+    "rows": 5394,
+    "sha256": "bfe06ea0bbe321e184e2efb4a984f10947a5d6fafaa84609b06ddc3e56e9d9d5"
+  },
+  "paired_budget_snapshot": {
+    "active_invocation": {
+      "arm": "M-short",
+      "charged_seconds": 0.0,
+      "code_commit": "5092dcbe0e70f8864d72e0d13d3301db7d46929c",
+      "config_sha256": "7d103a90dbd80dfd013c5953c9aaae8982eb5a2c32b778c2057850ea939f608d",
+      "ended_unix": null,
+      "failure": null,
+      "hostname": "sihao-dev",
+      "invocation_id": "708f21aff86c473cab55b6ce11dbe18e",
+      "pid": 363571,
+      "planned_updates": 9741,
+      "resume_checkpoint_sha256": null,
+      "started_unix": 1790734564.7173004,
+      "status": "running",
+      "successful_updates": 0
+    },
+    "pair_status": "active",
+    "path": "runs/learned_memory_v1/formal_r02/configs/formal/paired_formal_cost_ledger.json",
+    "prior_failed_gpu_hours": 0.21740979982746972,
+    "sha256": "07c59641c778176233c3c8862d60ede2bd5d5e0af020c6c2c79881bd2163366c"
+  },
+  "planned_updates": 9741,
+  "review_sha256": "403099b1f40b5ed6f8511c0aa364b9a4f9ac565b4a1461a0cc064752829d54e0",
+  "schedule": {
+    "execution_sha256": "b684a7852bef7aad6beff0539e0b6aa73bc4f8fbddd884f30d0ff2bb41d9beee",
+    "paired_sha256": "604ef984a13f2e065ee7049518dc2f48e349bc13206b8ef081b5fcf94eb9627c"
+  },
+  "schema": "molvid.learned_memory.running_status_snapshot.v1",
+  "snapshot_unix": 1790752150.3030207,
+  "stable_evidence": {
+    "oom_fix_profile": {
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_profile_5092dcbe_gpu2/profile.json",
+      "sha256": "ec1a8f9bbf36ae42d70903853703a8657560e2444c13b8d5623771476e577f43"
+    },
+    "oom_fix_verification": {
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_verification_5092dcbe.json",
+      "sha256": "eef5a51e4bf9fbeeaac070cff308dfe684710643dc53dded1c5d4ca5582cef48"
+    },
+    "threshold_profile": {
+      "path": "runs/learned_memory_v1/formal_r02/oom_fix_threshold_profile_5092dcbe_gpu2/profile.json",
+      "sha256": "05bed3987ebd3746d87539dc434bd98429dc0d258d4ce9e7edd2ec6e94061ee0"
+    }
+  },
+  "status": "formal_M-short_running",
+  "successful_updates_snapshot": 5394
+}

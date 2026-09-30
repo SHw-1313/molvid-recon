@@ -1,0 +1,22 @@
+{
+  "anchor_rule": "dt100_window_start=w*160; past>=1280raw; future>=480raw",
+  "data_hash": "a62c60ba76a86093fa563bec8549d831e66db17d8be86ea574c12814675ce3ae",
+  "eligible_anchors": 29376,
+  "manifest": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/manifest.json",
+  "manifest_sha256": "5664cd9fc9f1a328427e5732f2ce10751fa4dc9e7295ac28d97236b2d05e4233",
+  "raw_inventory_hash": "cf08b29b7404713489f85bb127e09152c02ccc56efd7cd050e4eb3561fa971ec",
+  "raw_root": "/data1/repo/BioKinema/data_atlas",
+  "schema": "molvid.learned_memory.raw_dataset.v1",
+  "split": "train",
+  "store_index": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/clip_store/train/index.txt",
+  "store_index_sha256": "02f28b0532944799c189d52037745d57d17f1077fccb36f2371b6a07944bc41b",
+  "systems": 192,
+  "test_opened": false,
+  "trajectories": 576,
+  "xtc_offset_cache": {
+    "cache_hash": "e838a1fe024b73e9dd66404186e148dbf991868944b9e842f6722117350876ca",
+    "manifest": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/xtc_offsets_v1/manifest.json",
+    "manifest_sha256": "21c3dc05271b7c018278b3e4e6972b29987a4b513bc21ac122adfaf9ceda0e3f",
+    "root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/xtc_offsets_v1"
+  }
+}

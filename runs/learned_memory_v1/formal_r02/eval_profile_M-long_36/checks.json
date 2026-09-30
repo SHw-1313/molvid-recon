@@ -1,0 +1,22 @@
+{
+  "euler_steps": 16,
+  "future_target_latent_max_abs_difference": 6.594539165496826,
+  "generated_max_abs_difference": 0.0,
+  "observed_and_query_equal": true,
+  "passed": true,
+  "prefix": {
+    "anchor_raw_index": 3840,
+    "anchor_slot": 0,
+    "dataset_index": 5,
+    "history_span_ps": 800,
+    "observed_dt_ps": 100,
+    "query_lag_ps": 100,
+    "replica": "R1",
+    "sample_id": "atlas_2ejn_B_R1_w000008",
+    "system": "2ejn_B",
+    "trajectory_id": "atlas_2ejn_B_R1",
+    "window_index": 8
+  },
+  "schema": "molvid.learned_memory.future_leakage_check.v1",
+  "seed": 0
+}

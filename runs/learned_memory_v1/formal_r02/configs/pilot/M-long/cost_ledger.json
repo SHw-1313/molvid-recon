@@ -1,0 +1,11 @@
+{
+  "arm": "M-long",
+  "budget_bucket": "pilot",
+  "failure": null,
+  "gpu_hours": 0.13307708749974456,
+  "invocation_seconds": 479.07751499908045,
+  "peak_allocated_bytes": 57574855168,
+  "schema": "molvid.learned_memory.cost_ledger.v1",
+  "status": "completed",
+  "successful_updates": 128
+}

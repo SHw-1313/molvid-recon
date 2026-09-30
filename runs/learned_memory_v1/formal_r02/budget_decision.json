@@ -1,0 +1,30 @@
+{
+  "chosen_effective_epochs": 1,
+  "chosen_updates_per_arm": 9741,
+  "final_frozen_configs_sha256": "7917b420ddb3d1ffd83a2a1dd9b6e551d4e206dd81757620b4d519a2f7d5f875",
+  "formal_cap_gpu_hours": 32.0,
+  "original_frozen_configs_sha256": "d3587ca8f9c625d0e1abfcc1458ddbf59e2350b63282df405b53c437f7e0f317",
+  "pilot_manifests": {
+    "M-long": {
+      "gpu_hours": 0.13301168218436132,
+      "path": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot/M-long/train_manifest.json",
+      "seconds_per_update_including_setup": 3.7409535614351626,
+      "sha256": "d87abbea32502eaa5acbf18b76096fc4c73682f252c653b7bd354d841783c179",
+      "successful_updates": 128
+    },
+    "M-short": {
+      "gpu_hours": 0.13543194153255575,
+      "path": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot/M-short/train_manifest.json",
+      "seconds_per_update_including_setup": 3.8090233556031308,
+      "sha256": "b276a0966cbfd208f283dfa1f59aaea457baea8532e0114665db34a06729ac12",
+      "successful_updates": 128
+    }
+  },
+  "projected_paired_gpu_hours": {
+    "1": 23.493326089222368,
+    "2": 47.02765274753587
+  },
+  "rule": "use two paired epochs only when conservative pilot projection is <=32 GPUh; otherwise freeze both to one before review/launch",
+  "safety_factor": 1.15,
+  "schema": "molvid.learned_memory.formal_budget_decision.v1"
+}

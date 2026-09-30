@@ -1,0 +1,22 @@
+{
+  "arm": "M-short",
+  "checkpoint": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot/M-short/frame_joint_step_00000128.pt",
+  "checkpoint_sha256": "32b9e67325b282e31e354ae3af4f356e1996cfe219385f77ab1cd9ffa856abaf",
+  "code_commit": "e10148d49068da91bde37aca808b10f56c200cc4",
+  "config_sha256": "cd45627e08267bcb2b2fabba0fd97c7e46c16739c462b998fd5f302c17dbde3b",
+  "data_hash": "a62c60ba76a86093fa563bec8549d831e66db17d8be86ea574c12814675ce3ae",
+  "effective_epochs": 2,
+  "gpu_hours_this_invocation": 0.13543194153255575,
+  "memory_preparations_per_prefix": 1,
+  "parent_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+  "peak_allocated_bytes": 57570977792,
+  "raw_valid_atom_frames": 1717710,
+  "schema": "molvid.learned_memory.train_manifest.v1",
+  "status": "completed",
+  "successful_updates": 128,
+  "teacher_atom_frames": 4265576,
+  "teacher_observed_frames_per_prefix": 2,
+  "teacher_target_frames_per_prefix": 12,
+  "test_opened": false,
+  "training_seconds_this_invocation": 487.55498951720074
+}

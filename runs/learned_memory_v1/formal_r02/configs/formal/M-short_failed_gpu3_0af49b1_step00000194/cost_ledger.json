@@ -1,0 +1,20 @@
+{
+  "arm": "M-short",
+  "budget_bucket": "formal",
+  "cumulative_paired_gpu_hours": 0.21740979982746972,
+  "failure": {
+    "message": "CUDA out of memory. Tried to allocate 120.00 MiB. GPU 0 has a total capacity of 79.25 GiB of which 48.31 MiB is free. Process 912550 has 12.63 GiB memory in use. Process 1347828 has 66.56 GiB memory in use. Of the allocated memory 65.68 GiB is allocated by PyTorch, and 334.50 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+    "type": "OutOfMemoryError"
+  },
+  "formal_cap_gpu_hours": 32.0,
+  "gpu_hours_this_invocation": 0.217409606832597,
+  "invocation_id": "7b25450f0f4b427bae9697d50be221e8",
+  "invocation_seconds": 782.6745845973492,
+  "paired_ledger": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/formal/paired_formal_cost_ledger.json",
+  "paired_ledger_sha256": "eb1c58f4eddfad67c8cee7b764ca854c7d8937ec7c696105681aa6a8ea28628e",
+  "paired_status": "active",
+  "peak_allocated_bytes": 70522501632,
+  "schema": "molvid.learned_memory.cost_ledger.v2",
+  "status": "failed_or_interrupted",
+  "successful_updates": 194
+}

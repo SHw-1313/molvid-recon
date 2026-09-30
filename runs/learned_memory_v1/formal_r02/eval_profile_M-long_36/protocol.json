@@ -1,0 +1,550 @@
+{
+  "aggregation": "draw -> anchor -> replica -> system equal",
+  "alignment": "prediction and MD each to the same last-observed reference",
+  "anchor_selection": [
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 5,
+      "replica": "R1",
+      "sample_id": "atlas_2ejn_B_R1_w000008",
+      "system": "2ejn_B",
+      "trajectory_id": "atlas_2ejn_B_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 10,
+      "replica": "R1",
+      "sample_id": "atlas_2ejn_B_R1_w000013",
+      "system": "2ejn_B",
+      "trajectory_id": "atlas_2ejn_B_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 21,
+      "replica": "R2",
+      "sample_id": "atlas_2ejn_B_R2_w000008",
+      "system": "2ejn_B",
+      "trajectory_id": "atlas_2ejn_B_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 26,
+      "replica": "R2",
+      "sample_id": "atlas_2ejn_B_R2_w000013",
+      "system": "2ejn_B",
+      "trajectory_id": "atlas_2ejn_B_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 37,
+      "replica": "R3",
+      "sample_id": "atlas_2ejn_B_R3_w000008",
+      "system": "2ejn_B",
+      "trajectory_id": "atlas_2ejn_B_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 42,
+      "replica": "R3",
+      "sample_id": "atlas_2ejn_B_R3_w000013",
+      "system": "2ejn_B",
+      "trajectory_id": "atlas_2ejn_B_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 53,
+      "replica": "R1",
+      "sample_id": "atlas_3f0o_B_R1_w000008",
+      "system": "3f0o_B",
+      "trajectory_id": "atlas_3f0o_B_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 58,
+      "replica": "R1",
+      "sample_id": "atlas_3f0o_B_R1_w000013",
+      "system": "3f0o_B",
+      "trajectory_id": "atlas_3f0o_B_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 69,
+      "replica": "R2",
+      "sample_id": "atlas_3f0o_B_R2_w000008",
+      "system": "3f0o_B",
+      "trajectory_id": "atlas_3f0o_B_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 74,
+      "replica": "R2",
+      "sample_id": "atlas_3f0o_B_R2_w000013",
+      "system": "3f0o_B",
+      "trajectory_id": "atlas_3f0o_B_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 85,
+      "replica": "R3",
+      "sample_id": "atlas_3f0o_B_R3_w000008",
+      "system": "3f0o_B",
+      "trajectory_id": "atlas_3f0o_B_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 90,
+      "replica": "R3",
+      "sample_id": "atlas_3f0o_B_R3_w000013",
+      "system": "3f0o_B",
+      "trajectory_id": "atlas_3f0o_B_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 101,
+      "replica": "R1",
+      "sample_id": "atlas_3hdj_B_R1_w000008",
+      "system": "3hdj_B",
+      "trajectory_id": "atlas_3hdj_B_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 106,
+      "replica": "R1",
+      "sample_id": "atlas_3hdj_B_R1_w000013",
+      "system": "3hdj_B",
+      "trajectory_id": "atlas_3hdj_B_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 117,
+      "replica": "R2",
+      "sample_id": "atlas_3hdj_B_R2_w000008",
+      "system": "3hdj_B",
+      "trajectory_id": "atlas_3hdj_B_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 122,
+      "replica": "R2",
+      "sample_id": "atlas_3hdj_B_R2_w000013",
+      "system": "3hdj_B",
+      "trajectory_id": "atlas_3hdj_B_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 133,
+      "replica": "R3",
+      "sample_id": "atlas_3hdj_B_R3_w000008",
+      "system": "3hdj_B",
+      "trajectory_id": "atlas_3hdj_B_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 138,
+      "replica": "R3",
+      "sample_id": "atlas_3hdj_B_R3_w000013",
+      "system": "3hdj_B",
+      "trajectory_id": "atlas_3hdj_B_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 149,
+      "replica": "R1",
+      "sample_id": "atlas_3l4h_A_R1_w000008",
+      "system": "3l4h_A",
+      "trajectory_id": "atlas_3l4h_A_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 154,
+      "replica": "R1",
+      "sample_id": "atlas_3l4h_A_R1_w000013",
+      "system": "3l4h_A",
+      "trajectory_id": "atlas_3l4h_A_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 165,
+      "replica": "R2",
+      "sample_id": "atlas_3l4h_A_R2_w000008",
+      "system": "3l4h_A",
+      "trajectory_id": "atlas_3l4h_A_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 170,
+      "replica": "R2",
+      "sample_id": "atlas_3l4h_A_R2_w000013",
+      "system": "3l4h_A",
+      "trajectory_id": "atlas_3l4h_A_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 181,
+      "replica": "R3",
+      "sample_id": "atlas_3l4h_A_R3_w000008",
+      "system": "3l4h_A",
+      "trajectory_id": "atlas_3l4h_A_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 186,
+      "replica": "R3",
+      "sample_id": "atlas_3l4h_A_R3_w000013",
+      "system": "3l4h_A",
+      "trajectory_id": "atlas_3l4h_A_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 197,
+      "replica": "R1",
+      "sample_id": "atlas_3rv1_B_R1_w000008",
+      "system": "3rv1_B",
+      "trajectory_id": "atlas_3rv1_B_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 202,
+      "replica": "R1",
+      "sample_id": "atlas_3rv1_B_R1_w000013",
+      "system": "3rv1_B",
+      "trajectory_id": "atlas_3rv1_B_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 213,
+      "replica": "R2",
+      "sample_id": "atlas_3rv1_B_R2_w000008",
+      "system": "3rv1_B",
+      "trajectory_id": "atlas_3rv1_B_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 218,
+      "replica": "R2",
+      "sample_id": "atlas_3rv1_B_R2_w000013",
+      "system": "3rv1_B",
+      "trajectory_id": "atlas_3rv1_B_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 229,
+      "replica": "R3",
+      "sample_id": "atlas_3rv1_B_R3_w000008",
+      "system": "3rv1_B",
+      "trajectory_id": "atlas_3rv1_B_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 234,
+      "replica": "R3",
+      "sample_id": "atlas_3rv1_B_R3_w000013",
+      "system": "3rv1_B",
+      "trajectory_id": "atlas_3rv1_B_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 245,
+      "replica": "R1",
+      "sample_id": "atlas_5ef9_A_R1_w000008",
+      "system": "5ef9_A",
+      "trajectory_id": "atlas_5ef9_A_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 250,
+      "replica": "R1",
+      "sample_id": "atlas_5ef9_A_R1_w000013",
+      "system": "5ef9_A",
+      "trajectory_id": "atlas_5ef9_A_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 261,
+      "replica": "R2",
+      "sample_id": "atlas_5ef9_A_R2_w000008",
+      "system": "5ef9_A",
+      "trajectory_id": "atlas_5ef9_A_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 266,
+      "replica": "R2",
+      "sample_id": "atlas_5ef9_A_R2_w000013",
+      "system": "5ef9_A",
+      "trajectory_id": "atlas_5ef9_A_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 277,
+      "replica": "R3",
+      "sample_id": "atlas_5ef9_A_R3_w000008",
+      "system": "5ef9_A",
+      "trajectory_id": "atlas_5ef9_A_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 282,
+      "replica": "R3",
+      "sample_id": "atlas_5ef9_A_R3_w000013",
+      "system": "5ef9_A",
+      "trajectory_id": "atlas_5ef9_A_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 293,
+      "replica": "R1",
+      "sample_id": "atlas_5ii7_A_R1_w000008",
+      "system": "5ii7_A",
+      "trajectory_id": "atlas_5ii7_A_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 298,
+      "replica": "R1",
+      "sample_id": "atlas_5ii7_A_R1_w000013",
+      "system": "5ii7_A",
+      "trajectory_id": "atlas_5ii7_A_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 309,
+      "replica": "R2",
+      "sample_id": "atlas_5ii7_A_R2_w000008",
+      "system": "5ii7_A",
+      "trajectory_id": "atlas_5ii7_A_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 314,
+      "replica": "R2",
+      "sample_id": "atlas_5ii7_A_R2_w000013",
+      "system": "5ii7_A",
+      "trajectory_id": "atlas_5ii7_A_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 325,
+      "replica": "R3",
+      "sample_id": "atlas_5ii7_A_R3_w000008",
+      "system": "5ii7_A",
+      "trajectory_id": "atlas_5ii7_A_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 330,
+      "replica": "R3",
+      "sample_id": "atlas_5ii7_A_R3_w000013",
+      "system": "5ii7_A",
+      "trajectory_id": "atlas_5ii7_A_R3",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 341,
+      "replica": "R1",
+      "sample_id": "atlas_6xb3_H_R1_w000008",
+      "system": "6xb3_H",
+      "trajectory_id": "atlas_6xb3_H_R1",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 346,
+      "replica": "R1",
+      "sample_id": "atlas_6xb3_H_R1_w000013",
+      "system": "6xb3_H",
+      "trajectory_id": "atlas_6xb3_H_R1",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 357,
+      "replica": "R2",
+      "sample_id": "atlas_6xb3_H_R2_w000008",
+      "system": "6xb3_H",
+      "trajectory_id": "atlas_6xb3_H_R2",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 362,
+      "replica": "R2",
+      "sample_id": "atlas_6xb3_H_R2_w000013",
+      "system": "6xb3_H",
+      "trajectory_id": "atlas_6xb3_H_R2",
+      "window_index": 13
+    },
+    {
+      "anchor_raw_index": 3840,
+      "anchor_slot": 0,
+      "dataset_index": 373,
+      "replica": "R3",
+      "sample_id": "atlas_6xb3_H_R3_w000008",
+      "system": "6xb3_H",
+      "trajectory_id": "atlas_6xb3_H_R3",
+      "window_index": 8
+    },
+    {
+      "anchor_raw_index": 6240,
+      "anchor_slot": 1,
+      "dataset_index": 378,
+      "replica": "R3",
+      "sample_id": "atlas_6xb3_H_R3_w000013",
+      "system": "6xb3_H",
+      "trajectory_id": "atlas_6xb3_H_R3",
+      "window_index": 13
+    }
+  ],
+  "anchor_selection_sha256": "ff4edc148ee0e3a2f70ad0b71274173df981398716471d598a698511ce88dc59",
+  "arm": "M-long",
+  "best_of_N": false,
+  "checkpoint": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/pilot/M-long/frame_joint_step_00000128.pt",
+  "checkpoint_sha256": "7e1b993d161d6346e1db5cdebb1d0ae6bb65183a5e77cfd9ed104b5d95250e00",
+  "conditions_sha256": "8c5d402f21a857eada7922373ee1799484264baf3f12f3f6e302a29899799614",
+  "config": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/formal_r02/configs/formal_M-long.json",
+  "config_sha256": "5a18ff4210e600c40d1f69121785bd37ae5407aaca50f2f03ca440d895282321",
+  "euler_steps": 16,
+  "expected_rows": 180,
+  "future_Q": 12,
+  "history_spans_ps": [
+    800,
+    3200,
+    12800
+  ],
+  "observed_dt_ps": [
+    100,
+    200,
+    400
+  ],
+  "prefixes": 36,
+  "query_lag_ps": [
+    100,
+    200,
+    300,
+    400
+  ],
+  "schema": "molvid.learned_memory.evaluation.v1",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "teacher_anchor_times_ps": [
+    -800,
+    0
+  ],
+  "test_opened": false,
+  "validation_data": {
+    "anchor_rule": "dt300_window_start=w*480; past>=1280raw; future>=480raw",
+    "data_hash": "7704a2634ece890f80f9ffb83927d2df261e84a66c02de39392f66a7b01ae843",
+    "eligible_anchors": 384,
+    "manifest": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/manifest.json",
+    "manifest_sha256": "5664cd9fc9f1a328427e5732f2ce10751fa4dc9e7295ac28d97236b2d05e4233",
+    "raw_inventory_hash": "73545bdf15c68db632a500330af7cd3e7e88d9976eb93fc142d5cea09bbfc1c6",
+    "raw_root": "/data1/repo/BioKinema/data_atlas",
+    "schema": "molvid.learned_memory.raw_dataset.v1",
+    "split": "valid",
+    "store_index": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/clip_store/valid/index.txt",
+    "store_index_sha256": "c89f870d9bf087ee7bf983613012210af35c30199309dd1e63c0496887eef71e",
+    "systems": 8,
+    "test_opened": false,
+    "trajectories": 24,
+    "xtc_offset_cache": {
+      "cache_hash": "e838a1fe024b73e9dd66404186e148dbf991868944b9e842f6722117350876ca",
+      "manifest": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/xtc_offsets_v1/manifest.json",
+      "manifest_sha256": "21c3dc05271b7c018278b3e4e6972b29987a4b513bc21ac122adfaf9ceda0e3f",
+      "root": "/workspace/molvid-recon-learned-memory-v1/runs/learned_memory_v1/xtc_offsets_v1"
+    }
+  },
+  "validation_only_lag_ps": [
+    300
+  ]
+}
