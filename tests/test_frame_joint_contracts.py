@@ -11,6 +11,7 @@ from molvid.cli.train_frame_joint import (
     _merge_exposure_states,
     _validate_exposure_state,
     _validate_frame_joint_config,
+    _validate_parent_mode,
     _verified_derived_identity,
 )
 from molvid.config import load_config
@@ -54,6 +55,7 @@ def test_frame_joint_config_rejects_unknown_keys(mutate, message: str) -> None:
         ("model", "geometry_enabled"),
         ("model", "motion_enabled"),
         ("training", "deterministic"),
+        ("training", "checkpoint_flow_field"),
         ("loss", "inherit_parent"),
     ],
 )
@@ -123,6 +125,36 @@ def test_capacity_runtime_config_validates_geometry_and_warm_start_mapping() -> 
     invalid["training"]["warm_start_block_mapping"] = [2, 4, 6, 9]
     with pytest.raises(ValueError, match="exceeds model.depth"):
         _validate_frame_joint_config(invalid)
+
+
+def test_capacity_block_mapping_allows_exact_resume_but_not_unbound_fresh_run() -> None:
+    training = {"warm_start_block_mapping": [2, 4, 6, 8]}
+    _validate_parent_mode(
+        training,
+        resume=Path("capacity-step.pt"),
+        continuation_parent=None,
+        warm_start=None,
+    )
+    _validate_parent_mode(
+        training,
+        resume=None,
+        continuation_parent=None,
+        warm_start=Path("A1.pt"),
+    )
+    with pytest.raises(ValueError, match="fresh run or --resume"):
+        _validate_parent_mode(
+            training,
+            resume=None,
+            continuation_parent=None,
+            warm_start=None,
+        )
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        _validate_parent_mode(
+            training,
+            resume=Path("capacity-step.pt"),
+            continuation_parent=None,
+            warm_start=Path("A1.pt"),
+        )
 
 
 @pytest.mark.parametrize(

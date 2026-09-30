@@ -15,6 +15,7 @@ import time
 import torch
 
 from molvid.runtime import atomic_write_json, canonical_hash, sha256_file
+from tools.gm_capacity_common import capacity_source_identity
 
 
 FORMAL_TRAIN_BUDGET_SECONDS = 32.0 * 3600.0
@@ -40,7 +41,7 @@ def _stage_seconds(ledger, prefix: str) -> float:
         float(stage.get("elapsed_seconds", 0.0))
         for stage in ledger["stages"]
         if stage["name"].startswith(prefix)
-        and stage.get("status") in {"completed", "budget_stopped", "failed"}
+        and stage.get("status") in {"completed", "budget_stopped", "failed", "interrupted"}
     )
 
 
@@ -67,11 +68,50 @@ def _verify_paired_checkpoint(first: Path, second: Path) -> dict:
     }
 
 
+def validate_review_gate(
+    gate_path: Path,
+    *,
+    frozen: dict,
+    frozen_path: Path,
+    source_identity: dict,
+) -> dict:
+    """Validate the independent formal gate before any output mutation."""
+
+    gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    if gate.get("verdict") != "PASS" or gate.get("independent_session") is not True:
+        raise ValueError("capacity review gate is not an independent PASS")
+    if gate.get("frozen_configs_sha256") != sha256_file(frozen_path):
+        raise ValueError("reviewed frozen configs differ")
+    if gate.get("parent_checkpoint_sha256") != frozen["parent_sha256"]:
+        raise ValueError("reviewed capacity parent differs")
+    if gate.get("candidate_commit") != source_identity["commit"]:
+        raise ValueError("review gate candidate differs from the executing source commit")
+    if sha256_file(gate["review_path"]) != gate["review_sha256"]:
+        raise ValueError("capacity review report identity differs")
+    root = Path(__file__).resolve().parents[1]
+    changed = subprocess.check_output(
+        [
+            "git", "diff", str(gate["candidate_commit"]), "--",
+            "molvid", "tools", "configs", "tests",
+        ],
+        cwd=root,
+        text=True,
+    )
+    if changed:
+        raise ValueError("runtime source differs from the reviewed capacity candidate")
+    return gate
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--frozen", type=Path, required=True)
     parser.add_argument("--phase", choices=("pilot", "formal"), required=True)
     parser.add_argument("--review-gate", type=Path)
+    parser.add_argument(
+        "--recover",
+        action="store_true",
+        help="resume interrupted arms/evaluations from durable artifacts",
+    )
     parser.add_argument("--arms", nargs="+", default=("C4", "C8"))
     args = parser.parse_args()
     if not os.environ.get("CUDA_VISIBLE_DEVICES"):
@@ -79,6 +119,9 @@ def main() -> None:
     frozen = json.loads(args.frozen.read_text(encoding="utf-8"))
     if frozen.get("schema") != "molvid.capacity.frozen_configs.v1":
         raise ValueError("capacity frozen-config schema differs")
+    source_identity = capacity_source_identity()
+    if frozen.get("source_identity") != source_identity:
+        raise ValueError("capacity frozen configs were not produced by this clean source commit")
     if tuple(args.arms) != ("C4", "C8"):
         raise ValueError("capacity execution requires the matched C4 then C8 pair")
     root = args.frozen.parent
@@ -88,31 +131,39 @@ def main() -> None:
     if args.phase == "formal":
         if args.review_gate is None:
             raise ValueError("formal capacity training requires an independent review gate")
-        gate = json.loads(args.review_gate.read_text(encoding="utf-8"))
-        if gate.get("verdict") != "PASS" or gate.get("independent_session") is not True:
-            raise ValueError("capacity review gate is not an independent PASS")
-        if gate.get("frozen_configs_sha256") != sha256_file(args.frozen):
-            raise ValueError("reviewed frozen configs differ")
-        if gate.get("parent_checkpoint_sha256") != frozen["parent_sha256"]:
-            raise ValueError("reviewed capacity parent differs")
-        if sha256_file(gate["review_path"]) != gate["review_sha256"]:
-            raise ValueError("capacity review report identity differs")
-        changed = subprocess.check_output(
-            [
-                "git", "diff", str(gate["candidate_commit"]), "--",
-                "molvid", "tools", "configs", "tests",
-            ],
-            text=True,
+        validate_review_gate(
+            args.review_gate,
+            frozen=frozen,
+            frozen_path=args.frozen,
+            source_identity=source_identity,
         )
-        if changed:
-            raise ValueError("runtime source differs from the reviewed capacity candidate")
 
     ledger_path = root / f"{args.phase}_cost_ledger.json"
     ledger = (
         json.loads(ledger_path.read_text(encoding="utf-8"))
         if ledger_path.exists()
-        else {"schema": "molvid.capacity.stage_costs.v1", "phase": args.phase, "stages": []}
+        else {
+            "schema": "molvid.capacity.stage_costs.v1",
+            "phase": args.phase,
+            "source_identity": source_identity,
+            "stages": [],
+        }
     )
+    if ledger.get("source_identity") != source_identity:
+        raise ValueError("capacity cost ledger source identity differs")
+    stale = [stage for stage in ledger["stages"] if stage.get("status") == "running"]
+    if stale and not args.recover:
+        raise RuntimeError("capacity ledger contains an interrupted stage; rerun with --recover")
+    for record in stale:
+        elapsed = float(record.get("elapsed_seconds_at_checkpoint", 0.0))
+        record.update({
+            "elapsed_seconds": elapsed,
+            "gpu_hours": elapsed / 3600.0,
+            "status": "interrupted",
+            "recovered_by_source_commit": source_identity["commit"],
+        })
+    if stale:
+        atomic_write_json(ledger_path, ledger)
 
     def run_stage(
         name: str,
@@ -120,11 +171,12 @@ def main() -> None:
         *,
         output: Path | None = None,
         train_arm: str | None = None,
+        allow_existing_output: bool = False,
     ) -> tuple[str, Path | None]:
         log = root / f"{name}.log"
         if log.exists():
             raise FileExistsError(f"refusing to overwrite existing stage log {log}")
-        if output is not None and output.exists():
+        if output is not None and output.exists() and not allow_existing_output:
             raise FileExistsError(f"refusing to overwrite existing output {output}")
         budget = (
             PILOT_BUDGET_SECONDS
@@ -153,30 +205,50 @@ def main() -> None:
             record["pid"] = process.pid
             atomic_write_json(ledger_path, ledger)
             print(json.dumps({"stage": name, "pid": process.pid, "log": str(log)}), flush=True)
-            while True:
-                code = process.poll()
-                if code is not None:
-                    break
-                if output is not None:
-                    checkpoints = _checkpoints(output)
-                    if checkpoints and checkpoints[-1][1] != last_checkpoint:
-                        last_checkpoint = checkpoints[-1][1]
-                        record["last_checkpoint"] = str(last_checkpoint)
-                        record["last_checkpoint_step"] = checkpoints[-1][0]
-                        elapsed = time.time() - record["started_unix"]
-                        if args.phase == "formal" and train_arm is not None:
-                            seconds_per_update = float(
-                                profile["arms"][train_arm]["weighted_seconds_per_update"]
-                            )
-                            reserve = 120.0 + 1.5 * 1000.0 * seconds_per_update
-                            if used + elapsed + reserve >= budget:
-                                record["budget_stop_reason"] = "next_checkpoint_reserve"
-                                process.send_signal(signal.SIGTERM)
-                                code = process.wait()
-                                stopped = True
-                                break
-                        atomic_write_json(ledger_path, ledger)
-                time.sleep(1.0)
+            try:
+                while True:
+                    code = process.poll()
+                    if code is not None:
+                        break
+                    if output is not None:
+                        checkpoints = _checkpoints(output)
+                        if checkpoints and checkpoints[-1][1] != last_checkpoint:
+                            last_checkpoint = checkpoints[-1][1]
+                            record["last_checkpoint"] = str(last_checkpoint)
+                            record["last_checkpoint_step"] = checkpoints[-1][0]
+                            elapsed = time.time() - record["started_unix"]
+                            record["elapsed_seconds_at_checkpoint"] = elapsed
+                            record["gpu_hours_at_checkpoint"] = elapsed / 3600.0
+                            if args.phase == "formal" and train_arm is not None:
+                                seconds_per_update = float(
+                                    profile["arms"][train_arm]["weighted_seconds_per_update"]
+                                )
+                                reserve = 120.0 + 1.5 * 1000.0 * seconds_per_update
+                                if used + elapsed + reserve >= budget:
+                                    record["budget_stop_reason"] = "next_checkpoint_reserve"
+                                    process.send_signal(signal.SIGTERM)
+                                    code = process.wait()
+                                    stopped = True
+                                    break
+                            atomic_write_json(ledger_path, ledger)
+                    time.sleep(1.0)
+            except BaseException:
+                if process.poll() is None:
+                    process.send_signal(signal.SIGTERM)
+                    try:
+                        process.wait(timeout=30.0)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+                elapsed = time.time() - record["started_unix"]
+                record.update({
+                    "exit_code": process.returncode,
+                    "elapsed_seconds": elapsed,
+                    "gpu_hours": elapsed / 3600.0,
+                    "status": "interrupted",
+                })
+                atomic_write_json(ledger_path, ledger)
+                raise
         elapsed = time.time() - record["started_unix"]
         record.update({
             "exit_code": code,
@@ -197,25 +269,66 @@ def main() -> None:
             raise ValueError(f"{arm} {args.phase} config changed after freeze")
         output = Path(record["output_root"])
         checkpoint_every = "64" if args.phase == "pilot" else "1000"
-        status, last_checkpoint = run_stage(
-            f"{args.phase}_{arm}_train",
-            [
-                sys.executable,
-                "-u",
-                "-m",
-                "molvid.cli.train_frame_joint",
-                "--config",
-                str(config),
-                "--warm-start",
-                str(frozen["parent_path"]),
-                "--warm-start-sha256",
-                str(frozen["parent_sha256"]),
-                "--checkpoint-every",
-                checkpoint_every,
-            ],
-            output=output,
-            train_arm=arm,
-        )
+        existing = _checkpoints(output) if output.exists() else []
+        arm_stages = [
+            stage for stage in ledger["stages"]
+            if stage["name"].startswith(f"{args.phase}_{arm}_")
+        ]
+        target_updates = int(record["updates"])
+        status = "completed"
+        last_checkpoint = existing[-1][1] if existing else None
+        if existing and not args.recover:
+            raise FileExistsError(
+                f"{arm} has durable checkpoints; use --recover for an exact continuation"
+            )
+        if existing and existing[-1][0] > target_updates:
+            raise RuntimeError(f"{arm} checkpoint exceeds the frozen update target")
+        budget_stopped = any(stage.get("status") == "budget_stopped" for stage in arm_stages)
+        if budget_stopped:
+            status = "budget_stopped"
+        if not existing or (existing[-1][0] < target_updates and not budget_stopped):
+            if existing:
+                resume_step, resume_path = existing[-1]
+                stage_name = (
+                    f"{args.phase}_{arm}_resume_{resume_step:08d}_{len(arm_stages):02d}"
+                )
+                command = [
+                    sys.executable,
+                    "-u",
+                    "-m",
+                    "molvid.cli.train_frame_joint",
+                    "--config",
+                    str(config),
+                    "--resume",
+                    str(resume_path),
+                    "--resume-sha256",
+                    sha256_file(resume_path),
+                    "--checkpoint-every",
+                    checkpoint_every,
+                ]
+            else:
+                stage_name = f"{args.phase}_{arm}_train"
+                command = [
+                    sys.executable,
+                    "-u",
+                    "-m",
+                    "molvid.cli.train_frame_joint",
+                    "--config",
+                    str(config),
+                    "--warm-start",
+                    str(frozen["parent_path"]),
+                    "--warm-start-sha256",
+                    str(frozen["parent_sha256"]),
+                    "--checkpoint-every",
+                    checkpoint_every,
+                ]
+            status, last_checkpoint = run_stage(
+                stage_name,
+                command,
+                output=output,
+                train_arm=arm,
+                allow_existing_output=bool(existing),
+            )
         checkpoints = _checkpoints(output)
         if not checkpoints:
             raise RuntimeError(f"{arm} produced no durable checkpoint")
@@ -231,6 +344,7 @@ def main() -> None:
             "config_sha256": record["config_sha256"],
             "parent_sha256": frozen["parent_sha256"],
             "status": status,
+            "source_identity": source_identity,
         })
 
     paired_step = min(value[0] for value in retained.values())
@@ -253,6 +367,7 @@ def main() -> None:
         "phase": args.phase,
         "parent_sha256": frozen["parent_sha256"],
         "test_opened": False,
+        "source_identity": source_identity,
     })
     atomic_write_json(root / f"{args.phase}_paired_identity.json", paired)
 
@@ -266,27 +381,51 @@ def main() -> None:
                     raise ValueError(f"{family} evaluation manifest changed")
                 if sha256_file(Path(source["store"]) / "index.txt") != source["store_index_sha256"]:
                     raise ValueError(f"{family} evaluation store changed")
+                evaluation_output = root / "evaluation" / arm / family
+                summary_path = evaluation_output / "summary.json"
+                if summary_path.exists():
+                    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+                    if summary.get("checkpoint_sha256") != paired[arm]["checkpoint_sha256"]:
+                        raise ValueError(f"{arm} {family} completed evaluation uses another checkpoint")
+                    if not args.recover:
+                        raise FileExistsError(
+                            f"{arm} {family} evaluation exists; use --recover to verify and reuse it"
+                        )
+                    continue
+                evaluation_exists = evaluation_output.exists()
+                if evaluation_exists and not args.recover:
+                    raise FileExistsError(
+                        f"{arm} {family} evaluation is partial; use --recover"
+                    )
+                eval_stages = [
+                    stage for stage in ledger["stages"]
+                    if stage["name"].startswith(f"eval_{arm}_{family}")
+                ]
+                command = [
+                    sys.executable,
+                    "-u",
+                    "-m",
+                    "tools.evaluate_gm_a",
+                    "--checkpoint",
+                    paired[arm]["checkpoint"],
+                    "--checkpoint-sha256",
+                    paired[arm]["checkpoint_sha256"],
+                    "--recipe",
+                    str(recipe),
+                    "--store",
+                    source["store"],
+                    "--manifest",
+                    source["manifest"],
+                    "--output",
+                    str(evaluation_output),
+                ]
+                if evaluation_exists:
+                    command.append("--resume")
                 run_stage(
-                    f"eval_{arm}_{family}",
-                    [
-                        sys.executable,
-                        "-u",
-                        "-m",
-                        "tools.evaluate_gm_a",
-                        "--checkpoint",
-                        paired[arm]["checkpoint"],
-                        "--checkpoint-sha256",
-                        paired[arm]["checkpoint_sha256"],
-                        "--recipe",
-                        str(recipe),
-                        "--store",
-                        source["store"],
-                        "--manifest",
-                        source["manifest"],
-                        "--output",
-                        str(root / "evaluation" / arm / family),
-                    ],
-                    output=root / "evaluation" / arm / family,
+                    f"eval_{arm}_{family}_{len(eval_stages):02d}",
+                    command,
+                    output=evaluation_output,
+                    allow_existing_output=evaluation_exists,
                 )
 
 

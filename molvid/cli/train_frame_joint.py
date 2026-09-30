@@ -754,11 +754,35 @@ def _git_commit() -> str:
     ).strip()
 
 
+def _validate_parent_mode(
+    training: Mapping[str, Any],
+    *,
+    resume: str | Path | None,
+    continuation_parent: str | Path | None,
+    warm_start: str | Path | None,
+) -> None:
+    """Validate construction provenance without blocking exact resume.
+
+    ``warm_start_block_mapping`` describes how a fresh child is constructed.
+    It remains in the frozen config and checkpoint provenance, but an exact
+    resume restores the already-constructed child and must not apply it again.
+    """
+
+    modes = [resume is not None, continuation_parent is not None, warm_start is not None]
+    if sum(modes) > 1:
+        raise ValueError("resume, continuation parent, and warm start are mutually exclusive")
+    if (
+        training.get("warm_start_block_mapping") is not None
+        and warm_start is None
+        and resume is None
+    ):
+        raise ValueError(
+            "warm_start_block_mapping requires --warm-start on a fresh run or --resume"
+        )
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    parent_modes = [args.resume is not None, args.continuation_parent is not None, args.warm_start is not None]
-    if sum(parent_modes) > 1:
-        raise ValueError("resume, continuation parent, and warm start are mutually exclusive")
     if args.continuation_parent and not args.continuation_parent_sha256:
         raise ValueError("continuation parent requires its SHA-256")
     if args.warm_start and not args.warm_start_sha256:
@@ -768,8 +792,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     raw = load_config(args.config, schema=SCHEMA)
     _validate_frame_joint_config(raw)
     training = dict(raw["training"])
-    if training.get("warm_start_block_mapping") is not None and args.warm_start is None:
-        raise ValueError("warm_start_block_mapping requires --warm-start")
+    _validate_parent_mode(
+        training,
+        resume=args.resume,
+        continuation_parent=args.continuation_parent,
+        warm_start=args.warm_start,
+    )
     if args.output_root is not None:
         training["output_root"] = str(args.output_root)
     device, rank, local_rank, world = _distributed_device(training)

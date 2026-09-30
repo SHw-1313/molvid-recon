@@ -19,6 +19,7 @@ from molvid.training.batches import prepare_frame_joint_batch
 from molvid.training.dit import module_state_hash
 from tools.gm_capacity_common import (
     build_capacity_trainer,
+    capacity_source_identity,
     load_capacity_release,
     load_parent_model,
     parameter_ledger,
@@ -76,6 +77,65 @@ def _max_abs(first: torch.Tensor, second: torch.Tensor) -> float:
     return float((first.float() - second.float()).abs().max())
 
 
+def _checkpoint_equivalence(model, batch, draw) -> dict[str, object]:
+    """Compare the real C8 flow field and every gradient with checkpointing on/off."""
+
+    results = []
+    for enabled in (False, True):
+        model.zero_grad(set_to_none=True)
+        model.train()
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            output = model(
+                draw.interpolated,
+                context=batch.observed_context,
+                query=batch.query,
+                flow_time=draw.flow_time,
+                checkpoint_flow_field=enabled,
+            )
+            loss = output.velocity.h.float().square().mean() + output.velocity.v.float().square().mean()
+        loss.backward()
+        results.append({
+            "loss": loss.detach().cpu(),
+            "velocity_h": output.velocity.h.detach().cpu(),
+            "velocity_v": output.velocity.v.detach().cpu(),
+            "gradients": {
+                name: parameter.grad.detach().cpu().clone()
+                for name, parameter in model.named_parameters()
+                if parameter.grad is not None
+            },
+        })
+    direct, checkpointed = results
+    if direct["gradients"].keys() != checkpointed["gradients"].keys():
+        raise RuntimeError("flow-field checkpointing changes the gradient key set")
+    unequal = [
+        name for name in direct["gradients"]
+        if not torch.equal(direct["gradients"][name], checkpointed["gradients"][name])
+    ]
+    if (
+        not torch.equal(direct["loss"], checkpointed["loss"])
+        or not torch.equal(direct["velocity_h"], checkpointed["velocity_h"])
+        or not torch.equal(direct["velocity_v"], checkpointed["velocity_v"])
+        or unequal
+    ):
+        raise RuntimeError(
+            "flow-field activation checkpointing changes the function or gradients: "
+            f"unequal_gradients={unequal[:8]}"
+        )
+    model.zero_grad(set_to_none=True)
+    return {
+        "precision": "bf16",
+        "loss_exact": True,
+        "velocity_h_exact": True,
+        "velocity_v_exact": True,
+        "gradient_keys_equal": True,
+        "gradient_tensors_exact": True,
+        "gradient_tensor_count": len(direct["gradients"]),
+        "teacher_has_gradients": any(
+            parameter.grad is not None for parameter in model.target_teacher.parameters()
+        ),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release", type=Path, required=True)
@@ -84,6 +144,7 @@ def main() -> None:
     args = parser.parse_args()
     if args.gradient_updates < 2 or args.gradient_updates > 8:
         raise ValueError("gradient-updates must lie in [2,8]")
+    source_identity = capacity_source_identity()
     args.output.mkdir(parents=True, exist_ok=True)
     started = time.time()
     device = configure_device("cuda", deterministic=True)
@@ -109,6 +170,7 @@ def main() -> None:
         "function_preservation": [],
         "gradient_updates": [],
         "test_opened": False,
+        "source_identity": source_identity,
     }
     try:
         ordinary = [
@@ -168,6 +230,18 @@ def main() -> None:
                 if any(value != 0.0 for key, value in row.items() if key.endswith(("_abs", "_abs_A"))):
                     raise RuntimeError(f"C8 warm start does not preserve the C4 function: {row}")
                 evidence["function_preservation"].append(row)
+
+        checkpoint_batch = batches[4]
+        checkpoint_draw = objective.sample(
+            checkpoint_batch.normalized_target,
+            checkpoint_batch.source_center,
+            generator=torch.Generator(device=device).manual_seed(SEED + 4000),
+        )
+        evidence["flow_checkpoint_equivalence"] = _checkpoint_equivalence(
+            expanded, checkpoint_batch, checkpoint_draw
+        )
+        if evidence["flow_checkpoint_equivalence"]["teacher_has_gradients"]:
+            raise RuntimeError("flow-field checkpoint diagnostic reached the frozen teacher")
 
         teacher_before = module_state_hash(expanded.target_teacher)
         batch = batches[4]

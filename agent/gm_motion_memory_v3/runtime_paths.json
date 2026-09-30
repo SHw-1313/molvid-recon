@@ -33,11 +33,8 @@
   ],
   "gpu_status": "GPU5 explicitly user-authorized for C shared use; hold the UUID flock, do not preempt or alter the existing external process",
   "external_runs_access": "read_only",
-  "capacity_run_root_container": "/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/r05",
-  "cuda_check_sha256": "b85c5089e49e0b348e4586fcf6a465d2686bb157099611d8158e8579391ee5c4",
-  "profile_sha256": "2f78b88b70ad0c3ac41cf7c5f3ec0aa33c3e620f164b7a473765cabca5460a55",
-  "frozen_configs_sha256": "84d703d5febbfc5cef49a7edcdc5179ee81cb83be668370ea9b686895cda918c",
-  "pilot_paired_identity_sha256": "966f5f027da4c3f4267cde07759d672e293cf418811d0624fabb0a9a221dbd14",
+  "capacity_run_root_container": "/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/r06",
+  "acceptance_evidence_status": "must be regenerated from this clean committed candidate before r02 review",
   "formal_updates_per_arm": 9000,
   "effective_epochs_per_arm": 0.6629834254143646,
   "sealed_test_opened": false

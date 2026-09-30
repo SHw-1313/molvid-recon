@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import subprocess
 from typing import Any, Mapping
 
 import torch
@@ -24,6 +25,36 @@ from molvid.training.joint import (
 CAPACITY_DEPTHS = (4, 8)
 GEOMETRY_BLOCKS = {4: (2, 4), 8: (2, 4, 6, 8)}
 PARENT_BLOCK_MAPPING = {4: (1, 2, 3, 4), 8: (2, 4, 6, 8)}
+SOURCE_PATHS = ("molvid", "tools", "tests", "agent/gm_motion_memory_v3/runtime_paths.json")
+
+
+def capacity_source_identity(*, require_clean: bool = True) -> dict[str, Any]:
+    """Bind execution evidence to the exact committed capacity source tree."""
+
+    root = Path(__file__).resolve().parents[1]
+    commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=root, text=True
+    ).strip()
+    tree = subprocess.check_output(
+        ["git", "rev-parse", "HEAD^{tree}"], cwd=root, text=True
+    ).strip()
+    status = subprocess.check_output(
+        ["git", "status", "--porcelain", "--untracked-files=all", "--", *SOURCE_PATHS],
+        cwd=root,
+        text=True,
+    ).splitlines()
+    if require_clean and status:
+        raise RuntimeError(
+            "capacity acceptance evidence requires clean committed runtime source: "
+            + "; ".join(status[:8])
+        )
+    return {
+        "commit": commit,
+        "tree": tree,
+        "paths": list(SOURCE_PATHS),
+        "clean": not status,
+        "status": status,
+    }
 
 
 @dataclass(frozen=True)
@@ -225,6 +256,7 @@ __all__ = [
     "GEOMETRY_BLOCKS",
     "PARENT_BLOCK_MAPPING",
     "CapacityRelease",
+    "capacity_source_identity",
     "build_capacity_trainer",
     "load_capacity_release",
     "load_parent_model",

@@ -17,6 +17,7 @@ from tools.gm_capacity_common import (
     CAPACITY_DEPTHS,
     GEOMETRY_BLOCKS,
     PARENT_BLOCK_MAPPING,
+    capacity_source_identity,
     load_capacity_release,
 )
 
@@ -50,12 +51,15 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
+    source_identity = capacity_source_identity()
     bundle = load_capacity_release(args.release)
     profile = json.loads(args.profile.read_text(encoding="utf-8"))
     if profile.get("schema") != "molvid.capacity.profile.v1" or profile.get("passed") is not True:
         raise ValueError("capacity configs require a completed profile")
     if profile.get("parent_checkpoint_sha256") != bundle.checkpoint_sha256:
         raise ValueError("capacity profile and release parent differ")
+    if profile.get("source_identity") != source_identity:
+        raise ValueError("capacity profile was not measured by this clean source commit")
     max_atom_frames = int(profile["max_atom_frames_per_gpu"])
     effective_epochs = float(profile["chosen_effective_epochs"])
     formal_updates = int(profile["formal_updates_per_arm"])
@@ -131,6 +135,7 @@ def main() -> None:
         "evaluation_families": evaluation_families,
         "arms": {},
         "test_opened": False,
+        "source_identity": source_identity,
     }
     for depth in CAPACITY_DEPTHS:
         arm = f"C{depth}"

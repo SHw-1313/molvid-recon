@@ -24,6 +24,7 @@ from molvid.training.execution import execution_schedule
 from tools.gm_capacity_common import (
     CAPACITY_DEPTHS,
     build_capacity_trainer,
+    capacity_source_identity,
     load_capacity_release,
     load_parent_model,
     parameter_ledger,
@@ -163,6 +164,7 @@ def main() -> None:
     args = parser.parse_args()
     if args.max_atom_frames < 1000:
         raise ValueError("max-atom-frames is implausibly small")
+    source_identity = capacity_source_identity()
     args.output.mkdir(parents=True, exist_ok=True)
     if args.finalize_measurements is not None:
         bundle = load_capacity_release(args.release)
@@ -196,6 +198,7 @@ def main() -> None:
         "pilot_updates_per_arm": PILOT_UPDATES,
         "arms": {},
         "test_opened": False,
+        "source_identity": source_identity,
     }
     try:
         sampler = _sampler(train, raw["training"], seed=SEED, rank=0, world=1)
