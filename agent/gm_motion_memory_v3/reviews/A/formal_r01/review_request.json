@@ -1,0 +1,70 @@
+{
+  "schema": "molvid.gm_memory.independent_review_request.v1",
+  "lane": "A",
+  "base_commit": "cc74a385577e57c64c9623111e0db86e54e48770",
+  "candidate_commit": "2608141f1daa81ffe3148aa9869b0a6e7e103197",
+  "pilot_training_code_commit": "8fc396f48264dbe655a3928772a691a41894bd1f",
+  "candidate_change_after_pilot": "Only tools/gm_a_smoke.py random future-coordinate mutation shape fix; training, loss, model and evaluation code unchanged.",
+  "scope": "Read-only independent scientific and engineering review of fixed candidate, frozen A0-A3 configs, real CUDA evidence and preserved failures. Do not edit model code or start formal training.",
+  "instructions": [
+    "Read root AGENTS.md, README.md, HANDOFF.md and SESSION_REVIEW_PROMPT_260928.md, then the A lane task specs and this request.",
+    "Verify the fixed candidate commit and diff from base; explicitly distinguish the common fix commits, A loss implementation and pilot-only artifacts.",
+    "Inspect actual-source autograd, streamed K2 gradient equivalence, no future leakage, physical units, packed masks, RMSF fixed-history exclusion, endpoint bond provenance, sampler/aux schedule fairness, resume and configuration identity.",
+    "Check MD threshold training provenance, loss weights and gradient boundaries, parent/teacher/stats/data identities, GPU memory and the 48 GPU-hour formal budget.",
+    "Review preserved failures as failures, not approvals; give concrete blocking findings and minimal targeted rechecks. Write the full Markdown report to reviews/A/formal_r01/REVIEW.md. Do not modify implementation files."
+  ],
+  "specifications": {
+    "AGENTS.md": "ce5d33bd93d790f4ce02ee063376629a0d4bab65ebb3f4bda91acc81a3aefd3f",
+    "EXPERIMENTS.md": "00c6bbd0034ae593c3a49926f9eb238b3e9913450cf28590fa8948edeaa35ee7",
+    "IMPLEMENTATION_A.md": "6c32e1e78df4c28d9e9d6e28eb7a117dba8d5d606858c0ff9ff88dd21e883dad",
+    "DATA_TRAIN_EVAL.md": "b77f2420b750c79702ca497fd049e4a0914943560ff4a95c10bccb2e2fd9c094",
+    "WORKFLOW.md": "c4450c6e302cb86c8096c535d63a71b3a773b79cc0d1f80ee6e1449274c343f7",
+    "experiment_spec.json": "2969da0bfdfdade6b9f6487e219786e4efe6d032b8e90f72bc1adf60fd3451d7"
+  },
+  "identities": {
+    "P2_GM_parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+    "teacher_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+    "statistics_sha256": "117dbcb674f9932c40216c4e2c3ee69153dacc3d3efebcca6e67c876a3b6bee9",
+    "data_card_sha256": "487d40ee31132e80ae3144c711ae333d181c8b844986b01fb7596f681a9400aa",
+    "recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+    "frozen_configs_sha256": "9b77ab35a5fad143a5e3ecc92fa15a3a6bfebe70c427bc3838933099920bc29c"
+  },
+  "evidence_paths": {
+    "data_card": "agent/gm_motion_memory_v3/artifacts/A/metadata/data_card.json",
+    "cuda_smoke_current": "runs/gm_motion_memory_v3/A/r17/smoke/smoke.json",
+    "mixed_masks": "runs/gm_motion_memory_v3/A/r03/masks.json",
+    "integrator_choice": "runs/gm_motion_memory_v3/A/r03/integrator/integrator_choice.json",
+    "train_only_tables": "runs/gm_motion_memory_v3/A/r04/physical_tables.json",
+    "calibration": "runs/gm_motion_memory_v3/A/r04/resolved_auxiliary.json",
+    "profile_used_to_freeze": "runs/gm_motion_memory_v3/A/r09/profile/profile.json",
+    "candidate_commit_profile": "runs/gm_motion_memory_v3/A/r19/profile/profile.json",
+    "streamed_gradient_parity_303_atoms": "runs/gm_motion_memory_v3/A/r13/streamed_parity/streamed_parity.json",
+    "streamed_gradient_parity_1503_atoms": "runs/gm_motion_memory_v3/A/r12/streamed_parity/streamed_parity.json",
+    "gradient_diagnostic_cuda": "runs/gm_motion_memory_v3/A/r16/diagnostic/diagnostic_cuda.json",
+    "frozen_configs": "runs/gm_motion_memory_v3/A/r16/configs/frozen_configs.json",
+    "pilot_costs": "runs/gm_motion_memory_v3/A/r16/configs/pilot_cost_ledger.json",
+    "ordinary_evaluation_smoke": "runs/gm_motion_memory_v3/A/r18/eval_smoke/ordinary/summary.json",
+    "fixed_history_evaluation_smoke": "runs/gm_motion_memory_v3/A/r18/eval_smoke/fixed_history/summary.json"
+  },
+  "pilot_facts": {
+    "successful_updates_per_arm": 128,
+    "P2_GM_warm_start_sha256_each_arm": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+    "execution_schedule_sha256_each_arm": "fd1d911067ac7805d38add74559b962787a0e0ed10ad4be09a1d54ad374a9991",
+    "aux_active_updates": {"A0": 0, "A1": 15, "A2": 15, "A3": 15},
+    "streamed_updates": {"A0": 0, "A1": 1, "A2": 1, "A3": 1},
+    "gpu_hours": {"A0": 0.09931395848592123, "A1": 0.13913051837020451, "A2": 0.1522226615746816, "A3": 0.14879382510979972},
+    "total_pilot_gpu_hours": 0.5394609635406071,
+    "linear_four_arm_one_epoch_projection_gpu_hours": 44.6993982758725,
+    "candidate_profile_one_epoch_projection_gpu_hours_with_20_percent_headroom": 46.71619125505318,
+    "frozen_formal_updates_each_arm": 10606,
+    "formal_budget_gpu_hours": 48,
+    "sealed_test_opened": false
+  },
+  "preserved_failed_attempts": [
+    "r01 initial physical table generation interrupted after expensive Python pair enumeration; r02 CUDA chunked topology method replaced it.",
+    "r05/r06 largest H4 K2 backward CUDA OOM; r07 whole-graph CPU activation offload interrupted as too slow; r08 streamed H4 passed but profile incorrectly attempted invalid H8 on a fixed-history clip; r09/r19 profile fixed this.",
+    "r10/r11 parity failed stricter raw parameter absolute thresholds; r12/r13 report exact raw/weighted loss and 0.18-0.20 percent BF16 gradient relative L2 differences under the stated 0.3 percent tolerance.",
+    "r14 pilot rejected JSON exponent learning rate read through YAML; molvid.config now parses .json as JSON. r15 pilot stopped at step32 gradient diagnostic flow_h applicability KeyError; targeted r16 CUDA diagnostic and full r16 pilots passed."
+  ],
+  "report_target": "agent/gm_motion_memory_v3/reviews/A/formal_r01/REVIEW.md"
+}

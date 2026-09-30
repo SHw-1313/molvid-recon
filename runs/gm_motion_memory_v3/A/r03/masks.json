@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "sampled_bond_band": "exact independent-switch match; padded gradients zero",
+    "sampled_clash": "exact independent-switch match; padded gradients zero",
+    "sampled_displacement": "exact independent-switch match; padded gradients zero",
+    "sampled_rmsf": "exact independent-switch match; padded gradients zero"
+  },
+  "counts": {
+    "sampled_bond_band": 2,
+    "sampled_clash": 2,
+    "sampled_displacement": 2,
+    "sampled_rmsf": 1
+  },
+  "device": "NVIDIA A100-SXM4-80GB",
+  "overlap_diagnostics": {
+    "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+    "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+    "exact_overlap_pair_frames": 2075076
+  },
+  "passed": true,
+  "test_opened": false
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "molvid.gm_memory.independent_review_request.v1",
+  "lane": "A",
+  "round": "formal_r02",
+  "base_commit": "cc74a385577e57c64c9623111e0db86e54e48770",
+  "candidate_commit": "af60c05aa02ce46872edbad0711833317773436e",
+  "previous_review": "agent/gm_motion_memory_v3/reviews/A/formal_r01/REVIEW.md",
+  "fix_response": "agent/gm_motion_memory_v3/reviews/A/formal_r01/FIX_RESPONSE.md",
+  "scope": "Fresh read-only independent rereview of A-R01-1 budget guard, deterministic test, unchanged scientific code/config identities and formal readiness. Do not edit code or launch formal training.",
+  "frozen_configs_sha256": "9b77ab35a5fad143a5e3ecc92fa15a3a6bfebe70c427bc3838933099920bc29c",
+  "recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "targeted_test": "python -m pytest -q tools/test_gm_a_budget.py: 2 passed in torch-ito container",
+  "report_target": "agent/gm_motion_memory_v3/reviews/A/formal_r02/REVIEW.md"
+}

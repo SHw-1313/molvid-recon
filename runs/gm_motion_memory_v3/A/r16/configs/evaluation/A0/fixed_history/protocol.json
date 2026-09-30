@@ -1,0 +1,18 @@
+{
+  "aggregation": "draw -> anchor -> replica -> system equal",
+  "checkpoint_sha256": "f459f1d3f55f6404ee8afbd898c669f071dfe053cb8ab5f337e7528c88523bc7",
+  "conditioning": "observed prefix/topology/query times only",
+  "limit": null,
+  "manifest_sha256": "900fbd41f40754dc61aee22320e751389e0ef7eabd628b751c24250bc0ea76c3",
+  "precision": "fp32",
+  "recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+  "schema": "molvid.A.evaluation.v1",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "steps": 16,
+  "store_index_sha256": "c8b91ad7a430de907ab4695f87bb0eb97f234efb2db618b6b9aa246f58ccb7d5",
+  "test_opened": false
+}

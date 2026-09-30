@@ -1,0 +1,2317 @@
+{
+  "comparisons": {
+    "bond_rmse_A": {
+      "median_abs_16_32": 0.019389525055885315,
+      "median_abs_4_16": 0.0944419652223587,
+      "median_abs_8_16": 0.03783425688743591,
+      "supports_eight": true
+    },
+    "clash_severity": {
+      "median_abs_16_32": 0.005098740570247173,
+      "median_abs_4_16": 0.016865740763023496,
+      "median_abs_8_16": 0.008005371782928705,
+      "supports_eight": true
+    },
+    "msd_A2": {
+      "median_abs_16_32": 0.16435259580612183,
+      "median_abs_4_16": 0.7295747399330139,
+      "median_abs_8_16": 0.28181666135787964,
+      "supports_eight": true
+    },
+    "rmsf_A": {
+      "median_abs_16_32": 0.04584798216819763,
+      "median_abs_4_16": 0.24946820735931396,
+      "median_abs_8_16": 0.08761855959892273,
+      "supports_eight": true
+    }
+  },
+  "entries": [
+    {
+      "auxiliary": false,
+      "global_batch_index": 0,
+      "history_frames": 4,
+      "indices": [
+        65966,
+        66239
+      ],
+      "time_bucket_id": "fixed_history_dt_400ps",
+      "view": "fixed_history"
+    },
+    {
+      "auxiliary": false,
+      "global_batch_index": 1,
+      "history_frames": 4,
+      "indices": [
+        59982
+      ],
+      "time_bucket_id": "dt_400ps",
+      "view": "ordinary"
+    },
+    {
+      "auxiliary": true,
+      "global_batch_index": 2,
+      "history_frames": 4,
+      "indices": [
+        81
+      ],
+      "time_bucket_id": "dt_100ps",
+      "view": "ordinary"
+    },
+    {
+      "auxiliary": false,
+      "global_batch_index": 3,
+      "history_frames": 8,
+      "indices": [
+        44703
+      ],
+      "time_bucket_id": "dt_200ps",
+      "view": "ordinary"
+    },
+    {
+      "auxiliary": false,
+      "global_batch_index": 4,
+      "history_frames": 4,
+      "indices": [
+        45094
+      ],
+      "time_bucket_id": "dt_200ps",
+      "view": "ordinary"
+    },
+    {
+      "auxiliary": false,
+      "global_batch_index": 5,
+      "history_frames": 8,
+      "indices": [
+        16711
+      ],
+      "time_bucket_id": "dt_100ps",
+      "view": "ordinary"
+    },
+    {
+      "auxiliary": true,
+      "global_batch_index": 8,
+      "history_frames": 8,
+      "indices": [
+        59596
+      ],
+      "time_bucket_id": "dt_400ps",
+      "view": "ordinary"
+    },
+    {
+      "auxiliary": false,
+      "global_batch_index": 47,
+      "history_frames": 4,
+      "indices": [
+        66588
+      ],
+      "time_bucket_id": "fixed_history_dt_100ps",
+      "view": "fixed_history"
+    },
+    {
+      "auxiliary": false,
+      "global_batch_index": 49,
+      "history_frames": 4,
+      "indices": [
+        63733,
+        63637
+      ],
+      "time_bucket_id": "fixed_history_dt_200ps",
+      "view": "fixed_history"
+    }
+  ],
+  "evaluation_steps": 16,
+  "gpu_hours": 0.11644922627343071,
+  "parents": {
+    "GM": {
+      "path": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+      "sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540"
+    },
+    "J0": {
+      "path": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/formal/J0/frame_joint_step_00021208.pt",
+      "sha256": "60e14c3e7cc59c8e4c1a2ff38512df829db7418446cc82bd3ed3587722696f5e"
+    },
+    "J1": {
+      "path": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P3/formal/J1/frame_joint_step_00021208.pt",
+      "sha256": "8859a499be7d06f31ba33fb9e71febf5019cebb9ced1947d0c277326da0c66e1"
+    }
+  },
+  "rows": [
+    {
+      "bond_rmse_A": 0.23355422168970108,
+      "clash_severity": 0.0038235478568822145,
+      "entry": 0,
+      "msd_A2": 0.7601832449436188,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.25625036656856537,
+      "clash_severity": 0.008579420857131481,
+      "entry": 0,
+      "msd_A2": 1.015248715877533,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.2892533093690872,
+      "clash_severity": 0.014430005103349686,
+      "entry": 0,
+      "msd_A2": 1.2274362444877625,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.30879464745521545,
+      "clash_severity": 0.018600407987833023,
+      "entry": 0,
+      "msd_A2": 1.3526226878166199,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.23202933371067047,
+      "clash_severity": 0.007512439973652363,
+      "entry": 0,
+      "msd_A2": 0.7274366617202759,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2527136579155922,
+      "clash_severity": 0.013422265648841858,
+      "entry": 0,
+      "msd_A2": 0.9641583561897278,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.2843018025159836,
+      "clash_severity": 0.020764071494340897,
+      "entry": 0,
+      "msd_A2": 1.1690961718559265,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3027256280183792,
+      "clash_severity": 0.026163706555962563,
+      "entry": 0,
+      "msd_A2": 1.2893585562705994,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3271203935146332,
+      "clash_severity": 0.04766250029206276,
+      "entry": 1,
+      "msd_A2": 2.6250367164611816,
+      "parent": "GM",
+      "rmsf_A": 0.8248472213745117,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.34533149003982544,
+      "clash_severity": 0.07892773300409317,
+      "entry": 1,
+      "msd_A2": 3.5648746490478516,
+      "parent": "GM",
+      "rmsf_A": 0.9739989042282104,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.37793898582458496,
+      "clash_severity": 0.10705472528934479,
+      "entry": 1,
+      "msd_A2": 4.252346992492676,
+      "parent": "GM",
+      "rmsf_A": 1.0881333351135254,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3955551087856293,
+      "clash_severity": 0.12299621105194092,
+      "entry": 1,
+      "msd_A2": 4.643345355987549,
+      "parent": "GM",
+      "rmsf_A": 1.1474775075912476,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.32039400935173035,
+      "clash_severity": 0.0367070809006691,
+      "entry": 1,
+      "msd_A2": 2.548217296600342,
+      "parent": "GM",
+      "rmsf_A": 0.8134293556213379,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.33807095885276794,
+      "clash_severity": 0.05871271342039108,
+      "entry": 1,
+      "msd_A2": 3.4866626262664795,
+      "parent": "GM",
+      "rmsf_A": 0.9623771905899048,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3716173470020294,
+      "clash_severity": 0.0812942311167717,
+      "entry": 1,
+      "msd_A2": 4.179431915283203,
+      "parent": "GM",
+      "rmsf_A": 1.0766507387161255,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3908938467502594,
+      "clash_severity": 0.09510044753551483,
+      "entry": 1,
+      "msd_A2": 4.57794713973999,
+      "parent": "GM",
+      "rmsf_A": 1.1360433101654053,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.20064975321292877,
+      "clash_severity": 0.0019885983783751726,
+      "entry": 2,
+      "msd_A2": 0.6943676471710205,
+      "parent": "GM",
+      "rmsf_A": 0.5274564027786255,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2185002863407135,
+      "clash_severity": 0.005007456056773663,
+      "entry": 2,
+      "msd_A2": 0.8519389033317566,
+      "parent": "GM",
+      "rmsf_A": 0.6327936053276062,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.24855057895183563,
+      "clash_severity": 0.009254708886146545,
+      "entry": 2,
+      "msd_A2": 1.002190113067627,
+      "parent": "GM",
+      "rmsf_A": 0.7203294038772583,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.26642656326293945,
+      "clash_severity": 0.012253472581505775,
+      "entry": 2,
+      "msd_A2": 1.089341640472412,
+      "parent": "GM",
+      "rmsf_A": 0.7671216130256653,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.20240344107151031,
+      "clash_severity": 0.0029266271740198135,
+      "entry": 2,
+      "msd_A2": 0.6621294021606445,
+      "parent": "GM",
+      "rmsf_A": 0.5207424759864807,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2211543619632721,
+      "clash_severity": 0.007113405968993902,
+      "entry": 2,
+      "msd_A2": 0.8128291964530945,
+      "parent": "GM",
+      "rmsf_A": 0.6263795495033264,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.25031447410583496,
+      "clash_severity": 0.011735270731151104,
+      "entry": 2,
+      "msd_A2": 0.9595033526420593,
+      "parent": "GM",
+      "rmsf_A": 0.7135201096534729,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.26763370633125305,
+      "clash_severity": 0.015187683515250683,
+      "entry": 2,
+      "msd_A2": 1.0445436239242554,
+      "parent": "GM",
+      "rmsf_A": 0.7598500847816467,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.26842203736305237,
+      "clash_severity": 0.03474532812833786,
+      "entry": 3,
+      "msd_A2": 2.7885124683380127,
+      "parent": "GM",
+      "rmsf_A": 0.6408271193504333,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2962293326854706,
+      "clash_severity": 0.049949489533901215,
+      "entry": 3,
+      "msd_A2": 3.77783203125,
+      "parent": "GM",
+      "rmsf_A": 0.7800996899604797,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3337443768978119,
+      "clash_severity": 0.06203152611851692,
+      "entry": 3,
+      "msd_A2": 4.6353654861450195,
+      "parent": "GM",
+      "rmsf_A": 0.889984130859375,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3530515432357788,
+      "clash_severity": 0.06928535550832748,
+      "entry": 3,
+      "msd_A2": 5.177138328552246,
+      "parent": "GM",
+      "rmsf_A": 0.9461802244186401,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.27028611302375793,
+      "clash_severity": 0.032003238797187805,
+      "entry": 3,
+      "msd_A2": 2.8574912548065186,
+      "parent": "GM",
+      "rmsf_A": 0.6780264377593994,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.29599425196647644,
+      "clash_severity": 0.04657122865319252,
+      "entry": 3,
+      "msd_A2": 3.969151496887207,
+      "parent": "GM",
+      "rmsf_A": 0.8260509371757507,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.33352020382881165,
+      "clash_severity": 0.05842132866382599,
+      "entry": 3,
+      "msd_A2": 4.933141708374023,
+      "parent": "GM",
+      "rmsf_A": 0.9404882788658142,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.35394755005836487,
+      "clash_severity": 0.06530174612998962,
+      "entry": 3,
+      "msd_A2": 5.560407638549805,
+      "parent": "GM",
+      "rmsf_A": 0.9996427893638611,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.25461167097091675,
+      "clash_severity": 0.030939986929297447,
+      "entry": 4,
+      "msd_A2": 2.2496721744537354,
+      "parent": "GM",
+      "rmsf_A": 0.6464376449584961,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.27592870593070984,
+      "clash_severity": 0.04198339581489563,
+      "entry": 4,
+      "msd_A2": 2.9042727947235107,
+      "parent": "GM",
+      "rmsf_A": 0.7829872369766235,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3101980686187744,
+      "clash_severity": 0.053645819425582886,
+      "entry": 4,
+      "msd_A2": 3.4044928550720215,
+      "parent": "GM",
+      "rmsf_A": 0.8917754888534546,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3306880295276642,
+      "clash_severity": 0.06093526631593704,
+      "entry": 4,
+      "msd_A2": 3.6960840225219727,
+      "parent": "GM",
+      "rmsf_A": 0.9489845633506775,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.25811633467674255,
+      "clash_severity": 0.03450452536344528,
+      "entry": 4,
+      "msd_A2": 2.257962703704834,
+      "parent": "GM",
+      "rmsf_A": 0.6599643230438232,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2837156057357788,
+      "clash_severity": 0.04887661710381508,
+      "entry": 4,
+      "msd_A2": 2.959855079650879,
+      "parent": "GM",
+      "rmsf_A": 0.801924467086792,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.320628821849823,
+      "clash_severity": 0.06206692010164261,
+      "entry": 4,
+      "msd_A2": 3.5048065185546875,
+      "parent": "GM",
+      "rmsf_A": 0.9143454432487488,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3419840335845947,
+      "clash_severity": 0.06948979943990707,
+      "entry": 4,
+      "msd_A2": 3.8210787773132324,
+      "parent": "GM",
+      "rmsf_A": 0.9731085300445557,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.20078925788402557,
+      "clash_severity": 0.004839702509343624,
+      "entry": 5,
+      "msd_A2": 0.6694519519805908,
+      "parent": "GM",
+      "rmsf_A": 0.4416666030883789,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.21906548738479614,
+      "clash_severity": 0.007968992926180363,
+      "entry": 5,
+      "msd_A2": 0.8515465259552002,
+      "parent": "GM",
+      "rmsf_A": 0.5389225482940674,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.2478378266096115,
+      "clash_severity": 0.01100661139935255,
+      "entry": 5,
+      "msd_A2": 1.027944564819336,
+      "parent": "GM",
+      "rmsf_A": 0.621911346912384,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.2661857008934021,
+      "clash_severity": 0.013264601118862629,
+      "entry": 5,
+      "msd_A2": 1.1345953941345215,
+      "parent": "GM",
+      "rmsf_A": 0.6662526726722717,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.20317290723323822,
+      "clash_severity": 0.006333450321108103,
+      "entry": 5,
+      "msd_A2": 0.6770322322845459,
+      "parent": "GM",
+      "rmsf_A": 0.42695844173431396,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.22440606355667114,
+      "clash_severity": 0.009029874578118324,
+      "entry": 5,
+      "msd_A2": 0.8651518821716309,
+      "parent": "GM",
+      "rmsf_A": 0.5207887291908264,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.256496399641037,
+      "clash_severity": 0.012344124726951122,
+      "entry": 5,
+      "msd_A2": 1.0489811897277832,
+      "parent": "GM",
+      "rmsf_A": 0.6015175580978394,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.27512675523757935,
+      "clash_severity": 0.014434192329645157,
+      "entry": 5,
+      "msd_A2": 1.1620454788208008,
+      "parent": "GM",
+      "rmsf_A": 0.6445137858390808,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.322244793176651,
+      "clash_severity": 0.040418460965156555,
+      "entry": 6,
+      "msd_A2": 1.9564478397369385,
+      "parent": "GM",
+      "rmsf_A": 0.6241832375526428,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3389469385147095,
+      "clash_severity": 0.06380540132522583,
+      "entry": 6,
+      "msd_A2": 2.6790099143981934,
+      "parent": "GM",
+      "rmsf_A": 0.7530477046966553,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.371035099029541,
+      "clash_severity": 0.0828520655632019,
+      "entry": 6,
+      "msd_A2": 3.2950713634490967,
+      "parent": "GM",
+      "rmsf_A": 0.8591117262840271,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.388838529586792,
+      "clash_severity": 0.09146057069301605,
+      "entry": 6,
+      "msd_A2": 3.6628360748291016,
+      "parent": "GM",
+      "rmsf_A": 0.9147341847419739,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3028232455253601,
+      "clash_severity": 0.0371730700135231,
+      "entry": 6,
+      "msd_A2": 1.8162391185760498,
+      "parent": "GM",
+      "rmsf_A": 0.618982195854187,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.318231463432312,
+      "clash_severity": 0.05482501909136772,
+      "entry": 6,
+      "msd_A2": 2.424055337905884,
+      "parent": "GM",
+      "rmsf_A": 0.7420971989631653,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3477993905544281,
+      "clash_severity": 0.07137779146432877,
+      "entry": 6,
+      "msd_A2": 2.9239845275878906,
+      "parent": "GM",
+      "rmsf_A": 0.842097282409668,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3648015558719635,
+      "clash_severity": 0.08134014904499054,
+      "entry": 6,
+      "msd_A2": 3.2088723182678223,
+      "parent": "GM",
+      "rmsf_A": 0.8944149017333984,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.23778031766414642,
+      "clash_severity": 0.009954876266419888,
+      "entry": 7,
+      "msd_A2": 1.10811448097229,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2605401277542114,
+      "clash_severity": 0.019816290587186813,
+      "entry": 7,
+      "msd_A2": 1.3727144002914429,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.292302668094635,
+      "clash_severity": 0.030970990657806396,
+      "entry": 7,
+      "msd_A2": 1.6052249670028687,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.31150394678115845,
+      "clash_severity": 0.037733808159828186,
+      "entry": 7,
+      "msd_A2": 1.7392162084579468,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.22850793600082397,
+      "clash_severity": 0.0056459312327206135,
+      "entry": 7,
+      "msd_A2": 1.056863784790039,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.24802976846694946,
+      "clash_severity": 0.011971692554652691,
+      "entry": 7,
+      "msd_A2": 1.310659646987915,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.27885329723358154,
+      "clash_severity": 0.01995176449418068,
+      "entry": 7,
+      "msd_A2": 1.535994291305542,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.2974749803543091,
+      "clash_severity": 0.025609752163290977,
+      "entry": 7,
+      "msd_A2": 1.6667451858520508,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.30424465239048004,
+      "clash_severity": 0.07277027517557144,
+      "entry": 8,
+      "msd_A2": 2.5567724108695984,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3372156471014023,
+      "clash_severity": 0.11117397248744965,
+      "entry": 8,
+      "msd_A2": 3.186260223388672,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3809855133295059,
+      "clash_severity": 0.13922619819641113,
+      "entry": 8,
+      "msd_A2": 3.7033079862594604,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.40657341480255127,
+      "clash_severity": 0.15395992994308472,
+      "entry": 8,
+      "msd_A2": 4.010176658630371,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3007557839155197,
+      "clash_severity": 0.0626988485455513,
+      "entry": 8,
+      "msd_A2": 2.6151368618011475,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.33581992238759995,
+      "clash_severity": 0.10693114250898361,
+      "entry": 8,
+      "msd_A2": 3.2453624606132507,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.381051704287529,
+      "clash_severity": 0.1429230272769928,
+      "entry": 8,
+      "msd_A2": 3.7657379508018494,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4084473103284836,
+      "clash_severity": 0.16207590699195862,
+      "entry": 8,
+      "msd_A2": 4.071906805038452,
+      "parent": "GM",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3050248771905899,
+      "clash_severity": 0.010896150022745132,
+      "entry": 0,
+      "msd_A2": 1.1065552234649658,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.366877481341362,
+      "clash_severity": 0.02654772251844406,
+      "entry": 0,
+      "msd_A2": 1.6804707050323486,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.4185817688703537,
+      "clash_severity": 0.03874504566192627,
+      "entry": 0,
+      "msd_A2": 2.0453094244003296,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4434274286031723,
+      "clash_severity": 0.046215593814849854,
+      "entry": 0,
+      "msd_A2": 2.248520851135254,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3127664774656296,
+      "clash_severity": 0.017155524343252182,
+      "entry": 0,
+      "msd_A2": 1.0597214102745056,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.37493477761745453,
+      "clash_severity": 0.035957448184490204,
+      "entry": 0,
+      "msd_A2": 1.620677411556244,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.42582082748413086,
+      "clash_severity": 0.05014819651842117,
+      "entry": 0,
+      "msd_A2": 1.9731395244598389,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.45016616582870483,
+      "clash_severity": 0.05864817649126053,
+      "entry": 0,
+      "msd_A2": 2.180941343307495,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.29499682784080505,
+      "clash_severity": 0.009335641749203205,
+      "entry": 1,
+      "msd_A2": 1.2846119403839111,
+      "parent": "J0",
+      "rmsf_A": 0.6113952994346619,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3458147346973419,
+      "clash_severity": 0.019113946706056595,
+      "entry": 1,
+      "msd_A2": 1.7973146438598633,
+      "parent": "J0",
+      "rmsf_A": 0.7701283693313599,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3853777348995209,
+      "clash_severity": 0.026569155976176262,
+      "entry": 1,
+      "msd_A2": 2.1397547721862793,
+      "parent": "J0",
+      "rmsf_A": 0.8602878451347351,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4042106866836548,
+      "clash_severity": 0.03102753311395645,
+      "entry": 1,
+      "msd_A2": 2.328566789627075,
+      "parent": "J0",
+      "rmsf_A": 0.9067249894142151,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2952839434146881,
+      "clash_severity": 0.008414984680712223,
+      "entry": 1,
+      "msd_A2": 1.2359700202941895,
+      "parent": "J0",
+      "rmsf_A": 0.6034359335899353,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3483247756958008,
+      "clash_severity": 0.015377816744148731,
+      "entry": 1,
+      "msd_A2": 1.746861457824707,
+      "parent": "J0",
+      "rmsf_A": 0.7653231024742126,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.38902994990348816,
+      "clash_severity": 0.02182532660663128,
+      "entry": 1,
+      "msd_A2": 2.086153507232666,
+      "parent": "J0",
+      "rmsf_A": 0.8562127351760864,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4074689745903015,
+      "clash_severity": 0.025829816237092018,
+      "entry": 1,
+      "msd_A2": 2.276425838470459,
+      "parent": "J0",
+      "rmsf_A": 0.9032003879547119,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.258998304605484,
+      "clash_severity": 0.004727550782263279,
+      "entry": 2,
+      "msd_A2": 0.7849852442741394,
+      "parent": "J0",
+      "rmsf_A": 0.6535362601280212,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3058445453643799,
+      "clash_severity": 0.013187413103878498,
+      "entry": 2,
+      "msd_A2": 1.0803189277648926,
+      "parent": "J0",
+      "rmsf_A": 0.8078747987747192,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.34462037682533264,
+      "clash_severity": 0.020400065928697586,
+      "entry": 2,
+      "msd_A2": 1.2815899848937988,
+      "parent": "J0",
+      "rmsf_A": 0.8973345756530762,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3643382489681244,
+      "clash_severity": 0.02480226196348667,
+      "entry": 2,
+      "msd_A2": 1.3929589986801147,
+      "parent": "J0",
+      "rmsf_A": 0.9421683549880981,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2617131471633911,
+      "clash_severity": 0.005978460423648357,
+      "entry": 2,
+      "msd_A2": 0.7640331983566284,
+      "parent": "J0",
+      "rmsf_A": 0.6455503106117249,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3073989450931549,
+      "clash_severity": 0.014191708527505398,
+      "entry": 2,
+      "msd_A2": 1.0458688735961914,
+      "parent": "J0",
+      "rmsf_A": 0.798615038394928,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3472231328487396,
+      "clash_severity": 0.02127171866595745,
+      "entry": 2,
+      "msd_A2": 1.2385451793670654,
+      "parent": "J0",
+      "rmsf_A": 0.8873210549354553,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.36591610312461853,
+      "clash_severity": 0.025854608044028282,
+      "entry": 2,
+      "msd_A2": 1.3472652435302734,
+      "parent": "J0",
+      "rmsf_A": 0.9326870441436768,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.29078471660614014,
+      "clash_severity": 0.01896655559539795,
+      "entry": 3,
+      "msd_A2": 1.8907197713851929,
+      "parent": "J0",
+      "rmsf_A": 0.6654823422431946,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3458198606967926,
+      "clash_severity": 0.03619438409805298,
+      "entry": 3,
+      "msd_A2": 2.4441537857055664,
+      "parent": "J0",
+      "rmsf_A": 0.8300132155418396,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.38920778036117554,
+      "clash_severity": 0.047688182443380356,
+      "entry": 3,
+      "msd_A2": 2.8129167556762695,
+      "parent": "J0",
+      "rmsf_A": 0.9233695864677429,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.41146066784858704,
+      "clash_severity": 0.054698456078767776,
+      "entry": 3,
+      "msd_A2": 3.0252273082733154,
+      "parent": "J0",
+      "rmsf_A": 0.9712439775466919,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.29044556617736816,
+      "clash_severity": 0.0146565530449152,
+      "entry": 3,
+      "msd_A2": 1.8054559230804443,
+      "parent": "J0",
+      "rmsf_A": 0.6601117849349976,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.349559485912323,
+      "clash_severity": 0.02802761271595955,
+      "entry": 3,
+      "msd_A2": 2.3185317516326904,
+      "parent": "J0",
+      "rmsf_A": 0.8270301222801208,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3941163420677185,
+      "clash_severity": 0.03959903493523598,
+      "entry": 3,
+      "msd_A2": 2.6808223724365234,
+      "parent": "J0",
+      "rmsf_A": 0.921306312084198,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.41591817140579224,
+      "clash_severity": 0.04682308807969093,
+      "entry": 3,
+      "msd_A2": 2.8867530822753906,
+      "parent": "J0",
+      "rmsf_A": 0.9694711565971375,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.28682416677474976,
+      "clash_severity": 0.019567903131246567,
+      "entry": 4,
+      "msd_A2": 1.940037488937378,
+      "parent": "J0",
+      "rmsf_A": 0.7013165354728699,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3415786921977997,
+      "clash_severity": 0.031205294653773308,
+      "entry": 4,
+      "msd_A2": 2.6368207931518555,
+      "parent": "J0",
+      "rmsf_A": 0.8719537258148193,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.38478246331214905,
+      "clash_severity": 0.040751684457063675,
+      "entry": 4,
+      "msd_A2": 3.052297592163086,
+      "parent": "J0",
+      "rmsf_A": 0.9679516553878784,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4060405492782593,
+      "clash_severity": 0.04605546593666077,
+      "entry": 4,
+      "msd_A2": 3.2780303955078125,
+      "parent": "J0",
+      "rmsf_A": 1.0153895616531372,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.29491108655929565,
+      "clash_severity": 0.02126353420317173,
+      "entry": 4,
+      "msd_A2": 1.8923614025115967,
+      "parent": "J0",
+      "rmsf_A": 0.7008814811706543,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3580958843231201,
+      "clash_severity": 0.034750208258628845,
+      "entry": 4,
+      "msd_A2": 2.611786365509033,
+      "parent": "J0",
+      "rmsf_A": 0.8707563281059265,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.405475914478302,
+      "clash_severity": 0.046805065125226974,
+      "entry": 4,
+      "msd_A2": 3.0487303733825684,
+      "parent": "J0",
+      "rmsf_A": 0.9684776663780212,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.42846906185150146,
+      "clash_severity": 0.054281096905469894,
+      "entry": 4,
+      "msd_A2": 3.295064926147461,
+      "parent": "J0",
+      "rmsf_A": 1.0181187391281128,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.26331838965415955,
+      "clash_severity": 0.005159326829016209,
+      "entry": 5,
+      "msd_A2": 0.7445440292358398,
+      "parent": "J0",
+      "rmsf_A": 0.5802534222602844,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3090471029281616,
+      "clash_severity": 0.012461597099900246,
+      "entry": 5,
+      "msd_A2": 1.0316076278686523,
+      "parent": "J0",
+      "rmsf_A": 0.7230327129364014,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3482570946216583,
+      "clash_severity": 0.019029248505830765,
+      "entry": 5,
+      "msd_A2": 1.237654209136963,
+      "parent": "J0",
+      "rmsf_A": 0.8069796562194824,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.36888357996940613,
+      "clash_severity": 0.023205772042274475,
+      "entry": 5,
+      "msd_A2": 1.3556183576583862,
+      "parent": "J0",
+      "rmsf_A": 0.849433183670044,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2656668424606323,
+      "clash_severity": 0.004562370479106903,
+      "entry": 5,
+      "msd_A2": 0.7199385166168213,
+      "parent": "J0",
+      "rmsf_A": 0.5724663734436035,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.31304317712783813,
+      "clash_severity": 0.011966023594141006,
+      "entry": 5,
+      "msd_A2": 1.0053448677062988,
+      "parent": "J0",
+      "rmsf_A": 0.7132782936096191,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3540828824043274,
+      "clash_severity": 0.018966522067785263,
+      "entry": 5,
+      "msd_A2": 1.21970534324646,
+      "parent": "J0",
+      "rmsf_A": 0.7990226745605469,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.37395772337913513,
+      "clash_severity": 0.02354433387517929,
+      "entry": 5,
+      "msd_A2": 1.3427131175994873,
+      "parent": "J0",
+      "rmsf_A": 0.8411775231361389,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3106989562511444,
+      "clash_severity": 0.00959785096347332,
+      "entry": 6,
+      "msd_A2": 1.2762866020202637,
+      "parent": "J0",
+      "rmsf_A": 0.6289042234420776,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.36299002170562744,
+      "clash_severity": 0.021722158417105675,
+      "entry": 6,
+      "msd_A2": 1.7289223670959473,
+      "parent": "J0",
+      "rmsf_A": 0.79134202003479,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.40170159935951233,
+      "clash_severity": 0.03212271258234978,
+      "entry": 6,
+      "msd_A2": 2.0183417797088623,
+      "parent": "J0",
+      "rmsf_A": 0.8825441002845764,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4213142693042755,
+      "clash_severity": 0.038733962923288345,
+      "entry": 6,
+      "msd_A2": 2.189753532409668,
+      "parent": "J0",
+      "rmsf_A": 0.933107316493988,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3017607629299164,
+      "clash_severity": 0.012114771641790867,
+      "entry": 6,
+      "msd_A2": 1.2270827293395996,
+      "parent": "J0",
+      "rmsf_A": 0.6199636459350586,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3581472933292389,
+      "clash_severity": 0.023219944909214973,
+      "entry": 6,
+      "msd_A2": 1.6699631214141846,
+      "parent": "J0",
+      "rmsf_A": 0.7763576507568359,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.39689868688583374,
+      "clash_severity": 0.031901922076940536,
+      "entry": 6,
+      "msd_A2": 1.9441770315170288,
+      "parent": "J0",
+      "rmsf_A": 0.8640589714050293,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4162295162677765,
+      "clash_severity": 0.03807023912668228,
+      "entry": 6,
+      "msd_A2": 2.102415084838867,
+      "parent": "J0",
+      "rmsf_A": 0.9112327098846436,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2799081802368164,
+      "clash_severity": 0.009931729175150394,
+      "entry": 7,
+      "msd_A2": 1.0221078395843506,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.32988545298576355,
+      "clash_severity": 0.0188364926725626,
+      "entry": 7,
+      "msd_A2": 1.3646914958953857,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.370050311088562,
+      "clash_severity": 0.02686716429889202,
+      "entry": 7,
+      "msd_A2": 1.5869646072387695,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3896264135837555,
+      "clash_severity": 0.031760863959789276,
+      "entry": 7,
+      "msd_A2": 1.712108850479126,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.28153812885284424,
+      "clash_severity": 0.006392866838723421,
+      "entry": 7,
+      "msd_A2": 1.0018552541732788,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.33138591051101685,
+      "clash_severity": 0.015109362080693245,
+      "entry": 7,
+      "msd_A2": 1.3582255840301514,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3735412657260895,
+      "clash_severity": 0.023188913241028786,
+      "entry": 7,
+      "msd_A2": 1.5949597358703613,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.39285844564437866,
+      "clash_severity": 0.02797531895339489,
+      "entry": 7,
+      "msd_A2": 1.7285339832305908,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.3465367406606674,
+      "clash_severity": 0.027303440496325493,
+      "entry": 8,
+      "msd_A2": 2.0839527547359467,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.41925033926963806,
+      "clash_severity": 0.05295100063085556,
+      "entry": 8,
+      "msd_A2": 2.684595763683319,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.47304733097553253,
+      "clash_severity": 0.07177798449993134,
+      "entry": 8,
+      "msd_A2": 3.1001782417297363,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4991052895784378,
+      "clash_severity": 0.08256930857896805,
+      "entry": 8,
+      "msd_A2": 3.337549924850464,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.35073718428611755,
+      "clash_severity": 0.0266110859811306,
+      "entry": 8,
+      "msd_A2": 2.1666057109832764,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.4279226064682007,
+      "clash_severity": 0.053327225148677826,
+      "entry": 8,
+      "msd_A2": 2.798384666442871,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.48578131198883057,
+      "clash_severity": 0.0748906061053276,
+      "entry": 8,
+      "msd_A2": 3.234927177429199,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.5156537890434265,
+      "clash_severity": 0.0861331894993782,
+      "entry": 8,
+      "msd_A2": 3.4834365844726562,
+      "parent": "J0",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2094888910651207,
+      "clash_severity": 0.0032147723250091076,
+      "entry": 0,
+      "msd_A2": 0.6787534654140472,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3031734675168991,
+      "clash_severity": 0.013791381381452084,
+      "entry": 0,
+      "msd_A2": 1.2766778469085693,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.35832037031650543,
+      "clash_severity": 0.023785317316651344,
+      "entry": 0,
+      "msd_A2": 1.6200163960456848,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3850968927145004,
+      "clash_severity": 0.029938913881778717,
+      "entry": 0,
+      "msd_A2": 1.8249449133872986,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.21663891524076462,
+      "clash_severity": 0.006534583866596222,
+      "entry": 0,
+      "msd_A2": 0.6341279149055481,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.31152014434337616,
+      "clash_severity": 0.020426714792847633,
+      "entry": 0,
+      "msd_A2": 1.2110188007354736,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3646276891231537,
+      "clash_severity": 0.03077027201652527,
+      "entry": 0,
+      "msd_A2": 1.5374590754508972,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.39276933670043945,
+      "clash_severity": 0.037613287568092346,
+      "entry": 0,
+      "msd_A2": 1.7391688227653503,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2077837884426117,
+      "clash_severity": 0.0013727571349591017,
+      "entry": 1,
+      "msd_A2": 0.5538832545280457,
+      "parent": "J1",
+      "rmsf_A": 0.397379994392395,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2710955739021301,
+      "clash_severity": 0.005407003685832024,
+      "entry": 1,
+      "msd_A2": 0.9509403705596924,
+      "parent": "J1",
+      "rmsf_A": 0.5628669857978821,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.30391833186149597,
+      "clash_severity": 0.00826222263276577,
+      "entry": 1,
+      "msd_A2": 1.1444542407989502,
+      "parent": "J1",
+      "rmsf_A": 0.633876621723175,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.31942325830459595,
+      "clash_severity": 0.010220400057733059,
+      "entry": 1,
+      "msd_A2": 1.254905104637146,
+      "parent": "J1",
+      "rmsf_A": 0.6717877388000488,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.204742431640625,
+      "clash_severity": 0.001257623080164194,
+      "entry": 1,
+      "msd_A2": 0.5255696773529053,
+      "parent": "J1",
+      "rmsf_A": 0.3913429379463196,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.26907891035079956,
+      "clash_severity": 0.00445912592113018,
+      "entry": 1,
+      "msd_A2": 0.9073003530502319,
+      "parent": "J1",
+      "rmsf_A": 0.5580671429634094,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.30423855781555176,
+      "clash_severity": 0.007239655125886202,
+      "entry": 1,
+      "msd_A2": 1.0999804735183716,
+      "parent": "J1",
+      "rmsf_A": 0.6314294934272766,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.32065123319625854,
+      "clash_severity": 0.009035498835146427,
+      "entry": 1,
+      "msd_A2": 1.2132049798965454,
+      "parent": "J1",
+      "rmsf_A": 0.6708025336265564,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.18021705746650696,
+      "clash_severity": 0.0005645013879984617,
+      "entry": 2,
+      "msd_A2": 0.48166167736053467,
+      "parent": "J1",
+      "rmsf_A": 0.4301038384437561,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.24495245516300201,
+      "clash_severity": 0.004428365733474493,
+      "entry": 2,
+      "msd_A2": 0.7583987712860107,
+      "parent": "J1",
+      "rmsf_A": 0.6269401907920837,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.28053486347198486,
+      "clash_severity": 0.007589423097670078,
+      "entry": 2,
+      "msd_A2": 0.8874592185020447,
+      "parent": "J1",
+      "rmsf_A": 0.7023859024047852,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.298414945602417,
+      "clash_severity": 0.009728522039949894,
+      "entry": 2,
+      "msd_A2": 0.9629237651824951,
+      "parent": "J1",
+      "rmsf_A": 0.7410793900489807,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.1803130805492401,
+      "clash_severity": 0.0012023441959172487,
+      "entry": 2,
+      "msd_A2": 0.46210628747940063,
+      "parent": "J1",
+      "rmsf_A": 0.4221811890602112,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.24650278687477112,
+      "clash_severity": 0.005272615700960159,
+      "entry": 2,
+      "msd_A2": 0.7235234975814819,
+      "parent": "J1",
+      "rmsf_A": 0.6161782145500183,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.28180187940597534,
+      "clash_severity": 0.008208333514630795,
+      "entry": 2,
+      "msd_A2": 0.8442195653915405,
+      "parent": "J1",
+      "rmsf_A": 0.6898146867752075,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.29949408769607544,
+      "clash_severity": 0.010257834568619728,
+      "entry": 2,
+      "msd_A2": 0.9175412058830261,
+      "parent": "J1",
+      "rmsf_A": 0.728523313999176,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2048616111278534,
+      "clash_severity": 0.0048183538019657135,
+      "entry": 3,
+      "msd_A2": 1.2791774272918701,
+      "parent": "J1",
+      "rmsf_A": 0.41530171036720276,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.26806724071502686,
+      "clash_severity": 0.014708318747580051,
+      "entry": 3,
+      "msd_A2": 1.7453346252441406,
+      "parent": "J1",
+      "rmsf_A": 0.5990926623344421,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3035537898540497,
+      "clash_severity": 0.019888298586010933,
+      "entry": 3,
+      "msd_A2": 1.9486937522888184,
+      "parent": "J1",
+      "rmsf_A": 0.6736791133880615,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.32255783677101135,
+      "clash_severity": 0.023306069895625114,
+      "entry": 3,
+      "msd_A2": 2.0798377990722656,
+      "parent": "J1",
+      "rmsf_A": 0.7137702107429504,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.20731763541698456,
+      "clash_severity": 0.0032080200035125017,
+      "entry": 3,
+      "msd_A2": 1.2533588409423828,
+      "parent": "J1",
+      "rmsf_A": 0.41117337346076965,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2706298232078552,
+      "clash_severity": 0.009037408046424389,
+      "entry": 3,
+      "msd_A2": 1.6672008037567139,
+      "parent": "J1",
+      "rmsf_A": 0.5941792726516724,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3066031336784363,
+      "clash_severity": 0.01346034649759531,
+      "entry": 3,
+      "msd_A2": 1.8524253368377686,
+      "parent": "J1",
+      "rmsf_A": 0.6684603691101074,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3270488679409027,
+      "clash_severity": 0.016394061967730522,
+      "entry": 3,
+      "msd_A2": 1.9766936302185059,
+      "parent": "J1",
+      "rmsf_A": 0.7104328870773315,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.20250019431114197,
+      "clash_severity": 0.009359436109662056,
+      "entry": 4,
+      "msd_A2": 1.2088046073913574,
+      "parent": "J1",
+      "rmsf_A": 0.4420173168182373,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2671430706977844,
+      "clash_severity": 0.014971274882555008,
+      "entry": 4,
+      "msd_A2": 1.8817501068115234,
+      "parent": "J1",
+      "rmsf_A": 0.643915057182312,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.302318811416626,
+      "clash_severity": 0.018880989402532578,
+      "entry": 4,
+      "msd_A2": 2.176149606704712,
+      "parent": "J1",
+      "rmsf_A": 0.7244550585746765,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.32035166025161743,
+      "clash_severity": 0.021175678819417953,
+      "entry": 4,
+      "msd_A2": 2.346616744995117,
+      "parent": "J1",
+      "rmsf_A": 0.766258180141449,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.199148029088974,
+      "clash_severity": 0.009735182859003544,
+      "entry": 4,
+      "msd_A2": 1.172035574913025,
+      "parent": "J1",
+      "rmsf_A": 0.4441830813884735,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2749699056148529,
+      "clash_severity": 0.01782589592039585,
+      "entry": 4,
+      "msd_A2": 1.8704924583435059,
+      "parent": "J1",
+      "rmsf_A": 0.6462137699127197,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3155888319015503,
+      "clash_severity": 0.023751024156808853,
+      "entry": 4,
+      "msd_A2": 2.1786468029022217,
+      "parent": "J1",
+      "rmsf_A": 0.728615939617157,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.33684417605400085,
+      "clash_severity": 0.02813156321644783,
+      "entry": 4,
+      "msd_A2": 2.369781970977783,
+      "parent": "J1",
+      "rmsf_A": 0.7726109623908997,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.1875644326210022,
+      "clash_severity": 0.0010026852833107114,
+      "entry": 5,
+      "msd_A2": 0.48037323355674744,
+      "parent": "J1",
+      "rmsf_A": 0.37023690342903137,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.25039950013160706,
+      "clash_severity": 0.004531011451035738,
+      "entry": 5,
+      "msd_A2": 0.7335567474365234,
+      "parent": "J1",
+      "rmsf_A": 0.5504041910171509,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.2858392596244812,
+      "clash_severity": 0.007238389924168587,
+      "entry": 5,
+      "msd_A2": 0.8633379340171814,
+      "parent": "J1",
+      "rmsf_A": 0.6211897730827332,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3052874803543091,
+      "clash_severity": 0.009157863445580006,
+      "entry": 5,
+      "msd_A2": 0.9439667463302612,
+      "parent": "J1",
+      "rmsf_A": 0.6586767435073853,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.1852763295173645,
+      "clash_severity": 0.0007509607239626348,
+      "entry": 5,
+      "msd_A2": 0.4584042429924011,
+      "parent": "J1",
+      "rmsf_A": 0.3634413480758667,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2520201504230499,
+      "clash_severity": 0.00402987701818347,
+      "entry": 5,
+      "msd_A2": 0.7018988132476807,
+      "parent": "J1",
+      "rmsf_A": 0.5407491326332092,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.28966227173805237,
+      "clash_severity": 0.00716891186311841,
+      "entry": 5,
+      "msd_A2": 0.838903546333313,
+      "parent": "J1",
+      "rmsf_A": 0.613220751285553,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.31003785133361816,
+      "clash_severity": 0.00932969432324171,
+      "entry": 5,
+      "msd_A2": 0.925408661365509,
+      "parent": "J1",
+      "rmsf_A": 0.651394248008728,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.22229908406734467,
+      "clash_severity": 0.0027740385849028826,
+      "entry": 6,
+      "msd_A2": 0.6699556112289429,
+      "parent": "J1",
+      "rmsf_A": 0.4118245542049408,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2899700701236725,
+      "clash_severity": 0.008381581865251064,
+      "entry": 6,
+      "msd_A2": 1.0420637130737305,
+      "parent": "J1",
+      "rmsf_A": 0.5848203897476196,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.32455509901046753,
+      "clash_severity": 0.013168505392968655,
+      "entry": 6,
+      "msd_A2": 1.2062788009643555,
+      "parent": "J1",
+      "rmsf_A": 0.659492015838623,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.34116432070732117,
+      "clash_severity": 0.016378015279769897,
+      "entry": 6,
+      "msd_A2": 1.3087260723114014,
+      "parent": "J1",
+      "rmsf_A": 0.7009872198104858,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.22081591188907623,
+      "clash_severity": 0.002452067332342267,
+      "entry": 6,
+      "msd_A2": 0.6382305026054382,
+      "parent": "J1",
+      "rmsf_A": 0.4032653272151947,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2852758765220642,
+      "clash_severity": 0.009404008276760578,
+      "entry": 6,
+      "msd_A2": 1.0080146789550781,
+      "parent": "J1",
+      "rmsf_A": 0.5696155428886414,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3177490830421448,
+      "clash_severity": 0.01381570752710104,
+      "entry": 6,
+      "msd_A2": 1.1629960536956787,
+      "parent": "J1",
+      "rmsf_A": 0.6400741934776306,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3344212770462036,
+      "clash_severity": 0.016874533146619797,
+      "entry": 6,
+      "msd_A2": 1.2592391967773438,
+      "parent": "J1",
+      "rmsf_A": 0.6789452433586121,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.19657929241657257,
+      "clash_severity": 0.002905000001192093,
+      "entry": 7,
+      "msd_A2": 0.6927981376647949,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2629173994064331,
+      "clash_severity": 0.008483514189720154,
+      "entry": 7,
+      "msd_A2": 1.0091359615325928,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3009437918663025,
+      "clash_severity": 0.012997950427234173,
+      "entry": 7,
+      "msd_A2": 1.1561903953552246,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3191221058368683,
+      "clash_severity": 0.015461939387023449,
+      "entry": 7,
+      "msd_A2": 1.2445012331008911,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.19624140858650208,
+      "clash_severity": 0.0015762851107865572,
+      "entry": 7,
+      "msd_A2": 0.6671256422996521,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.2649855613708496,
+      "clash_severity": 0.0059082647785544395,
+      "entry": 7,
+      "msd_A2": 0.9866318702697754,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.3042098581790924,
+      "clash_severity": 0.00988034624606371,
+      "entry": 7,
+      "msd_A2": 1.141209602355957,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.3232201933860779,
+      "clash_severity": 0.012566439807415009,
+      "entry": 7,
+      "msd_A2": 1.2382158041000366,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.2328573390841484,
+      "clash_severity": 0.008295705541968346,
+      "entry": 8,
+      "msd_A2": 1.493010252714157,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.3264719843864441,
+      "clash_severity": 0.02938133478164673,
+      "entry": 8,
+      "msd_A2": 2.024178594350815,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.37977612018585205,
+      "clash_severity": 0.04429277405142784,
+      "entry": 8,
+      "msd_A2": 2.3315248489379883,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.4074519872665405,
+      "clash_severity": 0.05247748643159866,
+      "entry": 8,
+      "msd_A2": 2.5316296219825745,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260928,
+      "steps": 32
+    },
+    {
+      "bond_rmse_A": 0.23083243519067764,
+      "clash_severity": 0.0066706836223602295,
+      "entry": 8,
+      "msd_A2": 1.5639572143554688,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 4
+    },
+    {
+      "bond_rmse_A": 0.32638154923915863,
+      "clash_severity": 0.02723909541964531,
+      "entry": 8,
+      "msd_A2": 2.116948664188385,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 8
+    },
+    {
+      "bond_rmse_A": 0.380913108587265,
+      "clash_severity": 0.04125659912824631,
+      "entry": 8,
+      "msd_A2": 2.4339482188224792,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 16
+    },
+    {
+      "bond_rmse_A": 0.40953418612480164,
+      "clash_severity": 0.0505300909280777,
+      "entry": 8,
+      "msd_A2": 2.6423242688179016,
+      "parent": "J1",
+      "rmsf_A": null,
+      "seed": 20260929,
+      "steps": 32
+    }
+  ],
+  "rule": {
+    "choose_eight": "at least one geometry metric AND one motion metric pass pooled paired medians",
+    "eight_vs_sixteen_reduction_max": 0.75,
+    "large_4_vs_16_over_16_vs_32": 2.0,
+    "metrics_geometry": [
+      "clash_severity",
+      "bond_rmse_A"
+    ],
+    "metrics_motion": [
+      "rmsf_A",
+      "msd_A2"
+    ]
+  },
+  "schema": "molvid.A.integrator_choice.v1",
+  "split": "train",
+  "steps": 8,
+  "test_opened": false
+}

@@ -1,0 +1,1422 @@
+{
+  "cadence": 8,
+  "cadence_amortization": "multiply active-step ratios by 1/8; actual rounding in execution manifests",
+  "distributions": {
+    "sampled_bond_band": {
+      "active_count": 24,
+      "active_ratio_median": 3.780156618064316,
+      "active_ratio_p90": 7.7305556337180095,
+      "eligible_count": 24,
+      "overall_ratio_median": 3.780156618064316,
+      "overall_ratio_p90": 7.7305556337180095,
+      "weight": 0.005290786076012187,
+      "zero_gradient_count": 0
+    },
+    "sampled_clash": {
+      "active_count": 24,
+      "active_ratio_median": 18.798909645930696,
+      "active_ratio_p90": 74.6278983666547,
+      "eligible_count": 24,
+      "overall_ratio_median": 18.798909645930696,
+      "overall_ratio_p90": 74.6278983666547,
+      "weight": 0.0010638914903412656,
+      "zero_gradient_count": 0
+    },
+    "sampled_displacement": {
+      "active_count": 24,
+      "active_ratio_median": 17.0955489776591,
+      "active_ratio_p90": 112.5484481736244,
+      "eligible_count": 24,
+      "overall_ratio_median": 17.0955489776591,
+      "overall_ratio_p90": 112.5484481736244,
+      "weight": 0.002193553424286401,
+      "zero_gradient_count": 0
+    },
+    "sampled_rmsf": {
+      "active_count": 18,
+      "active_ratio_median": 9.895899279473792,
+      "active_ratio_p90": 34.211612739808274,
+      "eligible_count": 18,
+      "overall_ratio_median": 9.895899279473792,
+      "overall_ratio_p90": 34.211612739808274,
+      "weight": 0.0037894484312085723,
+      "zero_gradient_count": 0
+    }
+  },
+  "draws": 2,
+  "euler_steps": 8,
+  "model_unchanged": true,
+  "motion_combined_p90_before_cap": 0.44265611867554516,
+  "motion_shared_scale": 1.0,
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "physical": {
+    "allowed_overlap_A": 0.8,
+    "bond_band_weight": 0.005290786076012187,
+    "bond_band_widths_A": {
+      "*": 0.11075562000274658,
+      "5:15": 0.13326982259750372,
+      "5:15:1": 0.13326982259750372,
+      "5:5": 0.11777544021606445,
+      "5:5:1": 0.11777544021606445,
+      "5:6": 0.10515560626983642,
+      "5:6:1": 0.10515560626983642,
+      "5:7": 0.08328590393066386,
+      "5:7:1": 0.08328590393066386
+    },
+    "clash_weight": 0.0010638914903412656,
+    "displacement_scale_A2": 6.790559953979887,
+    "displacement_weight": 0.002193553424286401,
+    "distance_chunk_size": 256,
+    "one_four_overlap_A": 1.2,
+    "rmsf_scale_A": 1.2989751036755146,
+    "rmsf_weight": 0.0037894484312085723,
+    "table_provenance": {
+      "source_hash": "ce39a1977bdc06746e111eccd96175f608b6ccf97c6aa8fe7f94574986455501",
+      "split": "train"
+    },
+    "vdw_radii_A": {
+      "0": 1.2,
+      "1": 1.4,
+      "10": 2.4,
+      "100": 2.0,
+      "101": 2.0,
+      "102": 2.0,
+      "103": 2.0,
+      "104": 2.0,
+      "105": 2.0,
+      "106": 2.0,
+      "107": 2.0,
+      "108": 2.0,
+      "109": 2.0,
+      "11": 2.2,
+      "110": 2.0,
+      "111": 2.0,
+      "112": 2.0,
+      "113": 2.0,
+      "114": 2.0,
+      "115": 2.0,
+      "116": 2.0,
+      "117": 2.0,
+      "12": 2.1,
+      "13": 2.1,
+      "14": 1.95,
+      "15": 1.8,
+      "16": 1.8,
+      "17": 1.88,
+      "18": 2.8,
+      "19": 2.4,
+      "2": 2.2,
+      "20": 2.3,
+      "21": 2.15,
+      "22": 2.05,
+      "23": 2.05,
+      "24": 2.05,
+      "25": 2.05,
+      "26": 2.0,
+      "27": 2.0,
+      "28": 2.0,
+      "29": 2.1,
+      "3": 1.9,
+      "30": 2.1,
+      "31": 2.1,
+      "32": 2.05,
+      "33": 1.9,
+      "34": 1.9,
+      "35": 2.02,
+      "36": 2.9,
+      "37": 2.55,
+      "38": 2.4,
+      "39": 2.3,
+      "4": 1.8,
+      "40": 2.15,
+      "41": 2.1,
+      "42": 2.05,
+      "43": 2.05,
+      "44": 2.0,
+      "45": 2.05,
+      "46": 2.1,
+      "47": 2.2,
+      "48": 2.2,
+      "49": 2.25,
+      "5": 1.7,
+      "50": 2.2,
+      "51": 2.1,
+      "52": 2.1,
+      "53": 2.16,
+      "54": 3.0,
+      "55": 2.7,
+      "56": 2.5,
+      "57": 2.48,
+      "58": 2.47,
+      "59": 2.45,
+      "6": 1.6,
+      "60": 2.43,
+      "61": 2.42,
+      "62": 2.4,
+      "63": 2.38,
+      "64": 2.37,
+      "65": 2.35,
+      "66": 2.33,
+      "67": 2.32,
+      "68": 2.3,
+      "69": 2.28,
+      "7": 1.55,
+      "70": 2.27,
+      "71": 2.25,
+      "72": 2.2,
+      "73": 2.1,
+      "74": 2.05,
+      "75": 2.0,
+      "76": 2.0,
+      "77": 2.05,
+      "78": 2.1,
+      "79": 2.05,
+      "8": 1.5,
+      "80": 2.2,
+      "81": 2.3,
+      "82": 2.3,
+      "83": 2.0,
+      "84": 2.0,
+      "85": 2.0,
+      "86": 2.0,
+      "87": 2.0,
+      "88": 2.0,
+      "89": 2.4,
+      "9": 1.54,
+      "90": 2.0,
+      "91": 2.3,
+      "92": 2.0,
+      "93": 2.0,
+      "94": 2.0,
+      "95": 2.0,
+      "96": 2.0,
+      "97": 2.0,
+      "98": 2.0,
+      "99": 2.0
+    }
+  },
+  "physical_tables_sha256": "b54c24df0028f5bea121dfecca4190cbbd223ffe1a85dd4fce611920647bbf2c",
+  "rows": [
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 0,
+        "history_frames": 4,
+        "indices": [
+          65966,
+          66239
+        ],
+        "time_bucket_id": "fixed_history_dt_400ps",
+        "view": "fixed_history"
+      },
+      "flow_norm": 0.22527035922404673,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.07710760086774826,
+          "dit_norm": 0.8474533967772087,
+          "eligible": true,
+          "flow_cosine": -0.047545697783216455,
+          "flow_ratio": 3.7619392080533705,
+          "raw": 0.03556115925312042
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.4081212878227234,
+          "dit_norm": 2.570016892417883,
+          "eligible": true,
+          "flow_cosine": 0.023777447579876928,
+          "flow_ratio": 11.408588778703132,
+          "raw": 0.010682858526706696
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.5128160715103149,
+          "dit_norm": 2.6441288828957585,
+          "eligible": true,
+          "flow_cosine": 0.11400429349892616,
+          "flow_ratio": 11.737580088226307,
+          "raw": 0.08938094228506088
+        },
+        "sampled_rmsf": {
+          "eligible": false
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 1,
+        "history_frames": 4,
+        "indices": [
+          59982
+        ],
+        "time_bucket_id": "dt_400ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 1.3821773093082959,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.3204829692840576,
+          "dit_norm": 3.843605462242727,
+          "eligible": true,
+          "flow_cosine": -0.23889299201598416,
+          "flow_ratio": 2.7808338599960387,
+          "raw": 0.07379627972841263
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 2.011251211166382,
+          "dit_norm": 22.491751148175087,
+          "eligible": true,
+          "flow_cosine": -0.15011451885293767,
+          "flow_ratio": 16.27269598242137,
+          "raw": 0.06454126536846161
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 2.3603053092956543,
+          "dit_norm": 13.01416256999179,
+          "eligible": true,
+          "flow_cosine": 0.4470327870750733,
+          "flow_ratio": 9.41569687358322,
+          "raw": 0.26472094655036926
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.9374630451202393,
+          "dit_norm": 15.760149817159242,
+          "eligible": true,
+          "flow_cosine": 0.45699019984477524,
+          "flow_ratio": 11.402408150547874,
+          "raw": 0.3030751943588257
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": true,
+        "global_batch_index": 2,
+        "history_frames": 4,
+        "indices": [
+          81
+        ],
+        "time_bucket_id": "dt_100ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.8890698845978474,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.1228293925523758,
+          "dit_norm": 0.9260671385855076,
+          "eligible": true,
+          "flow_cosine": -0.04297321311205639,
+          "flow_ratio": 1.0416134374008126,
+          "raw": 0.023524245247244835
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.2904822826385498,
+          "dit_norm": 1.6785812603155528,
+          "eligible": true,
+          "flow_cosine": -0.0774954818737606,
+          "flow_ratio": 1.888019479002851,
+          "raw": 0.006544535048305988
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.5983020067214966,
+          "dit_norm": 2.5913846138777643,
+          "eligible": true,
+          "flow_cosine": 0.034245507103694374,
+          "flow_ratio": 2.9147141960048777,
+          "raw": 0.14052045345306396
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 1.7468639612197876,
+          "dit_norm": 2.2001921213360562,
+          "eligible": true,
+          "flow_cosine": -0.0047558950744291395,
+          "flow_ratio": 2.474712235170656,
+          "raw": 0.17892444133758545
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 3,
+        "history_frames": 8,
+        "indices": [
+          44703
+        ],
+        "time_bucket_id": "dt_200ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.7420724804876769,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.2535213828086853,
+          "dit_norm": 3.8614475316445676,
+          "eligible": true,
+          "flow_cosine": 0.06301069693127634,
+          "flow_ratio": 5.203598884447099,
+          "raw": 0.0523684099316597
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.0757397413253784,
+          "dit_norm": 14.769165393727963,
+          "eligible": true,
+          "flow_cosine": -0.10967188378643597,
+          "flow_ratio": 19.902591434224764,
+          "raw": 0.04098350554704666
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 7.0909199714660645,
+          "dit_norm": 112.37960961640559,
+          "eligible": true,
+          "flow_cosine": -0.09556881308989701,
+          "flow_ratio": 151.44020641023056,
+          "raw": 0.6294702887535095
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 4.720419883728027,
+          "dit_norm": 24.878747960262295,
+          "eligible": true,
+          "flow_cosine": 0.056768503754871656,
+          "flow_ratio": 33.526035009292386,
+          "raw": 0.7731931805610657
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 4,
+        "history_frames": 4,
+        "indices": [
+          45094
+        ],
+        "time_bucket_id": "dt_200ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 2.8042396362412316,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.1723194718360901,
+          "dit_norm": 1.5137604734929546,
+          "eligible": true,
+          "flow_cosine": -0.004124132010524866,
+          "flow_ratio": 0.5398113819980024,
+          "raw": 0.046811677515506744
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.1675982475280762,
+          "dit_norm": 17.547730427352164,
+          "eligible": true,
+          "flow_cosine": -0.026397076428112988,
+          "flow_ratio": 6.257571642797592,
+          "raw": 0.04884222149848938
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 1.6733936071395874,
+          "dit_norm": 16.647695544947993,
+          "eligible": true,
+          "flow_cosine": 0.026656893308170802,
+          "flow_ratio": 5.936616589323429,
+          "raw": 0.0779496431350708
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 2.2965898513793945,
+          "dit_norm": 6.470558991556588,
+          "eligible": true,
+          "flow_cosine": 0.051545054311827425,
+          "flow_ratio": 2.3074201319790366,
+          "raw": 0.27898794412612915
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 5,
+        "history_frames": 8,
+        "indices": [
+          16711
+        ],
+        "time_bucket_id": "dt_100ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.13322466781889303,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.09174218773841858,
+          "dit_norm": 0.7233191384502631,
+          "eligible": true,
+          "flow_cosine": 0.1522428993174141,
+          "flow_ratio": 5.429318385942988,
+          "raw": 0.025925971567630768
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.3749622702598572,
+          "dit_norm": 9.247946534797887,
+          "eligible": true,
+          "flow_cosine": 0.35746551357827766,
+          "flow_ratio": 69.41617259177286,
+          "raw": 0.011946458369493484
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.9482355117797852,
+          "dit_norm": 7.354758906074676,
+          "eligible": true,
+          "flow_cosine": 0.27299243824469616,
+          "flow_ratio": 55.205683950909226,
+          "raw": 0.15290695428848267
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 2.195103406906128,
+          "dit_norm": 13.855770698132291,
+          "eligible": true,
+          "flow_cosine": -0.3649578999732441,
+          "flow_ratio": 104.00304181630963,
+          "raw": 0.24144823849201202
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": true,
+        "global_batch_index": 6,
+        "history_frames": 4,
+        "indices": [
+          68492,
+          63524
+        ],
+        "time_bucket_id": "fixed_history_dt_400ps",
+        "view": "fixed_history"
+      },
+      "flow_norm": 2.7263841766777674,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.3012441396713257,
+          "dit_norm": 0.8477834639654142,
+          "eligible": true,
+          "flow_cosine": 0.009525623918584256,
+          "flow_ratio": 0.3109552465927527,
+          "raw": 0.04646529257297516
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.7788820862770081,
+          "dit_norm": 8.015183410882354,
+          "eligible": true,
+          "flow_cosine": 0.010749124165624005,
+          "flow_ratio": 2.9398583953965165,
+          "raw": 0.022681748494505882
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 1.141374945640564,
+          "dit_norm": 7.306086984078919,
+          "eligible": true,
+          "flow_cosine": 0.0033229975359832077,
+          "flow_ratio": 2.6797716354786596,
+          "raw": 0.21870282292366028
+        },
+        "sampled_rmsf": {
+          "eligible": false
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": true,
+        "global_batch_index": 8,
+        "history_frames": 8,
+        "indices": [
+          59596
+        ],
+        "time_bucket_id": "dt_400ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.48897712751639827,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.2258753776550293,
+          "dit_norm": 3.5762412379255046,
+          "eligible": true,
+          "flow_cosine": -0.09135117694365678,
+          "flow_ratio": 7.313718856523759,
+          "raw": 0.06367452442646027
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.4793528318405151,
+          "dit_norm": 21.376405405184247,
+          "eligible": true,
+          "flow_cosine": -0.1648600127087607,
+          "flow_ratio": 43.71657527982711,
+          "raw": 0.05509641394019127
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 3.3862688541412354,
+          "dit_norm": 31.276519470294993,
+          "eligible": true,
+          "flow_cosine": 0.08961495221128928,
+          "flow_ratio": 63.96315432820752,
+          "raw": 0.3060973584651947
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.1951208114624023,
+          "dit_norm": 13.621978347123115,
+          "eligible": true,
+          "flow_cosine": 0.431577207567661,
+          "flow_ratio": 27.858109470910353,
+          "raw": 0.36239269375801086
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 9,
+        "history_frames": 4,
+        "indices": [
+          61049
+        ],
+        "time_bucket_id": "dt_400ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.6096524974004335,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.2451576590538025,
+          "dit_norm": 3.602573194157166,
+          "eligible": true,
+          "flow_cosine": -0.20316406959973518,
+          "flow_ratio": 5.90922404077501,
+          "raw": 0.06760042905807495
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.9381548166275024,
+          "dit_norm": 11.74894998640739,
+          "eligible": true,
+          "flow_cosine": -0.15754636915085474,
+          "flow_ratio": 19.27155229660351,
+          "raw": 0.030434317886829376
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 4.538627624511719,
+          "dit_norm": 25.138400953517515,
+          "eligible": true,
+          "flow_cosine": 0.10113182221849551,
+          "flow_ratio": 41.23398339333964,
+          "raw": 0.27072855830192566
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.0473718643188477,
+          "dit_norm": 15.286999820226534,
+          "eligible": true,
+          "flow_cosine": 0.30928987899617627,
+          "flow_ratio": 25.074940044386775,
+          "raw": 0.3070753216743469
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 10,
+        "history_frames": 4,
+        "indices": [
+          184
+        ],
+        "time_bucket_id": "dt_100ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.4896467894585286,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.11196751892566681,
+          "dit_norm": 0.9182501881124704,
+          "eligible": true,
+          "flow_cosine": -0.06048060273736606,
+          "flow_ratio": 1.875331785853041,
+          "raw": 0.024528682231903076
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.3317506015300751,
+          "dit_norm": 2.7020765577093058,
+          "eligible": true,
+          "flow_cosine": -0.0872395478065566,
+          "flow_ratio": 5.518419840345267,
+          "raw": 0.0077522918581962585
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 3.6406095027923584,
+          "dit_norm": 8.136518740461128,
+          "eligible": true,
+          "flow_cosine": -0.11250842876437296,
+          "flow_ratio": 16.617118534482422,
+          "raw": 0.10263713449239731
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 1.2157864570617676,
+          "dit_norm": 1.7879483516530779,
+          "eligible": true,
+          "flow_cosine": -0.058742149023130075,
+          "flow_ratio": 3.651506330982511,
+          "raw": 0.13283680379390717
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 11,
+        "history_frames": 8,
+        "indices": [
+          38855
+        ],
+        "time_bucket_id": "dt_200ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 2.546035142267308,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.15383796393871307,
+          "dit_norm": 2.0342822293076135,
+          "eligible": true,
+          "flow_cosine": 0.018497866877795553,
+          "flow_ratio": 0.7990000591649471,
+          "raw": 0.05090727657079697
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.985309898853302,
+          "dit_norm": 12.636828652771053,
+          "eligible": true,
+          "flow_cosine": -0.00897583925930288,
+          "flow_ratio": 4.96333630395912,
+          "raw": 0.04002499207854271
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 2.901304006576538,
+          "dit_norm": 20.477114941513705,
+          "eligible": true,
+          "flow_cosine": -0.007009963465178615,
+          "flow_ratio": 8.042746386948265,
+          "raw": 0.2747596204280853
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.123384475708008,
+          "dit_norm": 17.05811750808251,
+          "eligible": true,
+          "flow_cosine": -0.019158116560829008,
+          "flow_ratio": 6.69987512147685,
+          "raw": 0.30450737476348877
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 12,
+        "history_frames": 8,
+        "indices": [
+          37862,
+          51319
+        ],
+        "time_bucket_id": "dt_200ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 1.842187078042185,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.38721442222595215,
+          "dit_norm": 2.437320723815447,
+          "eligible": true,
+          "flow_cosine": 0.046019395528244064,
+          "flow_ratio": 1.3230582023220736,
+          "raw": 0.08175234496593475
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 2.9362308979034424,
+          "dit_norm": 33.76041224741505,
+          "eligible": true,
+          "flow_cosine": -0.04626224147585708,
+          "flow_ratio": 18.326266995257882,
+          "raw": 0.12145614624023438
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 4.951295375823975,
+          "dit_norm": 32.37455779884294,
+          "eligible": true,
+          "flow_cosine": -0.0653984872068246,
+          "flow_ratio": 17.573979420835773,
+          "raw": 0.6868436932563782
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.9102978706359863,
+          "dit_norm": 12.495174108654915,
+          "eligible": true,
+          "flow_cosine": 0.0029118933176367013,
+          "flow_ratio": 6.782793266541837,
+          "raw": 0.3932935893535614
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": true,
+        "global_batch_index": 13,
+        "history_frames": 8,
+        "indices": [
+          26448,
+          17523
+        ],
+        "time_bucket_id": "dt_100ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.1324627087795685,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.17661020159721375,
+          "dit_norm": 1.0440012716409115,
+          "eligible": true,
+          "flow_cosine": -0.022160902990479972,
+          "flow_ratio": 7.881473067097219,
+          "raw": 0.04812590777873993
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.0422708988189697,
+          "dit_norm": 10.181281845412196,
+          "eligible": true,
+          "flow_cosine": -0.11430334637348995,
+          "flow_ratio": 76.86149512731836,
+          "raw": 0.03357769921422005
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 3.3692169189453125,
+          "dit_norm": 5.032401199365091,
+          "eligible": true,
+          "flow_cosine": -0.07314654225596504,
+          "flow_ratio": 37.99107874005144,
+          "raw": 0.3117486238479614
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.1625120639801025,
+          "dit_norm": 4.31014368348039,
+          "eligible": true,
+          "flow_cosine": -0.014580997256927861,
+          "flow_ratio": 32.53854404150008,
+          "raw": 0.32991936802864075
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": true,
+        "global_batch_index": 14,
+        "history_frames": 4,
+        "indices": [
+          24015
+        ],
+        "time_bucket_id": "dt_100ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 1.9989638119208903,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.13012543320655823,
+          "dit_norm": 0.8486730469777716,
+          "eligible": true,
+          "flow_cosine": -0.028882284889987793,
+          "flow_ratio": 0.4245564836725309,
+          "raw": 0.025049172341823578
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.30329838395118713,
+          "dit_norm": 3.665253898273119,
+          "eligible": true,
+          "flow_cosine": -0.0295852872000593,
+          "flow_ratio": 1.8335769144069791,
+          "raw": 0.007900928147137165
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 1.583175778388977,
+          "dit_norm": 4.240397527860699,
+          "eligible": true,
+          "flow_cosine": -0.01513902319328373,
+          "flow_ratio": 2.1212977956744092,
+          "raw": 0.0645783394575119
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 1.1879905462265015,
+          "dit_norm": 1.5667762798376668,
+          "eligible": true,
+          "flow_cosine": -0.016420205038540185,
+          "flow_ratio": 0.7837942190319513,
+          "raw": 0.11467306315898895
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 16,
+        "history_frames": 8,
+        "indices": [
+          60297,
+          57430
+        ],
+        "time_bucket_id": "dt_400ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.6850765124817235,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.2721289396286011,
+          "dit_norm": 3.2018092848997317,
+          "eligible": true,
+          "flow_cosine": -0.13044726406370702,
+          "flow_ratio": 4.673652105369982,
+          "raw": 0.07720860838890076
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.8153274059295654,
+          "dit_norm": 14.652799480093416,
+          "eligible": true,
+          "flow_cosine": -0.06057420725392537,
+          "flow_ratio": 21.38855910708853,
+          "raw": 0.06231536343693733
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.3608967363834381,
+          "dit_norm": 9.788829194920575,
+          "eligible": true,
+          "flow_cosine": -0.18397081888861103,
+          "flow_ratio": 14.288665596577028,
+          "raw": 0.09841419756412506
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 0.6156253814697266,
+          "dit_norm": 4.018992648814025,
+          "eligible": true,
+          "flow_cosine": 0.14919587124810613,
+          "flow_ratio": 5.866487283668542,
+          "raw": 0.32547569274902344
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 17,
+        "history_frames": 4,
+        "indices": [
+          58888
+        ],
+        "time_bucket_id": "dt_400ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.32543632903106035,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.33764317631721497,
+          "dit_norm": 2.4012042772942257,
+          "eligible": true,
+          "flow_cosine": -0.2714330988213276,
+          "flow_ratio": 7.378414955833187,
+          "raw": 0.05715210735797882
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.1576063632965088,
+          "dit_norm": 11.388928495602357,
+          "eligible": true,
+          "flow_cosine": -0.20112471702284346,
+          "flow_ratio": 34.99587316975719,
+          "raw": 0.03686533123254776
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 4.458552360534668,
+          "dit_norm": 15.173495015192438,
+          "eligible": true,
+          "flow_cosine": 0.2775192790145265,
+          "flow_ratio": 46.62508042777316,
+          "raw": 0.23217900097370148
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 2.165700912475586,
+          "dit_norm": 6.980187838185101,
+          "eligible": true,
+          "flow_cosine": 0.4297532394342426,
+          "flow_ratio": 21.448705063038297,
+          "raw": 0.31059688329696655
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 27,
+        "history_frames": 8,
+        "indices": [
+          21935
+        ],
+        "time_bucket_id": "dt_100ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.24023499449459232,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.14972735941410065,
+          "dit_norm": 0.9594633254109244,
+          "eligible": true,
+          "flow_cosine": -0.12024003203601934,
+          "flow_ratio": 3.993853299472246,
+          "raw": 0.02518264576792717
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.21801768243312836,
+          "dit_norm": 1.1317332461681193,
+          "eligible": true,
+          "flow_cosine": -0.17024291469261219,
+          "flow_ratio": 4.710942502565315,
+          "raw": 0.004904785193502903
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 1.7011522054672241,
+          "dit_norm": 2.536747947050582,
+          "eligible": true,
+          "flow_cosine": -0.13372285094491915,
+          "flow_ratio": 10.559443899451061,
+          "raw": 0.06230580061674118
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 1.358639121055603,
+          "dit_norm": 2.0154251585748897,
+          "eligible": true,
+          "flow_cosine": 0.001411767400900093,
+          "flow_ratio": 8.38939040839971,
+          "raw": 0.12982027232646942
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 31,
+        "history_frames": 4,
+        "indices": [
+          52679
+        ],
+        "time_bucket_id": "dt_200ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.2024743192179769,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.13491542637348175,
+          "dit_norm": 1.6311855800471575,
+          "eligible": true,
+          "flow_cosine": 0.32609246402399733,
+          "flow_ratio": 8.0562591164516,
+          "raw": 0.04069636017084122
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.4782823324203491,
+          "dit_norm": 24.077830649756397,
+          "eligible": true,
+          "flow_cosine": 0.28775744886752075,
+          "flow_ratio": 118.91794842305424,
+          "raw": 0.054764144122600555
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.9715951681137085,
+          "dit_norm": 24.761677881307953,
+          "eligible": true,
+          "flow_cosine": -0.2713129584202612,
+          "flow_ratio": 122.2954001126947,
+          "raw": 0.12851351499557495
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 1.6395137310028076,
+          "dit_norm": 7.2508673954419,
+          "eligible": true,
+          "flow_cosine": -0.34292711806897663,
+          "flow_ratio": 35.811294111012,
+          "raw": 0.14560151100158691
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 32,
+        "history_frames": 8,
+        "indices": [
+          54650
+        ],
+        "time_bucket_id": "dt_400ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 8.452810817688665,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.1638154238462448,
+          "dit_norm": 2.7419622603307503,
+          "eligible": true,
+          "flow_cosine": -0.136413380526866,
+          "flow_ratio": 0.32438467149800854,
+          "raw": 0.06524857878684998
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.1371595859527588,
+          "dit_norm": 10.657117513687323,
+          "eligible": true,
+          "flow_cosine": -0.042788505506371435,
+          "flow_ratio": 1.2607779522742713,
+          "raw": 0.040200959891080856
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 4.530097484588623,
+          "dit_norm": 21.1099217078589,
+          "eligible": true,
+          "flow_cosine": 0.13510375562877044,
+          "flow_ratio": 2.497384853767636,
+          "raw": 0.23610003292560577
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.45160174369812,
+          "dit_norm": 14.680986559860285,
+          "eligible": true,
+          "flow_cosine": 0.19587756640083978,
+          "flow_ratio": 1.7368171223160833,
+          "raw": 0.47158190608024597
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 45,
+        "history_frames": 4,
+        "indices": [
+          37469
+        ],
+        "time_bucket_id": "dt_200ps",
+        "view": "ordinary"
+      },
+      "flow_norm": 0.602966535084673,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.15088365972042084,
+          "dit_norm": 1.2202414577270633,
+          "eligible": true,
+          "flow_cosine": -0.05386271267251403,
+          "flow_ratio": 2.023729986201818,
+          "raw": 0.04284992069005966
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 1.0427829027175903,
+          "dit_norm": 30.77033793109947,
+          "eligible": true,
+          "flow_cosine": -0.14143078859471278,
+          "flow_ratio": 51.03158490674523,
+          "raw": 0.04108370468020439
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 3.510451316833496,
+          "dit_norm": 126.26094607121439,
+          "eligible": true,
+          "flow_cosine": 0.14308510076364264,
+          "flow_ratio": 209.39959139437795,
+          "raw": 1.0178766250610352
+        },
+        "sampled_rmsf": {
+          "active": true,
+          "decoder_norm": 3.545567512512207,
+          "dit_norm": 12.255172942580936,
+          "eligible": true,
+          "flow_cosine": 0.13822750024254002,
+          "flow_ratio": 20.324797861062013,
+          "raw": 0.9922776222229004
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 47,
+        "history_frames": 4,
+        "indices": [
+          66588
+        ],
+        "time_bucket_id": "fixed_history_dt_100ps",
+        "view": "fixed_history"
+      },
+      "flow_norm": 0.31860481800611873,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.1744370311498642,
+          "dit_norm": 1.6822896991542315,
+          "eligible": true,
+          "flow_cosine": -0.10592475511603704,
+          "flow_ratio": 5.280176582646416,
+          "raw": 0.033438824117183685
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.5489912033081055,
+          "dit_norm": 4.414548797337634,
+          "eligible": true,
+          "flow_cosine": -0.130060108185393,
+          "flow_ratio": 13.85587583064376,
+          "raw": 0.014134293422102928
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.32556548714637756,
+          "dit_norm": 8.400934867621956,
+          "eligible": true,
+          "flow_cosine": 0.10011042059105144,
+          "flow_ratio": 26.367883951650153,
+          "raw": 0.22096122801303864
+        },
+        "sampled_rmsf": {
+          "eligible": false
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 49,
+        "history_frames": 4,
+        "indices": [
+          63733,
+          63637
+        ],
+        "time_bucket_id": "fixed_history_dt_200ps",
+        "view": "fixed_history"
+      },
+      "flow_norm": 0.22782398649368113,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.5899444222450256,
+          "dit_norm": 2.255622404149616,
+          "eligible": true,
+          "flow_cosine": 0.3583849078726862,
+          "flow_ratio": 9.90072397057356,
+          "raw": 0.07911264151334763
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 2.626007080078125,
+          "dit_norm": 27.2664320360628,
+          "eligible": true,
+          "flow_cosine": -0.5790079381992631,
+          "flow_ratio": 119.68200739398024,
+          "raw": 0.10228144377470016
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.9464784264564514,
+          "dit_norm": 20.459860760442865,
+          "eligible": true,
+          "flow_cosine": 0.5162305046573761,
+          "flow_ratio": 89.80556031579377,
+          "raw": 1.8504142761230469
+        },
+        "sampled_rmsf": {
+          "eligible": false
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 51,
+        "history_frames": 4,
+        "indices": [
+          68332
+        ],
+        "time_bucket_id": "fixed_history_dt_200ps",
+        "view": "fixed_history"
+      },
+      "flow_norm": 0.3105213641003522,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.12489770352840424,
+          "dit_norm": 0.8860524115500165,
+          "eligible": true,
+          "flow_cosine": -0.06183455484913992,
+          "flow_ratio": 2.853434623144538,
+          "raw": 0.03651970252394676
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.7050802707672119,
+          "dit_norm": 7.942283677430663,
+          "eligible": true,
+          "flow_cosine": -0.13518642864479022,
+          "flow_ratio": 25.577253598769875,
+          "raw": 0.019993260502815247
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 0.9590778946876526,
+          "dit_norm": 2.566288795229058,
+          "eligible": true,
+          "flow_cosine": 0.06512934797336146,
+          "flow_ratio": 8.264451634959654,
+          "raw": 0.12163446843624115
+        },
+        "sampled_rmsf": {
+          "eligible": false
+        }
+      },
+      "near_zero_flow": false
+    },
+    {
+      "entry": {
+        "auxiliary": false,
+        "global_batch_index": 61,
+        "history_frames": 4,
+        "indices": [
+          65949
+        ],
+        "time_bucket_id": "fixed_history_dt_100ps",
+        "view": "fixed_history"
+      },
+      "flow_norm": 0.27515996280236577,
+      "groups": {
+        "sampled_bond_band": {
+          "active": true,
+          "decoder_norm": 0.1378287523984909,
+          "dit_norm": 1.0451604562746613,
+          "eligible": true,
+          "flow_cosine": -0.048516602242086246,
+          "flow_ratio": 3.7983740280752616,
+          "raw": 0.04104561358690262
+        },
+        "sampled_clash": {
+          "active": true,
+          "decoder_norm": 0.9267369508743286,
+          "dit_norm": 12.645049050434325,
+          "eligible": true,
+          "flow_cosine": -0.04116534968554324,
+          "flow_ratio": 45.95526515431556,
+          "raw": 0.031184867024421692
+        },
+        "sampled_displacement": {
+          "active": true,
+          "decoder_norm": 1.6794984340667725,
+          "dit_norm": 23.72050293408395,
+          "eligible": true,
+          "flow_cosine": 0.003940487204735709,
+          "flow_ratio": 86.20622961459422,
+          "raw": 0.5045512914657593
+        },
+        "sampled_rmsf": {
+          "eligible": false
+        }
+      },
+      "near_zero_flow": false
+    }
+  ],
+  "schema": "molvid.A.resolved_auxiliary.v1",
+  "split": "train",
+  "test_opened": false
+}
