@@ -5,6 +5,8 @@ import torch
 from molvid.codec.learned_memory import ChemicalMapping, RawHistoryObservation, LearnedHistoryMemory
 from molvid.geometry.types import StaticTopologyMetadata
 from molvid.data.chemistry import NUM_BLOCK_TYPE
+from molvid.model import FrameJointCondition
+from molvid.training.joint import _ConditionGradientProxy
 
 
 @pytest.fixture
@@ -91,6 +93,53 @@ def test_optimizer_and_reused_graph(observed, amp):
     optimizer.step()
     assert not torch.equal(before,model.queries)
     assert not torch.equal(light_before,model.light_encoder.layers[0].message[0].weight)
+
+
+@pytest.mark.parametrize('amp', [False, True])
+def test_condition_gradient_proxy_matches_retained_sum(observed, amp):
+    """Sequential branch frees must preserve the one-prefix memory gradient."""
+    reference = LearnedHistoryMemory().cuda()
+    streamed = LearnedHistoryMemory().cuda()
+    streamed.load_state_dict(reference.state_dict())
+
+    def branch_loss(memory, index):
+        h, v = memory.gather_atoms()
+        time_features, distance = memory.query_time_features(
+            torch.tensor([[100., 400.], [200., 800.]], device='cuda')
+        )
+        return (
+            h.float().square().mean() + .03 * v.float().sin().mean(),
+            .07 * h.float().cos().mean() + v.float().square().mean(),
+            .05 * time_features.square().mean() + .02 * distance.sin().mean(),
+        )[index]
+
+    with torch.autocast('cuda', dtype=torch.bfloat16, enabled=amp):
+        reference_memory = reference(observed)
+        reference_total = sum(branch_loss(reference_memory, index) for index in range(3))
+    reference_total.backward()
+
+    with torch.autocast('cuda', dtype=torch.bfloat16, enabled=amp):
+        condition = FrameJointCondition(streamed(observed), None)
+    proxy = _ConditionGradientProxy.from_learned_memory(condition)
+    accumulated = None
+    for index in range(3):
+        loss = branch_loss(proxy.condition.history_memory, index)
+        loss.backward()
+        accumulated = proxy.take_leaf_gradients(accumulated)
+    proxy.backward_original(accumulated)
+
+    for (reference_name, reference_parameter), (streamed_name, streamed_parameter) in zip(
+        reference.named_parameters(), streamed.named_parameters()
+    ):
+        assert reference_name == streamed_name
+        assert reference_parameter.grad is not None, reference_name
+        assert streamed_parameter.grad is not None, streamed_name
+        torch.testing.assert_close(
+            streamed_parameter.grad,
+            reference_parameter.grad,
+            atol=3e-4 if amp else 2e-6,
+            rtol=3e-4 if amp else 2e-5,
+        )
 
 
 def test_atom_permutation_and_group_gather(observed):

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import nullcontext
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import math
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
@@ -26,7 +26,8 @@ from ..losses.distribution import (
 )
 from ..losses.geometry import FutureBondLoss, future_bond_distance_loss
 from ..losses.sampled_physical import PhysicalAuxiliaryConfig, physical_auxiliary_loss
-from ..model import FrameJointModel, FrameJointOutput
+from ..codec.learned_memory import GroupMemory
+from ..model import FrameJointCondition, FrameJointModel, FrameJointOutput
 from ..runtime import sha256_file
 from .batches import PreparedFrameJointBatch
 from .dit import module_state_hash
@@ -221,6 +222,73 @@ class WarmStartReport:
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class _ConditionGradientProxy:
+    """Leaf views used to free branch graphs before one condition backward."""
+
+    condition: FrameJointCondition
+    originals: tuple[Tensor, ...]
+    leaves: tuple[Tensor, ...]
+
+    @classmethod
+    def from_learned_memory(cls, condition: FrameJointCondition) -> "_ConditionGradientProxy":
+        memory = condition.history_memory
+        if not isinstance(memory, GroupMemory) or condition.motion_context is not None:
+            raise TypeError("condition gradient proxy requires learned memory with old M disabled")
+        originals = (memory.h, memory.v, memory.slot_weights)
+        if not all(value.requires_grad for value in originals):
+            raise RuntimeError("trainable learned-memory condition outputs must retain autograd")
+        leaves = tuple(value.detach().requires_grad_(True) for value in originals)
+        proxy_memory = replace(
+            memory,
+            h=leaves[0],
+            v=leaves[1],
+            slot_weights=leaves[2],
+        )
+        return cls(
+            condition=FrameJointCondition(history_memory=proxy_memory, motion_context=None),
+            originals=originals,
+            leaves=leaves,
+        )
+
+    def take_leaf_gradients(
+        self,
+        accumulated: tuple[Tensor | None, ...] | None,
+    ) -> tuple[Tensor | None, ...]:
+        """Accumulate one freed branch's exact gradients at the memory boundary."""
+
+        if accumulated is None:
+            accumulated = (None,) * len(self.leaves)
+        result: list[Tensor | None] = []
+        for prior, leaf in zip(accumulated, self.leaves):
+            gradient = leaf.grad
+            if gradient is None:
+                result.append(prior)
+            else:
+                value = gradient.detach().clone()
+                result.append(value if prior is None else prior + value)
+                leaf.grad = None
+        return tuple(result)
+
+    def backward_original(
+        self,
+        accumulated: tuple[Tensor | None, ...],
+    ) -> None:
+        """Propagate all branch gradients through the one observed-prefix graph."""
+
+        active = [
+            (original, gradient)
+            for original, gradient in zip(self.originals, accumulated)
+            if gradient is not None
+        ]
+        if not active:
+            raise RuntimeError("streamed branches did not use learned-memory condition")
+        torch.autograd.backward(
+            tuple(original for original, _ in active),
+            tuple(gradient for _, gradient in active),
+        )
 
 
 def _sample_equal_coordinate_mse(
@@ -908,10 +976,11 @@ class FrameJointTrainer:
         """Accumulate the same K=2 physical gradient one source at a time.
 
         The other source is a fixed coordinate value during each derivative.
-        The observed condition is prepared exactly once and its compact graph
-        is retained across the base and two sequential source backwards.  Only
-        one Euler graph is live at a time; learned memory is never detached or
-        recomputed inside the prefix update.
+        The observed condition is prepared exactly once. Branches read leaf
+        proxies of its outputs, accumulate the exact condition-output gradient,
+        and propagate that sum through the original observed graph once. This
+        frees the base and each Euler graph before constructing the next one;
+        learned memory is neither recomputed nor detached from optimization.
         """
         if len(sources) != 2 or self.sampled_config.physical is None:
             raise ValueError("streaming requires K=2 A physical auxiliaries")
@@ -926,13 +995,14 @@ class FrameJointTrainer:
         }
         with self._autocast():
             condition = self.base_model.prepare_condition(batch.observed_context)
+        proxy = _ConditionGradientProxy.from_learned_memory(condition)
         # Detached draw values give the exact two-sample loss and let each
         # subsequent backward differentiate only its own source trajectory.
         with torch.no_grad(), self._autocast():
             detached = tuple(
                 self.base_model.sample_source(
                     source, context=batch.observed_context, query=batch.query,
-                    condition=condition,
+                    condition=proxy.condition,
                     steps=self.sampled_config.euler_steps,
                     checkpoint_steps=False,
                 ).coordinates.detach()
@@ -947,7 +1017,7 @@ class FrameJointTrainer:
                 sample.interpolated, context=batch.observed_context, query=batch.query,
                 flow_time=sample.flow_time, clean_future=batch.target_future,
                 decode_generated=True, decode_clean=True, decode_near=True,
-                prepared_condition=condition,
+                prepared_condition=proxy.condition,
             )
             flow_loss = self.flow.loss(output.velocity, sample.target_velocity)
             losses = frame_joint_loss(
@@ -956,13 +1026,16 @@ class FrameJointTrainer:
             )
         if not torch.isfinite(losses.total):
             raise FloatingPointError("non-finite streamed base loss")
-        losses.total.backward(retain_graph=True)
-        del output
+        losses.total.backward()
+        condition_gradients = proxy.take_leaf_gradients(None)
+        raw = {name: value.detach() for name, value in losses.raw.items()}
+        weighted = {name: value.detach() for name, value in losses.weighted.items()}
+        del output, flow_loss, losses
         for index, source in enumerate(sources):
             with self._autocast():
                 generated = self.base_model.sample_source(
                     source, context=batch.observed_context, query=batch.query,
-                    condition=condition,
+                    condition=proxy.condition,
                     steps=self.sampled_config.euler_steps,
                     checkpoint_steps=self.sampled_config.activation_checkpoint,
                 ).coordinates
@@ -978,8 +1051,10 @@ class FrameJointTrainer:
                 )
             if not torch.isfinite(branch_total):
                 raise FloatingPointError("non-finite streamed sampled loss")
-            branch_total.backward(retain_graph=index + 1 < len(sources))
-            del generated, coordinates, branch_raw, branch_total
+            branch_total.backward()
+            condition_gradients = proxy.take_leaf_gradients(condition_gradients)
+            del generated, coordinates, branch_raw, branch_counts, branch_total
+        proxy.backward_original(condition_gradients)
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
         grad_norm = torch.nn.utils.clip_grad_norm_(active, self.grad_clip)
         if not torch.isfinite(torch.as_tensor(grad_norm)):
@@ -989,10 +1064,10 @@ class FrameJointTrainer:
             self.scheduler.step()
         self.step += 1
         self.successful_updates += 1
-        raw = {**losses.raw, **sampled_raw}
-        weighted = {**losses.weighted, **{
-            name: sampled_raw[name] * weight for name, weight in weights.items()
-        }}
+        raw.update({name: value.detach() for name, value in sampled_raw.items()})
+        weighted.update({
+            name: (sampled_raw[name] * weight).detach() for name, weight in weights.items()
+        })
         result: dict[str, Any] = {
             "step": self.step, "stage": self.stage,
             "loss": float(sum(weighted.values()).detach()),
@@ -1008,6 +1083,7 @@ class FrameJointTrainer:
                 "euler_steps": self.sampled_config.euler_steps,
                 "backward": "sequential_per_source_exact_K2_objective",
                 "condition_preparations_per_prefix": 1,
+                "condition_backward": "sum_output_gradients_then_one_observed_graph_backward",
             },
         }
         result.update({f"raw_{name}": float(value.detach()) for name, value in raw.items()})
