@@ -33,7 +33,7 @@
   ],
   "gpu_status": "GPU5 explicitly user-authorized for C shared use; hold the UUID flock, do not preempt or alter the existing external process",
   "external_runs_access": "read_only",
-  "capacity_run_root_container": "/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/r07",
+  "capacity_run_root_container": "/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/r08",
   "acceptance_evidence_status": "dynamic evidence identities live in the fixed review request and run manifests",
   "sealed_test_opened": false
 }
