@@ -14,6 +14,8 @@ from molvid.cli.train_frame_joint import (
     _verified_derived_identity,
 )
 from molvid.config import load_config
+from molvid.dit.frame import FrameDiT
+from molvid.latent.adapter import FrameLatentAdapter
 from molvid.runtime import sha256_file
 from molvid.training.joint import JointLossConfig, SampledAuxiliaryConfig
 from tools.profile_frame_gm_p2 import _arm_from_config
@@ -66,6 +68,61 @@ def test_all_p2_configs_pass_strict_validation() -> None:
     root = Path(__file__).parents[1]
     for path in sorted((root / "configs").glob("frame_gm_p2_*_260923.yaml")):
         _validate_frame_joint_config(load_config(path, schema="molvid.frame_joint.train.v1"))
+
+
+def test_capacity_geometry_indices_are_explicit_and_old_default_is_preserved() -> None:
+    adapter = FrameLatentAdapter(codec_width=128, scalar_width=16, vector_width=8)
+    old = FrameDiT(
+        adapter=adapter,
+        scalar_width=16,
+        vector_width=8,
+        depth=4,
+        heads=4,
+        geometry_enabled=True,
+        motion_enabled=True,
+    )
+    assert old.contract()["local_geometry_blocks_one_based"] == [2, 4]
+    assert [
+        index + 1 for index, block in enumerate(old.blocks)
+        if block.local_geometry is not None
+    ] == [2, 4]
+
+    expanded = FrameDiT(
+        adapter=adapter,
+        scalar_width=16,
+        vector_width=8,
+        depth=8,
+        heads=4,
+        geometry_enabled=True,
+        motion_enabled=True,
+        geometry_block_indices=[2, 4, 6, 8],
+    )
+    assert expanded.contract()["local_geometry_blocks_one_based"] == [2, 4, 6, 8]
+    assert [
+        index + 1 for index, block in enumerate(expanded.blocks)
+        if block.local_geometry is not None
+    ] == [2, 4, 6, 8]
+
+
+def test_capacity_runtime_config_validates_geometry_and_warm_start_mapping() -> None:
+    config = deepcopy(_valid_config())
+    config["model"].update({
+        "depth": 8,
+        "geometry_enabled": True,
+        "geometry_block_indices": [2, 4, 6, 8],
+    })
+    config["training"]["warm_start_block_mapping"] = [2, 4, 6, 8]
+    _validate_frame_joint_config(config)
+
+    invalid = deepcopy(config)
+    invalid["model"]["geometry_block_indices"] = [2, 4, 4, 8]
+    with pytest.raises(ValueError, match="unique and increasing"):
+        _validate_frame_joint_config(invalid)
+
+    invalid = deepcopy(config)
+    invalid["training"]["warm_start_block_mapping"] = [2, 4, 6, 9]
+    with pytest.raises(ValueError, match="exceeds model.depth"):
+        _validate_frame_joint_config(invalid)
 
 
 @pytest.mark.parametrize(

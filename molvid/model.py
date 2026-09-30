@@ -90,6 +90,7 @@ class FrameJointModel(nn.Module):
         heads: int = 8,
         geometry_enabled: bool = False,
         motion_enabled: bool = False,
+        geometry_block_indices: Sequence[int] | None = None,
     ) -> "FrameJointModel":
         channels = int(statistics.width)
         if channels != 128:
@@ -115,6 +116,7 @@ class FrameJointModel(nn.Module):
             heads=heads,
             geometry_enabled=geometry_enabled,
             motion_enabled=motion_enabled,
+            geometry_block_indices=geometry_block_indices,
         )
         decoder = TrajectoryDecoder.from_codec_head(
             codec.coordinate_head,
@@ -196,18 +198,36 @@ class FrameJointModel(nn.Module):
         sampled_sources: Sequence[FrameLatentBatch] | None = None,
         sampled_steps: int = 4,
         checkpoint_sampled_steps: bool = False,
+        checkpoint_flow_field: bool = False,
     ) -> FrameJointOutput:
         condition = prepared_condition or self.prepare_condition(context)
         if self.dit.motion_enabled != (condition.motion_context is not None):
             raise ValueError("prepared condition disagrees with the model M switch")
-        velocity = self.dit(
-            noisy_future,
-            context=context,
-            query=query,
-            history_memory=condition.history_memory,
-            flow_time=flow_time,
-            motion_context=condition.motion_context,
-        )
+
+        def predict_velocity(h: Tensor, v: Tensor) -> tuple[Tensor, Tensor]:
+            state = noisy_future.with_features(h, v)
+            value = self.dit(
+                state,
+                context=context,
+                query=query,
+                history_memory=condition.history_memory,
+                flow_time=flow_time,
+                motion_context=condition.motion_context,
+            )
+            return value.h, value.v
+
+        if checkpoint_flow_field and torch.is_grad_enabled():
+            velocity_h, velocity_v = activation_checkpoint(
+                predict_velocity,
+                noisy_future.h,
+                noisy_future.v,
+                use_reentrant=False,
+                preserve_rng_state=False,
+            )
+            velocity = noisy_future.with_features(velocity_h, velocity_v)
+        else:
+            velocity_h, velocity_v = predict_velocity(noisy_future.h, noisy_future.v)
+            velocity = noisy_future.with_features(velocity_h, velocity_v)
         normalized_endpoint = frame_endpoint_from_velocity(noisy_future, velocity, flow_time)
         endpoint = self.inverse(normalized_endpoint)
         generated = self.decoder(context, endpoint, query) if decode_generated else None

@@ -6,6 +6,7 @@ from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 import math
 from pathlib import Path
+import re
 from typing import Any, Iterable, Mapping, Sequence
 
 import torch
@@ -213,6 +214,9 @@ class WarmStartReport:
     initialized: tuple[str, ...]
     unexpected: tuple[str, ...]
     shape_mismatch: tuple[str, ...]
+    dit_block_mapping_one_based: tuple[int, ...] | None = None
+    identity_initialized_blocks_one_based: tuple[int, ...] = ()
+    zero_initialized_geometry_blocks_one_based: tuple[int, ...] = ()
     optimizer_restored: bool = False
     scheduler_restored: bool = False
     cursor_restored: bool = False
@@ -686,6 +690,7 @@ class FrameJointTrainer:
         optimizer: torch.optim.Optimizer | None = None,
         scheduler: Any = None,
         sampled_config: SampledAuxiliaryConfig | None = None,
+        checkpoint_flow_field: bool = False,
     ) -> None:
         self.model = model
         self.base_model = model.module if hasattr(model, "module") else model
@@ -695,6 +700,7 @@ class FrameJointTrainer:
             raise RuntimeError("target teacher must be frozen")
         self.loss_config = loss_config
         self.sampled_config = sampled_config or SampledAuxiliaryConfig()
+        self.checkpoint_flow_field = bool(checkpoint_flow_field)
         self.learning_rates = {name: float(learning_rates[name]) for name in ("history_encoder", "dit", "decoder")}
         self.weight_decay = float(weight_decay)
         self.grad_clip = float(grad_clip)
@@ -835,6 +841,7 @@ class FrameJointTrainer:
                 sampled_sources=sampled_sources,
                 sampled_steps=self.sampled_config.euler_steps,
                 checkpoint_sampled_steps=self.sampled_config.activation_checkpoint,
+                checkpoint_flow_field=self.checkpoint_flow_field,
             )
             flow_loss = self.flow.loss(output.velocity, sample.target_velocity)
             losses = frame_joint_loss(
@@ -942,6 +949,7 @@ class FrameJointTrainer:
                 sample.interpolated, context=batch.observed_context, query=batch.query,
                 flow_time=sample.flow_time, clean_future=batch.target_future,
                 decode_generated=True, decode_clean=True, decode_near=True,
+                checkpoint_flow_field=self.checkpoint_flow_field,
             )
             flow_loss = self.flow.loss(output.velocity, sample.target_velocity)
             losses = frame_joint_loss(
@@ -1027,6 +1035,7 @@ class FrameJointTrainer:
                 "weight_decay": self.weight_decay,
                 "grad_clip": self.grad_clip,
                 "amp_bfloat16": self.amp,
+                "checkpoint_flow_field": self.checkpoint_flow_field,
                 "norm_bias_weight_decay": 0.0,
             },
             "schedule": dict(self.schedule_contract),
@@ -1124,14 +1133,16 @@ class FrameJointTrainer:
         path: str | Path,
         *,
         expected_sha256: str,
+        dit_block_mapping: Sequence[int] | None = None,
     ) -> WarmStartReport:
         """Load compatible model tensors while resetting all training state.
 
         Warm start is deliberately distinct from strict resume and exact
-        continuation.  It permits only newly introduced G/M tensors to be
-        absent from the parent; old tensors must all exist with identical
-        shapes and dtypes.  Optimizer moments, counters, cursor, and RNG are
-        never read into the child experiment.
+        continuation.  The default permits only newly introduced G/M tensors
+        to be absent from the parent.  A declared DiT block mapping additionally
+        permits zero-residual target blocks to be inserted between every old
+        block.  Old tensors must all exist with identical shapes and dtypes;
+        optimizer moments, counters, cursor, and RNG are never restored.
         """
 
         actual_sha256 = sha256_file(path)
@@ -1153,6 +1164,44 @@ class FrameJointTrainer:
         parent_model = parent_contracts.get("model")
         if not isinstance(parent_model, Mapping):
             raise ValueError("warm-start parent model contract is missing")
+        parent_dit = parent_model.get("dit")
+        target_model = self.base_model.contract()
+        target_dit = target_model.get("dit")
+        if not isinstance(parent_dit, Mapping) or not isinstance(target_dit, Mapping):
+            raise ValueError("warm-start model contract lacks a DiT contract")
+        mapping: tuple[int, ...] | None = None
+        mapped_zero_based: dict[int, int] = {}
+        identity_blocks: tuple[int, ...] = ()
+        if dit_block_mapping is not None:
+            if isinstance(dit_block_mapping, (str, bytes)):
+                raise TypeError("DiT block mapping must be one-based integer indices")
+            raw_mapping = tuple(dit_block_mapping)
+            if any(isinstance(value, bool) or not isinstance(value, int) for value in raw_mapping):
+                raise TypeError("DiT block mapping must be one-based integer indices")
+            mapping = tuple(int(value) for value in raw_mapping)
+            source_depth = int(parent_dit.get("depth", 0))
+            target_depth = int(target_dit.get("depth", 0))
+            if len(mapping) != source_depth:
+                raise ValueError("DiT block mapping must contain one target for every parent block")
+            if mapping != tuple(sorted(set(mapping))):
+                raise ValueError("DiT block mapping must be unique and increasing")
+            if not mapping or mapping[0] < 1 or mapping[-1] > target_depth:
+                raise ValueError("DiT block mapping lies outside the target depth")
+            for name in ("scalar_width", "vector_width", "heads"):
+                if parent_dit.get(name) != target_dit.get(name):
+                    raise ValueError(f"capacity warm start changes DiT {name}")
+            for name in ("geometry_enabled", "motion_enabled"):
+                if parent_dit.get(name) != target_dit.get(name):
+                    raise ValueError(f"capacity warm start changes DiT {name}")
+            parent_geometry = tuple(parent_dit.get("local_geometry_blocks_one_based", ()))
+            target_geometry = set(target_dit.get("local_geometry_blocks_one_based", ()))
+            mapped_parent_geometry = {mapping[index - 1] for index in parent_geometry}
+            if not mapped_parent_geometry.issubset(target_geometry):
+                raise ValueError("capacity warm start drops a parent geometry branch")
+            mapped_zero_based = {source: target - 1 for source, target in enumerate(mapping)}
+            identity_blocks = tuple(
+                index for index in range(1, target_depth + 1) if index not in set(mapping)
+            )
         target_state = self.base_model.state_dict()
         loaded: dict[str, Tensor] = {}
         unexpected: list[str] = []
@@ -1160,13 +1209,23 @@ class FrameJointTrainer:
         for name, value in source_state.items():
             if not isinstance(name, str) or not isinstance(value, Tensor):
                 raise ValueError("warm-start model state must contain named tensors")
-            target = target_state.get(name)
+            target_name = name
+            match = re.match(r"^dit\.blocks\.(\d+)\.(.+)$", name)
+            if mapping is not None and match is not None:
+                source_index = int(match.group(1))
+                if source_index not in mapped_zero_based:
+                    unexpected.append(name)
+                    continue
+                target_name = f"dit.blocks.{mapped_zero_based[source_index]}.{match.group(2)}"
+            target = target_state.get(target_name)
             if target is None:
                 unexpected.append(name)
             elif value.shape != target.shape or value.dtype != target.dtype:
-                shape_mismatch.append(name)
+                shape_mismatch.append(f"{name}->{target_name}")
+            elif target_name in loaded:
+                unexpected.append(f"duplicate target {target_name}")
             else:
-                loaded[name] = value
+                loaded[target_name] = value
         if unexpected or shape_mismatch:
             raise ValueError(
                 "warm-start parent has incompatible old tensors: "
@@ -1183,6 +1242,11 @@ class FrameJointTrainer:
         forbidden_missing = [
             name for name in initialized
             if not any(fragment in name for fragment in allowed_fragments)
+            and not (
+                mapping is not None
+                and (match := re.match(r"^dit\.blocks\.(\d+)\.", name)) is not None
+                and int(match.group(1)) + 1 in identity_blocks
+            )
         ]
         if forbidden_missing:
             raise ValueError(
@@ -1196,6 +1260,50 @@ class FrameJointTrainer:
         for name, value in loaded.items():
             if not torch.equal(restored[name].detach().cpu(), value.detach().cpu()):
                 raise RuntimeError(f"warm-start tensor changed while loading {name!r}")
+        zero_initialized_geometry_blocks = tuple(
+            index + 1
+            for index, block in enumerate(self.base_model.dit.blocks)
+            if block.local_geometry is not None
+            and any(
+                name.startswith(f"dit.blocks.{index}.local_geometry.")
+                for name in initialized
+            )
+        )
+        for one_based in identity_blocks:
+            block = self.base_model.dit.blocks[one_based - 1]
+            zero_residual_tensors = (
+                block.history_adaln.modulation.weight,
+                block.history_adaln.modulation.bias,
+                block.spatial_adaln.modulation.weight,
+                block.spatial_adaln.modulation.bias,
+                block.temporal_adaln.modulation.weight,
+                block.temporal_adaln.modulation.bias,
+                block.ffn_adaln.modulation.weight,
+                block.ffn_adaln.modulation.bias,
+            )
+            if block.motion_context is not None:
+                zero_residual_tensors += (
+                    block.motion_context.scalar_residual_gate,
+                    block.motion_context.vector_residual_gate,
+                )
+            if block.local_geometry is not None:
+                zero_residual_tensors += (
+                    block.local_geometry.scalar_gate,
+                    block.local_geometry.vector_residual_gate,
+                )
+            if any(bool(torch.count_nonzero(value.detach())) for value in zero_residual_tensors):
+                raise RuntimeError(
+                    f"new DiT block {one_based} is not an identity residual block"
+                )
+        for one_based in zero_initialized_geometry_blocks:
+            local_geometry = self.base_model.dit.blocks[one_based - 1].local_geometry
+            assert local_geometry is not None
+            if bool(torch.count_nonzero(local_geometry.scalar_gate.detach())) or bool(
+                torch.count_nonzero(local_geometry.vector_residual_gate.detach())
+            ):
+                raise RuntimeError(
+                    f"new geometry branch in DiT block {one_based} is not zero contribution"
+                )
         self.step = 0
         self.successful_updates = 0
         self.continuation_parent = {
@@ -1217,6 +1325,9 @@ class FrameJointTrainer:
             initialized=tuple(initialized),
             unexpected=tuple(unexpected),
             shape_mismatch=tuple(shape_mismatch),
+            dit_block_mapping_one_based=mapping,
+            identity_initialized_blocks_one_based=identity_blocks,
+            zero_initialized_geometry_blocks_one_based=zero_initialized_geometry_blocks,
         )
 
     def load_continuation_parent(

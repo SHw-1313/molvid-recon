@@ -55,7 +55,10 @@ _SECTION_KEYS = {
     },
     "codec": {"checkpoint", "sha256"},
     "statistics": {"path", "sha256", "statistics_hash", "max_atom_frames_per_gpu"},
-    "model": {"scalar_width", "vector_width", "depth", "heads", "geometry_enabled", "motion_enabled"},
+    "model": {
+        "scalar_width", "vector_width", "depth", "heads", "geometry_enabled",
+        "motion_enabled", "geometry_block_indices",
+    },
     "loss": {
         "bond_enabled", "generated_bond", "clean_coordinate", "clean_bond", "near_coordinate",
         "near_bond", "generated_bond_min_flow_time", "near_min_flow_time",
@@ -65,7 +68,8 @@ _SECTION_KEYS = {
         "device", "deterministic", "precision", "seed", "max_atom_frames_per_gpu",
         "clips_per_trajectory", "time_bucket_weights", "history_order", "weight_decay",
         "grad_clip", "output_root", "stages",
-        "gradient_diagnostics_every",
+        "gradient_diagnostics_every", "warm_start_block_mapping",
+        "checkpoint_flow_field",
     },
 }
 _DERIVED_KEYS = {"store", "manifest", "manifest_sha256", "store_index_sha256", "record_count"}
@@ -182,6 +186,23 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
             _require_number(model[name], f"model.{name}", integer=True, positive=True)
     for name in ("geometry_enabled", "motion_enabled"):
         _require_bool(model, name, "model")
+    geometry_indices = model.get("geometry_block_indices")
+    if geometry_indices is not None:
+        if not isinstance(geometry_indices, list) or not geometry_indices:
+            raise ValueError("model.geometry_block_indices must be a nonempty list")
+        for index, value in enumerate(geometry_indices):
+            _require_number(
+                value,
+                f"model.geometry_block_indices[{index}]",
+                integer=True,
+                positive=True,
+            )
+        if geometry_indices != sorted(set(geometry_indices)):
+            raise ValueError("model.geometry_block_indices must be unique and increasing")
+        if not bool(model.get("geometry_enabled", False)):
+            raise ValueError("model.geometry_block_indices require geometry_enabled=true")
+        if int(geometry_indices[-1]) > int(model.get("depth", 4)):
+            raise ValueError("model.geometry_block_indices exceed model.depth")
 
     loss = raw["loss"]
     for name in ("bond_enabled", "inherit_parent"):
@@ -195,6 +216,7 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
 
     training = raw["training"]
     _require_bool(training, "deterministic", "training")
+    _require_bool(training, "checkpoint_flow_field", "training")
     for name in ("device", "output_root"):
         _require_string(training.get(name), f"training.{name}")
     for name in ("seed", "max_atom_frames_per_gpu", "clips_per_trajectory"):
@@ -206,6 +228,21 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
             _require_number(training[name], f"training.{name}", nonnegative=True)
     if "gradient_diagnostics_every" in training:
         _require_number(training["gradient_diagnostics_every"], "training.gradient_diagnostics_every", integer=True, nonnegative=True)
+    block_mapping = training.get("warm_start_block_mapping")
+    if block_mapping is not None:
+        if not isinstance(block_mapping, list) or not block_mapping:
+            raise ValueError("training.warm_start_block_mapping must be a nonempty list")
+        for index, value in enumerate(block_mapping):
+            _require_number(
+                value,
+                f"training.warm_start_block_mapping[{index}]",
+                integer=True,
+                positive=True,
+            )
+        if block_mapping != sorted(set(block_mapping)):
+            raise ValueError("training.warm_start_block_mapping must be unique and increasing")
+        if int(block_mapping[-1]) > int(model.get("depth", 4)):
+            raise ValueError("training.warm_start_block_mapping exceeds model.depth")
     if training.get("precision", "fp32") not in {"fp32", "bf16"}:
         raise ValueError("training.precision must be fp32 or bf16")
     histories = training.get("history_order", (4, 8))
@@ -731,6 +768,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     raw = load_config(args.config, schema=SCHEMA)
     _validate_frame_joint_config(raw)
     training = dict(raw["training"])
+    if training.get("warm_start_block_mapping") is not None and args.warm_start is None:
+        raise ValueError("warm_start_block_mapping requires --warm-start")
     if args.output_root is not None:
         training["output_root"] = str(args.output_root)
     device, rank, local_rank, world = _distributed_device(training)
@@ -791,6 +830,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             heads=int(model_config.get("heads", 8)),
             geometry_enabled=bool(model_config.get("geometry_enabled", False)),
             motion_enabled=bool(model_config.get("motion_enabled", False)),
+            geometry_block_indices=model_config.get("geometry_block_indices"),
         ).to(device)
         stages = _stages(training)
         histories = tuple(int(value) for value in training.get("history_order", (4, 8)))
@@ -933,6 +973,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 else None
             ),
             sampled_config=sampled_config,
+            checkpoint_flow_field=bool(training.get("checkpoint_flow_field", False)),
         )
         generator = torch.Generator(device=device).manual_seed(seed + 1000 + rank)
         sampled_generator = torch.Generator(device=device).manual_seed(
@@ -985,7 +1026,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             warm_start_report = trainer.load_warm_start(
                 args.warm_start,
                 expected_sha256=args.warm_start_sha256,
+                dit_block_mapping=training.get("warm_start_block_mapping"),
             )
+            # Architecture construction consumes a depth-dependent amount of
+            # global RNG. Model-only continuations reset that stream after the
+            # audited load so C4/C8 differ only in architecture, not stochastic
+            # state. Source and auxiliary noise already use dedicated generators.
+            seed_all(seed + rank)
         output_root = Path(training["output_root"])
         def build_execution():
             global_batches = sampler.global_batches
