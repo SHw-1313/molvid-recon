@@ -1,0 +1,73 @@
+{
+  "aggregate": {
+    "0": {
+      "coordinate_mse_reduction_fraction": null,
+      "metrics": {
+        "bond_distance_mse_A2": 0.4041969093183676,
+        "clash_raw_A2_per_atom": 0.14244641115268072,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 1.8899081498384476,
+        "output_coordinate_rmse_A": 1.3665414502223334,
+        "output_from_input_coordinate_mse_A2": 1.8899081498384476,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 1.9304793775081635
+      },
+      "sigma_per_axis_A": 0.0,
+      "system_count": 8
+    },
+    "0.05": {
+      "coordinate_mse_reduction_fraction": -776.7387201274121,
+      "metrics": {
+        "bond_distance_mse_A2": 0.4141201004385948,
+        "clash_raw_A2_per_atom": 0.14570509983847538,
+        "input_coordinate_mse_A2": 0.002486337616574019,
+        "output_coordinate_mse_A2": 1.9337210357189178,
+        "output_coordinate_rmse_A": 1.3822156439224877,
+        "output_from_input_coordinate_mse_A2": 1.9326341648896537,
+        "realized_rms_displacement_A": 0.0863624308258295,
+        "unscaled_training_objective": 1.9752880881230037
+      },
+      "sigma_per_axis_A": 0.05,
+      "system_count": 8
+    },
+    "0.1": {
+      "coordinate_mse_reduction_fraction": -205.10183884542988,
+      "metrics": {
+        "bond_distance_mse_A2": 0.44941179205973947,
+        "clash_raw_A2_per_atom": 0.15765834134072065,
+        "input_coordinate_mse_A2": 0.00998279560978214,
+        "output_coordinate_mse_A2": 2.0574725319941836,
+        "output_coordinate_rmse_A": 1.425447846452395,
+        "output_from_input_coordinate_mse_A2": 2.0500993579626083,
+        "realized_rms_displacement_A": 0.1730455985913674,
+        "unscaled_training_objective": 2.102581351995468
+      },
+      "sigma_per_axis_A": 0.1,
+      "system_count": 8
+    },
+    "0.2": {
+      "coordinate_mse_reduction_fraction": -56.59076859815119,
+      "metrics": {
+        "bond_distance_mse_A2": 0.5506920665502548,
+        "clash_raw_A2_per_atom": 0.17952436457077664,
+        "input_coordinate_mse_A2": 0.040011370865007244,
+        "output_coordinate_mse_A2": 2.3042856007814407,
+        "output_coordinate_rmse_A": 1.5083338071902594,
+        "output_from_input_coordinate_mse_A2": 2.2747042725483575,
+        "realized_rms_displacement_A": 0.34643771375219024,
+        "unscaled_training_objective": 2.359545807043711
+      },
+      "sigma_per_axis_A": 0.2,
+      "system_count": 8
+    }
+  },
+  "checkpoint_sha256": "f4d0ccd956aeb6b2a6593b3256da55f942d8a2ccb5ca937f8c594b1928a77874",
+  "gpu_hours_this_invocation": 0.04605851868788401,
+  "protocol_sha256": "a1cd613981187f6e14a63afd4dd375ad97f1ab00f8ab1552790e0be4bf885f66",
+  "record_count": 24,
+  "replica_count": 3,
+  "row_count": 96,
+  "schema": "molvid.static_decoder.heldout_summary.v1",
+  "system_count": 8,
+  "test_opened": false
+}

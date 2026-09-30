@@ -1,0 +1,37 @@
+{
+  "actual": {
+    "atoms": 523904,
+    "samples": 742,
+    "static_updates": 125,
+    "supervised_atoms": 523904
+  },
+  "batch_index": 125,
+  "cadence_dynamic_updates": 4,
+  "epoch": 0,
+  "epoch_batch_hash": "e8f8f6a392b74dc85474855addb4b6c8be9272d079246f9526944fb5c7785310",
+  "exposed_atoms": 523904,
+  "exposed_samples": 742,
+  "exposed_supervised_atoms": 523904,
+  "max_atoms_per_update": 5000,
+  "max_samples_per_update": 6,
+  "planned": {
+    "atoms": 523904,
+    "samples": 742,
+    "static_updates": 125,
+    "supervised_atoms": 523904
+  },
+  "pool_hash": "483b6810b33e1efe00152c338a39e1c2f2669fdc10ba520dfe73650b74d3806d",
+  "schema": "molvid.static_decoder.schedule.v2",
+  "seed": 20260929,
+  "successful_static_updates": 125,
+  "target": {
+    "atom_tolerance": 3773,
+    "atoms": 527677,
+    "sample_tolerance": 3,
+    "samples": 739,
+    "static_updates": 125,
+    "supervised_atom_tolerance": 3773,
+    "supervised_atoms": 527677
+  },
+  "test_opened": false
+}

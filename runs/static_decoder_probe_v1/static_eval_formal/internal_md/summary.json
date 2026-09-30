@@ -1,0 +1,73 @@
+{
+  "aggregate": {
+    "0": {
+      "coordinate_mse_reduction_fraction": null,
+      "metrics": {
+        "bond_distance_mse_A2": 0.014171316443632046,
+        "clash_raw_A2_per_atom": 0.00459224293687536,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.04682824217403928,
+        "output_coordinate_rmse_A": 0.21473163304229578,
+        "output_from_input_coordinate_mse_A2": 0.04682824217403928,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.04825025703758001
+      },
+      "sigma_per_axis_A": 0.0,
+      "system_count": 8
+    },
+    "0.05": {
+      "coordinate_mse_reduction_fraction": -19.028090083828175,
+      "metrics": {
+        "bond_distance_mse_A2": 0.019515930209308863,
+        "clash_raw_A2_per_atom": 0.004649951049941592,
+        "input_coordinate_mse_A2": 0.002486337616574019,
+        "output_coordinate_mse_A2": 0.049796593763555094,
+        "output_coordinate_rmse_A": 0.2216729043672482,
+        "output_from_input_coordinate_mse_A2": 0.04753444235151012,
+        "realized_rms_displacement_A": 0.0863624308258295,
+        "unscaled_training_objective": 0.051753135553250715
+      },
+      "sigma_per_axis_A": 0.05,
+      "system_count": 8
+    },
+    "0.1": {
+      "coordinate_mse_reduction_fraction": -4.955608318486437,
+      "metrics": {
+        "bond_distance_mse_A2": 0.035156905806312956,
+        "clash_raw_A2_per_atom": 0.0046285039764673765,
+        "input_coordinate_mse_A2": 0.00998279560978214,
+        "output_coordinate_mse_A2": 0.059453620575368404,
+        "output_coordinate_rmse_A": 0.2426400544742743,
+        "output_from_input_coordinate_mse_A2": 0.049958330656712256,
+        "realized_rms_displacement_A": 0.1730455985913674,
+        "unscaled_training_objective": 0.06297423675035436
+      },
+      "sigma_per_axis_A": 0.1,
+      "system_count": 8
+    },
+    "0.2": {
+      "coordinate_mse_reduction_fraction": -1.3074856038857452,
+      "metrics": {
+        "bond_distance_mse_A2": 0.09644206458081801,
+        "clash_raw_A2_per_atom": 0.005345177647541277,
+        "input_coordinate_mse_A2": 0.040011370865007244,
+        "output_coordinate_mse_A2": 0.09232566226273775,
+        "output_coordinate_rmse_A": 0.30304956063628197,
+        "output_from_input_coordinate_mse_A2": 0.05381171405315399,
+        "realized_rms_displacement_A": 0.34643771375219024,
+        "unscaled_training_objective": 0.10197555584212144
+      },
+      "sigma_per_axis_A": 0.2,
+      "system_count": 8
+    }
+  },
+  "checkpoint_sha256": "90e80ba76d968f155cc5b04bd1683b6fc31463ac2959fec4ca2b52889bf61d99",
+  "gpu_hours_this_invocation": 0.052304937707053294,
+  "protocol_sha256": "5b873c67dc8a4ad49cf3f168ec768e775e79e287ccfb3577106329ce4488cb5b",
+  "record_count": 24,
+  "replica_count": 3,
+  "row_count": 96,
+  "schema": "molvid.static_decoder.heldout_summary.v1",
+  "system_count": 8,
+  "test_opened": false
+}

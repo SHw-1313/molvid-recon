@@ -1,0 +1,484 @@
+{
+  "rows": [
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.015719895251095295,
+        "clash_raw_A2_per_atom": 0.002416336016419033,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.03609551737705866,
+        "output_coordinate_rmse_A": 0.1899329274892807,
+        "output_from_input_coordinate_mse_A2": 0.03609551737705866,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.0376700758934021
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_2ejn_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.009465237768987814,
+        "clash_raw_A2_per_atom": 0.0030584930209442973,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.04166144008437792,
+        "output_coordinate_rmse_A": 0.20408247411251068,
+        "output_from_input_coordinate_mse_A2": 0.04166144008437792,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.04261122147242228
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_3f0o_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.01375773704300324,
+        "clash_raw_A2_per_atom": 0.00808685009057323,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.06607002764940262,
+        "output_coordinate_rmse_A": 0.25703875223795575,
+        "output_from_input_coordinate_mse_A2": 0.06607002764940262,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.06745438774426778
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_3hdj_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.010353847406804562,
+        "clash_raw_A2_per_atom": 0.003427154694994291,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.0465651440123717,
+        "output_coordinate_rmse_A": 0.2157048980394999,
+        "output_from_input_coordinate_mse_A2": 0.0465651440123717,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.04760417714715004
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_3l4h_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.01964721456170082,
+        "clash_raw_A2_per_atom": 0.004331827629357576,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.05158676579594612,
+        "output_coordinate_rmse_A": 0.2270363767941793,
+        "output_from_input_coordinate_mse_A2": 0.05158676579594612,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.05355609332521757
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_3rv1_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.015485934602717558,
+        "clash_raw_A2_per_atom": 0.002336246815199653,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.04443064580361048,
+        "output_coordinate_rmse_A": 0.21072866519292197,
+        "output_from_input_coordinate_mse_A2": 0.04443064580361048,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.04598172878225645
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_5ef9_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.016609018047650654,
+        "clash_raw_A2_per_atom": 0.010843077829728523,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.059294416258732476,
+        "output_coordinate_rmse_A": 0.24327937265237173,
+        "output_from_input_coordinate_mse_A2": 0.059294416258732476,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.06096684808532397
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_5ii7_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.012331646867096424,
+        "clash_raw_A2_per_atom": 0.0022379573977862797,
+        "input_coordinate_mse_A2": 0.0,
+        "output_coordinate_mse_A2": 0.028921980410814285,
+        "output_coordinate_rmse_A": 0.1700495978196462,
+        "output_from_input_coordinate_mse_A2": 0.028921980410814285,
+        "realized_rms_displacement_A": 0.0,
+        "unscaled_training_objective": 0.030157523850599926
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.0,
+      "system": "atlas_6xb3_H"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.02119137967626254,
+        "clash_raw_A2_per_atom": 0.002695689210668206,
+        "input_coordinate_mse_A2": 0.00249056665537258,
+        "output_coordinate_mse_A2": 0.03967408090829849,
+        "output_coordinate_rmse_A": 0.19912070035934448,
+        "output_from_input_coordinate_mse_A2": 0.03687484562397003,
+        "realized_rms_displacement_A": 0.08643816163142522,
+        "unscaled_training_objective": 0.04179609070221583
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_2ejn_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.014624565529326597,
+        "clash_raw_A2_per_atom": 0.002921929544148346,
+        "input_coordinate_mse_A2": 0.0024821178521960974,
+        "output_coordinate_mse_A2": 0.044171009212732315,
+        "output_coordinate_rmse_A": 0.21014619867006937,
+        "output_from_input_coordinate_mse_A2": 0.04175428549448649,
+        "realized_rms_displacement_A": 0.08629197130600612,
+        "unscaled_training_objective": 0.045636579394340515
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_3f0o_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.019047784929474194,
+        "clash_raw_A2_per_atom": 0.008048380725085735,
+        "input_coordinate_mse_A2": 0.002505350625142455,
+        "output_coordinate_mse_A2": 0.0689052144686381,
+        "output_coordinate_rmse_A": 0.26249528924624127,
+        "output_from_input_coordinate_mse_A2": 0.06646867841482162,
+        "realized_rms_displacement_A": 0.08669495085875194,
+        "unscaled_training_objective": 0.07081855585177739
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_3hdj_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.015077574489017328,
+        "clash_raw_A2_per_atom": 0.003388518583960831,
+        "input_coordinate_mse_A2": 0.0025105986278504133,
+        "output_coordinate_mse_A2": 0.0487283356487751,
+        "output_coordinate_rmse_A": 0.2206509311993917,
+        "output_from_input_coordinate_mse_A2": 0.046654488891363144,
+        "realized_rms_displacement_A": 0.08677847931782405,
+        "unscaled_training_objective": 0.05023970082402229
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_3l4h_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.02563055728872617,
+        "clash_raw_A2_per_atom": 0.00460368231870234,
+        "input_coordinate_mse_A2": 0.002511240697155396,
+        "output_coordinate_mse_A2": 0.05569100255767504,
+        "output_coordinate_rmse_A": 0.23595859110355377,
+        "output_from_input_coordinate_mse_A2": 0.05325079088409742,
+        "realized_rms_displacement_A": 0.08679695179065068,
+        "unscaled_training_objective": 0.05825895071029663
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_3rv1_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.020829221233725548,
+        "clash_raw_A2_per_atom": 0.002531911556919416,
+        "input_coordinate_mse_A2": 0.0024478037375956774,
+        "output_coordinate_mse_A2": 0.04751826201876005,
+        "output_coordinate_rmse_A": 0.21791870892047882,
+        "output_from_input_coordinate_mse_A2": 0.04552962010105451,
+        "realized_rms_displacement_A": 0.08568747838338216,
+        "unscaled_training_objective": 0.04960387945175171
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_5ef9_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.02166234515607357,
+        "clash_raw_A2_per_atom": 0.010794774939616522,
+        "input_coordinate_mse_A2": 0.0024633376548687616,
+        "output_coordinate_mse_A2": 0.061516171942154564,
+        "output_coordinate_rmse_A": 0.24775026738643646,
+        "output_from_input_coordinate_mse_A2": 0.059778774778048195,
+        "realized_rms_displacement_A": 0.08596178144216537,
+        "unscaled_training_objective": 0.06369389221072197
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_5ii7_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.018064013371864956,
+        "clash_raw_A2_per_atom": 0.0022147215204313397,
+        "input_coordinate_mse_A2": 0.002479685082410773,
+        "output_coordinate_mse_A2": 0.03216867335140705,
+        "output_coordinate_rmse_A": 0.17934254805246988,
+        "output_from_input_coordinate_mse_A2": 0.029964054624239605,
+        "realized_rms_displacement_A": 0.08624967187643051,
+        "unscaled_training_objective": 0.03397743528087934
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.05,
+      "system": "atlas_6xb3_H"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.03665769596894582,
+        "clash_raw_A2_per_atom": 0.0031189104386915765,
+        "input_coordinate_mse_A2": 0.00998415177067121,
+        "output_coordinate_mse_A2": 0.049624369790156685,
+        "output_coordinate_rmse_A": 0.222699706753095,
+        "output_from_input_coordinate_mse_A2": 0.0394486573835214,
+        "realized_rms_displacement_A": 0.17306475341320038,
+        "unscaled_training_objective": 0.053293454150358834
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_2ejn_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.030126618842283886,
+        "clash_raw_A2_per_atom": 0.0035696707976361117,
+        "input_coordinate_mse_A2": 0.010030752047896385,
+        "output_coordinate_mse_A2": 0.05463829884926478,
+        "output_coordinate_rmse_A": 0.23374121884504953,
+        "output_from_input_coordinate_mse_A2": 0.044608124842246376,
+        "realized_rms_displacement_A": 0.1734670748313268,
+        "unscaled_training_objective": 0.05765476698676745
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_3f0o_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.03496340289711952,
+        "clash_raw_A2_per_atom": 0.008575784663359324,
+        "input_coordinate_mse_A2": 0.010081879794597626,
+        "output_coordinate_mse_A2": 0.07996487617492676,
+        "output_coordinate_rmse_A": 0.28277819355328876,
+        "output_from_input_coordinate_mse_A2": 0.06976864486932755,
+        "realized_rms_displacement_A": 0.17390508949756622,
+        "unscaled_training_objective": 0.0834703470269839
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_3hdj_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.03076590970158577,
+        "clash_raw_A2_per_atom": 0.0036892706993967295,
+        "input_coordinate_mse_A2": 0.009876275435090065,
+        "output_coordinate_mse_A2": 0.05826262136300405,
+        "output_coordinate_rmse_A": 0.24134893218676248,
+        "output_from_input_coordinate_mse_A2": 0.04942303275068601,
+        "realized_rms_displacement_A": 0.1721134881178538,
+        "unscaled_training_objective": 0.06134313469131788
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_3l4h_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.04261737565199534,
+        "clash_raw_A2_per_atom": 0.0036657172410438457,
+        "input_coordinate_mse_A2": 0.00986194455375274,
+        "output_coordinate_mse_A2": 0.06633132447799046,
+        "output_coordinate_rmse_A": 0.2575248082478841,
+        "output_from_input_coordinate_mse_A2": 0.05724215383330981,
+        "realized_rms_displacement_A": 0.17200429240862528,
+        "unscaled_training_objective": 0.07059696316719055
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_3rv1_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.03549625352025032,
+        "clash_raw_A2_per_atom": 0.0026229151990264654,
+        "input_coordinate_mse_A2": 0.010165277868509293,
+        "output_coordinate_mse_A2": 0.055369662741820015,
+        "output_coordinate_rmse_A": 0.2352290948232015,
+        "output_from_input_coordinate_mse_A2": 0.045698544631401695,
+        "realized_rms_displacement_A": 0.17462128897507986,
+        "unscaled_training_objective": 0.058922079702218376
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_5ef9_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.03780674561858177,
+        "clash_raw_A2_per_atom": 0.009447770037998756,
+        "input_coordinate_mse_A2": 0.009876949402193228,
+        "output_coordinate_mse_A2": 0.07032992194096248,
+        "output_coordinate_rmse_A": 0.265057235956192,
+        "output_from_input_coordinate_mse_A2": 0.061758374174435936,
+        "realized_rms_displacement_A": 0.1721127728621165,
+        "unscaled_training_objective": 0.07412064572175343
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_5ii7_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.032821244249741234,
+        "clash_raw_A2_per_atom": 0.0023379927345861993,
+        "input_coordinate_mse_A2": 0.00998513400554657,
+        "output_coordinate_mse_A2": 0.041107889264822006,
+        "output_coordinate_rmse_A": 0.2027412454287211,
+        "output_from_input_coordinate_mse_A2": 0.031719112768769264,
+        "realized_rms_displacement_A": 0.17307602862517038,
+        "unscaled_training_objective": 0.04439250255624453
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.1,
+      "system": "atlas_6xb3_H"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.09950371583302815,
+        "clash_raw_A2_per_atom": 0.0034929160804798207,
+        "input_coordinate_mse_A2": 0.03946660955746969,
+        "output_coordinate_mse_A2": 0.08058395981788635,
+        "output_coordinate_rmse_A": 0.28380345304807025,
+        "output_from_input_coordinate_mse_A2": 0.04285705337921778,
+        "realized_rms_displacement_A": 0.3440584143002828,
+        "unscaled_training_objective": 0.09053804973761241
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_2ejn_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.09042635808388393,
+        "clash_raw_A2_per_atom": 0.004019819820920627,
+        "input_coordinate_mse_A2": 0.04044587661822637,
+        "output_coordinate_mse_A2": 0.08712083101272583,
+        "output_coordinate_rmse_A": 0.2951010564963023,
+        "output_from_input_coordinate_mse_A2": 0.04822449137767156,
+        "realized_rms_displacement_A": 0.34831514954566956,
+        "unscaled_training_objective": 0.09616774320602417
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_3f0o_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.09416316201289494,
+        "clash_raw_A2_per_atom": 0.009742376239349445,
+        "input_coordinate_mse_A2": 0.0396879551311334,
+        "output_coordinate_mse_A2": 0.1128285676240921,
+        "output_coordinate_rmse_A": 0.3358444273471832,
+        "output_from_input_coordinate_mse_A2": 0.07508218288421631,
+        "realized_rms_displacement_A": 0.3450542688369751,
+        "unscaled_training_objective": 0.12225524087746938
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_3hdj_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.09231931467851003,
+        "clash_raw_A2_per_atom": 0.0042275584225232405,
+        "input_coordinate_mse_A2": 0.04022519290447235,
+        "output_coordinate_mse_A2": 0.08918298035860062,
+        "output_coordinate_rmse_A": 0.298496146996816,
+        "output_from_input_coordinate_mse_A2": 0.049923647195100784,
+        "realized_rms_displacement_A": 0.34736230969429016,
+        "unscaled_training_objective": 0.09841941297054291
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_3l4h_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.10661017894744873,
+        "clash_raw_A2_per_atom": 0.004939131128291289,
+        "input_coordinate_mse_A2": 0.039577664186557136,
+        "output_coordinate_mse_A2": 0.1020403082172076,
+        "output_coordinate_rmse_A": 0.319428155819575,
+        "output_from_input_coordinate_mse_A2": 0.06248228872815768,
+        "realized_rms_displacement_A": 0.3445756236712138,
+        "unscaled_training_objective": 0.11270659168561299
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_3rv1_B"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.09641200304031372,
+        "clash_raw_A2_per_atom": 0.003193794284015894,
+        "input_coordinate_mse_A2": 0.04042342181007067,
+        "output_coordinate_mse_A2": 0.08674741039673488,
+        "output_coordinate_rmse_A": 0.29450543721516925,
+        "output_from_input_coordinate_mse_A2": 0.048508092761039734,
+        "realized_rms_displacement_A": 0.3482307394345601,
+        "unscaled_training_objective": 0.09639200568199158
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_5ef9_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.10063879936933517,
+        "clash_raw_A2_per_atom": 0.010172299419840177,
+        "input_coordinate_mse_A2": 0.04065249984463056,
+        "output_coordinate_mse_A2": 0.10737536350886027,
+        "output_coordinate_rmse_A": 0.3275632858276367,
+        "output_from_input_coordinate_mse_A2": 0.06875001390775044,
+        "realized_rms_displacement_A": 0.3492073714733124,
+        "unscaled_training_objective": 0.11745006591081619
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_5ii7_A"
+    },
+    {
+      "metrics": {
+        "bond_distance_mse_A2": 0.09146298468112946,
+        "clash_raw_A2_per_atom": 0.002973525784909725,
+        "input_coordinate_mse_A2": 0.039611746867497764,
+        "output_coordinate_mse_A2": 0.07272587716579437,
+        "output_coordinate_rmse_A": 0.269654522339503,
+        "output_from_input_coordinate_mse_A2": 0.03466594219207764,
+        "realized_rms_displacement_A": 0.34469783306121826,
+        "unscaled_training_objective": 0.0818753366669019
+      },
+      "replica_count": 3,
+      "sigma_per_axis_A": 0.2,
+      "system": "atlas_6xb3_H"
+    }
+  ]
+}
