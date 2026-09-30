@@ -10,7 +10,20 @@ from torch import nn
 
 from molvid.runtime import sha256_file
 from molvid.training.joint import FrameJointTrainer
-from tools.run_gm_capacity import validate_review_gate
+from tools.evaluate_gm_a import (
+    evaluation_protocol,
+    validate_completed_evaluation,
+)
+from tools.run_gm_capacity import (
+    EVALUATION_BOUNDARY_RESERVE_SECONDS,
+    EVALUATION_BUDGET_SECONDS,
+    EVALUATION_HARD_RESERVE_SECONDS,
+    _evaluation_deadlines,
+    _finalize_stale_stage,
+    _prepare_training_attempt,
+    _training_command,
+    validate_review_gate,
+)
 
 
 class _AdaLN(nn.Module):
@@ -159,3 +172,190 @@ def test_capacity_review_gate_rejects_missing_and_stale_identity(tmp_path: Path)
             frozen_path=frozen_path,
             source_identity={"commit": commit},
         )
+
+
+def test_capacity_runner_archives_precheckpoint_attempt_and_restarts_parent(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "formal" / "C4"
+    output.mkdir(parents=True)
+    (output / "train_metrics.jsonl").write_text("partial\n", encoding="utf-8")
+    original_log = tmp_path / "formal_C4_warm_start_00.log"
+    original_log.write_text("interrupted\n", encoding="utf-8")
+    stages = [{
+        "name": "formal_C4_warm_start_00",
+        "status": "interrupted",
+    }]
+    attempt = _prepare_training_attempt(
+        phase="formal",
+        arm="C4",
+        output=output,
+        arm_stages=stages,
+        recover=True,
+    )
+    assert attempt["kind"] == "warm_start"
+    assert attempt["stage_name"] == "formal_C4_warm_start_01"
+    assert not output.exists()
+    archive = Path(attempt["archive"])
+    assert (archive / "train_metrics.jsonl").read_text(encoding="utf-8") == "partial\n"
+    assert original_log.read_text(encoding="utf-8") == "interrupted\n"
+    assert stages[0]["abandoned_output_archive"] == str(archive)
+    command = _training_command(
+        config=tmp_path / "formal_C4.json",
+        checkpoint_every="1000",
+        attempt=attempt,
+        frozen={"parent_path": "parent.pt", "parent_sha256": "parent-sha"},
+    )
+    assert "--warm-start" in command
+    assert "--resume" not in command
+
+
+def test_capacity_runner_second_interruption_resumes_latest_durable_checkpoint(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "formal" / "C8"
+    output.mkdir(parents=True)
+    checkpoint = output / "frame_joint_step_00001000.pt"
+    checkpoint.write_bytes(b"durable")
+    stages = [
+        {"name": "formal_C8_warm_start_00", "status": "interrupted"},
+        {"name": "formal_C8_resume_00001000_01", "status": "interrupted"},
+    ]
+    attempt = _prepare_training_attempt(
+        phase="formal",
+        arm="C8",
+        output=output,
+        arm_stages=stages,
+        recover=True,
+    )
+    assert attempt["kind"] == "resume"
+    assert attempt["checkpoint"] == checkpoint
+    assert attempt["stage_name"] == "formal_C8_resume_00001000_02"
+    assert attempt["archive"] is None
+    command = _training_command(
+        config=tmp_path / "formal_C8.json",
+        checkpoint_every="1000",
+        attempt=attempt,
+        frozen={"parent_path": "parent.pt", "parent_sha256": "parent-sha"},
+    )
+    assert "--resume" in command
+    assert "--warm-start" not in command
+    assert command[command.index("--resume-sha256") + 1] == sha256_file(checkpoint)
+
+
+def _write_completed_evaluation(tmp_path: Path) -> tuple[Path, dict, Path]:
+    recipe = tmp_path / "recipe.json"
+    manifest = tmp_path / "manifest.json"
+    store = tmp_path / "store"
+    output = tmp_path / "evaluation"
+    recipe.write_text("{}\n", encoding="utf-8")
+    manifest.write_text('{"test_opened": false}\n', encoding="utf-8")
+    store.mkdir()
+    (store / "index.txt").write_text("sample_H4\t0\t1\t1\t16\tdt_100ps\n", encoding="utf-8")
+    (output / "coordinates").mkdir(parents=True)
+    (output / "profiles").mkdir()
+    protocol = evaluation_protocol(
+        checkpoint_sha256="checkpoint",
+        recipe=recipe,
+        store=store,
+        manifest=manifest,
+    )
+    protocol_path = output / "protocol.json"
+    protocol_path.write_text(json.dumps(protocol), encoding="utf-8")
+    rows = []
+    for path, seed in (
+        ("persistence", None),
+        ("oracle", None),
+        ("generated", 0),
+        ("generated", 1),
+        ("generated", 2),
+    ):
+        name = f"{path}-{seed}.npz"
+        (output / "coordinates" / name).write_bytes(b"coordinate")
+        (output / "profiles" / name).write_bytes(b"profile")
+        rows.append({
+            "row_key": f"sample_H4|H4|{path}|seed={seed}",
+            "path": path,
+            "seed": seed,
+            "metric_family": {"family": "ordinary"},
+            "coordinate_file": name,
+            "profile_file": name,
+        })
+    (output / "rows.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
+    )
+    (output / "per_system.csv").write_text("system\n", encoding="utf-8")
+    (output / "summary.json").write_text(json.dumps({
+        "family": "ordinary",
+        "records": 1,
+        "rows": 5,
+        "checkpoint_sha256": "checkpoint",
+        "protocol_sha256": sha256_file(protocol_path),
+        "test_opened": False,
+    }), encoding="utf-8")
+    return output, protocol, store
+
+
+def test_completed_evaluation_reuse_requires_full_protocol_and_coverage(
+    tmp_path: Path,
+) -> None:
+    output, protocol, store = _write_completed_evaluation(tmp_path)
+    verified = validate_completed_evaluation(
+        output,
+        expected_protocol=protocol,
+        expected_family="ordinary",
+        store=store,
+    )
+    assert verified["records"] == 1
+    stale = dict(protocol)
+    stale["recipe_sha256"] = "stale"
+    with pytest.raises(ValueError, match="protocol differs"):
+        validate_completed_evaluation(
+            output,
+            expected_protocol=stale,
+            expected_family="ordinary",
+            store=store,
+        )
+    summary_path = output / "summary.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    summary["rows"] = 4
+    summary_path.write_text(json.dumps(summary), encoding="utf-8")
+    with pytest.raises(ValueError, match="row coverage differs"):
+        validate_completed_evaluation(
+            output,
+            expected_protocol=protocol,
+            expected_family="ordinary",
+            store=store,
+        )
+
+
+def test_evaluation_deadlines_preserve_row_and_hard_cap_reserves() -> None:
+    boundary, hard = _evaluation_deadlines(now=100.0, used=3600.0)
+    assert boundary == pytest.approx(
+        100.0 + EVALUATION_BUDGET_SECONDS - 3600.0
+        - EVALUATION_BOUNDARY_RESERVE_SECONDS
+    )
+    assert hard == pytest.approx(
+        100.0 + EVALUATION_BUDGET_SECONDS - 3600.0
+        - EVALUATION_HARD_RESERVE_SECONDS
+    )
+    assert boundary < hard
+    with pytest.raises(RuntimeError, match="row-boundary reserve"):
+        _evaluation_deadlines(
+            now=100.0,
+            used=EVALUATION_BUDGET_SECONDS - EVALUATION_BOUNDARY_RESERVE_SECONDS,
+        )
+
+
+def test_interrupted_stage_charges_observed_runtime_and_heartbeat_gap() -> None:
+    record = {
+        "status": "running",
+        "elapsed_seconds_at_checkpoint": 91.0,
+        "elapsed_seconds_observed": 97.0,
+    }
+    _finalize_stale_stage(record, source_commit="candidate")
+    assert record["status"] == "interrupted"
+    assert record["elapsed_seconds"] > 97.0
+    assert record["gpu_hours"] == pytest.approx(record["elapsed_seconds"] / 3600.0)
+    assert record["budget_charge_is_conservative"] is True
+    assert record["recovered_by_source_commit"] == "candidate"

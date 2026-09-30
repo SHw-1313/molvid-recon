@@ -15,12 +15,20 @@ import time
 import torch
 
 from molvid.runtime import atomic_write_json, canonical_hash, sha256_file
+from tools.evaluate_gm_a import (
+    BUDGET_STOP_EXIT_CODE,
+    evaluation_protocol,
+    validate_completed_evaluation,
+)
 from tools.gm_capacity_common import capacity_source_identity
 
 
 FORMAL_TRAIN_BUDGET_SECONDS = 32.0 * 3600.0
 PILOT_BUDGET_SECONDS = 8.0 * 3600.0
 EVALUATION_BUDGET_SECONDS = 8.0 * 3600.0
+EVALUATION_BOUNDARY_RESERVE_SECONDS = 300.0
+EVALUATION_HARD_RESERVE_SECONDS = 30.0
+LEDGER_HEARTBEAT_SECONDS = 5.0
 CHECKPOINT_PATTERN = re.compile(r"frame_joint_step_(\d{8})\.pt$")
 
 
@@ -34,6 +42,127 @@ def _checkpoints(output: Path) -> list[tuple[int, Path]]:
         (_checkpoint_step(path), path) for path in output.glob("frame_joint_step_*.pt")
     ]
     return sorted((step, path) for step, path in values if step is not None)
+
+
+def _prepare_training_attempt(
+    *,
+    phase: str,
+    arm: str,
+    output: Path,
+    arm_stages: list[dict],
+    recover: bool,
+) -> dict:
+    """Choose a fresh/restart/resume transition without overwriting evidence."""
+
+    existing = _checkpoints(output) if output.exists() else []
+    archive = None
+    if output.exists() and not existing:
+        if not recover:
+            raise FileExistsError(
+                f"{arm} has a pre-checkpoint output; use --recover for a safe restart"
+            )
+        recoverable = [
+            stage for stage in arm_stages
+            if stage.get("status") in {"interrupted", "failed"}
+        ]
+        if not recoverable:
+            raise RuntimeError(
+                f"{arm} pre-checkpoint output has no interrupted/failed ledger attempt"
+            )
+        archive_root = output.parent / "_abandoned_precheckpoint"
+        archive_root.mkdir(parents=True, exist_ok=True)
+        archive = archive_root / f"{output.name}_attempt_{len(arm_stages) - 1:02d}"
+        if archive.exists():
+            raise FileExistsError(f"refusing to overwrite abandoned attempt {archive}")
+        output.rename(archive)
+        recoverable[-1]["abandoned_output_archive"] = str(archive)
+        recoverable[-1]["recovery_transition"] = "restart_from_frozen_parent"
+    attempt_index = len(arm_stages)
+    if existing:
+        step, checkpoint = existing[-1]
+        return {
+            "kind": "resume",
+            "step": step,
+            "checkpoint": checkpoint,
+            "stage_name": f"{phase}_{arm}_resume_{step:08d}_{attempt_index:02d}",
+            "allow_existing_output": True,
+            "archive": archive,
+            "checkpoints": existing,
+        }
+    return {
+        "kind": "warm_start",
+        "step": 0,
+        "checkpoint": None,
+        "stage_name": f"{phase}_{arm}_warm_start_{attempt_index:02d}",
+        "allow_existing_output": False,
+        "archive": archive,
+        "checkpoints": [],
+    }
+
+
+def _training_command(
+    *,
+    config: Path,
+    checkpoint_every: str,
+    attempt: dict,
+    frozen: dict,
+) -> list[str]:
+    command = [
+        sys.executable,
+        "-u",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        str(config),
+    ]
+    if attempt["kind"] == "resume":
+        checkpoint = Path(attempt["checkpoint"])
+        command.extend([
+            "--resume",
+            str(checkpoint),
+            "--resume-sha256",
+            sha256_file(checkpoint),
+        ])
+    else:
+        command.extend([
+            "--warm-start",
+            str(frozen["parent_path"]),
+            "--warm-start-sha256",
+            str(frozen["parent_sha256"]),
+        ])
+    command.extend(["--checkpoint-every", checkpoint_every])
+    return command
+
+
+def _evaluation_deadlines(*, now: float, used: float) -> tuple[float, float]:
+    """Return a resumable row-boundary stop and a hard cap below 8 GPU-hours."""
+
+    remaining = EVALUATION_BUDGET_SECONDS - used
+    if remaining <= EVALUATION_BOUNDARY_RESERVE_SECONDS:
+        raise RuntimeError("evaluation budget lacks the row-boundary reserve")
+    return (
+        now + remaining - EVALUATION_BOUNDARY_RESERVE_SECONDS,
+        now + remaining - EVALUATION_HARD_RESERVE_SECONDS,
+    )
+
+
+def _finalize_stale_stage(record: dict, *, source_commit: str) -> None:
+    """Charge a crashed attempt through its last heartbeat plus one safe interval."""
+
+    observed = max(
+        float(record.get("elapsed_seconds_at_checkpoint", 0.0)),
+        float(record.get("elapsed_seconds_observed", 0.0)),
+    )
+    elapsed = observed + LEDGER_HEARTBEAT_SECONDS
+    record.update({
+        "elapsed_seconds": elapsed,
+        "gpu_hours": elapsed / 3600.0,
+        "status": "interrupted",
+        "elapsed_seconds_observed_before_crash": observed,
+        "unobserved_runtime_charged_seconds": LEDGER_HEARTBEAT_SECONDS,
+        "budget_charge_is_conservative": True,
+        "recovered_by_source_commit": source_commit,
+    })
 
 
 def _stage_seconds(ledger, prefix: str) -> float:
@@ -155,13 +284,7 @@ def main() -> None:
     if stale and not args.recover:
         raise RuntimeError("capacity ledger contains an interrupted stage; rerun with --recover")
     for record in stale:
-        elapsed = float(record.get("elapsed_seconds_at_checkpoint", 0.0))
-        record.update({
-            "elapsed_seconds": elapsed,
-            "gpu_hours": elapsed / 3600.0,
-            "status": "interrupted",
-            "recovered_by_source_commit": source_identity["commit"],
-        })
+        _finalize_stale_stage(record, source_commit=source_identity["commit"])
     if stale:
         atomic_write_json(ledger_path, ledger)
 
@@ -189,6 +312,17 @@ def main() -> None:
         used = _stage_seconds(ledger, prefix)
         if used >= budget:
             raise RuntimeError(f"{prefix.rstrip('_')} budget is exhausted")
+        evaluation_boundary_stop = None
+        evaluation_hard_stop = None
+        if args.phase == "formal" and train_arm is None:
+            evaluation_boundary_stop, evaluation_hard_stop = _evaluation_deadlines(
+                now=time.time(), used=used
+            )
+            command = [
+                *command,
+                "--stop-before-unix",
+                repr(evaluation_boundary_stop),
+            ]
         record = {
             "name": name,
             "command": command,
@@ -196,6 +330,13 @@ def main() -> None:
             "started_unix": time.time(),
             "status": "running",
         }
+        if evaluation_boundary_stop is not None:
+            record.update({
+                "evaluation_boundary_stop_unix": evaluation_boundary_stop,
+                "evaluation_hard_stop_unix": evaluation_hard_stop,
+                "evaluation_boundary_reserve_seconds": EVALUATION_BOUNDARY_RESERVE_SECONDS,
+                "evaluation_hard_reserve_seconds": EVALUATION_HARD_RESERVE_SECONDS,
+            })
         ledger["stages"].append(record)
         atomic_write_json(ledger_path, ledger)
         stopped = False
@@ -205,10 +346,28 @@ def main() -> None:
             record["pid"] = process.pid
             atomic_write_json(ledger_path, ledger)
             print(json.dumps({"stage": name, "pid": process.pid, "log": str(log)}), flush=True)
+            last_heartbeat = time.time()
             try:
                 while True:
                     code = process.poll()
                     if code is not None:
+                        break
+                    now = time.time()
+                    elapsed = now - record["started_unix"]
+                    if now - last_heartbeat >= LEDGER_HEARTBEAT_SECONDS:
+                        record["elapsed_seconds_observed"] = elapsed
+                        record["gpu_hours_observed"] = elapsed / 3600.0
+                        atomic_write_json(ledger_path, ledger)
+                        last_heartbeat = now
+                    if evaluation_hard_stop is not None and now >= evaluation_hard_stop:
+                        record["budget_stop_reason"] = "evaluation_hard_deadline"
+                        process.send_signal(signal.SIGTERM)
+                        try:
+                            code = process.wait(timeout=20.0)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            code = process.wait()
+                        stopped = True
                         break
                     if output is not None:
                         checkpoints = _checkpoints(output)
@@ -249,6 +408,12 @@ def main() -> None:
                 })
                 atomic_write_json(ledger_path, ledger)
                 raise
+        if (
+            evaluation_boundary_stop is not None
+            and code == BUDGET_STOP_EXIT_CODE
+        ):
+            stopped = True
+            record["budget_stop_reason"] = "evaluation_row_boundary"
         elapsed = time.time() - record["started_unix"]
         record.update({
             "exit_code": code,
@@ -269,11 +434,20 @@ def main() -> None:
             raise ValueError(f"{arm} {args.phase} config changed after freeze")
         output = Path(record["output_root"])
         checkpoint_every = "64" if args.phase == "pilot" else "1000"
-        existing = _checkpoints(output) if output.exists() else []
         arm_stages = [
             stage for stage in ledger["stages"]
             if stage["name"].startswith(f"{args.phase}_{arm}_")
         ]
+        attempt = _prepare_training_attempt(
+            phase=args.phase,
+            arm=arm,
+            output=output,
+            arm_stages=arm_stages,
+            recover=args.recover,
+        )
+        if attempt["archive"] is not None:
+            atomic_write_json(ledger_path, ledger)
+        existing = attempt["checkpoints"]
         target_updates = int(record["updates"])
         status = "completed"
         last_checkpoint = existing[-1][1] if existing else None
@@ -287,47 +461,18 @@ def main() -> None:
         if budget_stopped:
             status = "budget_stopped"
         if not existing or (existing[-1][0] < target_updates and not budget_stopped):
-            if existing:
-                resume_step, resume_path = existing[-1]
-                stage_name = (
-                    f"{args.phase}_{arm}_resume_{resume_step:08d}_{len(arm_stages):02d}"
-                )
-                command = [
-                    sys.executable,
-                    "-u",
-                    "-m",
-                    "molvid.cli.train_frame_joint",
-                    "--config",
-                    str(config),
-                    "--resume",
-                    str(resume_path),
-                    "--resume-sha256",
-                    sha256_file(resume_path),
-                    "--checkpoint-every",
-                    checkpoint_every,
-                ]
-            else:
-                stage_name = f"{args.phase}_{arm}_train"
-                command = [
-                    sys.executable,
-                    "-u",
-                    "-m",
-                    "molvid.cli.train_frame_joint",
-                    "--config",
-                    str(config),
-                    "--warm-start",
-                    str(frozen["parent_path"]),
-                    "--warm-start-sha256",
-                    str(frozen["parent_sha256"]),
-                    "--checkpoint-every",
-                    checkpoint_every,
-                ]
+            command = _training_command(
+                config=config,
+                checkpoint_every=checkpoint_every,
+                attempt=attempt,
+                frozen=frozen,
+            )
             status, last_checkpoint = run_stage(
-                stage_name,
+                attempt["stage_name"],
                 command,
                 output=output,
                 train_arm=arm,
-                allow_existing_output=bool(existing),
+                allow_existing_output=attempt["allow_existing_output"],
             )
         checkpoints = _checkpoints(output)
         if not checkpoints:
@@ -383,14 +528,23 @@ def main() -> None:
                     raise ValueError(f"{family} evaluation store changed")
                 evaluation_output = root / "evaluation" / arm / family
                 summary_path = evaluation_output / "summary.json"
+                expected_protocol = evaluation_protocol(
+                    checkpoint_sha256=paired[arm]["checkpoint_sha256"],
+                    recipe=recipe,
+                    store=Path(source["store"]),
+                    manifest=Path(source["manifest"]),
+                )
                 if summary_path.exists():
-                    summary = json.loads(summary_path.read_text(encoding="utf-8"))
-                    if summary.get("checkpoint_sha256") != paired[arm]["checkpoint_sha256"]:
-                        raise ValueError(f"{arm} {family} completed evaluation uses another checkpoint")
                     if not args.recover:
                         raise FileExistsError(
                             f"{arm} {family} evaluation exists; use --recover to verify and reuse it"
                         )
+                    validate_completed_evaluation(
+                        evaluation_output,
+                        expected_protocol=expected_protocol,
+                        expected_family=family,
+                        store=Path(source["store"]),
+                    )
                     continue
                 evaluation_exists = evaluation_output.exists()
                 if evaluation_exists and not args.recover:
@@ -421,11 +575,22 @@ def main() -> None:
                 ]
                 if evaluation_exists:
                     command.append("--resume")
-                run_stage(
+                status, _ = run_stage(
                     f"eval_{arm}_{family}_{len(eval_stages):02d}",
                     command,
                     output=evaluation_output,
                     allow_existing_output=evaluation_exists,
+                )
+                if status == "budget_stopped":
+                    raise RuntimeError(
+                        "evaluation allocation stopped at a resumable boundary; "
+                        "the 8 GPU-hour cap is exhausted"
+                    )
+                validate_completed_evaluation(
+                    evaluation_output,
+                    expected_protocol=expected_protocol,
+                    expected_family=family,
+                    store=Path(source["store"]),
                 )
 
 
