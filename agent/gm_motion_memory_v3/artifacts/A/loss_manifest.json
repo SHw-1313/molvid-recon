@@ -1,6 +1,6 @@
 {
   "schema": "molvid.A.loss_manifest.v1",
-  "status": "calibrated_frozen_A0_A3_A1_formal_evaluated",
+  "status": "calibrated_frozen_A0_A3_formal_evaluated",
   "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
   "source": "actual torch.load checkpoint contracts.loss; enter-container/torch-ito CPU deserialization only",
   "teacher_trainable": false,

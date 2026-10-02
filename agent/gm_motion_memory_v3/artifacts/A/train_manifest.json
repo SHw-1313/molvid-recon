@@ -1,6 +1,6 @@
 {
   "schema": "molvid.A.train_manifest.v1",
-  "status": "A0_A1_formal_completed_A2_A3_pending",
+  "status": "A0_A3_formal_and_evaluation_completed",
   "seed": 20260928,
   "precision": "bf16",
   "optimizer": "AdamW",
@@ -20,17 +20,24 @@
   "max_atom_frames_per_gpu_provisional": 40000,
   "exposure_frozen": true,
   "profile_completed": true,
-  "actual_successful_updates": 21212,
-  "actual_valid_atom_frames": 680625180,
-  "actual_gpu_hours": 15.175738758775923,
+  "actual_successful_updates": 42424,
+  "actual_valid_atom_frames": 1361250360,
+  "actual_formal_train_gpu_hours": 33.84521766179138,
+  "actual_formal_eval_gpu_hours": 6.429578157663345,
+  "actual_formal_gpu_hours": 40.274795819454724,
+  "actual_auditable_gpu_hours_including_failed_pilots_smoke_profile": 41.05090764039093,
   "gpu_hours_budget": 80,
   "pilot_checkpoint_used_as_parent": false,
   "formal_runs": [
     {"arm":"A0","updates":10606,"gpu_hours":6.472515347732438,"checkpoint_sha256":"f459f1d3f55f6404ee8afbd898c669f071dfe053cb8ab5f337e7528c88523bc7","config_sha256":"2d15e38c51b7c81123fe57f8cbec018a7b21aa2ad25be2f671e892d590564da4"},
-    {"arm":"A1","updates":10606,"gpu_hours":8.703223411043485,"checkpoint_sha256":"52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9","config_sha256":"15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce"}
+    {"arm":"A1","updates":10606,"gpu_hours":8.703223411043485,"checkpoint_sha256":"52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9","config_sha256":"15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce"},
+    {"arm":"A2","updates":10606,"gpu_hours":9.217116085357135,"checkpoint_sha256":"3d10ddd99a6860ccb30cd0ac10d4585512bd74c537f7e950b27f77ff7969cc65","config_sha256":"db842c3ad563ee150c5f20f1d9f3ec591f4869eb4ca83f730c58a08b39fdb00e"},
+    {"arm":"A3","updates":10606,"gpu_hours":9.452362817658319,"checkpoint_sha256":"efafdd617919c981e8d21f820a010c0e365822630fd34aa147cb5ce499a95711","config_sha256":"b41ba050c47eac764450690f0cf8dcf5063e647fdc7a3142f7a6e803f134a867"}
   ],
   "formal_candidate_review_pass": true,
   "reviewed_commit": "af60c05aa02ce46872edbad0711833317773436e",
   "review_path": "agent/gm_motion_memory_v3/reviews/A/formal_r02/REVIEW.md",
+  "final_analysis": "runs/gm_motion_memory_v3/A/r21/final_analysis/selection.json",
+  "selected_arm": "A1",
   "test_opened": false
 }

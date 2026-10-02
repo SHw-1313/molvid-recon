@@ -53,7 +53,7 @@
       },
       "epoch": 0,
       "schedule_hash": "abbae4b784aaef17578e9e36fd423fc5bf563f769acc387c2b040a3735849bbf",
-      "status": "proposed_not_frozen_pending_profile",
+      "status": "frozen_and_executed_formal",
       "trajectory_max_clips": 24,
       "trajectory_min_clips": 24,
       "updates": 10606
@@ -109,7 +109,7 @@
       },
       "epoch": 1,
       "schedule_hash": "6deff0e0026f91b7f56cb2e488dc5cfb7f855cf3d5d4279be14ebad9fb3efcf2",
-      "status": "proposed_not_frozen_pending_profile",
+      "status": "not_executed_after_symmetric_profile_budget_freeze",
       "trajectory_max_clips": 24,
       "trajectory_min_clips": 24,
       "updates": 10598
@@ -133,7 +133,16 @@
   },
   "schema": "molvid.A.data_card.v1",
   "sealed_test_opened": false,
-  "status": "metadata_verified_model_not_run",
+  "status": "formal_completed_valid_evaluated",
+  "final_training_exposure_per_arm": {
+    "effective_epochs": 1,
+    "clips": 13824,
+    "successful_updates": 10606,
+    "valid_atom_frames": 340312590,
+    "clips_per_physical_trajectory": 24,
+    "ordinary_fraction": 0.75,
+    "fixed_history_fraction": 0.25
+  },
   "train": {
     "bucket_clip_counts": {
       "dt_100ps": 35712,
