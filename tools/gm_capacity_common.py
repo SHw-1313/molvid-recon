@@ -77,7 +77,10 @@ def load_capacity_release(path: str | Path) -> CapacityRelease:
     release = json.loads(release_path.read_text(encoding="utf-8"))
     if release.get("schema") != "molvid.gm_memory.capacity_release.v1":
         raise ValueError("capacity release schema differs")
-    if release.get("status") != "released_interim_A1" or release.get("selected_arm") != "A1":
+    if (
+        release.get("status") not in {"released_interim_A1", "released_final_A1"}
+        or release.get("selected_arm") != "A1"
+    ):
         raise ValueError("capacity release is not the immutable evaluated A1 handoff")
     validation = release.get("validation")
     if (
@@ -94,10 +97,17 @@ def load_capacity_release(path: str | Path) -> CapacityRelease:
     recipe_release = json.loads(recipe_release_path.read_text(encoding="utf-8"))
     if recipe_release.get("schema") != "molvid.gm_memory.recipe_release.v1":
         raise ValueError("recipe release schema differs")
+    if recipe_release.get("status") not in {
+        "released_interim_A1",
+        "final_A0_A3_formal_evaluated",
+    }:
+        raise ValueError("recipe release is not a completed evaluated handoff")
     if recipe_release.get("selected_arm") != "A1":
         raise ValueError("capacity and recipe releases select different arms")
     if recipe_release.get("review", {}).get("verdict") != "PASS":
         raise ValueError("released A recipe lacks independent PASS review")
+    if recipe_release.get("test_opened") is not False:
+        raise ValueError("recipe release does not preserve the sealed-test boundary")
 
     checkpoint_path = Path(str(release["checkpoint"]))
     checkpoint_sha256 = str(release["checkpoint_sha256"])
@@ -121,10 +131,67 @@ def load_capacity_release(path: str | Path) -> CapacityRelease:
         raise ValueError("released target teacher SHA-256 differs")
     if sha256_file(configuration["statistics"]["path"]) != str(release["statistics_sha256"]):
         raise ValueError("released statistics SHA-256 differs")
-    if recipe_release.get("A1_checkpoint", {}).get("sha256") != checkpoint_sha256:
+    selected_checkpoint = recipe_release.get(
+        "selected_checkpoint", recipe_release.get("A1_checkpoint", {})
+    )
+    if selected_checkpoint.get("sha256") != checkpoint_sha256:
         raise ValueError("recipe and capacity checkpoint identities differ")
+    if int(selected_checkpoint.get("updates", release["formal_updates"])) != int(
+        release["formal_updates"]
+    ):
+        raise ValueError("recipe and capacity update counts differ")
+    if int(selected_checkpoint.get("effective_epochs", release["effective_epochs"])) != int(
+        release["effective_epochs"]
+    ):
+        raise ValueError("recipe and capacity effective epochs differ")
     if recipe_release.get("configuration", {}).get("sha256") != configuration_sha256:
         raise ValueError("recipe and capacity configuration identities differ")
+    if recipe_release.get("teacher_sha256") != release.get("teacher_sha256"):
+        raise ValueError("recipe and capacity teacher identities differ")
+    if recipe_release.get("statistics_sha256") != release.get("statistics_sha256"):
+        raise ValueError("recipe and capacity statistics identities differ")
+
+    def require_equal(actual: Any, expected: Any, name: str) -> None:
+        if float(actual) != float(expected):
+            raise ValueError(f"released A1 numeric recipe differs for {name}")
+
+    loss = configuration["loss"]
+    ledger = recipe_release["loss_ledger"]
+    for name in (
+        "clean_coordinate",
+        "clean_bond",
+        "near_coordinate",
+        "near_bond",
+        "generated_bond",
+    ):
+        require_equal(ledger[name]["weight"], loss[name], name)
+    require_equal(
+        ledger["generated_bond"]["min_flow_time"],
+        loss["generated_bond_min_flow_time"],
+        "generated_bond_min_flow_time",
+    )
+    for name in ("near_coordinate", "near_bond"):
+        require_equal(
+            ledger[name]["min_flow_time"], loss["near_min_flow_time"], f"{name}_min_flow_time"
+        )
+    sampled = configuration["sampled_auxiliary"]
+    auxiliary = recipe_release["auxiliary_recipe"]
+    for name in ("draws", "euler_steps", "cadence"):
+        require_equal(auxiliary[name], sampled[name], name)
+    physical = sampled["physical"]
+    for ledger_name, config_name in (
+        ("sampled_clash", "clash_weight"),
+        ("sampled_rmsf", "rmsf_weight"),
+        ("sampled_displacement", "displacement_weight"),
+        ("sampled_bond_band", "bond_band_weight"),
+    ):
+        require_equal(ledger[ledger_name]["weight"], physical[config_name], ledger_name)
+    require_equal(ledger["sampled_rmsf"]["scale_A"], physical["rmsf_scale_A"], "rmsf_scale_A")
+    require_equal(
+        ledger["sampled_displacement"]["scale_A2"],
+        physical["displacement_scale_A2"],
+        "displacement_scale_A2",
+    )
     return CapacityRelease(
         release_path=release_path,
         release=release,

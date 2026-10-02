@@ -146,20 +146,156 @@ def _evaluation_deadlines(*, now: float, used: float) -> tuple[float, float]:
     )
 
 
-def _finalize_stale_stage(record: dict, *, source_commit: str) -> None:
-    """Charge a crashed attempt through its last heartbeat plus one safe interval."""
+def _process_stat(pid: int) -> dict | None:
+    """Read the Linux identity fields needed to avoid signalling a reused PID."""
 
+    try:
+        remainder = (
+            Path(f"/proc/{pid}/stat")
+            .read_text(encoding="utf-8")
+            .rsplit(")", 1)[1]
+        )
+        fields = remainder.split()
+        return {
+            "state": fields[0],
+            "process_group_id": int(fields[2]),
+            "session_id": int(fields[3]),
+            "start_ticks": int(fields[19]),
+        }
+    except (FileNotFoundError, IndexError, PermissionError, ValueError):
+        return None
+
+
+def _process_start_ticks(pid: int) -> int | None:
+    stat = _process_stat(pid)
+    return None if stat is None else int(stat["start_ticks"])
+
+
+def _recorded_process_alive(record: dict, prefix: str) -> bool:
+    pid = record.get(f"{prefix}_pid")
+    start_ticks = record.get(f"{prefix}_start_ticks")
+    if not isinstance(pid, int) or not isinstance(start_ticks, int):
+        return False
+    stat = _process_stat(pid)
+    return (
+        stat is not None
+        and stat["state"] != "Z"
+        and stat["start_ticks"] == start_ticks
+    )
+
+
+def _owned_group_members(*, process_group_id: int, session_id: int) -> list[int]:
+    """Return non-zombie members of the runner-owned child session/group."""
+
+    members = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        stat = _process_stat(int(entry.name))
+        if (
+            stat is not None
+            and stat["state"] != "Z"
+            and stat["process_group_id"] == process_group_id
+            and stat["session_id"] == session_id
+        ):
+            members.append(int(entry.name))
+    return members
+
+
+def _terminate_process_group(
+    *,
+    pid: int,
+    start_ticks: int,
+    process_group_id: int,
+    session_id: int,
+    timeout_seconds: float = 30.0,
+) -> dict:
+    """Stop an identity-verified owned process group and confirm it is gone."""
+
+    if process_group_id != pid or session_id != pid:
+        raise RuntimeError("recorded child does not own its process group and session")
+    leader = _process_stat(pid)
+    if leader is not None and leader["start_ticks"] != start_ticks:
+        raise RuntimeError("recorded child PID was reused; refusing to signal its process group")
+    members = _owned_group_members(
+        process_group_id=process_group_id,
+        session_id=session_id,
+    )
+    if not members:
+        return {"was_alive": False, "signal": None, "stopped_unix": time.time()}
+    try:
+        os.killpg(process_group_id, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline and _owned_group_members(
+        process_group_id=process_group_id,
+        session_id=session_id,
+    ):
+        time.sleep(0.05)
+    used_signal = "SIGTERM"
+    if _owned_group_members(process_group_id=process_group_id, session_id=session_id):
+        try:
+            os.killpg(process_group_id, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        used_signal = "SIGKILL"
+        deadline = time.time() + timeout_seconds
+        while time.time() < deadline and _owned_group_members(
+            process_group_id=process_group_id,
+            session_id=session_id,
+        ):
+            time.sleep(0.05)
+    if _owned_group_members(process_group_id=process_group_id, session_id=session_id):
+        raise RuntimeError("recorded child process group did not stop")
+    return {"was_alive": True, "signal": used_signal, "stopped_unix": time.time()}
+
+
+def _recover_stale_stage(record: dict, *, source_commit: str) -> None:
+    """Confirm an orphan is stopped, then conservatively charge through recovery."""
+
+    if _recorded_process_alive(record, "runner"):
+        raise RuntimeError(
+            f"stage {record.get('name')} is still owned by a live runner; refusing recovery"
+        )
+    child_pid = record.get("child_pid")
+    child_start_ticks = record.get("child_start_ticks")
+    process_group_id = record.get("child_process_group_id")
+    session_id = record.get("child_session_id")
+    legacy_pid = record.get("pid")
+    if child_pid is None and legacy_pid is not None:
+        raise RuntimeError(
+            "running stage predates process-identity recording; refusing unsafe recovery"
+        )
+    stop = {"was_alive": False, "signal": None, "stopped_unix": time.time()}
+    if child_pid is not None:
+        if not all(
+            isinstance(value, int)
+            for value in (child_pid, child_start_ticks, process_group_id, session_id)
+        ):
+            raise RuntimeError("running stage has incomplete child process identity")
+        stop = _terminate_process_group(
+            pid=child_pid,
+            start_ticks=child_start_ticks,
+            process_group_id=process_group_id,
+            session_id=session_id,
+        )
+    started = float(record.get("started_unix", stop["stopped_unix"]))
     observed = max(
         float(record.get("elapsed_seconds_at_checkpoint", 0.0)),
         float(record.get("elapsed_seconds_observed", 0.0)),
     )
-    elapsed = observed + LEDGER_HEARTBEAT_SECONDS
+    # Recovery wall time is an upper bound when a dead child stopped earlier,
+    # and exact to polling resolution when this recovery terminates the orphan.
+    elapsed = max(observed, float(stop["stopped_unix"]) - started)
     record.update({
         "elapsed_seconds": elapsed,
         "gpu_hours": elapsed / 3600.0,
         "status": "interrupted",
-        "elapsed_seconds_observed_before_crash": observed,
-        "unobserved_runtime_charged_seconds": LEDGER_HEARTBEAT_SECONDS,
+        "elapsed_seconds_observed_before_recovery": observed,
+        "child_was_alive_at_recovery": stop["was_alive"],
+        "child_stop_signal": stop["signal"],
+        "child_stop_confirmed_unix": stop["stopped_unix"],
         "budget_charge_is_conservative": True,
         "recovered_by_source_commit": source_commit,
     })
@@ -231,6 +367,15 @@ def validate_review_gate(
     return gate
 
 
+def validate_frozen_release_files(frozen: dict) -> None:
+    """Reject a mutable or replaced A handoff before any run output is touched."""
+
+    for name in ("capacity_release", "recipe_release"):
+        path = Path(str(frozen[name]))
+        if sha256_file(path) != frozen[f"{name}_sha256"]:
+            raise ValueError(f"frozen {name.replace('_', ' ')} changed after config freeze")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--frozen", type=Path, required=True)
@@ -251,6 +396,7 @@ def main() -> None:
     source_identity = capacity_source_identity()
     if frozen.get("source_identity") != source_identity:
         raise ValueError("capacity frozen configs were not produced by this clean source commit")
+    validate_frozen_release_files(frozen)
     if tuple(args.arms) != ("C4", "C8"):
         raise ValueError("capacity execution requires the matched C4 then C8 pair")
     root = args.frozen.parent
@@ -284,7 +430,7 @@ def main() -> None:
     if stale and not args.recover:
         raise RuntimeError("capacity ledger contains an interrupted stage; rerun with --recover")
     for record in stale:
-        _finalize_stale_stage(record, source_commit=source_identity["commit"])
+        _recover_stale_stage(record, source_commit=source_identity["commit"])
     if stale:
         atomic_write_json(ledger_path, ledger)
 
@@ -328,8 +474,12 @@ def main() -> None:
             "command": command,
             "gpu_uuid": os.environ["CUDA_VISIBLE_DEVICES"],
             "started_unix": time.time(),
+            "runner_pid": os.getpid(),
+            "runner_start_ticks": _process_start_ticks(os.getpid()),
             "status": "running",
         }
+        if record["runner_start_ticks"] is None:
+            raise RuntimeError("cannot record runner process identity")
         if evaluation_boundary_stop is not None:
             record.update({
                 "evaluation_boundary_stop_unix": evaluation_boundary_stop,
@@ -342,8 +492,31 @@ def main() -> None:
         stopped = False
         last_checkpoint: Path | None = None
         with log.open("w", encoding="utf-8") as handle:
-            process = subprocess.Popen(command, stdout=handle, stderr=subprocess.STDOUT)
-            record["pid"] = process.pid
+            process = subprocess.Popen(
+                command,
+                stdout=handle,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            child_start_ticks = _process_start_ticks(process.pid)
+            if child_start_ticks is None:
+                process.terminate()
+                process.wait()
+                raise RuntimeError("cannot record child process identity")
+            record.update({
+                "pid": process.pid,
+                "child_pid": process.pid,
+                "child_start_ticks": child_start_ticks,
+                "child_process_group_id": os.getpgid(process.pid),
+                "child_session_id": os.getsid(process.pid),
+            })
+            if (
+                record["child_process_group_id"] != process.pid
+                or record["child_session_id"] != process.pid
+            ):
+                process.terminate()
+                process.wait()
+                raise RuntimeError("capacity child did not create its owned process group")
             atomic_write_json(ledger_path, ledger)
             print(json.dumps({"stage": name, "pid": process.pid, "log": str(log)}), flush=True)
             last_heartbeat = time.time()
@@ -361,12 +534,14 @@ def main() -> None:
                         last_heartbeat = now
                     if evaluation_hard_stop is not None and now >= evaluation_hard_stop:
                         record["budget_stop_reason"] = "evaluation_hard_deadline"
-                        process.send_signal(signal.SIGTERM)
-                        try:
-                            code = process.wait(timeout=20.0)
-                        except subprocess.TimeoutExpired:
-                            process.kill()
-                            code = process.wait()
+                        _terminate_process_group(
+                            pid=process.pid,
+                            start_ticks=child_start_ticks,
+                            process_group_id=process.pid,
+                            session_id=process.pid,
+                            timeout_seconds=20.0,
+                        )
+                        code = process.wait()
                         stopped = True
                         break
                     if output is not None:
@@ -385,7 +560,12 @@ def main() -> None:
                                 reserve = 120.0 + 1.5 * 1000.0 * seconds_per_update
                                 if used + elapsed + reserve >= budget:
                                     record["budget_stop_reason"] = "next_checkpoint_reserve"
-                                    process.send_signal(signal.SIGTERM)
+                                    _terminate_process_group(
+                                        pid=process.pid,
+                                        start_ticks=child_start_ticks,
+                                        process_group_id=process.pid,
+                                        session_id=process.pid,
+                                    )
                                     code = process.wait()
                                     stopped = True
                                     break
@@ -393,12 +573,13 @@ def main() -> None:
                     time.sleep(1.0)
             except BaseException:
                 if process.poll() is None:
-                    process.send_signal(signal.SIGTERM)
-                    try:
-                        process.wait(timeout=30.0)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait()
+                    _terminate_process_group(
+                        pid=process.pid,
+                        start_ticks=child_start_ticks,
+                        process_group_id=process.pid,
+                        session_id=process.pid,
+                    )
+                    process.wait()
                 elapsed = time.time() - record["started_unix"]
                 record.update({
                     "exit_code": process.returncode,

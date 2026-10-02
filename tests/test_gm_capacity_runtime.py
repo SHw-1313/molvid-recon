@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
+import sys
+import time
 
 import pytest
 import torch
@@ -19,9 +22,11 @@ from tools.run_gm_capacity import (
     EVALUATION_BUDGET_SECONDS,
     EVALUATION_HARD_RESERVE_SECONDS,
     _evaluation_deadlines,
-    _finalize_stale_stage,
     _prepare_training_attempt,
+    _process_start_ticks,
+    _recover_stale_stage,
     _training_command,
+    validate_frozen_release_files,
     validate_review_gate,
 )
 
@@ -347,15 +352,79 @@ def test_evaluation_deadlines_preserve_row_and_hard_cap_reserves() -> None:
         )
 
 
-def test_interrupted_stage_charges_observed_runtime_and_heartbeat_gap() -> None:
+def test_recovery_refuses_a_stage_owned_by_a_live_runner() -> None:
     record = {
+        "name": "pilot_C4_warm_start_00",
         "status": "running",
-        "elapsed_seconds_at_checkpoint": 91.0,
-        "elapsed_seconds_observed": 97.0,
+        "runner_pid": os.getpid(),
+        "runner_start_ticks": _process_start_ticks(os.getpid()),
     }
-    _finalize_stale_stage(record, source_commit="candidate")
-    assert record["status"] == "interrupted"
-    assert record["elapsed_seconds"] > 97.0
-    assert record["gpu_hours"] == pytest.approx(record["elapsed_seconds"] / 3600.0)
-    assert record["budget_charge_is_conservative"] is True
-    assert record["recovered_by_source_commit"] == "candidate"
+    with pytest.raises(RuntimeError, match="live runner"):
+        _recover_stale_stage(record, source_commit="candidate")
+
+
+def test_recovery_stops_live_child_before_archiving_output(tmp_path: Path) -> None:
+    process = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(60)"],
+        start_new_session=True,
+    )
+    started = time.time()
+    try:
+        child_start_ticks = _process_start_ticks(process.pid)
+        assert child_start_ticks is not None
+        record = {
+            "name": "pilot_C4_warm_start_00",
+            "status": "running",
+            "started_unix": started,
+            "elapsed_seconds_observed": 0.01,
+            "child_pid": process.pid,
+            "child_start_ticks": child_start_ticks,
+            "child_process_group_id": os.getpgid(process.pid),
+            "child_session_id": os.getsid(process.pid),
+        }
+        _recover_stale_stage(record, source_commit="candidate")
+        process.wait(timeout=5.0)
+        assert record["status"] == "interrupted"
+        assert record["child_was_alive_at_recovery"] is True
+        assert record["child_stop_signal"] == "SIGTERM"
+        assert record["elapsed_seconds"] >= record["elapsed_seconds_observed"]
+        assert record["gpu_hours"] == pytest.approx(
+            record["elapsed_seconds"] / 3600.0
+        )
+        assert record["budget_charge_is_conservative"] is True
+        assert record["recovered_by_source_commit"] == "candidate"
+
+        output = tmp_path / "pilot" / "C4"
+        output.mkdir(parents=True)
+        (output / "partial.txt").write_text("stopped", encoding="utf-8")
+        attempt = _prepare_training_attempt(
+            phase="pilot",
+            arm="C4",
+            output=output,
+            arm_stages=[record],
+            recover=True,
+        )
+        assert attempt["kind"] == "warm_start"
+        assert attempt["archive"] is not None
+        assert not output.exists()
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            process.wait(timeout=5.0)
+
+
+def test_frozen_release_files_are_rehashed_at_runner_start(tmp_path: Path) -> None:
+    capacity = tmp_path / "capacity_release.json"
+    recipe = tmp_path / "recipe_release.json"
+    capacity.write_text("capacity", encoding="utf-8")
+    recipe.write_text("recipe", encoding="utf-8")
+    frozen = {
+        "capacity_release": str(capacity),
+        "capacity_release_sha256": sha256_file(capacity),
+        "recipe_release": str(recipe),
+        "recipe_release_sha256": sha256_file(recipe),
+    }
+    validate_frozen_release_files(frozen)
+    recipe.write_text("changed", encoding="utf-8")
+    with pytest.raises(ValueError, match="recipe release changed"):
+        validate_frozen_release_files(frozen)

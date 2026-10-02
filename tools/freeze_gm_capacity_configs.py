@@ -53,6 +53,13 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=True)
     source_identity = capacity_source_identity()
     bundle = load_capacity_release(args.release)
+    release_sha256 = sha256_file(bundle.release_path)
+    recipe_release_sha256 = sha256_file(bundle.recipe_release_path)
+    expected_snapshot_name = f"{release_sha256}_{recipe_release_sha256}"
+    if bundle.release_path.parent.name != expected_snapshot_name:
+        raise ValueError(
+            "capacity freeze requires a hash-addressed immutable A release snapshot"
+        )
     profile = json.loads(args.profile.read_text(encoding="utf-8"))
     if profile.get("schema") != "molvid.capacity.profile.v1" or profile.get("passed") is not True:
         raise ValueError("capacity configs require a completed profile")
@@ -94,7 +101,7 @@ def main() -> None:
     evaluation_recipe = {
         "schema": "molvid.capacity.evaluation_recipe.v1",
         "physical": copy.deepcopy(raw["sampled_auxiliary"]["physical"]),
-        "source_capacity_release_sha256": sha256_file(bundle.release_path),
+        "source_capacity_release_sha256": release_sha256,
     }
     evaluation_recipe_path = args.output / "evaluation_recipe.json"
     atomic_write_json(evaluation_recipe_path, evaluation_recipe)
@@ -109,9 +116,9 @@ def main() -> None:
     manifest: dict[str, object] = {
         "schema": "molvid.capacity.frozen_configs.v1",
         "capacity_release": str(bundle.release_path),
-        "capacity_release_sha256": sha256_file(bundle.release_path),
+        "capacity_release_sha256": release_sha256,
         "recipe_release": str(bundle.recipe_release_path),
-        "recipe_release_sha256": sha256_file(bundle.recipe_release_path),
+        "recipe_release_sha256": recipe_release_sha256,
         "parent_path": str(bundle.checkpoint_path),
         "parent_sha256": bundle.checkpoint_sha256,
         "parent_formal_updates": int(bundle.release["formal_updates"]),
