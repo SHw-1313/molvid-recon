@@ -18,6 +18,7 @@ from tools.evaluate_gm_a import (
     validate_completed_evaluation,
 )
 from tools.run_gm_capacity import (
+    CHILD_LAUNCH_PROTOCOL,
     EVALUATION_BOUNDARY_RESERVE_SECONDS,
     EVALUATION_BUDGET_SECONDS,
     EVALUATION_HARD_RESERVE_SECONDS,
@@ -25,6 +26,8 @@ from tools.run_gm_capacity import (
     _prepare_training_attempt,
     _process_start_ticks,
     _recover_stale_stage,
+    _release_gated_child,
+    _spawn_gated_child,
     _training_command,
     validate_frozen_release_files,
     validate_review_gate,
@@ -361,6 +364,75 @@ def test_recovery_refuses_a_stage_owned_by_a_live_runner() -> None:
     }
     with pytest.raises(RuntimeError, match="live runner"):
         _recover_stale_stage(record, source_commit="candidate")
+
+
+def test_recovery_refuses_identityless_running_stage() -> None:
+    record = {
+        "name": "pilot_C4_warm_start_00",
+        "status": "running",
+        "started_unix": time.time() - 1.0,
+    }
+    with pytest.raises(RuntimeError, match="lacks durable child identity"):
+        _recover_stale_stage(record, source_commit="candidate")
+
+
+def test_launch_gate_parent_death_prevents_exec_before_identity(
+    tmp_path: Path,
+) -> None:
+    marker = tmp_path / "command_executed"
+    command = [
+        sys.executable,
+        "-c",
+        "from pathlib import Path; import sys; Path(sys.argv[1]).write_text('bad')",
+        str(marker),
+    ]
+    process, gate_write_fd = _spawn_gated_child(
+        command,
+        stdout=subprocess.DEVNULL,
+    )
+    record = {
+        "name": "pilot_C4_warm_start_00",
+        "status": "launching",
+        "started_unix": time.time(),
+        "child_launch_protocol": CHILD_LAUNCH_PROTOCOL,
+    }
+    # Closing the inherited pipe without the release token models the runner
+    # dying after Popen but before the child identity is durably recorded.
+    os.close(gate_write_fd)
+    assert process.wait(timeout=5.0) == 125
+    _recover_stale_stage(record, source_commit="candidate")
+    assert record["status"] == "interrupted"
+    assert record["child_exec_prevented_by_launch_gate"] is True
+    assert record["child_was_alive_at_recovery"] is False
+    assert not marker.exists()
+
+    attempt = _prepare_training_attempt(
+        phase="pilot",
+        arm="C4",
+        output=tmp_path / "pilot" / "C4",
+        arm_stages=[record],
+        recover=True,
+    )
+    assert attempt["kind"] == "warm_start"
+    assert process.poll() is not None
+
+
+def test_launch_gate_release_executes_the_recorded_command(tmp_path: Path) -> None:
+    marker = tmp_path / "command_executed"
+    command = [
+        sys.executable,
+        "-c",
+        "from pathlib import Path; import sys; Path(sys.argv[1]).write_text('ok')",
+        str(marker),
+    ]
+    process, gate_write_fd = _spawn_gated_child(
+        command,
+        stdout=subprocess.DEVNULL,
+    )
+    assert not marker.exists()
+    _release_gated_child(gate_write_fd)
+    assert process.wait(timeout=5.0) == 0
+    assert marker.read_text(encoding="utf-8") == "ok"
 
 
 def test_recovery_stops_live_child_before_archiving_output(tmp_path: Path) -> None:

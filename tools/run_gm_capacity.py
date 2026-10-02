@@ -20,6 +20,7 @@ from tools.evaluate_gm_a import (
     evaluation_protocol,
     validate_completed_evaluation,
 )
+from tools.gm_capacity_child_gate import READY_TOKEN
 from tools.gm_capacity_common import capacity_source_identity
 
 
@@ -30,6 +31,7 @@ EVALUATION_BOUNDARY_RESERVE_SECONDS = 300.0
 EVALUATION_HARD_RESERVE_SECONDS = 30.0
 LEDGER_HEARTBEAT_SECONDS = 5.0
 CHECKPOINT_PATTERN = re.compile(r"frame_joint_step_(\d{8})\.pt$")
+CHILD_LAUNCH_PROTOCOL = "pipe_eof_blocks_exec_until_identity_is_durable_v1"
 
 
 def _checkpoint_step(path: Path) -> int | None:
@@ -202,6 +204,45 @@ def _owned_group_members(*, process_group_id: int, session_id: int) -> list[int]
     return members
 
 
+def _spawn_gated_child(
+    command: list[str], *, stdout
+) -> tuple[subprocess.Popen, int]:
+    """Start a session leader that cannot exec the real command before release."""
+
+    read_fd, write_fd = os.pipe()
+    gated_command = [
+        sys.executable,
+        "-u",
+        "-m",
+        "tools.gm_capacity_child_gate",
+        str(read_fd),
+        *command,
+    ]
+    try:
+        process = subprocess.Popen(
+            gated_command,
+            stdout=stdout,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+            pass_fds=(read_fd,),
+        )
+    except BaseException:
+        os.close(read_fd)
+        os.close(write_fd)
+        raise
+    os.close(read_fd)
+    return process, write_fd
+
+
+def _release_gated_child(write_fd: int) -> None:
+    try:
+        written = os.write(write_fd, READY_TOKEN)
+        if written != len(READY_TOKEN):
+            raise RuntimeError("capacity child launch gate accepted a partial token")
+    finally:
+        os.close(write_fd)
+
+
 def _terminate_process_group(
     *,
     pid: int,
@@ -263,10 +304,24 @@ def _recover_stale_stage(record: dict, *, source_commit: str) -> None:
     process_group_id = record.get("child_process_group_id")
     session_id = record.get("child_session_id")
     legacy_pid = record.get("pid")
-    if child_pid is None and legacy_pid is not None:
-        raise RuntimeError(
-            "running stage predates process-identity recording; refusing unsafe recovery"
-        )
+    launch_was_gated = (
+        record.get("status") == "launching"
+        and record.get("child_launch_protocol") == CHILD_LAUNCH_PROTOCOL
+    )
+    if child_pid is None:
+        if launch_was_gated and legacy_pid is None:
+            # With no release token, parent death closes the only write end.
+            # The helper exits before exec and therefore cannot touch model,
+            # GPU, or output state.
+            pass
+        elif legacy_pid is not None:
+            raise RuntimeError(
+                "running stage predates process-identity recording; refusing unsafe recovery"
+            )
+        else:
+            raise RuntimeError(
+                "running stage lacks durable child identity; refusing unsafe recovery"
+            )
     stop = {"was_alive": False, "signal": None, "stopped_unix": time.time()}
     if child_pid is not None:
         if not all(
@@ -296,6 +351,7 @@ def _recover_stale_stage(record: dict, *, source_commit: str) -> None:
         "child_was_alive_at_recovery": stop["was_alive"],
         "child_stop_signal": stop["signal"],
         "child_stop_confirmed_unix": stop["stopped_unix"],
+        "child_exec_prevented_by_launch_gate": launch_was_gated,
         "budget_charge_is_conservative": True,
         "recovered_by_source_commit": source_commit,
     })
@@ -426,7 +482,11 @@ def main() -> None:
     )
     if ledger.get("source_identity") != source_identity:
         raise ValueError("capacity cost ledger source identity differs")
-    stale = [stage for stage in ledger["stages"] if stage.get("status") == "running"]
+    stale = [
+        stage
+        for stage in ledger["stages"]
+        if stage.get("status") in {"launching", "running"}
+    ]
     if stale and not args.recover:
         raise RuntimeError("capacity ledger contains an interrupted stage; rerun with --recover")
     for record in stale:
@@ -476,7 +536,8 @@ def main() -> None:
             "started_unix": time.time(),
             "runner_pid": os.getpid(),
             "runner_start_ticks": _process_start_ticks(os.getpid()),
-            "status": "running",
+            "child_launch_protocol": CHILD_LAUNCH_PROTOCOL,
+            "status": "launching",
         }
         if record["runner_start_ticks"] is None:
             raise RuntimeError("cannot record runner process identity")
@@ -492,35 +553,47 @@ def main() -> None:
         stopped = False
         last_checkpoint: Path | None = None
         with log.open("w", encoding="utf-8") as handle:
-            process = subprocess.Popen(
-                command,
-                stdout=handle,
-                stderr=subprocess.STDOUT,
-                start_new_session=True,
-            )
-            child_start_ticks = _process_start_ticks(process.pid)
-            if child_start_ticks is None:
-                process.terminate()
+            process, gate_write_fd = _spawn_gated_child(command, stdout=handle)
+            child_start_ticks = None
+            try:
+                child_start_ticks = _process_start_ticks(process.pid)
+                if child_start_ticks is None:
+                    raise RuntimeError("cannot record child process identity")
+                record.update({
+                    "pid": process.pid,
+                    "child_pid": process.pid,
+                    "child_start_ticks": child_start_ticks,
+                    "child_process_group_id": os.getpgid(process.pid),
+                    "child_session_id": os.getsid(process.pid),
+                    "status": "running",
+                })
+                if (
+                    record["child_process_group_id"] != process.pid
+                    or record["child_session_id"] != process.pid
+                ):
+                    raise RuntimeError(
+                        "capacity child did not create its owned process group"
+                    )
+                # The actual command remains blocked in the child gate until
+                # this complete identity is durable.
+                atomic_write_json(ledger_path, ledger)
+            except BaseException:
+                os.close(gate_write_fd)
+                if process.poll() is None and child_start_ticks is not None:
+                    _terminate_process_group(
+                        pid=process.pid,
+                        start_ticks=child_start_ticks,
+                        process_group_id=process.pid,
+                        session_id=process.pid,
+                    )
+                if process.poll() is None:
+                    process.terminate()
                 process.wait()
-                raise RuntimeError("cannot record child process identity")
-            record.update({
-                "pid": process.pid,
-                "child_pid": process.pid,
-                "child_start_ticks": child_start_ticks,
-                "child_process_group_id": os.getpgid(process.pid),
-                "child_session_id": os.getsid(process.pid),
-            })
-            if (
-                record["child_process_group_id"] != process.pid
-                or record["child_session_id"] != process.pid
-            ):
-                process.terminate()
-                process.wait()
-                raise RuntimeError("capacity child did not create its owned process group")
-            atomic_write_json(ledger_path, ledger)
+                raise
             print(json.dumps({"stage": name, "pid": process.pid, "log": str(log)}), flush=True)
             last_heartbeat = time.time()
             try:
+                _release_gated_child(gate_write_fd)
                 while True:
                     code = process.poll()
                     if code is not None:
