@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Sequence
+
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
@@ -36,6 +38,7 @@ class FrameDiT(nn.Module):
         max_component_type: int = 128,
         geometry_enabled: bool = False,
         motion_enabled: bool = False,
+        geometry_block_indices: Sequence[int] | None = None,
     ) -> None:
         super().__init__()
         self.adapter = adapter
@@ -45,10 +48,24 @@ class FrameDiT(nn.Module):
         self.heads = int(heads)
         self.geometry_enabled = bool(geometry_enabled)
         self.motion_enabled = bool(motion_enabled)
+        if geometry_block_indices is None:
+            geometry_block_indices = (2, 4) if self.geometry_enabled else ()
+        if isinstance(geometry_block_indices, (str, bytes)):
+            raise TypeError("geometry_block_indices must be one-based integer indices")
+        self.geometry_block_indices = tuple(int(value) for value in geometry_block_indices)
         if min(self.scalar_width, self.vector_width, self.depth, self.heads) < 1:
             raise ValueError("FrameDiT widths/depth/heads must be positive")
-        if self.geometry_enabled and self.depth < 4:
-            raise ValueError("the G branch requires depth >= 4 for blocks 2 and 4")
+        if any(isinstance(value, bool) or not isinstance(value, int) for value in geometry_block_indices):
+            raise TypeError("geometry_block_indices must be one-based integer indices")
+        if self.geometry_block_indices != tuple(sorted(set(self.geometry_block_indices))):
+            raise ValueError("geometry_block_indices must be unique and increasing")
+        if self.geometry_enabled:
+            if not self.geometry_block_indices:
+                raise ValueError("the enabled G branch requires geometry_block_indices")
+            if self.geometry_block_indices[0] < 1 or self.geometry_block_indices[-1] > self.depth:
+                raise ValueError("geometry_block_indices must lie within the configured depth")
+        elif self.geometry_block_indices:
+            raise ValueError("geometry_block_indices require geometry_enabled=true")
         if self.scalar_width % self.heads or self.vector_width % self.heads:
             raise ValueError("FrameDiT widths must divide heads")
         if float(dropout) != 0.0:
@@ -70,7 +87,7 @@ class FrameDiT(nn.Module):
                     self.heads,
                     int(ffn_multiplier),
                     0.0,
-                    local_geometry=self.geometry_enabled and index in {1, 3},
+                    local_geometry=(index + 1) in self.geometry_block_indices,
                     motion_context=self.motion_enabled,
                 )
                 for index in range(self.depth)
@@ -238,10 +255,10 @@ class FrameDiT(nn.Module):
             "schema_version": "molvid.frame_joint.dit.v2",
             "geometry_enabled": self.geometry_enabled,
             "motion_enabled": self.motion_enabled,
-            "local_geometry_blocks_one_based": [2, 4] if self.geometry_enabled else [],
+            "local_geometry_blocks_one_based": list(self.geometry_block_indices),
             "local_geometry": (
-                self.blocks[1].local_geometry.contract()
-                if self.geometry_enabled and self.blocks[1].local_geometry is not None
+                self.blocks[self.geometry_block_indices[0] - 1].local_geometry.contract()
+                if self.geometry_enabled
                 else None
             ),
             "motion_context": (

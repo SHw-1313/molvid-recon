@@ -724,6 +724,16 @@ def load_frame_joint_inference(
             raise ValueError("Frame Joint model and DiT G/M switches differ")
     else:
         raise ValueError("unsupported Frame Joint model/DiT contract schemas")
+    geometry_block_indices = dit_contract.get("local_geometry_blocks_one_based")
+    if geometry_enabled:
+        if (
+            not isinstance(geometry_block_indices, list)
+            or not geometry_block_indices
+            or any(isinstance(value, bool) or not isinstance(value, int) for value in geometry_block_indices)
+        ):
+            raise ValueError("Frame Joint checkpoint has invalid geometry block indices")
+    else:
+        geometry_block_indices = None
     model = FrameJointModel.from_codec(
         artifact.model,
         statistics.to(device=device),
@@ -733,6 +743,7 @@ def load_frame_joint_inference(
         heads=int(dit_contract["heads"]),
         geometry_enabled=geometry_enabled,
         motion_enabled=motion_enabled,
+        geometry_block_indices=geometry_block_indices,
     ).to(device)
     if dict(model.contract()) != dict(model_contract):
         raise ValueError("reconstructed Frame Joint model contract differs")
