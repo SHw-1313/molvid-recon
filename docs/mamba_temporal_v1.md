@@ -2,6 +2,8 @@
 
 基线：`integration/abcd-20261004`，ABCD 合并点 `f85896b`。这是可以在合并树上逐阶段实现的设计，**尚未实现或训练 Mamba，不能把预期收益当成结果**。默认科学基线仍为 A1/4-block/原 history+M；B 与 C 的实验结论不作为实施依赖。
 
+静态单结构进入共享主干的接口与梯度平衡见 [D2 联合预训练方案](static_backbone_pretraining_v2.md)。static 显式跳过物理时间模块；不把单帧当零运动轨迹训练 Mamba。
+
 ## 目标与不应混淆的对象
 
 统一所有**物理时间序列**的可学习建模：observed history、history 到 query 的读出、future 内部相互作用、decoder 时间混合。`physical_time_ps` 与 flow progress `s∈[0,1]` 保持两个接口。`s` 是每次向量场求值的噪声条件，不是 MD 时钟，不对 Euler 的 8/16/32 个步骤做 Mamba 扫描。保留其小型 MLP/AdaLN 调制。
@@ -107,6 +109,6 @@ history结束后产生固定的 `S_obs`，每个 query horizon `τ=t_query-t_las
 
 这项结构改造不是最终对标协议。统一原子集合、Å/ps、observed prefix、预测长度、轨迹数、采样预算和对齐方式；若baseline只支持单帧，分别报告共同H1任务与各自最佳合法条件，不能让它默默少看history。公开权重若用过本项目valid systems，须单列重叠；sealed test保持封存直到方法和协议冻结。
 
-PVB的静态数据作用于同一生成桥接训练路线；D的decoder-only T=1 pilot不是该预训练的替代。[PVB官方仓库](https://github.com/yaledeus/PVB)。BioKinema的发布流程包括预计算Pairformer表征及分层forecast/interpolation；其不同checkpoint训练数据和动力学目标不同。当前源码base config的`alpha_acf=0`，不能仅凭存在ACF代码就说所有发布模型都启用该损失。[BioKinema训练文档](https://github.com/IDEA-XL/BioKinema/blob/main/docs/data_and_training.md)。
+PVB仅以用户指定的 `/data4/users/sihao/workspace/PVB_origin`（`c08e5e3`）为原始源码基准，不使用深度改动的 `workspace/PVB`。PVB的静态数据作用于同一生成桥接训练路线；D的decoder-only T=1 pilot不是该预训练的替代。[PVB官方仓库](https://github.com/yaledeus/PVB)。BioKinema的发布流程包括预计算Pairformer表征及分层forecast/interpolation；其不同checkpoint训练数据和动力学目标不同。当前源码base config的`alpha_acf=0`，不能仅凭存在ACF代码就说所有发布模型都启用该损失。[BioKinema训练文档](https://github.com/IDEA-XL/BioKinema/blob/main/docs/data_and_training.md)。
 
 因此需要并行推进生成latent→几何流形的约束、真正作用于生成路径的结构预训练，以及matched baseline评估。Mamba负责其中的时间表示问题；不能承诺替换它就超过两个baseline。

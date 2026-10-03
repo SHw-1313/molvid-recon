@@ -4,6 +4,12 @@ Current code lives in the shallow root package [`molvid/`](molvid/). Use the
 versioned templates in [`configs/`](configs/) and the current inspection tools
 in [`tools/`](tools/). New run artifacts go in `runs/` (ignored by Git).
 
+2026-10-04 integration: [ABCD audit and merge handoff](agent/abcd_integration_20261004/REPORT.md).
+The selected scientific baseline remains A1/4-block; B/C/D are retained optional
+capabilities, not jointly promoted experiments. Next-stage designs:
+[shared-trunk static pretraining](docs/static_backbone_pretraining_v2.md) and
+[physical-time Mamba](docs/mamba_temporal_v1.md); neither is implemented yet.
+
 ```bash
 enter-container
 conda activate torch-ito
