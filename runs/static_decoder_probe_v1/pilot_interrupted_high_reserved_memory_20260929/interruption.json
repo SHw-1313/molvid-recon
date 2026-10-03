@@ -1,0 +1,21 @@
+{
+  "schema": "molvid.static_decoder.interruption.v1",
+  "status": "operator_interrupted",
+  "successful_metric_rows_preserved": 17,
+  "reason": "The implementer stopped only the D process after observing unexpectedly high CUDA reservation during engineering calibration/pilot; no A/B/C process was signalled.",
+  "contemporaneous_artifacts": [
+    "gamma_calibration.json",
+    "pilot_metrics.jsonl"
+  ],
+  "reconstructed_observation": {
+    "source": "interactive tool transcript; this value was not written by the interrupted process",
+    "gpu_total_memory_mib": 81920,
+    "gpu_reported_used_memory_mib": 66999,
+    "known_preexisting_external_process_memory_mib": 9126,
+    "inferred_D_cached_or_live_memory_mib": 57873
+  },
+  "diagnosis": "The excess was allocator reservation retained after full-dynamic gamma calibration, not growth in post-step live allocations.",
+  "resolution": "The replacement candidate selects the three cheapest complete systems for calibration and releases unused phase caches before the bounded pilot.",
+  "recovery": "The interrupted engineering run is not resumable and is prohibited as a formal parent.",
+  "sealed_test_trajectories_opened": false
+}

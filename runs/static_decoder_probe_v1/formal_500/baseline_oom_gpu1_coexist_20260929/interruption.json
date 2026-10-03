@@ -1,0 +1,13 @@
+{
+  "schema": "molvid.static_decoder.formal_interruption.v1",
+  "arm": "baseline",
+  "status": "cuda_oom_before_checkpoint",
+  "completed_metric_rows": 138,
+  "elapsed_seconds": 674.289,
+  "reason": "GPU1 had two pre-existing processes using 9126 MiB and 6864 MiB; the D process reached 63.18 GiB and could not allocate another 822 MiB with 444.75 MiB free.",
+  "torch_allocated_gib": 61.78,
+  "torch_reserved_unallocated_mib": 865.51,
+  "recovery": "Preserved this directory and restarted the exact arm from the released A1 parent with PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True. No comparison outcome or checkpoint was observed.",
+  "other_processes_signalled": false,
+  "sealed_test_trajectories_opened": false
+}

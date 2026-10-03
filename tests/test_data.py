@@ -14,6 +14,7 @@ from molvid.data.batch import (
     validate_clip_record,
 )
 from molvid.data.store import ClipMMapDataset, ClipMMapWriter, StaticClipDataset, static_record_to_clip
+from molvid.data.static import STATIC_DECODER_TASK_TYPE, trajectory_record_to_static
 
 
 def _record(
@@ -103,6 +104,36 @@ def test_static_clip_is_single_frame_and_uses_explicit_bucket():
     assert record["x"].shape == (1, 4, 3)
     assert record["time_ps"].tolist() == [0.0]
     assert record["delta_time_ps"].size == 0
+
+
+def test_trajectory_frame_becomes_static_target_with_source_provenance():
+    source = _record(frames=4, dt=100.0)
+    source.update({"system_id": "sys", "replica": "rep1", "split": "train"})
+    static = trajectory_record_to_static(source, frame_index=2)
+    assert static["task"] == 0
+    assert static["training_task_type"] == STATIC_DECODER_TASK_TYPE
+    assert static["time_bucket_id"] == "static"
+    assert static["time_ps"].tolist() == [0.0]
+    assert static["delta_time_ps"].shape == (0,)
+    assert static["static_source_frame_index"] == 2
+    assert static["static_source_time_ps"] == pytest.approx(200.0)
+    assert static["motion_available"] is False
+    assert static["physical_lag_applicable"] is False
+    np.testing.assert_array_equal(static["x"], source["x"][2:3])
+    np.testing.assert_array_equal(static["bpos"], source["bpos"][2:3])
+
+
+def test_static_selection_rejects_invalid_or_nontrajectory_frames():
+    source = _record(frames=4)
+    source["frame_mask"] = np.asarray([True, True, False, False])
+    with pytest.raises(ValueError, match="must be valid"):
+        trajectory_record_to_static(source, frame_index=2)
+    with pytest.raises(IndexError, match="out of range"):
+        trajectory_record_to_static(_record(frames=4), frame_index=4)
+    with pytest.raises(ValueError, match="trajectory record"):
+        trajectory_record_to_static(
+            _record(frames=1, bucket="static", task="static"), frame_index=0
+        )
 
 
 def test_trajectory_clip_has_fixed_sixteen_frame_shape():

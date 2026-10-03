@@ -1,0 +1,108 @@
+{
+  "schema": "molvid.static_decoder.loss_manifest.v1",
+  "training_implementation_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+  "released_A1_recipe": {
+    "reference_config_sha256": "15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce",
+    "physical_recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+    "dynamic_terms": {
+      "flow": {
+        "weight": 1.0,
+        "activation": "every dynamic update",
+        "source": "target-interpolated flow endpoint",
+        "decoder_gradient": false
+      },
+      "clean_coordinate": {
+        "weight": 1.0,
+        "activation": "every dynamic update",
+        "decoder_gradient": true
+      },
+      "clean_bond": {
+        "weight": 0.1,
+        "activation": "every dynamic update",
+        "decoder_gradient": true
+      },
+      "near_coordinate": {
+        "weight": 0.1,
+        "activation": "flow_time >= 0.9",
+        "source": "detached near-endpoint",
+        "decoder_gradient_when_active": true
+      },
+      "near_bond": {
+        "weight": 0.01,
+        "activation": "flow_time >= 0.9",
+        "source": "detached near-endpoint",
+        "decoder_gradient_when_active": true
+      },
+      "generated_bond": {
+        "weight": 0.051707249134778976,
+        "activation": "flow_time >= 0.75",
+        "decoder_gradient_when_active": true
+      },
+      "sampled_clash": {
+        "weight": 0.0010638914903412656,
+        "activation": "every 8 dynamic updates; 2 actual-source draws; 8 Euler steps",
+        "decoder_gradient_when_active": true,
+        "allowed_overlap_A": 0.8,
+        "one_four_overlap_A": 1.2,
+        "distance_chunk_size": 256,
+        "table_source_hash": "ce39a1977bdc06746e111eccd96175f608b6ccf97c6aa8fe7f94574986455501",
+        "table_split": "train"
+      },
+      "sampled_bond_band": {"weight": 0.0},
+      "sampled_displacement": {"weight": 0.0},
+      "sampled_rmsf": {"weight": 0.0}
+    }
+  },
+  "static_decoder_auxiliary": {
+    "formula": "gamma * (coordinate_MSE + 0.1 * bond_distance_MSE + 0.0010638914903412656 * clash_raw)",
+    "coordinate_unit": "angstrom",
+    "coordinate": {
+      "weight_before_gamma": 1.0,
+      "target": "clean input structure x",
+      "condition": "perturbed structure x_tilde only"
+    },
+    "bond": {
+      "weight_before_gamma": 0.1,
+      "target": "clean target bond distances"
+    },
+    "clash": {
+      "weight_before_gamma": 0.0010638914903412656,
+      "rule": "released A1 topology-aware exclusions, thresholds and normalization"
+    },
+    "gamma": 0.00017325410836320802,
+    "gamma_target_decoder_gradient_ratio": 0.075,
+    "gamma_achieved_median_decoder_gradient_ratio": 0.075,
+    "gamma_calibration_sha256": "2e09ed560c50d5938ffce1b8fe6c2080d001972fba79400154b2a9a966351478",
+    "perturbation": {
+      "clean_probability": 0.2,
+      "sigma_per_axis_A": [0.05, 0.1, 0.2],
+      "three_dimensional_rms_displacement_A": [
+        0.08660254037844387,
+        0.17320508075688773,
+        0.34641016151377546
+      ]
+    },
+    "task_semantics": {
+      "task_type": "static_decoder_aux",
+      "frames": 1,
+      "physical_lag_applicable": false,
+      "motion_available": false,
+      "motion_losses": false
+    },
+    "gradient_boundary": {
+      "updated": ["decoder"],
+      "frozen_or_inactive": ["target_teacher", "history_encoder", "motion_encoder", "dit"],
+      "teacher_mode": "frozen eval no_grad",
+      "scheduler_advanced": false,
+      "inactive_parameter_and_optimizer_state_check": "bitwise fail-closed"
+    }
+  },
+  "calibration_evidence": {
+    "result_sha256": "e76611870ebe1bd7c7d8db6f242ee80492a0fb36a4b7b98fb98b0ce47778ca79",
+    "batch_count": 9,
+    "dynamic_decoder_gradient_norm_median": 0.1572979837656021,
+    "actual_source_sampled_clash_included": true,
+    "training_clean_mixture_included": true,
+    "raw_weighted_and_zero_gradient_terms_recorded": true
+  }
+}

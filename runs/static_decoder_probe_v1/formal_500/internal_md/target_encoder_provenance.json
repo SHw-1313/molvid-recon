@@ -1,0 +1,66 @@
+{
+  "artifact_epoch": 26,
+  "artifact_step": 39721,
+  "code_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+  "constructor": {
+    "bond_construction": {
+      "mode": "topology"
+    },
+    "coordinate_stem": "centered_vector",
+    "cutoff_lower": 0.0,
+    "cutoff_upper": 5.0,
+    "distance_bond_cache_capacity": 4096,
+    "distance_bond_max": 2.2,
+    "distance_bond_max_num_neighbors": 64,
+    "distance_bond_min": 0.5,
+    "frame_encoder_source_hash": "e2ec7e6c1ed37c5b3bd6272f33b1ff48e4d697092de16f9925ef6fdd20a2414a",
+    "freeze_frame_encoder": true,
+    "hidden_channels": 128,
+    "lmax": 1,
+    "max_num_neighbors": 32,
+    "neighbor_backend": "cuda_radius",
+    "num_heads": 8,
+    "num_rbf": 50,
+    "spatial_backbone": "torchmd_et",
+    "spatial_dtype": "float32",
+    "spatial_execution": {
+      "mode": "full"
+    },
+    "spatial_layers": 2,
+    "temporal_codec_mode": "ratio4_state_detail",
+    "temporal_layers": 1,
+    "temporal_ratio": 4,
+    "time_scale_ps": 100.0,
+    "topology_cache_capacity": 4096,
+    "topology_device_cache_capacity": 4096,
+    "trainable_rbf": false,
+    "use_spatial_refiner": false,
+    "vecnorm_type": null,
+    "vertex": true
+  },
+  "coordinate_convention": "one frame-zero loss-mask centroid per sample; same origin for all frames",
+  "coordinate_stem_state_sha256": "e0141b268464799000895e2fe8b2b2ffadf29072c2fd20bfed9dee69067cd236",
+  "cuda_check": {},
+  "extracted_modules": [
+    "frame_encoder",
+    "coordinate_stem"
+  ],
+  "feature_boundary": "frame_encoder_plus_coordinate_stem_before_haar",
+  "frame_encoder_state_sha256": "462f70e08cbc966627ed60a14c696c57ed6444668a4cf33a0336911a4b9ce5a1",
+  "frozen": true,
+  "historical_final_result_step": 45844,
+  "name_mappings": [
+    {
+      "source_prefix": "coordinate_vector_stem.projection.",
+      "target_prefix": "coordinate_stem.projection."
+    },
+    {
+      "source_prefix": "frame_encoder.spatial_encoder.",
+      "target_prefix": "frame_encoder.backbone."
+    }
+  ],
+  "schema_version": "molvid.frame_joint.target_encoder_provenance.v1",
+  "source_path": "/workspace/molvid-recon-gm-motion-v3/inputs/codec_best.pt",
+  "source_schema": "pvb.codec.checkpoint.v2",
+  "source_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df"
+}

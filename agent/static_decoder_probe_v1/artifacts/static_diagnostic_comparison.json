@@ -1,0 +1,85 @@
+{
+  "schema": "molvid.static_decoder.heldout_comparison.v1",
+  "protocol": {
+    "systems": 8,
+    "replicas_per_system": 3,
+    "records_per_arm": 24,
+    "rows_per_arm": 96,
+    "sigmas_per_axis_A": [0.0, 0.05, 0.1, 0.2],
+    "aggregation": "replica mean within system, then system-equal mean",
+    "paired_bootstrap_unit": "system",
+    "paired_bootstrap_draws": 10000,
+    "identical_cross_arm_inputs_and_noise": true,
+    "test_opened": false
+  },
+  "output_coordinate_mse_A2": {
+    "baseline": {
+      "0": 1.8899081498384476,
+      "0.05": 1.9337210357189178,
+      "0.1": 2.0574725319941836,
+      "0.2": 2.3042856007814407
+    },
+    "internal_md": {
+      "0": 0.04682824217403928,
+      "0.05": 0.049796593763555094,
+      "0.1": 0.059453620575368404,
+      "0.2": 0.09232566226273775
+    },
+    "external_pdb": {
+      "0": 0.04101965708347659,
+      "0.05": 0.043858416223277644,
+      "0.1": 0.05309823978071411,
+      "0.2": 0.08516694946835437
+    }
+  },
+  "external_vs_internal_output_mse": {
+    "0": {
+      "relative_delta": -0.12404,
+      "absolute_delta_A2": -0.00580858509056269,
+      "paired_system_CI95_A2": [-0.007154, -0.004511]
+    },
+    "0.05": {
+      "relative_delta": -0.11925,
+      "absolute_delta_A2": -0.00593817754027745,
+      "paired_system_CI95_A2": [-0.007291, -0.004607]
+    },
+    "0.1": {
+      "relative_delta": -0.10690,
+      "absolute_delta_A2": -0.00635538079465429,
+      "paired_system_CI95_A2": [-0.007767, -0.004941]
+    },
+    "0.2": {
+      "relative_delta": -0.07754,
+      "absolute_delta_A2": -0.00715871279438338,
+      "paired_system_CI95_A2": [-0.008792, -0.005547]
+    }
+  },
+  "external_vs_internal_relative_deltas": {
+    "bond_distance_mse": {
+      "0": -0.08183,
+      "0.05": -0.06153,
+      "0.1": -0.03744,
+      "0.2": -0.01402
+    },
+    "clash_raw": {
+      "0": -0.17748,
+      "0.05": -0.17146,
+      "0.1": -0.17495,
+      "0.2": -0.15854
+    }
+  },
+  "artifact_sha256": {
+    "baseline_summary": "b61bdef2ba0988b56e89fd22ed250cedafc6920970331e75a32ad50c0efdc343",
+    "baseline_rows": "4c9c0567af7da6627e17768bca77e50e35b1373deb54396459bcd01b00b53557",
+    "internal_summary": "583458a2a4e251cddc7daa63fe6883331d4dced09c8dd18ba2508567bacdbf9c",
+    "internal_rows": "8d4fd019a4d71afee07565e6b5153079d4c588624c45f473b4eed31866b50672",
+    "external_summary": "cbe878435acf8418378e07e6514876b2507e8dbfbdfec987055a9647516fb8a9",
+    "external_rows": "b36f5a559cd2a449c52c2ee37c23b37f0d493438a1ff4218fe39c8b1dc4e31e8"
+  },
+  "interpretation": {
+    "external_improves_static_decoder_vs_internal": true,
+    "both_auxiliary_arms_improve_static_decoder_vs_baseline": true,
+    "net_denoising_relative_to_raw_perturbed_input": false,
+    "dynamic_transfer_established_for_external": false
+  }
+}

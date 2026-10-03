@@ -94,3 +94,88 @@ def test_physical_configuration_does_not_invent_uncalibrated_tables():
     with pytest.raises(ValueError, match="historical J1"):
         SampledAuxiliaryConfig.resolve({"enabled": True, "observed_bond_weight": 0.1,
                                        "physical": {"displacement_weight": 0.1, "displacement_scale_A2": 1.0}})
+
+
+def test_static_auxiliary_config_is_strict_and_internal_pool_is_frozen():
+    path = Path(__file__).resolve().parents[1] / "configs/frame_gm_p3_formal_J0_260923.yaml"
+    raw = yaml.safe_load(path.read_text())
+    raw["static_decoder_auxiliary"] = {
+        "enabled": True,
+        "source": "internal_md",
+        "cadence": 4,
+        "seed": 20260929,
+        "max_atoms_per_update": 5000,
+        "max_samples_per_update": 6,
+        "min_source_atoms": 303,
+        "max_source_atoms": 1000,
+        "expected_pool_size": 186,
+        "exposure_target": {
+            "static_updates": 250, "samples": 1000, "atoms": 800000,
+            "supervised_atoms": 800000, "sample_tolerance": 20,
+            "atom_tolerance": 20000, "supervised_atom_tolerance": 20000,
+        },
+        "perturbation": {
+            "sigma_per_axis_angstrom": [0.05, 0.10, 0.20],
+            "clean_probability": 0.20,
+        },
+        "loss": {"coordinate": 1.0, "bond": 0.1, "clash": 0.001, "gamma": 0.01},
+        "gamma_calibration": {
+            "path": "train-only-gamma.json",
+            "sha256": "gamma-sha256",
+            "parent_sha256": "released-parent-sha256",
+            "code_commit": "code-commit",
+            "reference_config_sha256": "reference-config-sha256",
+            "recipe_release_sha256": "recipe-release-sha256",
+            "auxiliary_recipe_sha256": "auxiliary-recipe-sha256",
+        },
+    }
+    _validate_frame_joint_config(raw)
+    raw["static_decoder_auxiliary"]["cadence"] = 5
+    with pytest.raises(ValueError, match="cadence"):
+        _validate_frame_joint_config(raw)
+    raw["static_decoder_auxiliary"]["cadence"] = 4
+    raw["static_decoder_auxiliary"]["expected_pool_size"] = 185
+    with pytest.raises(ValueError, match="three-replica"):
+        _validate_frame_joint_config(raw)
+
+
+def test_external_static_config_requires_a_complete_eligibility_identity():
+    path = Path(__file__).resolve().parents[1] / "configs/frame_gm_p3_formal_J0_260923.yaml"
+    raw = yaml.safe_load(path.read_text())
+    raw["static_decoder_auxiliary"] = {
+        "enabled": True,
+        "source": "external_static",
+        "cadence": 4,
+        "seed": 20260929,
+        "max_atoms_per_update": 5000,
+        "max_samples_per_update": 6,
+        "min_source_atoms": 303,
+        "max_source_atoms": 1000,
+        "expected_pool_size": 2000,
+        "exposure_target": {
+            "static_updates": 250, "samples": 1000, "atoms": 800000,
+            "supervised_atoms": 800000, "sample_tolerance": 20,
+            "atom_tolerance": 20000, "supervised_atom_tolerance": 20000,
+        },
+        "perturbation": {},
+        "loss": {"gamma": 0.01},
+        "gamma_calibration": {
+            "path": "train-only-gamma.json",
+            "sha256": "gamma-sha256",
+            "parent_sha256": "released-parent-sha256",
+            "code_commit": "code-commit",
+            "reference_config_sha256": "reference-config-sha256",
+            "recipe_release_sha256": "recipe-release-sha256",
+            "auxiliary_recipe_sha256": "auxiliary-recipe-sha256",
+        },
+        "external": {
+            "store": "static-store",
+            "store_index_sha256": "index-sha256",
+            "source": "pdb",
+            "split": "train",
+            "eligibility_manifest": "eligibility.json",
+            "near_homology_policy": "waived_by_user_20260929",
+        },
+    }
+    with pytest.raises(ValueError, match="identity is incomplete"):
+        _validate_frame_joint_config(raw)

@@ -1,0 +1,435 @@
+{
+  "auxiliary_recipe": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r04/resolved_auxiliary.json",
+  "auxiliary_recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+  "code_commit": "07b6ea76a1460eb37f85154cb3770983ad64c490",
+  "cuda_device_name": "NVIDIA A100-SXM4-80GB",
+  "data_hash": "8b972def15babf848015699e527e28bc53fc195292ce446bda8555d86aaed0b1",
+  "data_relationship": {
+    "base_data_hash": "54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0",
+    "derived_train": [
+      {
+        "contract_hash": "5bc483d292440fe01d9d598159b29d08678a2c64cf431d7521780ab9c4c00668",
+        "index_sha256": "3a1be208b90f77bf78452cb6e7402b14f9066b8b0208ce6e250852133d250045",
+        "manifest": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/data/fixed_history_train/fixed_history_train_manifest.json",
+        "manifest_sha256": "863d368d8b6937dd7c5a5efce0ccfc4a2857b77b7aaf1de007ade3a40ae0cc61",
+        "record_count": 6912,
+        "store": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/data/fixed_history_train/clip_store/train"
+      }
+    ],
+    "mode": "authorized_train_only_derived_views",
+    "normalization_source_data_hash": "54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0",
+    "train_systems": []
+  },
+  "device": "cuda:0",
+  "elapsed_seconds": 60.743084320798516,
+  "gamma_calibration": "/workspace/molvid-recon-static-decoder-probe-v1/runs/static_decoder_probe_v1/a1_smoke_final_07b6ea7/gamma_calibration.json",
+  "largest_profile": {
+    "atoms": 4975,
+    "dataset_index": 67787,
+    "metrics": {
+      "atom_count": 4975,
+      "batch_size": 1,
+      "bpos_exact_anchor_count": 4975,
+      "bpos_fallback_count": 0,
+      "decoder_grad_norm": 0.044138241559267044,
+      "loss": 0.0006269505829550326,
+      "motion_available": false,
+      "nominal_sigma_per_axis_angstrom": [
+        0.05000000074505806
+      ],
+      "physical_lag_applicable": false,
+      "raw_bond_distance": 0.882188081741333,
+      "raw_clash": 0.20584139227867126,
+      "raw_coordinate_mse": 3.530238389968872,
+      "realized_rms_displacement_angstrom": [
+        0.08641137182712555
+      ],
+      "static_update": 1,
+      "supervised_atom_count": 4975,
+      "task_type": "static_decoder_aux",
+      "unscaled_loss": 3.6186764240264893,
+      "weighted_bond_distance": 1.5284271285054274e-05,
+      "weighted_clash": 3.794141889557068e-08,
+      "weighted_coordinate_mse": 0.0006116283475421369
+    },
+    "peak_allocated_bytes": 802621440,
+    "sample_id": "atlas_4yal_A_R3_dt_400ps_wf000061",
+    "seconds": 0.29938505170866847,
+    "source_frame_index": 3
+  },
+  "limitations": [
+    "static clash reuses the released A1 thresholds and normalization",
+    "engineering pilot checkpoint is prohibited as a formal three-arm parent"
+  ],
+  "loss": {
+    "bond": 0.1,
+    "clash": 0.0010638914903412656,
+    "coordinate": 1.0,
+    "gamma": 0.00017325410836320802
+  },
+  "mode": "smoke",
+  "normalization_source_data_hash": "54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0",
+  "parent": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
+  "parent_role": "released_A1",
+  "parent_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+  "perturbation": {
+    "clean_probability": 0.2,
+    "coordinate_unit": "angstrom",
+    "sigma_definition": "independent Gaussian standard deviation per Cartesian axis",
+    "sigma_per_axis_angstrom": [
+      0.05,
+      0.1,
+      0.2
+    ],
+    "three_dimensional_rms_displacement_angstrom": [
+      0.08660254037844387,
+      0.17320508075688773,
+      0.34641016151377546
+    ]
+  },
+  "phase_cache_releases": {
+    "after_gradient_calibration_and_precision_smoke": {
+      "allocated_bytes": 152138240,
+      "reserved_bytes_after_release": 203423744,
+      "reserved_bytes_before_release": 13337886720
+    },
+    "after_largest_sample_profile": {
+      "allocated_bytes": 152138240,
+      "reserved_bytes_after_release": 203423744,
+      "reserved_bytes_before_release": 6589251584
+    }
+  },
+  "pilot": null,
+  "recipe_release": "/workspace/molvid-gm-memory-v3-coordination/recipe_release.json",
+  "recipe_release_sha256": "38702552fd847f79cf5a6e9c3f0d4b2a104ef7c590316ac6c5395ec2c94626f2",
+  "schema": "molvid.static_decoder.smoke_pilot.v1",
+  "smoke": [
+    {
+      "disabled_static_path_dynamic_decode_max_abs": 0.0,
+      "inactive_optimizer_state_entries": 0,
+      "inactive_parameter_max_abs": 0.0,
+      "metrics": {
+        "atom_count": 3531,
+        "batch_size": 9,
+        "bpos_exact_anchor_count": 3531,
+        "bpos_fallback_count": 0,
+        "decoder_grad_norm": 0.00985208060592413,
+        "loss": 0.00018798434757627547,
+        "motion_available": false,
+        "nominal_sigma_per_axis_angstrom": [
+          0.10000000149011612,
+          0.20000000298023224,
+          0.20000000298023224,
+          0.05000000074505806,
+          0.20000000298023224,
+          0.20000000298023224,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "physical_lag_applicable": false,
+        "raw_bond_distance": 0.18759723007678986,
+        "raw_clash": 0.09406721591949463,
+        "raw_coordinate_mse": 1.0661611557006836,
+        "realized_rms_displacement_angstrom": [
+          0.17480021715164185,
+          0.3494696319103241,
+          0.3350508213043213,
+          0.08653281629085541,
+          0.34700530767440796,
+          0.3410395383834839,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "static_update": 1,
+        "supervised_atom_count": 3531,
+        "task_type": "static_decoder_aux",
+        "unscaled_loss": 1.0850210189819336,
+        "weighted_bond_distance": 3.250199370086193e-06,
+        "weighted_clash": 1.7338804170208277e-08,
+        "weighted_coordinate_mse": 0.00018471680232323706
+      },
+      "peak_allocated_bytes": 818662400,
+      "precision": "fp32",
+      "step_seconds": 0.3115020119585097,
+      "target_mutation_max_abs": 0.0,
+      "teacher_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+      "teacher_state_unchanged": true,
+      "trainer_contract": {
+        "amp_bfloat16": false,
+        "grad_clip": 1.0,
+        "inactive_scope": [
+          "target_teacher",
+          "history_encoder",
+          "motion_encoder",
+          "dit"
+        ],
+        "loss": {
+          "bond": 0.1,
+          "clash": 0.0010638914903412656,
+          "coordinate": 1.0,
+          "gamma": 0.00017325410836320802
+        },
+        "model_path": "perturbed_coordinates->frozen_teacher->shared_decoder",
+        "motion_available": false,
+        "optimizer_groups": [
+          {
+            "group_name": "history_encoder.decay",
+            "lr": 0.0001,
+            "parameter_count": 23,
+            "weight_decay": 0.01
+          },
+          {
+            "group_name": "history_encoder.no_decay",
+            "lr": 0.0001,
+            "parameter_count": 14,
+            "weight_decay": 0.0
+          },
+          {
+            "group_name": "dit.decay",
+            "lr": 0.0002,
+            "parameter_count": 167,
+            "weight_decay": 0.01
+          },
+          {
+            "group_name": "dit.no_decay",
+            "lr": 0.0002,
+            "parameter_count": 141,
+            "weight_decay": 0.0
+          },
+          {
+            "group_name": "decoder.decay",
+            "lr": 5e-05,
+            "parameter_count": 38,
+            "weight_decay": 0.01
+          },
+          {
+            "group_name": "decoder.no_decay",
+            "lr": 5e-05,
+            "parameter_count": 41,
+            "weight_decay": 0.0
+          }
+        ],
+        "physical_lag_applicable": false,
+        "scheduler_advanced_by_static_updates": false,
+        "schema": "molvid.static_decoder_auxiliary.v1",
+        "task_type": "static_decoder_aux",
+        "teacher_frozen_eval": true,
+        "trainable_scope": [
+          "decoder"
+        ]
+      },
+      "warm_start_initialized": 0,
+      "warm_start_loaded": 481
+    },
+    {
+      "disabled_static_path_dynamic_decode_max_abs": 0.0,
+      "inactive_optimizer_state_entries": 0,
+      "inactive_parameter_max_abs": 0.0,
+      "metrics": {
+        "atom_count": 3531,
+        "batch_size": 9,
+        "bpos_exact_anchor_count": 3531,
+        "bpos_fallback_count": 0,
+        "decoder_grad_norm": 0.00964103639125824,
+        "loss": 0.00018162417109124362,
+        "motion_available": false,
+        "nominal_sigma_per_axis_angstrom": [
+          0.10000000149011612,
+          0.05000000074505806,
+          0.0,
+          0.0,
+          0.0,
+          0.20000000298023224,
+          0.05000000074505806,
+          0.10000000149011612,
+          0.10000000149011612
+        ],
+        "physical_lag_applicable": false,
+        "raw_bond_distance": 0.17003636062145233,
+        "raw_clash": 0.08735568076372147,
+        "raw_coordinate_mse": 1.0312142372131348,
+        "realized_rms_displacement_angstrom": [
+          0.17216207087039948,
+          0.09127771854400635,
+          0.0,
+          0.0,
+          0.0,
+          0.361309289932251,
+          0.08771292120218277,
+          0.17029957473278046,
+          0.17947378754615784
+        ],
+        "static_update": 1,
+        "supervised_atom_count": 3531,
+        "task_type": "static_decoder_aux",
+        "unscaled_loss": 1.0483108758926392,
+        "weighted_bond_distance": 2.945949972854578e-06,
+        "weighted_clash": 1.6101711963756316e-08,
+        "weighted_coordinate_mse": 0.00017866211419459432
+      },
+      "peak_allocated_bytes": 705878528,
+      "precision": "bf16",
+      "step_seconds": 0.5535401180386543,
+      "target_mutation_max_abs": 0.0,
+      "teacher_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+      "teacher_state_unchanged": true,
+      "trainer_contract": {
+        "amp_bfloat16": true,
+        "grad_clip": 1.0,
+        "inactive_scope": [
+          "target_teacher",
+          "history_encoder",
+          "motion_encoder",
+          "dit"
+        ],
+        "loss": {
+          "bond": 0.1,
+          "clash": 0.0010638914903412656,
+          "coordinate": 1.0,
+          "gamma": 0.00017325410836320802
+        },
+        "model_path": "perturbed_coordinates->frozen_teacher->shared_decoder",
+        "motion_available": false,
+        "optimizer_groups": [
+          {
+            "group_name": "history_encoder.decay",
+            "lr": 0.0001,
+            "parameter_count": 23,
+            "weight_decay": 0.01
+          },
+          {
+            "group_name": "history_encoder.no_decay",
+            "lr": 0.0001,
+            "parameter_count": 14,
+            "weight_decay": 0.0
+          },
+          {
+            "group_name": "dit.decay",
+            "lr": 0.0002,
+            "parameter_count": 167,
+            "weight_decay": 0.01
+          },
+          {
+            "group_name": "dit.no_decay",
+            "lr": 0.0002,
+            "parameter_count": 141,
+            "weight_decay": 0.0
+          },
+          {
+            "group_name": "decoder.decay",
+            "lr": 5e-05,
+            "parameter_count": 38,
+            "weight_decay": 0.01
+          },
+          {
+            "group_name": "decoder.no_decay",
+            "lr": 5e-05,
+            "parameter_count": 41,
+            "weight_decay": 0.0
+          }
+        ],
+        "physical_lag_applicable": false,
+        "scheduler_advanced_by_static_updates": false,
+        "schema": "molvid.static_decoder_auxiliary.v1",
+        "task_type": "static_decoder_aux",
+        "teacher_frozen_eval": true,
+        "trainable_scope": [
+          "decoder"
+        ]
+      },
+      "warm_start_initialized": 0,
+      "warm_start_loaded": 481
+    }
+  ],
+  "static_sources": [
+    {
+      "atoms": 303,
+      "dataset_index": 10044,
+      "replica": "R1",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_2erl_A_R1_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "2erl_A"
+    },
+    {
+      "atoms": 303,
+      "dataset_index": 10106,
+      "replica": "R2",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_2erl_A_R2_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "2erl_A"
+    },
+    {
+      "atoms": 303,
+      "dataset_index": 10168,
+      "replica": "R3",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_2erl_A_R3_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "2erl_A"
+    },
+    {
+      "atoms": 410,
+      "dataset_index": 8556,
+      "replica": "R1",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_2b9d_A_R1_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "2b9d_A"
+    },
+    {
+      "atoms": 410,
+      "dataset_index": 8618,
+      "replica": "R2",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_2b9d_A_R2_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "2b9d_A"
+    },
+    {
+      "atoms": 410,
+      "dataset_index": 8680,
+      "replica": "R3",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_2b9d_A_R3_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "2b9d_A"
+    },
+    {
+      "atoms": 464,
+      "dataset_index": 17484,
+      "replica": "R1",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_3c05_A_R1_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "3c05_A"
+    },
+    {
+      "atoms": 464,
+      "dataset_index": 17546,
+      "replica": "R2",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_3c05_A_R2_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "3c05_A"
+    },
+    {
+      "atoms": 464,
+      "dataset_index": 17608,
+      "replica": "R3",
+      "source_frame_index": 8,
+      "source_sample_id": "atlas_3c05_A_R3_dt_100ps_w000000",
+      "source_time_ps": 800.0,
+      "system_id": "3c05_A"
+    }
+  ],
+  "teacher_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+  "test_opened": false,
+  "train_replica_count": 9,
+  "train_system_count": 3,
+  "warm_start_initialized": 0,
+  "warm_start_loaded": 481
+}

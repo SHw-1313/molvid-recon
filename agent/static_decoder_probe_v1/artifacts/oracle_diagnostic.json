@@ -1,0 +1,61 @@
+{
+  "schema": "molvid.static_decoder.clean_latent_oracle_comparison.v1",
+  "aggregation": "all frozen validation lag/history buckets, systems equal within evaluator report",
+  "metrics": {
+    "baseline": {
+      "ordinary": {
+        "aligned_rmsd_A": 0.0363457,
+        "drmsd_A": 0.0339153,
+        "bond_rmse_A": 0.0205268
+      },
+      "fixed_history": {
+        "aligned_rmsd_A": 0.0362058,
+        "drmsd_A": 0.0338410,
+        "bond_rmse_A": 0.0203297
+      }
+    },
+    "internal_md": {
+      "ordinary": {
+        "aligned_rmsd_A": 0.0358799,
+        "drmsd_A": 0.0328432,
+        "bond_rmse_A": 0.0205414
+      },
+      "fixed_history": {
+        "aligned_rmsd_A": 0.0358255,
+        "drmsd_A": 0.0329045,
+        "bond_rmse_A": 0.0203881
+      }
+    },
+    "external_pdb": {
+      "ordinary": {
+        "aligned_rmsd_A": 0.0364919,
+        "drmsd_A": 0.0341571,
+        "bond_rmse_A": 0.0205568
+      },
+      "fixed_history": {
+        "aligned_rmsd_A": 0.0364247,
+        "drmsd_A": 0.0341817,
+        "bond_rmse_A": 0.0204036
+      }
+    }
+  },
+  "relative_to_baseline": {
+    "internal_md": {
+      "ordinary_aligned_rmsd": -0.012816,
+      "ordinary_drmsd": -0.031609,
+      "ordinary_bond_rmse": 0.00071,
+      "fixed_aligned_rmsd": -0.010502,
+      "fixed_drmsd": -0.027673,
+      "fixed_bond_rmse": 0.00287
+    },
+    "external_pdb": {
+      "ordinary_aligned_rmsd": 0.004024,
+      "ordinary_drmsd": 0.007130,
+      "ordinary_bond_rmse": 0.00146,
+      "fixed_aligned_rmsd": 0.006046,
+      "fixed_drmsd": 0.010065,
+      "fixed_bond_rmse": 0.003635
+    }
+  },
+  "test_opened": false
+}
