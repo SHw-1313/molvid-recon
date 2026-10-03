@@ -1,5 +1,28 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
 
+## ABCD integration follow-up (2026-10-04)
+
+- [x] Isolate integration worktree; merge A → D → C → B; preserve source trees,
+  running B/C8 and sealed test.
+- [x] Validate affected contracts/tests, A1 inference parity, streamed backward,
+  real B/C4/D artifact loading and capacity expansion/checkpointing numerics.
+- [x] Complete bounded solver/oracle/persistence/memory-sensitivity diagnostic:
+  16 validation clips, 192 rows; keep interpretation limits and per-system data.
+- [x] Audit retained architecture against original `PVB_origin` and BioKinema;
+  distinguish measured results from hypotheses and incomplete lanes.
+- [x] Design D2 shared-trunk static/dynamic gradient balance and staged
+  physical-time Mamba replacement; see `docs/` and integration report.
+- [ ] Implement D2 with explicit static task/temporal bypass, train-only gradient
+  calibration and one shared optimizer step; then paired D0/D1/D2-I/D2-E pilots.
+- [ ] Implement staged equivariant physical-time Mamba, CUDA reference gates and
+  matched-exposure/capacity ablations; do not upgrade the live training env.
+- [ ] Freeze matched PVB_origin/BioKinema evaluation and pretrained-data overlap;
+  complete baseline inference before claiming a performance ranking.
+- [ ] Allocate safe checkpoint storage for new training; collect B/C8 final
+  results when independently finished, without gating the completed code merge.
+
+## Earlier refactor/calibration tasks
+
 - [x] Frame GM Calibration v2 P1--P3 completed in the dedicated
   `feat/frame-gm-calibration-v2` worktree: repaired temporal metrics and
   fixed-history views, four-arm G/M calibration, and sampled-trajectory

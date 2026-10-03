@@ -1,0 +1,110 @@
+{
+  "schema": "molvid.abcd.integration_snapshot.v1",
+  "date": "2026-10-04",
+  "branch": "integration/abcd-20261004",
+  "host_worktree": "/data4/users/sihao/workspace/molvid-integration-abcd-20261004",
+  "container_worktree": "/workspace/molvid-integration-abcd-20261004",
+  "base_commit": "cc74a385577e57c64c9623111e0db86e54e48770",
+  "model_code_commit": "3aad9be2502a2a7672bef8d8f726fc75c4356865",
+  "verification_tools_commit": "5caa0d784a2471eda462e53f791356f1eae4b142",
+  "validated_git_subtrees": {
+    "molvid": "9631b4067d8b04ac54471a488a2433ec2406c854",
+    "tools": "8e42beb3a40f4d8bfb13be898a55728eb69fd550",
+    "tests": "0293e333c94eb15b781874821271dc0ed8c50164"
+  },
+  "sources": {
+    "A": "e5e5fe0f559cb50d1d2ad9ab42f07692277db0bc",
+    "B": "5092dcbe0e70f8864d72e0d13d3301db7d46929c",
+    "C": "e4beede3bbcbed68cfb059bd5686e6613147b340",
+    "D": "29e96452e62f33b8c40fcaec5d4b61f476040c7c"
+  },
+  "merges_in_order": [
+    {"lane": "A", "commit": "7da861d33227f098ed002e6137acb05373feae3a"},
+    {"lane": "D", "commit": "3b88cb6fa7241540ce0ee28d66271d56cc5639e7"},
+    {"lane": "C", "commit": "f70e388b989bf53c5584b9b8f263dc0e839c074f"},
+    {"lane": "B", "commit": "f85896bb43f306b95294ba37c71fafdedb24ad1c"}
+  ],
+  "scientific_baseline": {
+    "selected_arm": "A1",
+    "history_backend": "legacy",
+    "dit_depth": 4,
+    "geometry_enabled": true,
+    "motion_enabled": true,
+    "static_auxiliary_enabled": false,
+    "checkpoint": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
+    "checkpoint_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+    "meaning": "retained selected research baseline; not a new combined-model promotion"
+  },
+  "lane_status_at_snapshot": {
+    "A": "four arms complete; selected A1",
+    "B": "M-short 9741 complete; M-long 7960/9741 at 00:39 CST and running; no final paired selection",
+    "C": "C4 13575 complete; C8 running externally, neither changed nor required for merge",
+    "D": "decoder-only 500-update pilot complete; not shared-trunk static pretraining"
+  },
+  "checks": {
+    "targeted_tests": {"passed": 75, "failed": 0, "skipped": 0},
+    "real_A1_inference": {
+      "reference_commit": "e5e5fe0f559cb50d1d2ad9ab42f07692277db0bc",
+      "merged_run_commit": "f85896bb43f306b95294ba37c71fafdedb24ad1c",
+      "sample_id": "atlas_2ejn_B_R1_a000000_dt_100ps_H4",
+      "steps": 16,
+      "seed": 0,
+      "coordinates_byte_exact": true,
+      "coordinate_sha256": "5cfabe39aaecd52716102d852c3b94c208d5efeafd7727386ab222835c87f32b"
+    },
+    "streamed_backward": {
+      "passed": true,
+      "precision": "bf16",
+      "draws": 2,
+      "steps": 8,
+      "gradient_relative_l2_difference": 0.0017764746760721099,
+      "gradient_relative_l2_tolerance": 0.003,
+      "parameter_max_abs_difference": 0.0003898739814758301,
+      "parameter_max_abs_tolerance": 0.00041,
+      "tolerances_changed": false
+    },
+    "strict_artifact_loads": ["B_M-short", "C4_completed_not_selected", "D_baseline", "D_internal_md", "D_external_pdb"],
+    "capacity_cuda": {
+      "passed": true,
+      "warm_start_function_exact_H4_H8_fp32_bf16": true,
+      "checkpointing_gradient_tensors_exact": 633,
+      "startup_updates": 2,
+      "teacher_unchanged": true,
+      "live_C8_artifact_opened": false
+    },
+    "generation_diagnostic": {
+      "status": "completed",
+      "systems": 8,
+      "records": 16,
+      "rows": 192,
+      "scope": "R1/anchor0/H4; lags100/400; seeds0/1; Euler8/16/32; oracle/persistence; OOD memory sensitivity",
+      "trained_ablation": false,
+      "full_validation": false
+    }
+  },
+  "evidence_root": "runs/abcd_integration_20261004",
+  "evidence_sha256": {
+    "final_tests.xml": "873d6f38ba63efc6911f35cde3a3fc14990441702f0da3dedb19c8bf63841b0a",
+    "artifact_loads.json": "7921e6c7fb564e287dcb5b9e4c14ab8f306e606dafd7cda23d7c6b5b77815686",
+    "streamed_parity_final/streamed_parity.json": "7bc05989e233217d8804f206f2f43396240626de91acfc87a426e712bd275f29",
+    "capacity_cuda/cuda_check.json": "5f802bdb48bfa35a098f3e6bf256a0e72e3337c76302e2e0c342c6bb3536a5a1",
+    "merged_a1/protocol.json": "bc87a8a268920e786d2b09da731eb2fbe0584febaee5b27ff96de8310c02154a",
+    "merged_a1/summary.json": "8cdbd0e7efcec639c48a217d240899e60dd1623bfb9553787e6a8a9baae1e35b",
+    "merged_a1/rows.json": "6f55e4a3e93947c5ff892522f6484471ff07b75b7b6a6600fe610964707eb0b8",
+    "merged_a1/analysis.json": "0db02a88f0c1d169e14f9c9fffee4696a7c308db788396d7b1d39b8b15293674"
+  },
+  "designs": {
+    "static_shared_trunk": {"path": "docs/static_backbone_pretraining_v2.md", "implemented": false},
+    "physical_time_mamba": {"path": "docs/mamba_temporal_v1.md", "implemented": false}
+  },
+  "baseline_reference": {
+    "PVB": {"path": "/data4/users/sihao/workspace/PVB_origin", "commit": "c08e5e3cd49d45c6d748387e78224843bd356f50", "modified_workspace_PVB_used": false},
+    "BioKinema_source_commit": "62109dd49b325a7d9a22357303220c5f2b302b48",
+    "matched_performance_comparison_completed": false
+  },
+  "source_worktrees_modified": false,
+  "original_main_branch_moved": false,
+  "new_long_training_started": false,
+  "test_opened": false,
+  "limits": ["single-real-sample inference parity", "unvalidated combinations of optional lanes", "no new independent review", "historical full-production migration gates remain open", "checkpoint storage must be reserved before new training"]
+}

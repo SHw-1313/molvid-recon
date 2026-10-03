@@ -4,6 +4,8 @@
 
 静态单结构进入共享主干的接口与梯度平衡见 [D2 联合预训练方案](static_backbone_pretraining_v2.md)。static 显式跳过物理时间模块；不把单帧当零运动轨迹训练 Mamba。
 
+合并后补充诊断（八valid体系、16片段、192行）发现：zero-history/zero-M使clash分别增加约255%/44%，所以原分支有实际功能，不可当死代码直接剪掉；16→32 Euler使clash增加约14%，也不支持仅靠增加采样步数修复几何。置零是OOD敏感性而非trained ablation，完整协议与结果见 [集成报告](../agent/abcd_integration_20261004/REPORT.md)。这些结果强化了“分阶段替换、保留level/motion信息、与结构目标分别验证”的方案，而非证明Mamba必胜。
+
 ## 目标与不应混淆的对象
 
 统一所有**物理时间序列**的可学习建模：observed history、history 到 query 的读出、future 内部相互作用、decoder 时间混合。`physical_time_ps` 与 flow progress `s∈[0,1]` 保持两个接口。`s` 是每次向量场求值的噪声条件，不是 MD 时钟，不对 Euler 的 8/16/32 个步骤做 Mamba 扫描。保留其小型 MLP/AdaLN 调制。
@@ -48,6 +50,8 @@ source latent + query clock + flow s → spatial/G + bidirectional future Mamba
 新核心放 `molvid/temporal/`，不建立平行模型框架。`EquivariantSelectiveScan.forward(h, v, physical_time_ps, frame_mask, system_id, initial_state=None, reverse=False)` 输入 `h[T,N,Cs]`、`v[T,N,3,Cv]`、clock/mask `[B,T]`，输出同形 features 和显式 state。history 可在 residue group 轴 R 使用同一算子；atom/group 均是 batch 轴，绝不沿 packed atoms 扫描。
 
 定义归一化实际间隔 `d_i=(t_i-t_(i-1))/100ps`。选择性速率来自旋转不变内容 `g_i=softplus(W[h_i, ||v_i||, clock_i]+b)`，有效间隔 `δ_i=d_i*g_i`。两者分别记录；不能直接把 Mamba 学到的 `dt` 标为 ps。初始化衰减时间常数覆盖10、100、1000、10000 ps，可学习，但无需另堆四条独立网络。
+
+clock 的原点固定为每条轨迹最后 observed timestamp；输入只使用相对时间、实际间隔和合法 observed support，不用绝对文件时间/帧号。共享 ClockMamba 在 observed clock 上扫描；query clock 从同一个结束状态分别读出，不按所请求 query 列表逐个更新，因此 history/query condition 不随插入其它 query 而变化。future/decoder 的双向序列混合本身可以依赖预测网格，不能把这种合理依赖与 history 泄漏混为一谈。
 
 对于稳定的对角状态矩阵 `A=-exp(A_log)`：
 

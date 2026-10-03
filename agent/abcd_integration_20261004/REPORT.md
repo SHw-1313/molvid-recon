@@ -13,7 +13,7 @@
 | Lane | 本次纳入的源码 HEAD | 已知实验结果 | 合并后定位 |
 |---|---|---|---|
 | A motion/geometry | `e5e5fe0f559cb50d1d2ad9ab42f07692277db0bc`；科学实现 `af60c05` | A0–A3 完成，各 10,606 updates；A1 被选中 | 默认 recipe 与实际 source 辅助损失 |
-| B learned memory | `5092dcbe0e70f8864d72e0d13d3301db7d46929c` | M-short 9,741 完成；M-long 仍在续跑，尚无成对最终选择 | 可选 history backend，不替换默认 |
+| B learned memory | `5092dcbe0e70f8864d72e0d13d3301db7d46929c` | M-short 9,741 完成；M-long 00:39 CST 已到 7,960/9,741，仍在续跑，尚无成对最终选择 | 可选 history backend，不替换默认 |
 | C capacity | `e4beede3bbcbed68cfb059bd5686e6613147b340` | C4 13,575 完成；C8 运行中 | 合并深度扩展、warm start、checkpointing 支持；不认定 8 层胜出 |
 | D static decoder | `29e9645`；实现 `07b6ea76`，最终评估 `abd8f7b` | 三臂 500 dynamic updates，静态臂另有 125 static steps | 已完成的有限 pilot；仅作 D2 的 decoder-only 对照 |
 
@@ -38,6 +38,14 @@ B 的 artifact-only 分支 `artifacts/learned-memory-v1-step5394` (`172362b`) �
 
 合并接受的是各能力的兼容实现，不是 A+B+C+D 的全组合训练验证。尤其 B 的 history schedule 与 A 不同，不能仅设置几个开关就称为公平 A1+B 比较。
 
+### 保留代码的工程债务
+
+`molvid/model.py` 359 行，仍是可读的模型组合层；新增 B memory 本体 344 行，尚可局部审查。真正膨胀的是 `cli/train_frame_joint.py` 1,972 行、`training/joint.py` 1,558 行，CLI 包含配置校验、统计量、exposure/resume 和训练循环，已超出“构造并调用”的合理边界。旧 D 又有 632 行 trainer + 388 行 schedule，B formal orchestration 679 行。不能把这种编排复杂度包装成模型创新。
+
+后续应把纯配置解析、exposure ledger、resume identity 和训练 orchestration 分别移回现有 config/training 模块，保留一个可逐行追踪的 global update；不新建 registry/平行训练框架。先做行为不变的提取，再实现 D2 双任务 microbatch，避免在 2,000 行 CLI 中继续嵌套分支。本次没有顺手大重构这些路径，因为 strict resume/曝光语义的风险高于表面减少行数。
+
+legacy history 与 B backend 同时留在仓库是复现实验所需，不表示一次 forward 同时运行两套。Mamba 胜出后才按 checkpoint contract 显式退休被替代模块；在结论未明时删除旧 backend，只会破坏对照。相反，A/D/C 分支携带的过时 artifact/report 冲突已经按最终来源解决，不能继续把多份不同时间的“最新结果”混在一起。
+
 ## 3. 为什么现在的进展仍然很有限
 
 ### 3.1 A 的改善不足以证明核心问题已解决
@@ -54,6 +62,8 @@ B 的 artifact-only 分支 `artifacts/learned-memory-v1-step5394` (`172362b`) �
 A1 clash 仅改善 4.07%，severity 改善 5.11%，RMSF MAE 反而增加 1.18%；没有达到原先约 30% 的理想几何改善。A2 提升运动，但 clash/severity 恶化 22.93%/29.10%。A3 部分挽回几何，仍未解除 trade-off。高 system Pearson（约 0.90）与很低的 spread 可以并存：体系排序对，并不代表运动幅度和分布对。
 
 这不是再选一个最好看的指标就能掩盖的结果。A1 是当前较安全的折中，不是强模型。只有一个 training seed、八个 validation systems，bootstrap 不能代替独立训练重复。来源：[A 最终报告](../gm_motion_memory_v3/report.md)。
+
+四部分本质上仍是同一小体系上的局部干预，不是四种充分预训练、充分收敛的独立模型：A 为 192 train systems 上一轮 continuation，D 只有 500 步，B/C 尚未收齐。与使用结构预训练/预计算大模型表征的 baseline 比较时，数据覆盖、有效曝光和优化收敛都可能占主要差异。需要同架构 1/2/4 个有效 epoch 的学习曲线和独立 seeds，才能区分欠训练、泛化瓶颈与架构瓶颈；目前没有证据认定增加 DiT blocks 就足够，也没有证据认定当前架构已训练到上限。
 
 ### 3.2 生成 latent → 几何流形，是首要待定位瓶颈
 
@@ -106,20 +116,57 @@ Mamba 最终替换 history、独立 M、history-query 读出、future temporal�
 
 ## 5. 合并验证与补充实验
 
-验证证据正在收尾；这里只列出已完成与待完成边界，不把初版检查冒充最终检查。
+最终源码验证基于 `3aad9be` 的模型/训练代码（诊断工具提交为 `5caa0d7`）；后续仅补设计与证据文档。完整原始输出位于 `runs/abcd_integration_20261004/`。
 
-- 九个与 A/B/C/D 接口直接相关的文件共 75 个针对性 tests 已在中间合并版通过；最后保留 legacy 反向数值顺序后，将重跑这些相关测试。
+- 九个与 A/B/C/D 接口直接相关的文件在最终训练代码上 **75 passed，0 failed，0 skipped**，34.53 s。证据 `final_tests.xml`；不是整个历史全测试集的宣称。
 - 原始 A 工作树与合并树，同一 A1 checkpoint、真实 validation clip `atlas_2ejn_B_R1_a000000_dt_100ps_H4`、Euler16、seed0，generated coordinates SHA-256 均为 `5cfabe39aaecd52716102d852c3b94c208d5efeafd7727386ab222835c87f32b`，逐字节一致。只是一个真实样本，不宣称全生产 parity。
-- 最终代码的真实 train-clip BF16/K2/Euler8 full-vs-streamed 梯度检查、B/C4/D strict artifact loads 待收尾；不加载 C8 live checkpoint。
-- 额外生成诊断冻结八个 valid systems，每体系 R1/anchor0/H4、lags 100/400 ps，seeds 0/1、Euler 8/16/32，另有 oracle、persistence、zero-history、zero-M，共 16 records/192 rows。zero-condition 是 OOD 敏感性干预，**不是 trained ablation**；这也不是完整 A validation。
+- 最终代码的真实 train clip（303 atoms）BF16/K2/Euler8 full-vs-streamed 检查通过：所有 raw/weighted metric 差为 0，gradient relative L2 `0.00177647 < 0.003`，更新后 parameter max abs diff `0.000389874 < 0.00041`。使用已有门限，没有放宽；这是有限精度数值接近，**不是梯度/参数逐位相同**。证据 `streamed_parity_final/streamed_parity.json`。
+- B M-short、C4 completed、D baseline/internal/external 五个真实 artifact 均 strict load 成功，校验 SHA、teacher/stats、model contract、keys/order/shape/dtype。证据 `artifact_loads.json`。加载不等于性能验收；未加载 C8 live checkpoint。
+- 另用 A1 parent 在新进程内存中构造 8-block 模型：真实小样本 H4/H8、FP32/BF16 的 4→8 初始化 velocity/endpoint/coordinates 差均为 0；flow checkpointing 开关的 loss、velocity、633 个梯度张量逐位一致；两次 startup updates 后新增 gates/内部参数均有梯度，teacher 未变。峰值 allocated 4.51 GB。证据 `capacity_cuda/cuda_check.json`。这是扩层代码检查，不是正在运行的 C8 实验或其结果。
+- 额外生成诊断冻结八个 valid systems，每体系 R1/anchor0/H4、lags 100/400 ps，seeds 0/1、Euler 8/16/32，另有 oracle、persistence、zero-history、zero-M，共 16 records/192 rows。zero-condition 是 OOD 敏感性干预，**不是 trained ablation**；这也不是完整 A validation。zero-history 仅置零 memory h/v，仍保留 last-observed source/geometry 和 M；zero-M 则保留 history，因此不能把它们叫作完全无历史条件。
 
-所有 Python/model 检查都在 `enter-container` + `torch-ito`，CUDA GPU4。只在新 `runs/abcd_integration_20261004/` 写小型诊断结果；没有新长期训练、没有复制数据、没有修改正在使用的依赖。当前 `/data4` 仅约 7.7 GB 空闲，后续训练须先指定充足的 checkpoint 位置或明确保留策略，不能冒险耗尽 B/C 所用文件系统。
+### 补充诊断结果：已完成 192/192 rows
+
+每体系先平均两个lags与generation seeds，再对八个体系等权平均。数值与第3节完整A验证的取样不同，不能混为一张排名表。证据 `merged_a1/{protocol,rows,summary,analysis}.json`，本诊断运行时间约 0.3802 GPU-hours。
+
+| 条件 | bond RMSE Å | clash/1000 | residue RMSF MAE Å | mean predicted RMSF Å | MSD curve MAE Å² |
+|---|---:|---:|---:|---:|---:|
+| oracle clean latent | 0.02065 | 0.313 | 0.00209 | 1.2261 | 0.00653 |
+| persistence | 0.04185 | 0.313 | 1.20452 | 0 | 7.79258 |
+| Euler8 | 0.26103 | 117.462 | 0.46696 | 0.7965 | 5.63610 |
+| Euler16 | 0.28935 | 151.212 | 0.42205 | 0.8922 | 5.29192 |
+| Euler32 | 0.30742 | 172.230 | 0.40760 | 0.9473 | 5.08326 |
+| zero-history / Euler16 | 0.60168 | 536.717 | 0.52804 | 1.2971 | 10.59273 |
+| zero-M / Euler16 | 0.37076 | 217.369 | 0.48192 | 0.9240 | 8.20227 |
+
+对应 mean target RMSF 为 1.22574 Å。由此更新研究判断：
+
+1. **“多采样几步就好”不成立于这批片段。** 16→32 的 bond/clash 恶化 6.25%/13.90%，RMSF MAE 改善 3.42%（system bootstrap CI 跨零）、MSD MAE 改善 3.94%。8 步几何更好但运动更小，像数值离散带来的收缩权衡；这是解释性推断，不是已证明的收敛机制。没有64步/高阶参考，不能宣称solver误差已全部排除，也不据此把默认改成8步。
+2. **history/M 都有明显作用，不能简单叫作死模块。** zero-history 的 clash 增加 254.94%，zero-M 增加 43.75%；这是训练后模型对条件的敏感性，不证明这种架构优于重训的无memory模型。统一Mamba要保留有效level/motion信息、分阶段迁移，而非直接删除旧支路。
+3. **只追 RMSF 幅度会走偏。** zero-history 的平均幅度比正常采样更接近target，却几何崩坏、RMSF profile/MSD更差；更大运动不等于正确动力学。generated torsion-increment MAE 约0.447 rad，persistence约0.245、oracle约0.017，说明仅达到运动幅度仍远远不够。
+4. **生成—解码路径差距再次确认。** 同一模型oracle几何与运动都很好，而generated很差；应优先验证真正经过shared生成路径的D2、generated geometry梯度及latent manifold，再检验Mamba贡献。不能把此结果解读成“decoder无需任何改进”，因为其对off-manifold latent的鲁棒性仍是可能因素。
+
+bootstrap为八体系的探索性重采样，不增加独立training seeds；全量配对CI和per-system数值在 `analysis.json`。所有新结论保持validation诊断级别，不升级为对PVB/BioKinema的排名。
+
+所有 Python/model 检查都在 `enter-container` + `torch-ito`，CUDA GPU4。只在新 `runs/abcd_integration_20261004/` 写小型诊断结果；没有新长期训练、没有复制数据、没有修改正在使用的依赖。当前 `/data4` 仅约 7.7 GB 空闲，后续训练须先指定充足的 checkpoint 位置或明确保留策略，不能冒险耗尽 B/C 所用文件系统。各脚本 GPU-hours 为单进程运行时间记账，同卡短暂重叠执行，不应将相加值当成设备独占利用率积分。
+
+复现命令（先进入 container/torch-ito，在集成树运行；output 必须用新目录）：
+
+```bash
+python -m tools.diagnose_abcd_generation --ablate-memory --output runs/abcd_diagnostic_new
+python -m tools.summarize_abcd_generation --run runs/abcd_diagnostic_new
+python -m tools.check_abcd_artifacts --output runs/abcd_artifact_loads_new.json
+python -m tools.check_gm_a_streamed_cuda --recipe /workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r04/resolved_auxiliary.json --output runs/abcd_streamed_new
+python -m tools.check_gm_capacity_cuda --release /workspace/molvid-gm-memory-v3-coordination/capacity_release.json --output runs/abcd_capacity_new --gradient-updates 2
+```
 
 ## 6. PVB / BioKinema 对照边界
 
 **PVB 仅以用户指定的 `/data4/users/sihao/workspace/PVB_origin` 为原始源码基准**，commit `c08e5e3cd49d45c6d748387e78224843bd356f50`，读取时 worktree clean。`workspace/PVB` 已深度修改，不能充当原始 baseline。本次没有编辑二者。[PVB 官方仓库](https://github.com/yaledeus/PVB)。
 
 原始 PVB 的静态/动态数据参与同一生成桥接路线；不能把旧 D decoder-only 当成等价实现。对原模型的优劣需要真实 checkpoint 和匹配协议，不能把本地 epoch0/step1 smoke 权重当发布模型。
+
+源码直接证据：`PVB_origin/module/model.py::dyVAE._train` 在 pretrain/md 下分别选择 `clean_x0/x1` 为 target，后续共同经过 interpolant 与 `decode`；训练时以当前 `xt` 构建邻居/距离，输入初始和当前 edge 几何。molvid 当前则主要在高维 latent 上流动，再交给独立 decoder，并大量依赖 observed 几何。这是应优先验证的表示/生成几何差异，比“PVB 参数更多”更具体。D2 首轮沿用 molvid latent RF 以控制风险，不能冒称已复现 PVB 的坐标空间桥接；若差距仍在，再独立比较生成坐标感知的非键分支/低维几何 bottleneck。
 
 BioKinema 源码参照 commit `62109dd49b325a7d9a22357303220c5f2b302b48`。本机 `/data1/repo/BioKinema/checkpoints/` 确有 `biokinema.pt` 和 kinase/misato fine-tuned 权重；没有下载或加载这些多 GB artifact。其 Pairformer 输入/预计算表征、coarse/fine 生成与训练数据需一并匹配。base config 的 `alpha_acf=0`，不能仅因代码含 ACF loss 就说发布模型都用了它。[官方数据和训练说明](https://github.com/IDEA-XL/BioKinema/blob/main/docs/data_and_training.md)。
 

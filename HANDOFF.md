@@ -1,5 +1,37 @@
 # Refactor handoff
 
+## ABCD integration (2026-10-04, current worktree)
+
+This isolated worktree is `integration/abcd-20261004`, merged in A → D → C → B
+order; original source worktrees and live B/C8 jobs were not modified. The
+selected scientific baseline remains A1/4-block/legacy history+G+M. B learned
+memory, C capacity support and D decoder-only static training are optional;
+their union is not a scientifically validated combined model. B M-long and
+C8 are still external running experiments, not blockers for this code merge.
+
+Final numerical checks: 75 targeted tests passed without skips; one real A1
+inference sample matches the original A tree byte-for-byte; real BF16 K2
+streamed backward passes existing tolerances; B M-short/C4/three D artifacts
+strict-load; C4→C8 initialization and flow-checkpoint gradients pass. This does
+not close the older full production-migration gates below. See the complete
+[audit, source identities and evidence](agent/abcd_integration_20261004/REPORT.md).
+
+The bounded generation diagnostic completed 16 validation clips / 192 rows:
+Euler16→32 increases clash by 13.90% while MSD MAE improves 3.94%; zero-history
+and zero-M damage geometry. Do not treat more solver steps as a geometry fix
+or retire memory as unused. These are short-clip/OOD sensitivity results,
+not trained ablations or full baseline comparisons.
+
+User clarified that D must pretrain the shared generative trunk, not just the
+decoder. [D2 design](docs/static_backbone_pretraining_v2.md) and
+[physical-time Mamba design](docs/mamba_temporal_v1.md) are ready for staged
+implementation, but not implemented/trained in this merge. Use only
+`/data4/users/sihao/workspace/PVB_origin` (`c08e5e3`) as original PVB reference;
+the separate `workspace/PVB` is user-modified. `/data4` has about 7.7 GB free:
+reserve a safe checkpoint destination before new checkpoint-heavy training.
+
+## Earlier refactor/calibration handoff (historical context)
+
 Current stage: Frame GM Calibration v2 P1--P3 is complete on the dedicated
 `feat/frame-gm-calibration-v2` worktree. The earlier operator-directed history
 cleanup remains intact: the active surface is `molvid/`, `configs/`, `tools/`,

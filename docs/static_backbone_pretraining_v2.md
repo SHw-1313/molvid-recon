@@ -10,6 +10,8 @@
 
 当前A1可先做D2的联合continued pretraining验证。真正的“静态预训练→动态微调”需另从同一初始化启动成对实验，不能把从已训练A1追加几百步叫作从头预训练。第一轮保持frozen target teacher和latent statistics，避免同时改变target空间；共享主干指trainable DiT/spatial/decoder，不包括自动解冻这个target teacher。
 
+原始PVB对照固定为用户指定的 `PVB_origin`（commit `c08e5e3`），不是已改动的 `PVB`。其 `module/model.py::dyVAE._train` 将pretrain/md的target分别设为clean结构/MD future，但共同经过坐标interpolant与同一decode。D2借鉴的是“静态训练真正作用于生成主干”，首轮仍保留molvid latent RF，并非宣称等价复现PVB；若继续存在latent→geometry差距，再独立消融坐标感知主干，不能把该变化混入首次接入实验。
+
 ## 两种任务如何经过同一个主干
 
 | 项目 | 动态多帧+历史 | 静态单结构 |
@@ -26,7 +28,11 @@
 
 物理 `dt=0` 不是静态任务的替代标签。新增 `task_kind=dynamic|static` 与独立 `StructureCondition` / `StructureQuery`；静态clock为not-applicable，调用路径不经过 `QuerySpec` 的正future间隔校验。两任务可共享几何context的显式字段，但不能添加一个把static伪装成future的任意100 ps。
 
+static decoder实际处理的是一个generated latent位置；corrupted结构只提供几何context/origin/reference，不将它与generated结构拼成伪T2再做时间混合。结构condition可以复用teacher与拓扑，不能复用带“过去→未来”含义的接口后偷偷填占位时间。
+
 各block按任务跳过history cross、M以及future temporal，仅执行相同的spatial/G/FFN。Mamba版也是同样分工：static训练共享内容/空间部分，不更新SSM时间常数、历史状态和时间读出。Q1经过普通Mamba仍可能训练A/dt/conv参数，因此必须显式跳过，不仅依靠长度1。
+
+参数边界按实际对象而非模糊的“主干”名字列清：`history_encoder`、M encoder/injector、`query_time`、history/temporal attention及其专属AdaLN/time-bias/decay、decoder `time_embedding`/temporal/gates归入temporal；adapter/reference投影、identity、flow-s、spatial/FFN及其AdaLN、G、decoder local/FFN/head归入shared。decoder被local/FFN复用的norm也是shared，不能因为temporal也调用它就整体冻结。static不直接更新专属时间参数，不代表shared表示变化后dynamic输出不受影响——后者必须由配对验证和梯度冲突监控约束。
 
 ## 防止又退化成容易的重建旁路
 
@@ -56,15 +62,19 @@ flow内部保留h/v各0.5的既有归一化，以便首轮归因。新几何项�
 
 静态batch先设 `max_static_atoms ≈ max_dynamic_atom_frames/8`（A1的40,000对应约5,000 static atoms），按profile调整到额外wall/GPU成本约20–30%。这只是compute起点，不能把frame数当loss倍数。dynamic每体系先平均future有效帧与原子，static每结构先平均有效原子，最后各自按体系/结构等权；Q12不能天然获得静态12倍权重，大分子也不能因原子多占据全部梯度。
 
+当前 `FrameRectifiedFlowObjective::_sample_equal_frame_mse` 与 joint coordinate loss 已按体系平均；首轮继承这些动态归一化，不额外改成全局atom-frame平均，也不套用旧四字段RF的全局mask归一化。新static loss要独立处理有效structure计数；任何其它动态loss归一化调整都需单独记录与成对对照。
+
 参数划分为 `θ_shared`、`θ_temporal`、极小的 `θ_task`。设动态和静态在shared上的梯度为 `g_D,g_S`：
 
 ```text
 g_shared   = g_D + λ_S * g_S
-g_temporal = ∂L_D / ∂θ_temporal       # static必须为None，不做weight decay步
+g_temporal = ∂L_D / ∂θ_temporal       # static分支必须为None；joint step仍按dynamic更新
 λ_S        = ρ * median(||g_D||) / median(||g_S||)
 ```
 
 推荐第一轮 `ρ=0.25`，两个探索臂 `ρ=0.10,0.50`。这表示static在shared上约为dynamic的四分之一梯度范数，不是25%的样本，也不是loss数值的25%。标定用至少16个冻结train batch pair，覆盖atom-size/lag/history桶，先冻结λ再跑paired pilot；`λ_S`是主干真实梯度的标定结果，不沿用decoder-only gamma。
+
+static-only阶段temporal参数不进optimizer，避免动量/weight decay造成无监督更新；joint阶段保留dynamic产生的temporal梯度，不能在static backward前误清空它们。隔离检查应分别测dynamic/static的梯度贡献，而不是要求joint总梯度在temporal上为None。
 
 每128个global updates记录各shared block的norm比与cosine、history/temporal梯度和实际参数更新范数，校验固定λ是否仍在目标附近。先不引入自适应loss controller，使比较可解释。若长期范数比超过0.5或static与dynamic梯度反向比例过高，按预先规则停在checkpoint、用降低ρ的**新臂**比较，不在一个臂中静默改目标。
 
