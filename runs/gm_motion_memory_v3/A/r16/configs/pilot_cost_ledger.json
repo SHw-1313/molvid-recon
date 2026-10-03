@@ -1,0 +1,101 @@
+{
+  "schema": "molvid.A.stage_costs.v1",
+  "stages": [
+    {
+      "command": [
+        "/home/sihao/miniforge3/envs/torch-ito/bin/python",
+        "-u",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A0.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+        "--warm-start-sha256",
+        "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+        "--checkpoint-every",
+        "1000"
+      ],
+      "elapsed_seconds": 357.5302429199219,
+      "exit_code": 0,
+      "gpu_hours": 0.09931395848592123,
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "name": "pilot_A0_train",
+      "pid": 321631,
+      "started_unix": 1790596287.6187828,
+      "status": "completed"
+    },
+    {
+      "command": [
+        "/home/sihao/miniforge3/envs/torch-ito/bin/python",
+        "-u",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A1.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+        "--warm-start-sha256",
+        "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+        "--checkpoint-every",
+        "1000"
+      ],
+      "elapsed_seconds": 500.8698585033417,
+      "exit_code": 0,
+      "gpu_hours": 0.13913051837020451,
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "name": "pilot_A1_train",
+      "pid": 321890,
+      "started_unix": 1790596645.1529553,
+      "status": "completed"
+    },
+    {
+      "command": [
+        "/home/sihao/miniforge3/envs/torch-ito/bin/python",
+        "-u",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A2.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+        "--warm-start-sha256",
+        "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+        "--checkpoint-every",
+        "1000"
+      ],
+      "elapsed_seconds": 548.0015726089478,
+      "exit_code": 0,
+      "gpu_hours": 0.1522226615746816,
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "name": "pilot_A2_train",
+      "pid": 322149,
+      "started_unix": 1790597146.026319,
+      "status": "completed"
+    },
+    {
+      "command": [
+        "/home/sihao/miniforge3/envs/torch-ito/bin/python",
+        "-u",
+        "-m",
+        "molvid.cli.train_frame_joint",
+        "--config",
+        "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A3.json",
+        "--warm-start",
+        "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+        "--warm-start-sha256",
+        "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+        "--checkpoint-every",
+        "1000"
+      ],
+      "elapsed_seconds": 535.6577632427216,
+      "exit_code": 0,
+      "gpu_hours": 0.14879382510979972,
+      "gpu_uuid": "GPU-b6b9107a-2a73-2d74-1dc0-1cbe16ae86d0",
+      "name": "pilot_A3_train",
+      "pid": 322408,
+      "started_unix": 1790597694.031345,
+      "status": "completed"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "molvid.A.final_selection.v1",
+  "status": "formal_A0_A3_completed",
+  "selected_arm": "A1",
+  "reason": "A1 is the only enhanced arm that preserves the motion guardrails while reducing ordinary and fixed-history clash count and severity versus paired A0. The reduction is consistent across all eight validation systems but is modest and misses the approximately 30 percent ideal target. A2 and A3 improve motion error but show a clear clash rebound; A3 is the more balanced of those motion-oriented arms but is not the default release.",
+  "capacity_release_eligible": true,
+  "recipe_release_eligible": true,
+  "keep_release_trigger_evaluated": true,
+  "keep_release_trigger": false,
+  "comparison_path": "runs/gm_motion_memory_v3/A/r21/final_analysis/selection.json",
+  "comparison_sha256": "5240de5dd38661bbe8fc2bf07e2a05ad22037fb046ae7461cb0ce6a0540263ab",
+  "per_system_path": "runs/gm_motion_memory_v3/A/r21/final_analysis/per_system.csv",
+  "per_system_sha256": "67e53c84a029ed98ab072123adccafaaeb5110d61cfdf67f1a0f109cbef40548",
+  "selected_checkpoint_sha256": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+  "selected_config_sha256": "15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce",
+  "guardrail_pass": true,
+  "pareto_candidates": [
+    "A0",
+    "A1",
+    "A2",
+    "A3"
+  ],
+  "test_opened": false
+}

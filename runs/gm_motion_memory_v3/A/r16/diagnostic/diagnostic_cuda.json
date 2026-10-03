@@ -1,0 +1,70 @@
+{
+  "gradient_diagnostics": {
+    "clean_bond": {
+      "active": true,
+      "dit_raw_norm": 0.0,
+      "flow_cosine": null,
+      "flow_norm": 1.5383129119873047
+    },
+    "clean_coordinate": {
+      "active": true,
+      "dit_raw_norm": 0.0,
+      "flow_cosine": null,
+      "flow_norm": 1.5383129119873047
+    },
+    "flow": {
+      "active": true,
+      "dit_raw_norm": 1.5383129119873047,
+      "flow_cosine": 1.0,
+      "flow_norm": 1.5383129119873047
+    },
+    "flow_h": {
+      "active": true,
+      "dit_raw_norm": 0.7290685176849365,
+      "flow_cosine": 0.19205480813980103,
+      "flow_norm": 1.5383129119873047
+    },
+    "flow_v": {
+      "active": true,
+      "dit_raw_norm": 3.022672414779663,
+      "flow_cosine": 0.9715691208839417,
+      "flow_norm": 1.5383129119873047
+    },
+    "generated_bond": {
+      "active": true,
+      "dit_raw_norm": 0.10411552339792252,
+      "flow_cosine": 0.0880972370505333,
+      "flow_norm": 1.5383129119873047
+    },
+    "near_bond": {
+      "active": true,
+      "dit_raw_norm": 0.0,
+      "flow_cosine": null,
+      "flow_norm": 1.5383129119873047
+    },
+    "near_coordinate": {
+      "active": true,
+      "dit_raw_norm": 0.0,
+      "flow_cosine": null,
+      "flow_norm": 1.5383129119873047
+    },
+    "sampled_energy": {
+      "active": false
+    },
+    "sampled_observed_bond": {
+      "active": false
+    }
+  },
+  "loss": 0.42416760325431824,
+  "passed": true,
+  "required": [
+    "flow",
+    "flow_h",
+    "flow_v",
+    "clean_coordinate",
+    "clean_bond"
+  ],
+  "sample_id": "atlas_2erl_A_R1_dt_100ps_w000000",
+  "schema": "molvid.A.diagnostic_cuda.v1",
+  "test_opened": false
+}

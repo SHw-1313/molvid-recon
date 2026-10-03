@@ -1,0 +1,10 @@
+{
+  "schema": "molvid.gm_memory.independent_review_gate.v1",
+  "lane": "A",
+  "verdict": "PASS",
+  "independent_session": "/root/formal_a_review_r02",
+  "candidate_commit": "af60c05aa02ce46872edbad0711833317773436e",
+  "review_path": "agent/gm_motion_memory_v3/reviews/A/formal_r02/REVIEW.md",
+  "review_sha256": "4b653591ab89f1a5d22abbde73d8a049f9976f826ea386e2e0d7e125266cc2d1",
+  "frozen_configs_sha256": "9b77ab35a5fad143a5e3ecc92fa15a3a6bfebe70c427bc3838933099920bc29c"
+}

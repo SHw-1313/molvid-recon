@@ -1,0 +1,202 @@
+{
+  "checks": [
+    {
+      "amp": false,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {
+        "sampled_bond_band": {
+          "decoder": 0.24316716194152832,
+          "dit": 0.9497208595275879,
+          "history": 0.9940301775932312,
+          "motion": 0.02489488199353218
+        },
+        "sampled_clash": {
+          "decoder": 0.41809165477752686,
+          "dit": 1.4090447425842285,
+          "history": 1.2303074598312378,
+          "motion": 0.015001107007265091
+        },
+        "sampled_displacement": {
+          "decoder": 1.2439380884170532,
+          "dit": 1.905060887336731,
+          "history": 0.988411009311676,
+          "motion": 0.17079044878482819
+        },
+        "sampled_rmsf": {
+          "decoder": 0.5702401995658875,
+          "dit": 1.6813207864761353,
+          "history": 0.8820044994354248,
+          "motion": 0.1399734765291214
+        }
+      },
+      "raw": {
+        "sampled_bond_band": 0.02778862789273262,
+        "sampled_clash": 0.00888931006193161,
+        "sampled_displacement": 0.054340437054634094,
+        "sampled_rmsf": 0.116739921271801
+      },
+      "sample_id": "atlas_2erl_A_R1_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {
+        "sampled_bond_band": {
+          "decoder": 0.23342761397361755,
+          "dit": 0.9581630229949951,
+          "history": 0.9995417594909668,
+          "motion": 0.02476819045841694
+        },
+        "sampled_clash": {
+          "decoder": 0.4144119918346405,
+          "dit": 1.394318699836731,
+          "history": 1.2188851833343506,
+          "motion": 0.01509132981300354
+        },
+        "sampled_displacement": {
+          "decoder": 1.3331972360610962,
+          "dit": 1.9921525716781616,
+          "history": 1.0945326089859009,
+          "motion": 0.1702856570482254
+        },
+        "sampled_rmsf": {
+          "decoder": 0.57952880859375,
+          "dit": 1.6844197511672974,
+          "history": 0.8712279200553894,
+          "motion": 0.14181460440158844
+        }
+      },
+      "raw": {
+        "sampled_bond_band": 0.027853140607476234,
+        "sampled_clash": 0.008789640851318836,
+        "sampled_displacement": 0.05458224192261696,
+        "sampled_rmsf": 0.11691372096538544
+      },
+      "sample_id": "atlas_2erl_A_R1_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.027375303208827972,
+        "sampled_clash": 0.009294692426919937,
+        "sampled_displacement": 0.13353119790554047,
+        "sampled_rmsf": 0.2696778178215027
+      },
+      "sample_id": "atlas_2erl_A_R2_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.03127111494541168,
+        "sampled_clash": 0.00864791963249445,
+        "sampled_displacement": 0.11241605132818222,
+        "sampled_rmsf": 0.21646660566329956
+      },
+      "sample_id": "atlas_2erl_A_R3_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.05928950756788254,
+        "sampled_clash": 0.02850302867591381,
+        "sampled_displacement": 0.5974607467651367,
+        "sampled_rmsf": 0.5108028650283813
+      },
+      "sample_id": "atlas_2b9d_A_R1_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.05296604335308075,
+        "sampled_clash": 0.025811385363340378,
+        "sampled_displacement": 0.3822228014469147,
+        "sampled_rmsf": 0.5468873977661133
+      },
+      "sample_id": "atlas_2b9d_A_R2_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.061355918645858765,
+        "sampled_clash": 0.034790072590112686,
+        "sampled_displacement": 0.2549417316913605,
+        "sampled_rmsf": 0.15645398199558258
+      },
+      "sample_id": "atlas_2b9d_A_R3_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.05069591850042343,
+        "sampled_clash": 0.062313005328178406,
+        "sampled_displacement": 0.3890012502670288,
+        "sampled_rmsf": 0.4978054165840149
+      },
+      "sample_id": "atlas_3c05_A_R1_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.06121336668729782,
+        "sampled_clash": 0.06048325449228287,
+        "sampled_displacement": 0.5292260050773621,
+        "sampled_rmsf": 0.414643257856369
+      },
+      "sample_id": "atlas_3c05_A_R2_dt_100ps_w000000"
+    },
+    {
+      "amp": true,
+      "clash_backend": "chunked_cuda_distance_correctness_reference_no_neighbor_cap",
+      "exact_overlap_note": "finite zero subgradient; cannot guarantee separation at exact coincidence",
+      "exact_overlap_pair_frames": 0,
+      "module_gradients": {},
+      "raw": {
+        "sampled_bond_band": 0.05106566101312637,
+        "sampled_clash": 0.04982675611972809,
+        "sampled_displacement": 0.3663387596607208,
+        "sampled_rmsf": 0.35593196749687195
+      },
+      "sample_id": "atlas_3c05_A_R3_dt_100ps_w000000"
+    }
+  ],
+  "exact_resume": true,
+  "future_mutation_max_abs": 0.0,
+  "gpu_hours": 0.045608076784345836,
+  "passed": true,
+  "schema": "molvid.A.cuda_smoke.v1",
+  "teacher_unchanged": true,
+  "test_opened": false,
+  "zero_motion_finite_gradient": true
+}

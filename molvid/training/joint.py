@@ -25,6 +25,7 @@ from ..losses.distribution import (
     sampled_auxiliary_loss,
 )
 from ..losses.geometry import FutureBondLoss, future_bond_distance_loss
+from ..losses.sampled_physical import PhysicalAuxiliaryConfig, physical_auxiliary_loss
 from ..model import FrameJointModel, FrameJointOutput
 from ..runtime import sha256_file
 from .batches import PreparedFrameJointBatch
@@ -96,9 +97,11 @@ class SampledAuxiliaryConfig:
     draws: int = 2
     euler_steps: int = 4
     activation_checkpoint: bool = True
+    streamed_atom_frames_threshold: int = 0
     energy_weight: float = 0.0
     observed_bond_weight: float = 0.0
     feature_scales: SampledFeatureScales | None = None
+    physical: PhysicalAuxiliaryConfig | None = None
 
     @classmethod
     def resolve(cls, value: Mapping[str, Any] | None) -> "SampledAuxiliaryConfig":
@@ -108,6 +111,7 @@ class SampledAuxiliaryConfig:
             "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
             "energy_weight", "observed_bond_weight", "feature_scales",
             "source", "target_used_as_condition",
+            "physical", "streamed_atom_frames_threshold",
         }
         unknown = sorted(set(value) - allowed)
         if unknown:
@@ -135,8 +139,11 @@ class SampledAuxiliaryConfig:
         cadence = int(integer_values["cadence"])
         draws = int(integer_values["draws"])
         steps = int(integer_values["euler_steps"])
-        if cadence != 8 or draws != 2 or steps != 4:
-            raise ValueError("sampled auxiliary is frozen at cadence=8, K=2, Euler steps=4")
+        if cadence != 8 or draws != 2 or steps not in (4, 8):
+            raise ValueError("sampled auxiliary requires cadence=8, K=2, Euler steps=4 or 8")
+        threshold = value.get("streamed_atom_frames_threshold", 0)
+        if isinstance(threshold, bool) or not isinstance(threshold, int) or threshold < 0:
+            raise ValueError("streamed_atom_frames_threshold must be a non-negative integer")
         weights = {
             "energy_weight": float(value.get("energy_weight", 0.0)),
             "observed_bond_weight": float(value.get("observed_bond_weight", 0.0)),
@@ -145,15 +152,20 @@ class SampledAuxiliaryConfig:
             raise ValueError("sampled auxiliary weights must be finite and non-negative")
         raw_scales = value.get("feature_scales")
         scales = None if raw_scales is None else SampledFeatureScales.resolve(raw_scales)
-        if enabled and scales is None:
+        if enabled and weights["energy_weight"] > 0 and scales is None:
             raise ValueError("enabled sampled auxiliary requires fixed train-only feature scales")
+        physical = None if value.get("physical") is None else PhysicalAuxiliaryConfig.resolve(value["physical"])
+        if physical is not None and any(weights.values()):
+            raise ValueError("A physical objectives cannot be combined with historical J1 objectives")
         return cls(
             enabled=enabled,
             cadence=cadence,
             draws=draws,
             euler_steps=steps,
             activation_checkpoint=bool(value.get("activation_checkpoint", True)),
+            streamed_atom_frames_threshold=threshold,
             feature_scales=scales,
+            physical=physical,
             **weights,
         )
 
@@ -167,9 +179,11 @@ class SampledAuxiliaryConfig:
             "draws": self.draws,
             "euler_steps": self.euler_steps,
             "activation_checkpoint": self.activation_checkpoint,
+            "streamed_atom_frames_threshold": self.streamed_atom_frames_threshold,
             "energy_weight": self.energy_weight,
             "observed_bond_weight": self.observed_bond_weight,
             "feature_scales": None if self.feature_scales is None else self.feature_scales.contract(),
+            "physical": None if self.physical is None else self.physical.contract(),
             "source": "repeat(last_observed_normalized_latent)+N(0,I)",
             "target_used_as_condition": False,
         }
@@ -314,14 +328,27 @@ def frame_joint_loss(
         raw["near_bond"] = diagnostics["near_bond"].loss
         applicable_samples["near_bond"] = diagnostics["near_bond"].applicable_count
     sampled_config = sampled_config or SampledAuxiliaryConfig()
+    physical_weights = {}
+    if sampled_config.physical is not None:
+        physical = sampled_config.physical
+        physical_weights = {
+            "sampled_clash": physical.clash_weight,
+            "sampled_rmsf": physical.rmsf_weight,
+            "sampled_displacement": physical.displacement_weight,
+            "sampled_bond_band": physical.bond_band_weight,
+        }
+        raw.update({name: zero for name in physical_weights})
+        applicable_samples.update({name: zero_count for name in physical_weights})
     if output.sampled:
-        if not sampled_config.enabled or sampled_config.feature_scales is None:
+        if not sampled_config.enabled:
             raise ValueError("model returned actual samples while sampled auxiliary is disabled")
         sampled_loss: SampledAuxiliaryLoss = sampled_auxiliary_loss(
             tuple(item.coordinates for item in output.sampled),
             batch.target_coordinates,
             batch,
             sampled_config.feature_scales,
+            compute_energy=sampled_config.energy_weight > 0,
+            compute_bond=sampled_config.observed_bond_weight > 0 and config.bond_enabled,
         )
         raw["sampled_energy"] = sampled_loss.energy_score
         raw["sampled_observed_bond"] = sampled_loss.observed_bond
@@ -332,6 +359,13 @@ def frame_joint_loss(
             "draws": len(output.sampled),
             "euler_steps": sampled_config.euler_steps,
         }
+        if sampled_config.physical is not None:
+            physical_raw, physical_counts, physical_diagnostics = physical_auxiliary_loss(
+                tuple(item.coordinates for item in output.sampled), batch, sampled_config.physical,
+            )
+            raw.update(physical_raw)
+            applicable_samples.update(physical_counts)
+            sampled_diagnostics.update(physical_diagnostics)
 
     active_flow = stage in {"flow_start", "joint", "continuation", "frozen_decoder"}
     active_clean = stage in {"decoder_warmup", "joint", "continuation"}
@@ -352,6 +386,8 @@ def frame_joint_loss(
             else 0.0
         ),
     }
+    weights.update({name: value if active_joint and sampled_config.enabled else 0.0
+                    for name, value in physical_weights.items()})
     weighted = {name: raw[name] * weight for name, weight in weights.items()}
     return JointStepLoss(
         total=sum(weighted.values(), zero),
@@ -489,6 +525,7 @@ def calibrate_sampled_auxiliary_weights(
     energy_target_ratio: float = 0.05,
     observed_bond_target_ratio: float = 0.05,
     checkpoint_sampled_steps: bool = True,
+    euler_steps: int = 4,
 ) -> tuple[tuple[float, float], dict[str, Any]]:
     """Match each actual-sample auxiliary to 0.05 of the main DiT flow gradient."""
 
@@ -527,7 +564,7 @@ def calibrate_sampled_auxiliary_weights(
             query=batch.query,
             flow_time=flow_sample.flow_time,
             sampled_sources=sources,
-            sampled_steps=4,
+            sampled_steps=euler_steps,
             checkpoint_sampled_steps=checkpoint_sampled_steps,
         )
         flow_loss = objective.loss(output.velocity, flow_sample.target_velocity).total
@@ -749,6 +786,8 @@ class FrameJointTrainer:
         *,
         generator: torch.Generator,
         sampled_generator: torch.Generator | None = None,
+        auxiliary_active: bool | None = None,
+        diagnose_gradients: bool = False,
     ) -> dict[str, Any]:
         self.model.train()
         self.base_model.target_teacher.eval()
@@ -759,7 +798,10 @@ class FrameJointTrainer:
         )
         need_clean = self.stage in {"decoder_warmup", "joint", "continuation"}
         need_joint = self.stage in {"joint", "continuation", "frozen_decoder"}
-        sampled_active = need_joint and self.sampled_config.active_at(self.successful_updates)
+        sampled_active = need_joint and self.sampled_config.enabled and (
+            self.sampled_config.active_at(self.successful_updates)
+            if auxiliary_active is None else auxiliary_active
+        )
         sampled_sources: tuple[FrameLatentBatch, ...] | None = None
         if sampled_active:
             if sampled_generator is None:
@@ -768,6 +810,18 @@ class FrameJointTrainer:
                 sample_frame_source(batch.source_center, generator=sampled_generator)[0]
                 for _ in range(self.sampled_config.draws)
             )
+            atom_frames = (
+                batch.observed_context.topology.num_atoms
+                * batch.query.frame_mask.shape[1]
+            )
+            if (
+                self.sampled_config.streamed_atom_frames_threshold
+                and atom_frames >= self.sampled_config.streamed_atom_frames_threshold
+            ):
+                return self._train_step_streamed(
+                    batch, sample, sampled_sources,
+                    diagnose_gradients=diagnose_gradients,
+                )
         with self._autocast():
             output = self.model(
                 sample.interpolated,
@@ -794,6 +848,23 @@ class FrameJointTrainer:
             )
         if not torch.isfinite(losses.total):
             raise FloatingPointError("non-finite Frame Joint loss")
+        gradient_diagnostics = {}
+        if diagnose_gradients:
+            parameters = [p for p in self.base_model.dit.parameters() if p.requires_grad]
+            reference = torch.autograd.grad(losses.raw["flow"], parameters, retain_graph=True, allow_unused=True)
+            reference_norm = sum((g.float().square().sum() for g in reference if g is not None), losses.total.new_zeros(())).sqrt()
+            for name, loss in losses.raw.items():
+                applicable_name = "flow" if name in {"flow_h", "flow_v"} else name
+                if int(losses.applicable_samples[applicable_name]) == 0 or not loss.requires_grad:
+                    gradient_diagnostics[name] = {"active": False}
+                    continue
+                gradients = torch.autograd.grad(loss, parameters, retain_graph=True, allow_unused=True)
+                norm = sum((g.float().square().sum() for g in gradients if g is not None), losses.total.new_zeros(())).sqrt()
+                dot = sum(((g.float() * ref.float()).sum() for g, ref in zip(gradients, reference)
+                           if g is not None and ref is not None), losses.total.new_zeros(()))
+                gradient_diagnostics[name] = {"active": True, "dit_raw_norm": float(norm),
+                    "flow_cosine": float(dot / (norm * reference_norm)) if float(norm * reference_norm) > 0 else None,
+                    "flow_norm": float(reference_norm)}
         self.optimizer.zero_grad(set_to_none=True)
         scaled = self._distributed_total(losses)
         scaled.backward()
@@ -820,6 +891,125 @@ class FrameJointTrainer:
         result.update({f"weighted_{name}": float(value.detach()) for name, value in losses.weighted.items()})
         if losses.sampled_diagnostics:
             result["sampled_diagnostics"] = dict(losses.sampled_diagnostics)
+        if diagnose_gradients:
+            result["gradient_diagnostics"] = gradient_diagnostics
+        return result
+
+    def _train_step_streamed(
+        self,
+        batch: PreparedFrameJointBatch,
+        sample: Any,
+        sources: tuple[FrameLatentBatch, ...],
+        *,
+        diagnose_gradients: bool,
+    ) -> dict[str, Any]:
+        """Accumulate the same K=2 physical gradient one source at a time.
+
+        The other source is a fixed coordinate value during each derivative.
+        We recompute observed-only conditions for each draw so that neither
+        source's Euler graph, nor the base branch graph, survives the next
+        backward. This changes memory scheduling, not the loss definition.
+        """
+        if len(sources) != 2 or self.sampled_config.physical is None:
+            raise ValueError("streaming requires K=2 A physical auxiliaries")
+        if dist.is_available() and dist.is_initialized() and dist.get_world_size() != 1:
+            raise RuntimeError("streamed source backward requires single-process training")
+        physical = self.sampled_config.physical
+        weights = {
+            "sampled_clash": physical.clash_weight,
+            "sampled_rmsf": physical.rmsf_weight,
+            "sampled_displacement": physical.displacement_weight,
+            "sampled_bond_band": physical.bond_band_weight,
+        }
+        # Detached draw values give the exact two-sample loss and let each
+        # subsequent backward differentiate only its own source trajectory.
+        with torch.no_grad(), self._autocast():
+            detached = tuple(
+                self.base_model.sample_source(
+                    source, context=batch.observed_context, query=batch.query,
+                    condition=self.base_model.prepare_condition(batch.observed_context),
+                    steps=self.sampled_config.euler_steps,
+                    checkpoint_steps=False,
+                ).coordinates.detach()
+                for source in sources
+            )
+            sampled_raw, sampled_counts, sampled_diagnostics = physical_auxiliary_loss(
+                detached, batch, physical,
+            )
+        self.optimizer.zero_grad(set_to_none=True)
+        with self._autocast():
+            output = self.model(
+                sample.interpolated, context=batch.observed_context, query=batch.query,
+                flow_time=sample.flow_time, clean_future=batch.target_future,
+                decode_generated=True, decode_clean=True, decode_near=True,
+            )
+            flow_loss = self.flow.loss(output.velocity, sample.target_velocity)
+            losses = frame_joint_loss(
+                output, flow_loss, batch, sample.flow_time, stage=self.stage,
+                config=self.loss_config, sampled_config=self.sampled_config,
+            )
+        if not torch.isfinite(losses.total):
+            raise FloatingPointError("non-finite streamed base loss")
+        losses.total.backward()
+        del output
+        for index, source in enumerate(sources):
+            with self._autocast():
+                generated = self.base_model.sample_source(
+                    source, context=batch.observed_context, query=batch.query,
+                    condition=self.base_model.prepare_condition(batch.observed_context),
+                    steps=self.sampled_config.euler_steps,
+                    checkpoint_steps=self.sampled_config.activation_checkpoint,
+                ).coordinates
+                coordinates = (generated, detached[1]) if index == 0 else (detached[0], generated)
+                branch_raw, branch_counts, _ = physical_auxiliary_loss(
+                    coordinates, batch, physical,
+                )
+                if any(int(branch_counts[name]) != int(sampled_counts[name]) for name in weights):
+                    raise RuntimeError("streamed source applicability changed")
+                branch_total = sum(
+                    (branch_raw[name] * weight for name, weight in weights.items()),
+                    generated.sum() * 0.0,
+                )
+            if not torch.isfinite(branch_total):
+                raise FloatingPointError("non-finite streamed sampled loss")
+            branch_total.backward()
+            del generated, coordinates, branch_raw, branch_total
+        active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
+        grad_norm = torch.nn.utils.clip_grad_norm_(active, self.grad_clip)
+        if not torch.isfinite(torch.as_tensor(grad_norm)):
+            raise FloatingPointError("non-finite streamed Frame Joint gradient norm")
+        self.optimizer.step()
+        if self.scheduler is not None:
+            self.scheduler.step()
+        self.step += 1
+        self.successful_updates += 1
+        raw = {**losses.raw, **sampled_raw}
+        weighted = {**losses.weighted, **{
+            name: sampled_raw[name] * weight for name, weight in weights.items()
+        }}
+        result: dict[str, Any] = {
+            "step": self.step, "stage": self.stage,
+            "loss": float(sum(weighted.values()).detach()),
+            "grad_norm": float(torch.as_tensor(grad_norm).detach()),
+            "flow_time_mean": float(sample.flow_time.mean().detach()),
+            "batch_size": batch.observed_context.latent.batch_size,
+            "sampled_branch_active": True,
+            "sampled_successful_update_cadence": self.sampled_config.cadence,
+            "sampled_streamed_backward": True,
+            "sampled_diagnostics": {
+                **sampled_diagnostics,
+                "draws": len(sources),
+                "euler_steps": self.sampled_config.euler_steps,
+                "backward": "sequential_per_source_exact_K2_objective",
+            },
+        }
+        result.update({f"raw_{name}": float(value.detach()) for name, value in raw.items()})
+        result.update({f"weighted_{name}": float(value.detach()) for name, value in weighted.items()})
+        if diagnose_gradients:
+            result["gradient_diagnostics"] = {
+                "streamed": {"active": True, "per_term_norms_available": False,
+                             "reason": "per-source sequential backward bounds maximum-sample CUDA memory"}
+            }
         return result
 
     def contracts(self) -> dict[str, Any]:

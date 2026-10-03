@@ -1,0 +1,37 @@
+{
+  "schema": "molvid.A.training_loss_summary.v1",
+  "aggregation": "arithmetic mean over all 10606 updates for base terms; arithmetic mean over nonzero active updates for sampled auxiliary terms",
+  "base_terms_all_update_range_across_arms": {
+    "flow": {"raw_min": 0.11703209345396337, "raw_max": 0.11724062274397544, "weighted_min": 0.11703209345396337, "weighted_max": 0.11724062274397544},
+    "clean_coordinate": {"raw_min": 0.0008760007999882797, "raw_max": 0.0008780070784268901, "weighted_min": 0.0008760007999882797, "weighted_max": 0.0008780070784268901},
+    "clean_bond": {"raw_min": 0.0012118041202095876, "raw_max": 0.0012119329740793757, "weighted_min": 0.0001211804141034495, "weighted_max": 0.00012119329948274488},
+    "near_coordinate": {"raw_min": 0.0006935065767073426, "raw_max": 0.0007024598928620994, "weighted_min": 0.00006935065891469937, "weighted_max": 0.00007024599048304528},
+    "near_bond": {"raw_min": 0.0007843356970081209, "raw_max": 0.0008052083367862312, "weighted_min": 0.000007843356792932976, "weighted_max": 0.000008052083199008096},
+    "generated_bond": {"raw_min": 0.004339341243412481, "raw_max": 0.004490469987961021, "weighted_min": 0.00022437539869203177, "weighted_max": 0.00023218985012853056}
+  },
+  "sampled_terms_active_update_mean": {
+    "A0": {},
+    "A1": {
+      "sampled_clash": {"active_updates": 1327, "raw": 0.029834599755620184, "weighted": 0.000031740775691674776}
+    },
+    "A2": {
+      "sampled_clash": {"active_updates": 1327, "raw": 0.04061934617562072, "weighted": 0.00004321457518236589},
+      "sampled_rmsf": {"active_updates": 994, "raw": 0.2690856044875904, "weighted": 0.001019686016764059},
+      "sampled_displacement": {"active_updates": 1327, "raw": 0.2896714907844173, "weighted": 0.0006354098767195136}
+    },
+    "A3": {
+      "sampled_clash": {"active_updates": 1327, "raw": 0.03794534154307903, "weighted": 0.00004036972452507444},
+      "sampled_rmsf": {"active_updates": 994, "raw": 0.2740470366233911, "weighted": 0.0010384871074892357},
+      "sampled_displacement": {"active_updates": 1327, "raw": 0.29448584447521503, "weighted": 0.0006459704164279115},
+      "sampled_bond_band": {"active_updates": 1327, "raw": 0.04540808474155144, "weighted": 0.00024024447144241478}
+    }
+  },
+  "peak_allocated_bytes": {
+    "A0": 56941594624,
+    "A1": 81123929088,
+    "A2": 81123929600,
+    "A3": 81123930112
+  },
+  "source": "formal/A*/train_metrics.jsonl",
+  "test_opened": false
+}

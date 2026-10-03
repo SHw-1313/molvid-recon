@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import time
 from typing import Any, Mapping, Sequence
 
 import torch
@@ -29,9 +30,11 @@ from ..data.sampling import (
 )
 from ..data.store import ClipMMapDataset
 from ..latent.statistics import FrameLatentStatistics
+from ..losses.sampled_physical import PhysicalAuxiliaryConfig
 from ..model import FrameJointModel
 from ..runtime import atomic_write_json, canonical_hash, configure_device, seed_all, sha256_file
 from ..training.batches import prepare_batch_then_to_device, prepare_frame_joint_batch
+from ..training.execution import EXECUTION_SCHEMA, execution_manifest, execution_schedule
 from ..training.joint import (
     FrameJointTrainer,
     JointLossConfig,
@@ -62,6 +65,7 @@ _SECTION_KEYS = {
         "device", "deterministic", "precision", "seed", "max_atom_frames_per_gpu",
         "clips_per_trajectory", "time_bucket_weights", "history_order", "weight_decay",
         "grad_clip", "output_root", "stages",
+        "gradient_diagnostics_every",
     },
 }
 _DERIVED_KEYS = {"store", "manifest", "manifest_sha256", "store_index_sha256", "record_count"}
@@ -72,6 +76,7 @@ _SAMPLED_AUXILIARY_KEYS = {
     "energy_weight", "observed_bond_weight", "feature_scales",
     "calibration_batches", "energy_gradient_target_ratio",
     "observed_bond_gradient_target_ratio",
+    "physical", "streamed_atom_frames_threshold",
 }
 _EXPOSURE_KEYS = {
     "schema", "successful_updates", "trajectory_clip_exposure", "bucket_clip_exposure",
@@ -199,6 +204,8 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     for name in ("weight_decay", "grad_clip"):
         if name in training:
             _require_number(training[name], f"training.{name}", nonnegative=True)
+    if "gradient_diagnostics_every" in training:
+        _require_number(training["gradient_diagnostics_every"], "training.gradient_diagnostics_every", integer=True, nonnegative=True)
     if training.get("precision", "fp32") not in {"fp32", "bf16"}:
         raise ValueError("training.precision must be fp32 or bf16")
     histories = training.get("history_order", (4, 8))
@@ -238,15 +245,21 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
     _reject_unknown(sampled, _SAMPLED_AUXILIARY_KEYS, "sampled_auxiliary")
     for name in ("enabled", "activation_checkpoint"):
         _require_bool(sampled, name, "sampled_auxiliary")
-    for name, frozen in (("cadence", 8), ("draws", 2), ("euler_steps", 4)):
+    for name, allowed in (("cadence", (8,)), ("draws", (2,)), ("euler_steps", (4, 8))):
         if name in sampled:
             _require_number(
                 sampled[name], f"sampled_auxiliary.{name}", integer=True, positive=True
             )
-            if int(sampled[name]) != frozen:
+            if int(sampled[name]) not in allowed:
                 raise ValueError(
-                    "sampled auxiliary is frozen at cadence=8, K=2, Euler steps=4"
+                    "sampled auxiliary requires cadence=8, K=2, Euler steps=4 or 8"
                 )
+    if "streamed_atom_frames_threshold" in sampled:
+        _require_number(
+            sampled["streamed_atom_frames_threshold"],
+            "sampled_auxiliary.streamed_atom_frames_threshold",
+            integer=True, nonnegative=True,
+        )
     if "calibration_batches" in sampled:
         _require_number(
             sampled["calibration_batches"],
@@ -280,8 +293,11 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
                 value, f"sampled_auxiliary.feature_scales.{name}", positive=True
             )
     enabled = bool(sampled.get("enabled", False))
-    if enabled and feature_scales is None:
-        raise ValueError("enabled sampled auxiliary requires feature_scales or 'fit'")
+    if sampled.get("physical") is not None:
+        PhysicalAuxiliaryConfig.resolve(_require_mapping(sampled["physical"], "sampled_auxiliary.physical"))
+    energy_requested = sampled.get("energy_weight", 0.0)
+    if enabled and feature_scales is None and (energy_requested == "calibrate" or float(energy_requested) > 0):
+        raise ValueError("enabled energy score requires feature_scales or 'fit'")
     calibrated_weights = [
         sampled.get(name) == "calibrate"
         for name in ("energy_weight", "observed_bond_weight")
@@ -718,6 +734,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.output_root is not None:
         training["output_root"] = str(args.output_root)
     device, rank, local_rank, world = _distributed_device(training)
+    if world != 1:
+        raise ValueError(
+            "stratified execution currently supports one process per arm only; "
+            "rank-local aux masks require a separately validated DDP normalization protocol"
+        )
     if args.fit_statistics and world != 1:
         raise ValueError("fit statistics in one CUDA process before launching DDP")
     seed = int(training["seed"])
@@ -776,7 +797,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not histories or any(value < 1 for value in histories):
             raise ValueError("history_order must contain positive H values")
         schedule_contract = {
-            "schema_version": "molvid.frame_joint.schedule.v1",
+            "schema_version": "molvid.frame_joint.schedule.v2",
+            "execution_schema": EXECUTION_SCHEMA,
+            "execution_seed": seed,
+            "auxiliary_cadence": 8,
             "stages": [
                 {
                     "name": str(stage["name"]),
@@ -828,7 +852,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif inherit_parent_loss:
             if parent_preview is None:
                 raise ValueError("loss.inherit_parent requires a continuation parent or warm start")
-            loss_mapping = dict(parent_preview["contracts"]["loss"])
+            # Explicit terms override inherited terms independently. In
+            # particular endpoint=0 must not disable clean/near bond losses.
+            inherited = dict(parent_preview["contracts"]["loss"])
+            overrides = dict(loss_mapping)
+            loss_mapping = {**inherited, **overrides}
+            print(json.dumps({"loss_resolution": "parent_plus_explicit_terms",
+                              "overrides": overrides, "resolved": loss_mapping}, sort_keys=True))
         calibration_requested = loss_mapping.get("generated_bond") in (None, "calibrate")
         if resume_payload is None and calibration_requested:
             loss_mapping["generated_bond"] = 0.0
@@ -844,6 +874,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sampled_runtime_keys = {
             "enabled", "cadence", "draws", "euler_steps", "activation_checkpoint",
             "energy_weight", "observed_bond_weight", "feature_scales",
+            "physical", "streamed_atom_frames_threshold",
         }
         if resume_payload is not None:
             resumed_sampled = resume_payload["contracts"].get("sampled_auxiliary")
@@ -956,6 +987,23 @@ def main(argv: Sequence[str] | None = None) -> int:
                 expected_sha256=args.warm_start_sha256,
             )
         output_root = Path(training["output_root"])
+        def build_execution():
+            global_batches = sampler.global_batches
+            if sampler.drop_last:
+                global_batches = global_batches[:len(global_batches) // world * world]
+            entries = execution_schedule(
+                global_batches, sampler.specs, histories=histories, seed=seed,
+                epoch=sampler.epoch, cadence=8,
+            )
+            manifest = execution_manifest(entries)
+            if rank == 0:
+                atomic_write_json(output_root / f"execution_epoch_{sampler.epoch:04d}.json", manifest)
+            return entries, manifest["sha256"]
+
+        execution, execution_hash = build_execution()
+        if args.resume or args.continuation_parent:
+            if cursor.get("execution_schedule_hash") != execution_hash:
+                raise ValueError("execution H/aux schedule differs; use model-only warm start for new objectives")
         sampled_scale_diagnostics: dict[str, Any] | None = None
         sampled_weight_diagnostics: dict[str, Any] | None = None
         if sampled_scale_fitting or sampled_weight_calibration:
@@ -1014,6 +1062,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         )
                     ),
                     checkpoint_sampled_steps=trainer.sampled_config.activation_checkpoint,
+                    euler_steps=trainer.sampled_config.euler_steps,
                 )
             trainer.sampled_config = SampledAuxiliaryConfig.resolve({
                 "enabled": True,
@@ -1101,24 +1150,30 @@ def main(argv: Sequence[str] | None = None) -> int:
             total_updates = min(total_updates, trainer.step + 1)
         last: dict[str, Any] = {}
         calibration_done = not calibration_requested or not loss_config.bond_enabled or loss_config.generated_bond > 0
+        gradient_diagnostics_every = int(training.get("gradient_diagnostics_every", 0))
         while trainer.step < total_updates:
+            update_started = time.perf_counter()
             batches = list(iter(sampler))
             if batch_index >= len(batches):
                 epoch += 1
                 batch_index = 0
                 sampler.set_epoch(epoch)
                 batches = list(iter(sampler))
+                execution, execution_hash = build_execution()
             indices = batches[batch_index]
+            entry = execution[batch_index * world + rank]
+            if tuple(indices) != entry.indices:
+                raise RuntimeError("execution schedule and sampler cursor disagree")
+            io_started = time.perf_counter()
             cpu_batch = collate_clip_records([train[index] for index in indices])
+            io_seconds = time.perf_counter() - io_started
             buckets = set(str(value) for value in cpu_batch.time_bucket_id)
             if len(buckets) != 1:
                 raise RuntimeError("Frame Joint sampler produced a mixed time-bucket batch")
             bucket = next(iter(buckets))
             fixed_history = bucket.startswith("fixed_history_dt_")
-            if fixed_history:
-                history = 4
-            else:
-                history = histories[ordinary_batch_index % len(histories)]
+            history = entry.history_frames
+            if not fixed_history:
                 ordinary_batch_index += 1
             if history >= cpu_batch.frames:
                 raise ValueError("sampled history must leave future query frames")
@@ -1145,7 +1200,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     coefficient.fill_(coefficient_value)
                 if world > 1:
                     dist.broadcast(coefficient, src=0)
-                resolved_loss = dict(raw["loss"])
+                resolved_loss = dict(loss_mapping)
+                resolved_loss.pop("inherit_parent", None)
                 resolved_loss.pop("calibration_target_ratio", None)
                 resolved_loss["generated_bond"] = float(coefficient)
                 trainer.loss_config = JointLossConfig.resolve(resolved_loss)
@@ -1155,6 +1211,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     resolved_config["resolved"]["loss_contract"] = trainer.loss_config.contract()
                     atomic_write_json(output_root / "resolved_config.json", resolved_config)
             trainer.set_learning_rates(_scheduled_rates(stage, stage_position))
+            prepare_started = time.perf_counter()
             prepared = prepare_frame_joint_batch(
                 model.target_teacher,
                 cpu_batch,
@@ -1162,12 +1219,24 @@ def main(argv: Sequence[str] | None = None) -> int:
                 normalizer=model,
                 history_frames=history,
             )
+            torch.cuda.synchronize(device)
+            prepare_seconds = time.perf_counter() - prepare_started
+            train_started = time.perf_counter()
             last = trainer.train_step(
                 prepared,
                 generator=generator,
                 sampled_generator=sampled_generator,
+                auxiliary_active=entry.auxiliary,
+                diagnose_gradients=bool(gradient_diagnostics_every and (trainer.step + 1) % gradient_diagnostics_every == 0),
             )
             last.update({
+                "io_seconds": io_seconds,
+                "prepare_seconds": prepare_seconds,
+                "train_seconds": time.perf_counter() - train_started,
+                "update_seconds": time.perf_counter() - update_started,
+                "peak_allocated_bytes": int(torch.cuda.max_memory_allocated(device)),
+                "execution_schedule_hash": execution_hash,
+                "scheduled_auxiliary": entry.auxiliary,
                 "epoch": epoch,
                 "batch_index": batch_index,
                 "history_frames": history,
@@ -1197,13 +1266,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 with (output_root / "train_metrics.jsonl").open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps(last, sort_keys=True) + "\n")
             save_now = args.checkpoint_every and trainer.step % args.checkpoint_every == 0
-            if save_now or trainer.step == total_updates:
+            if save_now or trainer.step == total_updates or batch_index == len(batches):
                 cursor = {
                     "epoch": epoch,
                     "batch_index": batch_index,
                     "ordinary_batch_index": ordinary_batch_index,
                     "sampler_state": sampler.state_dict(),
                     "global_batch_schedule_hash": canonical_hash(sampler.global_batches),
+                    "execution_schedule_hash": execution_hash,
                 }
                 local_state = {
                     "cursor": cursor,

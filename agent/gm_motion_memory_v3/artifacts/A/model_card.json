@@ -1,0 +1,29 @@
+{
+  "schema": "molvid.A.model_card.v1",
+  "identity": "GM / 4-block per-frame joint model / teacher frozen",
+  "parent_verified": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "target_channels_h_v": [128,128],
+  "dit_width_h_v": [256,128],
+  "dit_depth": 4,
+  "heads": 8,
+  "G_blocks_one_based": [2,4],
+  "M": "observed-only MotionContextEncoder",
+  "trainable": ["history_encoder","motion_encoder","dit","decoder"],
+  "motion_optimizer_group": "history_encoder decay/no_decay groups; source verified in joint.py",
+  "teacher_geometry_encoder": "frozen/eval, historical ratio4 codec; targets are per-frame",
+  "shapes": {"observed_h":"[H,N,128]","observed_v":"[H,N,3,128]","future_h":"[Q,N,128]","future_v":"[Q,N,3,128]","physical_time_and_mask":"[B,T]"},
+  "packed_system_isolation": "abid/atom_ptr, true covalent topology, frame/loss masks",
+  "source": "repeat(last observed normalized latent) + independent unit Gaussian",
+  "formal_reset": ["optimizer","scheduler","cursor","main_rng","sampled_rng"],
+  "warm_start_load_report": "all four formal arms loaded the same 481 parent tensors; initialized=[], unexpected=[]; optimizer/cursor not restored",
+  "parameter_count": 19600857,
+  "trainable_parameter_count": 18908433,
+  "cuda_forward_verified": true,
+  "cuda_smoke": "runs/gm_motion_memory_v3/A/r17/smoke/smoke.json",
+  "formal_checkpoint_shas": {
+    "A0": "f459f1d3f55f6404ee8afbd898c669f071dfe053cb8ab5f337e7528c88523bc7",
+    "A1": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
+    "A2": "3d10ddd99a6860ccb30cd0ac10d4585512bd74c537f7e950b27f77ff7969cc65",
+    "A3": "efafdd617919c981e8d21f820a010c0e365822630fd34aa147cb5ce499a95711"
+  }
+}

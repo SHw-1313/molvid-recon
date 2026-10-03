@@ -1,0 +1,62 @@
+{
+  "arms": {
+    "A0": {
+      "formal": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal_A0.json",
+        "config_sha256": "2d15e38c51b7c81123fe57f8cbec018a7b21aa2ad25be2f671e892d590564da4",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A0"
+      },
+      "pilot": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A0.json",
+        "config_sha256": "8988c72d9dad0816bec899c442d0d53dbc5fdd6ce3606be63b1d4c38a59b115c",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot/A0"
+      }
+    },
+    "A1": {
+      "formal": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal_A1.json",
+        "config_sha256": "15d55300b0bbab366f8ddd984b5c8f94b6ee94b2f6ad1d0264506e3018db1cce",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1"
+      },
+      "pilot": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A1.json",
+        "config_sha256": "2e13ee256ad92f1de22a7e04528c03959dabe107b6f36ae5926f8f850e3790dd",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot/A1"
+      }
+    },
+    "A2": {
+      "formal": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal_A2.json",
+        "config_sha256": "db842c3ad563ee150c5f20f1d9f3ec591f4869eb4ca83f730c58a08b39fdb00e",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A2"
+      },
+      "pilot": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A2.json",
+        "config_sha256": "9639c25a82a125903068891b65253084ca308ae4e6db0df923d6f7e43396675a",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot/A2"
+      }
+    },
+    "A3": {
+      "formal": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal_A3.json",
+        "config_sha256": "b41ba050c47eac764450690f0cf8dcf5063e647fdc7a3142f7a6e803f134a867",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A3"
+      },
+      "pilot": {
+        "config": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot_A3.json",
+        "config_sha256": "a22780b8af8855646a3f82d17607cef4041ac0936cdd2190195ceb3a5ed42994",
+        "output_root": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/pilot/A3"
+      }
+    }
+  },
+  "formal_total_updates": 10606,
+  "parent_path": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "profile_sha256": "5ef5ea16150ca67d73399d21d04bdacbac8ce5c651dd64f25e94fe401162b71d",
+  "recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+  "schema": "molvid.A.frozen_configs.v1",
+  "test_opened": false,
+  "updates_per_epoch": [
+    10606
+  ]
+}

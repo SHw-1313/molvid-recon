@@ -1,0 +1,7 @@
+{
+  "checkpoint": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A0/frame_joint_step_00010606.pt",
+  "config_sha256": "2d15e38c51b7c81123fe57f8cbec018a7b21aa2ad25be2f671e892d590564da4",
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "review_gate_sha256": "486d045b2c8037b66b0d9011121f9491285de0a3884e27739d58df6ea9f892f9",
+  "sha256": "f459f1d3f55f6404ee8afbd898c669f071dfe053cb8ab5f337e7528c88523bc7"
+}

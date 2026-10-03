@@ -1,0 +1,29 @@
+{
+  "schema": "molvid.A.experiment_status.v1",
+  "status": "formal_completed",
+  "base_commit": "cc74a385577e57c64c9623111e0db86e54e48770",
+  "reviewed_code_commit": "af60c05aa02ce46872edbad0711833317773436e",
+  "review_gate_sha256": "486d045b2c8037b66b0d9011121f9491285de0a3884e27739d58df6ea9f892f9",
+  "review_report_sha256": "4b653591ab89f1a5d22abbde73d8a049f9976f826ea386e2e0d7e125266cc2d1",
+  "parent_sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540",
+  "codec_sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
+  "statistics_sha256": "117dbcb674f9932c40216c4e2c3ee69153dacc3d3efebcca6e67c876a3b6bee9",
+  "recipe_sha256": "625d11cff4a579e96487029f58d88e8e3d6129c3123e80847cc6edb9c8a0e6f3",
+  "arms": {
+    "A0": "GM + complete base loss",
+    "A1": "GM + complete base loss + sampled clash",
+    "A2": "GM + complete base loss + sampled clash + motion-only ES",
+    "A3": "GM + complete base loss + sampled clash + motion-only ES + sampled bond band"
+  },
+  "shared_parent_and_symmetric_reset": true,
+  "effective_epochs": 1,
+  "updates_per_arm": 10606,
+  "formal_train_gpu_hours": 33.84521766179138,
+  "formal_eval_gpu_hours": 6.429578157663345,
+  "selected_arm": "A1",
+  "selection_path": "runs/gm_motion_memory_v3/A/r21/final_analysis/selection.json",
+  "selection_sha256": "5240de5dd38661bbe8fc2bf07e2a05ad22037fb046ae7461cb0ce6a0540263ab",
+  "conditional_release_trigger": false,
+  "scientific_conclusion": "A1 consistently reduces clash count and severity without material motion regression, but misses the approximately 30 percent target. A2/A3 improve motion errors but rebound on clash metrics; A3 partially repairs A2 geometry and does not trigger the predefined Keep/Release fork.",
+  "test_opened": false
+}
