@@ -1,0 +1,185 @@
+"""B raw ATLAS window contracts, independent of common training samplers."""
+from __future__ import annotations
+from dataclasses import dataclass
+from pathlib import Path
+import numpy as np
+from ..geometry.coordinates import kabsch_align
+from .io import iter_atlas_frames
+
+
+@dataclass(frozen=True)
+class RawHistoryWindow:
+    """Paired arm indices on the same native 10 ps trajectory clock."""
+    anchor_index: int
+    history_span_ps: int
+    observed_dt_ps: int
+    query_lag_ps: int
+    split: str
+    future_count: int = 12
+
+    def __post_init__(self):
+        if self.split not in ("train", "valid"):
+            raise ValueError("only train/valid raw trajectories are permitted")
+        if self.history_span_ps not in (800, 3200, 12800) or self.observed_dt_ps not in (100, 200, 400):
+            raise ValueError("unsupported B history span or observed sampling interval")
+        allowed = (100, 200, 400) if self.split == "train" else (100, 200, 300, 400)
+        if self.query_lag_ps not in allowed or self.future_count != 12:
+            raise ValueError("B uses Q12; 300 ps queries are valid-only")
+        if self.anchor_index < 1280:
+            raise ValueError("both arms require the same 12.8 ns-past eligible anchors")
+
+    @property
+    def history_indices(self):
+        return np.arange(self.anchor_index - self.history_span_ps // 10,
+                         self.anchor_index + 1, self.observed_dt_ps // 10, dtype=np.int64)
+
+    @property
+    def anchor_indices(self):
+        return np.array([self.anchor_index - 80, self.anchor_index], dtype=np.int64)
+
+    @property
+    def future_indices(self):
+        return self.anchor_index + np.arange(1, 13, dtype=np.int64) * (self.query_lag_ps // 10)
+
+    def validate_coverage(self, frame_count: int):
+        # Common future eligibility even for a 100 ps query.
+        if self.anchor_index + 480 >= frame_count:
+            raise ValueError("anchor lacks the common Q12/400 ps future coverage")
+
+    def manifest(self):
+        return dict(anchor_raw_index=self.anchor_index, history_span_ps=self.history_span_ps,
+                    observed_dt_ps=self.observed_dt_ps, query_lag_ps=self.query_lag_ps,
+                    split=self.split, future_count=self.future_count,
+                    history_raw_indices=self.history_indices.tolist(),
+                    geometry_anchor_raw_indices=self.anchor_indices.tolist(),
+                    future_raw_indices=self.future_indices.tolist(),
+                    history_time_ps=((self.history_indices - self.anchor_index) * 10).tolist(),
+                    anchor_time_ps=[-800, 0], query_time_ps=((self.future_indices - self.anchor_index) * 10).tolist())
+
+
+def read_raw_window_bank(xtc: Path, pdb: Path, indices: np.ndarray, *, atom_source_index: np.ndarray):
+    """Read actual requested frames, checking every native timestamp through max index.
+
+    Does not claim coverage of the unscanned trajectory tail. CPU work here is
+    raw I/O only, never a model fallback. Returned coordinates are Angstrom.
+    """
+    needed = set(int(i) for i in indices)
+    if not needed or min(needed) < 0:
+        raise ValueError("requested indices must be nonempty and nonnegative")
+    frames, times = {}, {}
+    first_time = None
+    reader = iter_atlas_frames(xtc, pdb, source_stride=1, expected_native_dt_ps=10, tolerance_ps=1e-3)
+    try:
+        for index, (xyz, time) in enumerate(reader):
+            if first_time is None:
+                first_time = time
+            if not np.isclose(time - first_time, index * 10, rtol=0, atol=1e-3):
+                raise ValueError(f"raw physical time mismatch at {xtc}:{index}")
+            if index in needed:
+                selected = xyz[atom_source_index]
+                if not np.isfinite(selected).all():
+                    raise ValueError("nonfinite raw coordinates")
+                frames[index], times[index] = selected, time
+            if index >= max(needed):
+                break
+    finally:
+        reader.close()
+    if needed != set(frames):
+        raise ValueError(f"missing requested raw past/future indices: {sorted(needed-set(frames))[:5]}")
+    ordered = sorted(needed)
+    return np.stack([frames[i] for i in ordered]), np.array([times[i] for i in ordered]), np.array(ordered)
+
+
+def align_bank_to_observed(bank: np.ndarray, indices: np.ndarray, anchor_index: int, align_mask: np.ndarray):
+    """Every frame uses the same last-observed backbone reference.
+
+    Future frames are transformed independently against observed geometry;
+    changing future cannot change any history/anchor coordinates or origin.
+    """
+    reference = bank[np.flatnonzero(indices == anchor_index).item(), align_mask].astype(np.float64)
+    result = np.empty_like(bank)
+    for i, frame in enumerate(bank):
+        rotation, translation = kabsch_align(frame[align_mask].astype(np.float64), reference)
+        result[i] = frame @ rotation + translation
+    return result
+
+
+def load_pilot_inputs(path: Path, window: RawHistoryWindow):
+    """Materialize separate CPU raw/anchor/target objects from an audited bank.
+
+    This is pilot I/O; it does not select or weight training exposures. The
+    generator receives only the returned raw and anchor objects, never bank.
+    """
+    import torch
+    from .batch import collate_clip_records
+    from ..codec.learned_memory import RawHistoryObservation, ChemicalMapping
+    from ..geometry.types import StaticTopologyMetadata
+    with np.load(path, allow_pickle=False) as stored:
+        bank = {k: stored[k] for k in stored.files}
+    indices = bank['raw_indices']
+    window.validate_coverage(int(indices.max()) + 1)
+    def positions(requested):
+        position = np.searchsorted(indices, requested)
+        if (position >= indices.size).any() or not np.array_equal(indices[position], requested):
+            raise ValueError('pilot bank lacks requested physical frames')
+        expected = (requested - window.anchor_index) * 10
+        anchor_position = np.flatnonzero(indices == window.anchor_index).item()
+        if not np.array_equal(bank['absolute_time_ps'][position] - bank['absolute_time_ps'][anchor_position], expected):
+            raise ValueError('pilot timestamps differ from native raw indices')
+        return position
+    common = {k: bank[k] for k in ('atype','btype','block_id','component_id','bond_index','align_mask','loss_mask','atom_source_index')}
+    common.update(sample_id=path.stem, task='trajectory', coordinate_unit='angstrom',
+                  edge_mask=np.zeros_like(bank['atype']), atom_identity=[f'{path.stem}:{i}' for i in bank['atom_source_index']],
+                  time_bucket_id='raw_memory_pilot')
+    def clip(requested):
+        x = bank['coordinates_angstrom'][positions(requested)]
+        bpos = np.empty_like(x)
+        for group in np.unique(bank['block_id']):
+            atom = bank['block_id'] == group
+            bpos[:,atom] = x[:,atom].mean(1,keepdims=True)
+        return collate_clip_records([{**common,'x':x,'bpos':bpos,'time_ps':(requested-window.anchor_index)*10}])
+    anchors = clip(window.anchor_indices)
+    future = clip(window.future_indices)
+    topology = StaticTopologyMetadata.from_batch(anchors)
+    history = torch.from_numpy(bank['coordinates_angstrom'][positions(window.history_indices)])
+    raw = RawHistoryObservation(history, torch.tensor((window.history_indices-window.anchor_index)*10,dtype=torch.float32)[None],
+                                torch.ones(1,len(history),dtype=torch.bool),topology,ChemicalMapping.from_topology(topology),history[-1])
+    return raw, anchors, future
+
+
+def pack_pilot_inputs(items):
+    """Pack single-system pilot inputs, including mixed history lengths/dt.
+
+    Padding coordinates/time are zero and always invalid, never repeated
+    observations. This packs explicit views; it does not schedule exposures.
+    """
+    import torch
+    from .batch import ClipBatch
+    from ..codec.learned_memory import RawHistoryObservation, ChemicalMapping
+    from ..geometry.types import StaticTopologyMetadata
+    if not items or any(anchor.batch_size != 1 for _, anchor, _ in items):
+        raise ValueError('packing expects nonempty single-system pilot views')
+    offsets=[0]
+    for _,anchor,_ in items: offsets.append(offsets[-1]+anchor.atom_count)
+    def clips(values):
+        if len({v.frames for v in values}) != 1:
+            raise ValueError('packed anchor/query views must share frame counts')
+        fields={name:torch.cat([getattr(v,name) for v in values],dim=0) for name in
+                ('atype','btype','block_id','component_id','atom_source_index','edge_mask','loss_mask','align_mask',
+                 'time_ps','delta_time_ps','frame_mask','task')}
+        fields.update(x=torch.cat([v.x for v in values],1),bpos=torch.cat([v.bpos for v in values],1),
+                      abid=torch.cat([v.abid+i for i,v in enumerate(values)]),atom_ptr=torch.tensor(offsets,dtype=torch.long),
+                      bond_index=torch.cat([v.bond_index+offsets[i] for i,v in enumerate(values)],1))
+        for name in ('time_bucket_id','topology_id','sample_id','atom_counts','atom_identity_sha256','host_task_ids'):
+            fields[name]=tuple(item for v in values for item in getattr(v,name))
+        return ClipBatch(**fields)
+    anchors=clips([anchor for _,anchor,_ in items]); future=clips([target for _,_,target in items])
+    length=max(raw.coordinates.shape[0] for raw,_,_ in items)
+    x=torch.zeros(length,offsets[-1],3); time=torch.zeros(len(items),length); mask=torch.zeros(len(items),length,dtype=torch.bool)
+    for i,(raw,_,_) in enumerate(items):
+        count=raw.coordinates.shape[0]
+        x[:count,offsets[i]:offsets[i+1]]=raw.coordinates
+        time[i,:count]=raw.physical_time_ps[0]; mask[i,:count]=raw.frame_mask[0]
+    topology=StaticTopologyMetadata.from_batch(anchors)
+    raw=RawHistoryObservation(x,time,mask,topology,ChemicalMapping.from_topology(topology),anchors.x[-1])
+    return raw,anchors,future

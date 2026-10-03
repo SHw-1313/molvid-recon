@@ -1,0 +1,19 @@
+{
+  "lane": "B",
+  "review_scope": "independent static integration review; post-pilot numerical approval remains required",
+  "base_commit": "cc74a385577e57c64c9623111e0db86e54e48770",
+  "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
+  "common_local_commit": "7270e54",
+  "candidate_commit": "43bbadf0491c8b3815be03ae1f3ad0114484227a",
+  "workspace": "/data4/users/sihao/workspace/molvid-recon-learned-memory-v1",
+  "prompt": "SESSION_REVIEW_PROMPT_260928.md",
+  "specifications": ["AGENTS.md", "agent/gm_motion_memory_v3/AGENTS.md", "agent/gm_motion_memory_v3/EXPERIMENTS.md", "agent/gm_motion_memory_v3/MEMORY_DESIGN.md", "agent/gm_motion_memory_v3/DATA_TRAIN_EVAL.md", "agent/gm_motion_memory_v3/WORKFLOW.md", "agent/gm_motion_memory_v3/experiment_spec.json"],
+  "config": "agent/gm_motion_memory_v3/B/pilot_config.json",
+  "data_evidence": "runs/learned_memory_v1/raw_pilot_r01/data_card.json",
+  "preflight_evidence": "runs/learned_memory_v1/pilot_preflight.log",
+  "resource_evidence": "/data4/users/sihao/workspace/molvid-gm-memory-v3-coordination/resources.json",
+  "cuda_smoke": "not_run; B has no assigned GPU",
+  "cuda_pilot": "not_run; B has no assigned GPU",
+  "formal_training": "not_run; A evaluated recipe absent",
+  "review_output": "agent/gm_motion_memory_v3/reviews/B/r01/REVIEW.md"
+}

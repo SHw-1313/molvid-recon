@@ -1,0 +1,17 @@
+{
+  "scope": "base_loss_only_pilot",
+  "weights": {
+    "bond_enabled": true,
+    "generated_bond": 0.051707249134778976,
+    "clean_coordinate": 1.0,
+    "clean_bond": 0.1,
+    "near_coordinate": 0.1,
+    "near_bond": 0.01,
+    "generated_bond_min_flow_time": 0.75,
+    "near_min_flow_time": 0.9
+  },
+  "flow": 1.0,
+  "flow_h_fraction": 0.5,
+  "flow_v_fraction": 0.5,
+  "actual_source_auxiliary": "not enabled before evaluated A recipe"
+}

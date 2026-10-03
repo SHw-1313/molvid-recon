@@ -1,0 +1,84 @@
+{
+  "scope": "pilot_only",
+  "updates": 243,
+  "seed": 20260928,
+  "analysis_mode": "physical",
+  "resources": "/workspace/molvid-gm-memory-v3-coordination/resources.json",
+  "output": "runs/learned_memory_v1/cuda_pilot_r01",
+  "common_commit": "eec76455a7d9a36723e7c1a2aad1043bba553198",
+  "raw_data_card_sha256": "235a671c01f48b367656733f0174d45aaad9a28ed774ebc311b01e85afe42a3c",
+  "learning_rates": {
+    "history_encoder": 0.0001,
+    "dit": 0.0002,
+    "decoder": 5e-05
+  },
+  "normalization_source_data_hash": "54bbdc198373ae9f477bf5803643aab77f960fe4498da8db1fcf9c5bfdd770c0",
+  "teacher": {
+    "path": "/workspace/PVB/outputs/state_detail_codec_v2/t1/full_20260904_seed20260903/ratio4_state_detail/codec_best.pt",
+    "sha256": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df"
+  },
+  "statistics": {
+    "path": "/workspace/molvid_recon/runs/frame_joint_v1_multitime/frame_statistics.pt",
+    "sha256": "117dbcb674f9932c40216c4e2c3ee69153dacc3d3efebcca6e67c876a3b6bee9",
+    "semantic_hash": "7be1542ce10e35bd7f2e170ca88eaf6db464bae4f7721402214bf2c4f0fad76a"
+  },
+  "parent": {
+    "path": "/workspace/molvid-recon-gm-calibration-v2/runs/frame_gm_calibration_v2/P2/formal/GM/frame_joint_step_00021208.pt",
+    "sha256": "aa3b89925d988024bb7ab43e6c38a916e8c2908393817873ce54561be91cd540"
+  },
+  "banks": [
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1bkp_A_R1.npz",
+      "sha256": "a5b34b963416b7772fbe319c023401f0207d041e41d6359cdf2188570aeb2032"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1bkp_A_R2.npz",
+      "sha256": "e08e0a1ba008b2f412d280f7c94f307df76b40cc2387c2ea962b83aba306fd59"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1bkp_A_R3.npz",
+      "sha256": "ca8f0f113bfb925cc684707c9b26fe484d3b7458a7f5387579b32281052a7a6b"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1by2_A_R1.npz",
+      "sha256": "7d6b178ca7d1f666403a64fbe9d4d7122b7c96b34fd56b895fc9ddb1dade9867"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1by2_A_R2.npz",
+      "sha256": "968df5450f014df417b077a7de3841fb67e9177aedc0341d92317d95c6fa0e6f"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1by2_A_R3.npz",
+      "sha256": "fcdffd3b464bfdd6bf550f49447e0482e10fc4b9d155ee4c71b5074c6749dee6"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1cpq_A_R1.npz",
+      "sha256": "05f8a2f49d9ea49c8c6cb6eb5364352e2b3ef9435abfaf4257b53e87df07ff0f"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1cpq_A_R2.npz",
+      "sha256": "b11e7a6f941e9cd2e441d197f9e286c5ab09c92400d8847e7a1e868fda747d6a"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/1cpq_A_R3.npz",
+      "sha256": "5cb7e67c3e9ae86fd9972b721b4936b4868e3439e8c31a129f7576d1b1dccd72"
+    }
+  ],
+  "profile_banks": [
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "sha256": "093291a5a45829e8e81048eeda8b9a55f59e9d6b29a54dfbd54b99d53474a923"
+    },
+    {
+      "path": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "sha256": "707d4acba6523f460de75e9ecc0cd6d34315bb56c8d39439ad7bb88865d51c64"
+    }
+  ],
+  "raw_data_card": "runs/learned_memory_v1/raw_pilot_r01/data_card.json",
+  "max_gpu_hours": 7.5,
+  "budget_root": "runs/learned_memory_v1",
+  "pilot_budget_gpu_hours": 8,
+  "status": "not_executed_no_GPU",
+  "reviewed_code_commit": "d104135e89804d841943d08309d8a5660642e3fa",
+  "formal_recipe": null
+}

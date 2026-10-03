@@ -1,0 +1,530 @@
+{
+  "source_commit": "3a484c88252ab8a6b953dd3616d8b130e183bd2d",
+  "scope": "18 training updates for throughput only; no quality evaluation",
+  "invalid_fields": "Original train_metrics.profile_ranges key_averages cpu_us/device_us must not be used as timing evidence",
+  "timing_semantics": "module_cuda_event_ms: stream event elapsed, inclusive overlapping ranges; trace_cpu_wall_ms: CPU annotation wall duration, includes launches/waits, not kernel-summed GPU time; step_seconds excludes trace serialization",
+  "conditions": [
+    {
+      "step": 1,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 13.33832597732544,
+      "step_seconds": 3.852243795990944,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 74.52911949157715,
+        "teacher_backbone": 432.28031158447266,
+        "teacher_geometry_inclusive": 507.86602783203125,
+        "teacher_observed": 93.0960922241211,
+        "teacher_target": 427.0356750488281,
+        "light_encode": 219.6131591796875,
+        "time_analysis": 140.6336669921875,
+        "memory_inclusive": 416.67706298828125,
+        "dit": 317.1100769042969,
+        "decoder": 143.66031646728516,
+        "memory_slots_and_readout": 56.43023681640625
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 612.3387290000001,
+        "B.teacher_and_transfer": 564.065938
+      }
+    },
+    {
+      "step": 2,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 3200,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 200,
+      "peak_allocated_GiB": 13.715368270874023,
+      "step_seconds": 3.632485107984394,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 70.68416213989258,
+        "teacher_backbone": 463.0862045288086,
+        "teacher_geometry_inclusive": 534.9269104003906,
+        "teacher_observed": 105.57049560546875,
+        "teacher_target": 443.1067810058594,
+        "light_encode": 93.10902404785156,
+        "time_analysis": 151.66685485839844,
+        "memory_inclusive": 254.97503662109375,
+        "dit": 216.40806579589844,
+        "decoder": 153.25039672851562,
+        "memory_slots_and_readout": 10.19915771484375
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 679.0150679999999,
+        "B.teacher_and_transfer": 585.92142
+      }
+    },
+    {
+      "step": 3,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 400,
+      "peak_allocated_GiB": 14.73475170135498,
+      "step_seconds": 4.224168532062322,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 70.92831802368164,
+        "teacher_backbone": 450.32540130615234,
+        "teacher_geometry_inclusive": 522.3642501831055,
+        "teacher_observed": 98.95747375488281,
+        "teacher_target": 437.51300048828125,
+        "light_encode": 327.0272216796875,
+        "time_analysis": 149.1972198486328,
+        "memory_inclusive": 486.35357666015625,
+        "dit": 176.797119140625,
+        "decoder": 138.3271713256836,
+        "memory_slots_and_readout": 10.129135131835938
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 839.43429,
+        "B.teacher_and_transfer": 571.7149860000001
+      }
+    },
+    {
+      "step": 4,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 400,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 13.717541217803955,
+      "step_seconds": 3.7747599869035184,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 74.26572799682617,
+        "teacher_backbone": 456.39627838134766,
+        "teacher_geometry_inclusive": 531.8484878540039,
+        "teacher_observed": 101.32630157470703,
+        "teacher_target": 447.1092224121094,
+        "light_encode": 100.05337524414062,
+        "time_analysis": 145.5735626220703,
+        "memory_inclusive": 257.7545166015625,
+        "dit": 178.69203186035156,
+        "decoder": 158.13151931762695,
+        "memory_slots_and_readout": 12.127578735351562
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 861.764549,
+        "B.teacher_and_transfer": 588.9837120000001
+      }
+    },
+    {
+      "step": 5,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 48.816011905670166,
+      "step_seconds": 5.487865189090371,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 78.98415946960449,
+        "teacher_backbone": 1529.645263671875,
+        "teacher_geometry_inclusive": 1609.9819641113281,
+        "teacher_observed": 285.1189880371094,
+        "teacher_target": 1339.642578125,
+        "light_encode": 50.195777893066406,
+        "time_analysis": 134.7914276123047,
+        "memory_inclusive": 196.25270080566406,
+        "dit": 404.8557434082031,
+        "decoder": 316.31779861450195,
+        "memory_slots_and_readout": 11.265495300292969
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 800.0423959999999,
+        "B.teacher_and_transfer": 1670.405686
+      }
+    },
+    {
+      "step": 6,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 3200,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 200,
+      "peak_allocated_GiB": 49.744046688079834,
+      "step_seconds": 4.811965089291334,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 77.87215995788574,
+        "teacher_backbone": 1495.9133758544922,
+        "teacher_geometry_inclusive": 1575.157455444336,
+        "teacher_observed": 257.9303283691406,
+        "teacher_target": 1331.99609375,
+        "light_encode": 94.69366455078125,
+        "time_analysis": 153.7796173095703,
+        "memory_inclusive": 258.7016296386719,
+        "dit": 210.60035705566406,
+        "decoder": 130.70028686523438,
+        "memory_slots_and_readout": 10.228347778320312
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 851.0266310000001,
+        "B.teacher_and_transfer": 1635.899704
+      }
+    },
+    {
+      "step": 7,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 400,
+      "peak_allocated_GiB": 53.43446445465088,
+      "step_seconds": 6.201461642980576,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 60.40092658996582,
+        "teacher_backbone": 1494.3177490234375,
+        "teacher_geometry_inclusive": 1556.1036834716797,
+        "teacher_observed": 258.8231506347656,
+        "teacher_target": 1313.178955078125,
+        "light_encode": 283.77593994140625,
+        "time_analysis": 136.1934051513672,
+        "memory_inclusive": 429.30059814453125,
+        "dit": 228.61599731445312,
+        "decoder": 476.0418167114258,
+        "memory_slots_and_readout": 9.331253051757812
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 1480.529512,
+        "B.teacher_and_transfer": 1604.194162
+      }
+    },
+    {
+      "step": 8,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "cold",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 400,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 49.74495887756348,
+      "step_seconds": 4.7072316240519285,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 76.13507270812988,
+        "teacher_backbone": 1493.8706817626953,
+        "teacher_geometry_inclusive": 1571.345199584961,
+        "teacher_observed": 258.83172607421875,
+        "teacher_target": 1328.2513427734375,
+        "light_encode": 115.7962875366211,
+        "time_analysis": 152.57093811035156,
+        "memory_inclusive": 280.6622009277344,
+        "dit": 216.85069274902344,
+        "decoder": 143.3640022277832,
+        "memory_slots_and_readout": 12.294975280761719
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 777.5517269999999,
+        "B.teacher_and_transfer": 1632.036332
+      }
+    },
+    {
+      "step": 9,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 2,
+      "profile_pass": "cold",
+      "mixed_history_dt": true,
+      "history_span_ps": 800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 27.133487224578857,
+      "step_seconds": 9.1986189247109,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 103.16348838806152,
+        "teacher_backbone": 866.7372131347656,
+        "teacher_geometry_inclusive": 971.1361389160156,
+        "teacher_observed": 174.8587188720703,
+        "teacher_target": 819.2670288085938,
+        "light_encode": 165.00445556640625,
+        "time_analysis": 411.9314880371094,
+        "memory_inclusive": 587.9620361328125,
+        "dit": 4155.7314453125,
+        "decoder": 144.5140151977539,
+        "memory_slots_and_readout": 11.026092529296875
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 905.969201,
+        "B.teacher_and_transfer": 1051.939049
+      }
+    },
+    {
+      "step": 10,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 13.461862087249756,
+      "step_seconds": 2.9637486930005252,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 64.70537567138672,
+        "teacher_backbone": 447.3105010986328,
+        "teacher_geometry_inclusive": 513.1208648681641,
+        "teacher_observed": 100.71199798583984,
+        "teacher_target": 426.2541809082031,
+        "light_encode": 39.236000061035156,
+        "time_analysis": 118.46300506591797,
+        "memory_inclusive": 167.9693145751953,
+        "dit": 184.76768493652344,
+        "decoder": 134.79267501831055,
+        "memory_slots_and_readout": 10.270309448242188
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 553.901292,
+        "B.teacher_and_transfer": 560.329505
+      }
+    },
+    {
+      "step": 11,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 3200,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 200,
+      "peak_allocated_GiB": 13.725502014160156,
+      "step_seconds": 3.6379637010395527,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 70.56012725830078,
+        "teacher_backbone": 450.0211486816406,
+        "teacher_geometry_inclusive": 521.6874847412109,
+        "teacher_observed": 104.15264129638672,
+        "teacher_target": 433.1970520019531,
+        "light_encode": 96.41871643066406,
+        "time_analysis": 153.07225036621094,
+        "memory_inclusive": 261.41754150390625,
+        "dit": 177.34559631347656,
+        "decoder": 143.52816009521484,
+        "memory_slots_and_readout": 11.92657470703125
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 645.7991450000001,
+        "B.teacher_and_transfer": 573.513317
+      }
+    },
+    {
+      "step": 12,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 400,
+      "peak_allocated_GiB": 14.744046211242676,
+      "step_seconds": 4.916175249032676,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 65.4078722000122,
+        "teacher_backbone": 451.7061538696289,
+        "teacher_geometry_inclusive": 518.2487106323242,
+        "teacher_observed": 96.4725112915039,
+        "teacher_target": 435.4459228515625,
+        "light_encode": 332.66259765625,
+        "time_analysis": 145.64707946777344,
+        "memory_inclusive": 488.63104248046875,
+        "dit": 186.52857971191406,
+        "decoder": 127.38076782226562,
+        "memory_slots_and_readout": 10.321365356445312
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 1083.437026,
+        "B.teacher_and_transfer": 567.6396659999999
+      }
+    },
+    {
+      "step": 13,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 400,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 13.724349021911621,
+      "step_seconds": 3.6827445081435144,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 76.28982353210449,
+        "teacher_backbone": 474.89722442626953,
+        "teacher_geometry_inclusive": 552.3546600341797,
+        "teacher_observed": 110.34425354003906,
+        "teacher_target": 460.7627868652344,
+        "light_encode": 102.70851135253906,
+        "time_analysis": 144.60169982910156,
+        "memory_inclusive": 258.826904296875,
+        "dit": 185.4430389404297,
+        "decoder": 148.3389778137207,
+        "memory_slots_and_readout": 11.516693115234375
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 693.4412219999999,
+        "B.teacher_and_transfer": 615.770211
+      }
+    },
+    {
+      "step": 14,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 48.823264598846436,
+      "step_seconds": 4.967422941233963,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 77.32595252990723,
+        "teacher_backbone": 1492.8804016113281,
+        "teacher_geometry_inclusive": 1571.5610961914062,
+        "teacher_observed": 256.101318359375,
+        "teacher_target": 1330.7100830078125,
+        "light_encode": 46.5715217590332,
+        "time_analysis": 139.6005401611328,
+        "memory_inclusive": 197.04940795898438,
+        "dit": 224.57705688476562,
+        "decoder": 127.01881790161133,
+        "memory_slots_and_readout": 10.87734603881836
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 562.480385,
+        "B.teacher_and_transfer": 1632.189721
+      }
+    },
+    {
+      "step": 15,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 3200,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 200,
+      "peak_allocated_GiB": 49.74664258956909,
+      "step_seconds": 5.3737117648124695,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 79.5934066772461,
+        "teacher_backbone": 1503.6197204589844,
+        "teacher_geometry_inclusive": 1584.6108703613281,
+        "teacher_observed": 271.1416015625,
+        "teacher_target": 1327.86572265625,
+        "light_encode": 98.59030151367188,
+        "time_analysis": 149.6730194091797,
+        "memory_inclusive": 259.3404541015625,
+        "dit": 202.22950744628906,
+        "decoder": 145.2552947998047,
+        "memory_slots_and_readout": 11.077133178710938
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 1093.148555,
+        "B.teacher_and_transfer": 1648.400016
+      }
+    },
+    {
+      "step": 16,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 400,
+      "peak_allocated_GiB": 53.42486524581909,
+      "step_seconds": 5.911153783090413,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 76.46054458618164,
+        "teacher_backbone": 1490.7350006103516,
+        "teacher_geometry_inclusive": 1568.541488647461,
+        "teacher_observed": 255.90762329101562,
+        "teacher_target": 1328.2236328125,
+        "light_encode": 356.5114440917969,
+        "time_analysis": 158.0015106201172,
+        "memory_inclusive": 525.0414428710938,
+        "dit": 223.2867889404297,
+        "decoder": 128.86054611206055,
+        "memory_slots_and_readout": 10.528488159179688
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 902.269688,
+        "B.teacher_and_transfer": 1633.451598
+      }
+    },
+    {
+      "step": 17,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/4yal_A_R1.npz",
+      "batch_size": 1,
+      "profile_pass": "warm",
+      "mixed_history_dt": false,
+      "history_span_ps": 12800,
+      "observed_dt_ps": 400,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 49.74619483947754,
+      "step_seconds": 4.967434046790004,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 75.53849601745605,
+        "teacher_backbone": 1490.9647064208984,
+        "teacher_geometry_inclusive": 1567.9114685058594,
+        "teacher_observed": 254.38995361328125,
+        "teacher_target": 1328.1307373046875,
+        "light_encode": 110.10688018798828,
+        "time_analysis": 157.6273956298828,
+        "memory_inclusive": 280.35797119140625,
+        "dit": 214.19772338867188,
+        "decoder": 139.10157012939453,
+        "memory_slots_and_readout": 12.623695373535156
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 690.7788810000001,
+        "B.teacher_and_transfer": 1625.25715
+      }
+    },
+    {
+      "step": 18,
+      "bank": "runs/learned_memory_v1/raw_pilot_r01/3gwi_A_R1.npz",
+      "batch_size": 2,
+      "profile_pass": "warm",
+      "mixed_history_dt": true,
+      "history_span_ps": 800,
+      "observed_dt_ps": 100,
+      "query_lag_ps": 100,
+      "peak_allocated_GiB": 27.135735988616943,
+      "step_seconds": 4.621511651203036,
+      "module_cuda_event_ms": {
+        "teacher_graph_and_pack": 75.54665756225586,
+        "teacher_backbone": 842.2193908691406,
+        "teacher_geometry_inclusive": 918.9941864013672,
+        "teacher_observed": 167.19158935546875,
+        "teacher_target": 767.4962768554688,
+        "light_encode": 85.3697280883789,
+        "time_analysis": 207.19174194335938,
+        "memory_inclusive": 305.00482177734375,
+        "dit": 187.8317108154297,
+        "decoder": 134.7528953552246,
+        "memory_slots_and_readout": 12.443351745605469
+      },
+      "trace_cpu_wall_ms": {
+        "frame_joint.backward": 589.412823,
+        "B.teacher_and_transfer": 978.285847
+      }
+    }
+  ]
+}

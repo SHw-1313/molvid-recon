@@ -1,0 +1,202 @@
+{
+  "contract": {
+    "schema_version": "molvid.frame_joint.model.learned_memory.v1",
+    "future_representation": [
+      "h",
+      "v"
+    ],
+    "teacher_frozen": true,
+    "history_ratio": null,
+    "history_tail": null,
+    "dit": {
+      "schema_version": "molvid.frame_joint.dit.v2",
+      "adapter": {
+        "schema_version": "molvid.frame_joint.adapter.v1",
+        "future_fields": [
+          "h",
+          "v"
+        ],
+        "codec_width": 128,
+        "scalar_width": 256,
+        "vector_width": 128,
+        "vector_maps": "bias_free_channel_only",
+        "state_detail_fields": false,
+        "inverse_haar": false
+      },
+      "scalar_width": 256,
+      "vector_width": 128,
+      "depth": 4,
+      "heads": 8,
+      "attention_order": [
+        "history_cross",
+        "spatial_groups",
+        "future_temporal",
+        "equivariant_ffn"
+      ],
+      "future_attention": "bidirectional_noncausal",
+      "physical_time_bias": true,
+      "future_fields": [
+        "h",
+        "v"
+      ],
+      "geometry_enabled": true,
+      "motion_enabled": false,
+      "local_geometry_blocks_one_based": [
+        2,
+        4
+      ],
+      "local_geometry": {
+        "edge_set": "deduplicated_bidirectional_covalent_1hop_plus_1-3",
+        "reference_geometry": "last_observed_coordinates",
+        "rbf_count": 8,
+        "raw_vector_invariants": [
+          "node_log_norm2",
+          "edge_inner",
+          "edge_difference_log_norm2"
+        ],
+        "vector_operations": [
+          "channel_mix_neighbor",
+          "channel_mix_difference",
+          "observed_direction"
+        ],
+        "aggregation": "destination_degree_mean_fp32",
+        "outer_gate_initialization": "zero"
+      },
+      "motion_context": null,
+      "time_decay": "learned_residual_minus_softplus(lambda_head)*sqrt(abs_dt_over_100ps)",
+      "history_backend": "learned_memory",
+      "history_time_semantics": "slot_weighted_observed_support_endpoints"
+    },
+    "decoder_depth": 2,
+    "statistics_hash": "7be1542ce10e35bd7f2e170ca88eaf6db464bae4f7721402214bf2c4f0fad76a",
+    "geometry_enabled": true,
+    "motion_enabled": false,
+    "motion_encoder": null,
+    "history_backend": "learned_memory",
+    "learned_memory": {
+      "backend": "learned_memory",
+      "light_scalar": 64,
+      "light_vector": 32,
+      "light_layers": 2,
+      "graph": "covalent_only",
+      "slots": 8,
+      "memory_scalar": 128,
+      "memory_vector": 64,
+      "analysis_mode": "physical",
+      "scales_ps": [
+        400,
+        800,
+        1600,
+        3200,
+        6400
+      ],
+      "max_centers": 4,
+      "recent": 4,
+      "teacher_observed_frames": 2,
+      "teacher_anchor_times_ps": [
+        -800,
+        0
+      ]
+    }
+  },
+  "parameters": 16122904,
+  "trainable": 15561680,
+  "optimizer_groups": [
+    {
+      "lr": 0.0001,
+      "weight_decay": 0.01,
+      "group_name": "history_encoder.decay",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 0.0001,
+      "weight_decay": 0.0,
+      "group_name": "history_encoder.no_decay",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 0.0002,
+      "weight_decay": 0.01,
+      "group_name": "dit.decay",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 0.0002,
+      "weight_decay": 0.0,
+      "group_name": "dit.no_decay",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 5e-05,
+      "weight_decay": 0.01,
+      "group_name": "decoder.decay",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    },
+    {
+      "lr": 5e-05,
+      "weight_decay": 0.0,
+      "group_name": "decoder.no_decay",
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "eps": 1e-08,
+      "amsgrad": false,
+      "foreach": null,
+      "maximize": false,
+      "capturable": false,
+      "differentiable": false,
+      "fused": null
+    }
+  ]
+}

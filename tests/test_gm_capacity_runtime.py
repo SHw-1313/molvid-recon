@@ -81,6 +81,7 @@ class _DiT(nn.Module):
 class _FakeCapacityModel(nn.Module):
     def __init__(self, depth: int, geometry: tuple[int, ...]) -> None:
         super().__init__()
+        self.history_backend = "legacy"
         self.statistics_hash = "stats"
         self.shared = nn.Linear(2, 2)
         self.dit = _DiT(depth, geometry)
@@ -500,3 +501,26 @@ def test_frozen_release_files_are_rehashed_at_runner_start(tmp_path: Path) -> No
     recipe.write_text("changed", encoding="utf-8")
     with pytest.raises(ValueError, match="recipe release changed"):
         validate_frozen_release_files(frozen)
+
+def test_completed_evaluation_accepts_d_seed_scope_and_rejects_missing_draw(tmp_path):
+    output, protocol, store = _write_completed_evaluation(tmp_path)
+    protocol["seeds"] = [0]
+    protocol_path = output / "protocol.json"
+    protocol_path.write_text(json.dumps(protocol))
+    rows_path = output / "rows.jsonl"
+    rows = [json.loads(line) for line in rows_path.read_text().splitlines()]
+    rows = [row for row in rows if row["seed"] in (None, 0)]
+    rows_path.write_text("".join(json.dumps(row) + "\n" for row in rows))
+    summary_path = output / "summary.json"
+    summary = json.loads(summary_path.read_text())
+    summary.update(rows=3, protocol_sha256=sha256_file(protocol_path))
+    summary_path.write_text(json.dumps(summary))
+    result = validate_completed_evaluation(
+        output, expected_protocol=protocol, expected_family="ordinary", store=store,
+    )
+    assert result["rows"] == 3
+    rows_path.write_text("".join(json.dumps(row) + "\n" for row in rows[:-1]))
+    with pytest.raises(ValueError, match="coverage differs"):
+        validate_completed_evaluation(
+            output, expected_protocol=protocol, expected_family="ordinary", store=store,
+        )

@@ -1,0 +1,6 @@
+system,role,atoms,raw_trajectories_audited,past_ps,future_ps,generated_motion_status
+1bkp_A,pilot,2307,3,12800,4800,not_evaluated_waiting_A_recipe
+1by2_A,pilot,886,3,12800,4800,not_evaluated_waiting_A_recipe
+1cpq_A,pilot,920,3,12800,4800,not_evaluated_waiting_A_recipe
+3gwi_A,size_profile,1374,1,12800,4800,not_evaluated_waiting_A_recipe
+4yal_A,size_profile,4975,1,12800,4800,not_evaluated_waiting_A_recipe

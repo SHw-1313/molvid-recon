@@ -1,0 +1,9 @@
+# GPU0 continuation: factual fixes
+
+User authorized GPU0 use after the initial no-allocation block. B recorded this in coordination/B_gpu_authorization.json without rewriting A's resource ownership. The pilot records that authorization and preexisting processes; B still uses one GPU and its own lane lock.
+
+1. Initial CUDA smoke: 5 passed / 1 failed. Exact repeated geometry produced ~1e-8 detail from independent chunk/reduction rounding. Fix reuses the last observed learned feature for exactly identical whole-system geometry (no epsilon threshold, no detach, no motion amplitude normalization). Corrected smoke: 6 passed / 10.40s.
+2. First real-teacher check stopped before updates: observed vector comparison max difference 8.29697e-5 under independently recomputed origins/non-deterministic CUDA. Corrected comparison explicitly shares the same observed origin and enables deterministic CUDA/TF32-off with CUBLAS_WORKSPACE_CONFIG=:4096:8. Tolerance remains atol=rtol=1e-5. Real same-origin split/full, future mutation and observed2/target12 checks then passed.
+3. First attempted real training step exposed a CUDA indexing assertion followed by a misleading cuBLAS error. Project residue vocabulary is 138, with real btype values118..137; the new encoder incorrectly allocated128. Reused NUM_ATOM_TYPE=118 / NUM_BLOCK_TYPE=138; targeted CUDA fixture now includes the actual maximum block type. Smoke: 6 passed / 8.92s. A standalone CUDA BF16 linear check at N12/886/2307 also passed, confirming the cuBLAS message was secondary to invalid indexing.
+
+All failed logs and cost ledgers remain in runs/learned_memory_v1/. Pilot r03 executes fixed source52617d23f79f743fd585e9fe9e143ca3e2768199 and fresh P2-GM warm start, not a failed-run continuation. A common review fix5a745960f673d5397b883c2b129f39cf57593856 was absorbed as0a556d7. Fresh post-pilot review is still required; earlier static reports do not approve these new numerical changes.

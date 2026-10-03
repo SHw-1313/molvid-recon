@@ -12,6 +12,7 @@ from torch.utils.checkpoint import checkpoint as activation_checkpoint
 from .codec.decoder import TrajectoryDecoder, TrajectoryDecoderOutput
 from .codec.frame import FrozenFrameTeacher
 from .codec.history import HistoryEncoder
+from .codec.learned_memory import LearnedHistoryMemory, GroupMemory
 from .codec.motion_context import MotionContext, MotionContextEncoder
 from .dit.frame import FrameDiT
 from .flow.objective import frame_endpoint_from_velocity
@@ -27,7 +28,7 @@ class FrameJointOutput:
     velocity: FrameLatentBatch
     normalized_endpoint: FrameLatentBatch
     endpoint: FrameLatentBatch
-    history_memory: HistoryMemory
+    history_memory: HistoryMemory | GroupMemory
     generated: TrajectoryDecoderOutput | None = None
     clean: TrajectoryDecoderOutput | None = None
     near: TrajectoryDecoderOutput | None = None
@@ -38,7 +39,7 @@ class FrameJointOutput:
 class FrameJointCondition:
     """Observed-only condition reusable across flow evaluations."""
 
-    history_memory: HistoryMemory
+    history_memory: HistoryMemory | GroupMemory
     motion_context: MotionContext | None
 
 
@@ -54,7 +55,7 @@ class FrameJointModel(nn.Module):
         self,
         *,
         target_teacher: FrozenFrameTeacher,
-        history_encoder: HistoryEncoder,
+        history_encoder: HistoryEncoder | LearnedHistoryMemory,
         dit: FrameDiT,
         decoder: TrajectoryDecoder,
         statistics: FrameLatentStatistics,
@@ -70,6 +71,11 @@ class FrameJointModel(nn.Module):
         self.dit = dit
         self.decoder = decoder
         self.motion_encoder = motion_encoder
+        self.history_backend = "learned_memory" if isinstance(history_encoder, LearnedHistoryMemory) else "legacy"
+        if dit.history_backend != self.history_backend:
+            raise ValueError("DiT and history encoder backends differ")
+        if self.history_backend == "learned_memory" and (motion_encoder is not None or dit.motion_enabled or dit.depth != 4 or not dit.geometry_enabled):
+            raise ValueError("B learned memory requires depth4/G and disables old M")
         self.register_buffer("frame_h_mean", statistics.h_mean.detach().clone())
         self.register_buffer("frame_h_std", statistics.h_std.detach().clone())
         self.register_buffer("frame_v_rms", statistics.v_rms.detach().clone())
@@ -91,18 +97,22 @@ class FrameJointModel(nn.Module):
         geometry_enabled: bool = False,
         motion_enabled: bool = False,
         geometry_block_indices: Sequence[int] | None = None,
+        history_backend: str = "legacy",
+        analysis_mode: str = "physical",
     ) -> "FrameJointModel":
         channels = int(statistics.width)
         if channels != 128:
             raise ValueError("Frame Joint v1 requires the 128-channel target codec")
         teacher = FrozenFrameTeacher.from_codec(codec)
-        history = HistoryEncoder(
-            channels=channels,
-            scalar_width=scalar_width,
-            vector_width=vector_width,
-            heads=heads,
-        )
-        history.load_compatible_state_detail(codec.temporal_codec)
+        if history_backend == "legacy":
+            history = HistoryEncoder(channels=channels, scalar_width=scalar_width, vector_width=vector_width, heads=heads)
+            history.load_compatible_state_detail(codec.temporal_codec)
+        elif history_backend == "learned_memory":
+            if motion_enabled or depth != 4 or not geometry_enabled:
+                raise ValueError("learned_memory requires old M off, depth4 and G on")
+            history = LearnedHistoryMemory(analysis_mode=analysis_mode, output_scalar=scalar_width, output_vector=vector_width)
+        else:
+            raise ValueError(f"unknown history_backend {history_backend!r}")
         adapter = FrameLatentAdapter(
             codec_width=channels,
             scalar_width=scalar_width,
@@ -117,6 +127,7 @@ class FrameJointModel(nn.Module):
             geometry_enabled=geometry_enabled,
             motion_enabled=motion_enabled,
             geometry_block_indices=geometry_block_indices,
+            history_backend=history_backend,
         )
         decoder = TrajectoryDecoder.from_codec_head(
             codec.coordinate_head,
@@ -179,7 +190,14 @@ class FrameJointModel(nn.Module):
     def prepare_condition(self, context: ObservedContext) -> FrameJointCondition:
         """Compute observed-only condition once without changing gradients."""
 
-        history = self.history_encoder(context)
+        if self.history_backend == "learned_memory":
+            if context.raw_history is None:
+                raise ValueError("learned_memory requires explicit raw observed history")
+            history = self.history_encoder(context.raw_history)
+        else:
+            if context.raw_history is not None:
+                raise ValueError("raw history cannot silently enter the legacy backend")
+            history = self.history_encoder(context)
         motion = self.motion_encoder(context) if self.motion_encoder is not None else None
         return FrameJointCondition(history_memory=history, motion_context=motion)
 
@@ -334,4 +352,8 @@ class FrameJointModel(nn.Module):
             result["motion_encoder"] = (
                 self.motion_encoder.contract() if self.motion_encoder is not None else None
             )
+        if self.history_backend == "learned_memory":
+            result.update(schema_version="molvid.frame_joint.model.learned_memory.v1",
+                          history_backend="learned_memory", history_ratio=None, history_tail=None,
+                          learned_memory=self.history_encoder.contract())
         return result

@@ -712,6 +712,8 @@ def load_frame_joint_inference(
         raise ValueError("Frame Joint checkpoint lacks its model constructor contract")
     model_schema = str(model_contract.get("schema_version"))
     dit_schema = str(dit_contract.get("schema_version"))
+    history_backend = "legacy"
+    analysis_mode = "physical"
     if model_schema == "molvid.frame_joint.model.v1" and dit_schema == "molvid.frame_joint.dit.v1":
         geometry_enabled = False
         motion_enabled = False
@@ -722,6 +724,25 @@ def load_frame_joint_inference(
             raise ValueError("Frame Joint v2 checkpoint has invalid G/M switches")
         if geometry_enabled != dit_contract.get("geometry_enabled") or motion_enabled != dit_contract.get("motion_enabled"):
             raise ValueError("Frame Joint model and DiT G/M switches differ")
+    elif (
+        model_schema == "molvid.frame_joint.model.learned_memory.v1"
+        and dit_schema == "molvid.frame_joint.dit.v2"
+    ):
+        geometry_enabled = model_contract.get("geometry_enabled")
+        motion_enabled = model_contract.get("motion_enabled")
+        learned_memory = model_contract.get("learned_memory")
+        if geometry_enabled is not True or motion_enabled is not False:
+            raise ValueError("learned-memory checkpoint requires depth4 G-on/M-off")
+        if (
+            dit_contract.get("geometry_enabled") is not True
+            or dit_contract.get("motion_enabled") is not False
+            or dit_contract.get("history_backend") != "learned_memory"
+            or not isinstance(learned_memory, Mapping)
+            or learned_memory.get("backend") != "learned_memory"
+        ):
+            raise ValueError("learned-memory model and DiT contracts differ")
+        history_backend = "learned_memory"
+        analysis_mode = str(learned_memory.get("analysis_mode"))
     else:
         raise ValueError("unsupported Frame Joint model/DiT contract schemas")
     geometry_block_indices = dit_contract.get("local_geometry_blocks_one_based")
@@ -744,6 +765,8 @@ def load_frame_joint_inference(
         geometry_enabled=geometry_enabled,
         motion_enabled=motion_enabled,
         geometry_block_indices=geometry_block_indices,
+        history_backend=history_backend,
+        analysis_mode=analysis_mode,
     ).to(device)
     if dict(model.contract()) != dict(model_contract):
         raise ValueError("reconstructed Frame Joint model contract differs")

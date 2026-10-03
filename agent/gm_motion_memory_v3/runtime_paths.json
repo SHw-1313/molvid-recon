@@ -1,39 +1,31 @@
 {
-  "lane": "C",
-  "host_worktree": "/data4/users/sihao/workspace/molvid-recon-gm-capacity-v3",
-  "container_worktree": "/workspace/molvid-recon-gm-capacity-v3",
-  "coordination_directory": "/data4/users/sihao/workspace/molvid-gm-memory-v3-coordination",
-  "container_coordination_directory": "/workspace/molvid-gm-memory-v3-coordination",
-  "base_commit_verified": "c1f70b2470a3fa31c8379cdda3b0fea32d5a4450",
-  "reviewed_A_source_commit": "af60c05aa02ce46872edbad0711833317773436e",
-  "post_review_runtime_delta_at_base": [],
-  "capacity_release_host_path": "/data4/users/sihao/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/releases/e553595fabcbf17d3442ae81d11cda094b624543b36db1abe51e8399561edb24_5de9a48fb383a73597a27d00b5029d7eaa4f0395780be56de118af9f7a764093/capacity_release.json",
-  "capacity_release_container_path": "/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/releases/e553595fabcbf17d3442ae81d11cda094b624543b36db1abe51e8399561edb24_5de9a48fb383a73597a27d00b5029d7eaa4f0395780be56de118af9f7a764093/capacity_release.json",
-  "capacity_release_sha256_verified": "e553595fabcbf17d3442ae81d11cda094b624543b36db1abe51e8399561edb24",
-  "recipe_release_sha256_verified": "5de9a48fb383a73597a27d00b5029d7eaa4f0395780be56de118af9f7a764093",
-  "parent_host_path": "/data4/users/sihao/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
-  "parent_container_path": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r16/configs/formal/A1/frame_joint_step_00010606.pt",
-  "parent_sha256_verified": "52d922f88ec50f08ebe889837ec7ee2cc2ae2a5c7ced1dd46b2909a917aa14a9",
-  "parent_formal_updates": 10606,
-  "parent_effective_epochs": 1,
-  "parent_formal_evaluation": {
-    "ordinary_records": 384,
-    "fixed_history_records": 192,
-    "guardrail_pass": true
-  },
-  "teacher_container_path": "/workspace/molvid-recon-gm-motion-v3/inputs/codec_best.pt",
-  "teacher_sha256_verified": "ba10c44189cca837430abbd64afce2109a0daf0bda4f05971e0441abb2a5e6df",
-  "statistics_container_path": "/workspace/molvid_recon/runs/frame_joint_v1_multitime/frame_statistics.pt",
-  "statistics_sha256_verified": "117dbcb674f9932c40216c4e2c3ee69153dacc3d3efebcca6e67c876a3b6bee9",
-  "data_hash_verified": "8b972def15babf848015699e527e28bc53fc195292ce446bda8555d86aaed0b1",
+  "schema": "molvid.integration.runtime.v1",
+  "lane": "integration",
+  "host_worktree": "/data4/users/sihao/workspace/molvid-integration-abcd-20261004",
+  "container_worktree": "/workspace/molvid-integration-abcd-20261004",
   "container_entry": "enter-container",
   "conda_environment": "torch-ito",
-  "assigned_gpu_uuids": [
-    "GPU-f0bea51c-913e-fe29-1cdd-4cde2adb3ff3"
-  ],
-  "gpu_status": "GPU5 explicitly user-authorized for C shared use; hold the UUID flock and never preempt unrelated work",
-  "external_runs_access": "read_only",
-  "capacity_run_root_container": "/workspace/molvid-recon-gm-capacity-v3/runs/gm_motion_memory_v3/C/r10",
-  "acceptance_evidence_status": "dynamic evidence identities live in the fixed review request and run manifests",
-  "sealed_test_opened": false
+  "source_runtime_paths": {
+    "A": {
+      "commit": "e5e5fe0",
+      "worktree": "/workspace/molvid-recon-gm-motion-v3"
+    },
+    "B": {
+      "commit": "5092dcb",
+      "worktree": "/workspace/molvid-recon-learned-memory-v1"
+    },
+    "C": {
+      "commit": "e4beede",
+      "worktree": "/workspace/molvid-recon-gm-capacity-v3"
+    },
+    "D": {
+      "commit": "29e9645",
+      "worktree": "/workspace/molvid-recon-static-decoder-probe-v1"
+    }
+  },
+  "output_root": "runs/abcd_integration_20261004",
+  "assigned_gpu_uuids": [],
+  "source_worktrees_access": "read_only",
+  "sealed_test_opened": false,
+  "note": "Lane launchers require newly frozen integration configs/review identities. This file never grants the source lanes' GPU leases or write authority."
 }

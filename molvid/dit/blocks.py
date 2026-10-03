@@ -237,6 +237,7 @@ class FrameDiTBlock(nn.Module):
         *,
         local_geometry: bool = False,
         motion_context: bool = False,
+        physical_time_decay: bool = False,
     ) -> None:
         super().__init__()
         self.history = ScalarVectorCrossAttention(scalar_width, vector_width, heads, dropout)
@@ -257,7 +258,7 @@ class FrameDiTBlock(nn.Module):
             MotionContextInjector(scalar_width, vector_width)
             if bool(motion_context) else None
         )
-        if motion_context:
+        if motion_context or physical_time_decay:
             self.history_time_decay_raw = nn.Parameter(torch.full((heads,), -4.0))
             self.temporal_time_decay_raw = nn.Parameter(torch.full((heads,), -4.0))
         else:

@@ -1,0 +1,9 @@
+{
+  "AGENTS.md": "97410d4bb8b73243347e5644e3143bda66ff020e2ec05c0a9b5ea3d17c8c0fc4",
+  "agent/gm_motion_memory_v3/AGENTS.md": "ce5d33bd93d790f4ce02ee063376629a0d4bab65ebb3f4bda91acc81a3aefd3f",
+  "agent/gm_motion_memory_v3/MEMORY_DESIGN.md": "5f23c42b290f57b3f5e8c802eaa4c60550c692f12ca0a0945b866a46b566eff5",
+  "agent/gm_motion_memory_v3/EXPERIMENTS.md": "00c6bbd0034ae593c3a49926f9eb238b3e9913450cf28590fa8948edeaa35ee7",
+  "agent/gm_motion_memory_v3/DATA_TRAIN_EVAL.md": "b77f2420b750c79702ca497fd049e4a0914943560ff4a95c10bccb2e2fd9c094",
+  "agent/gm_motion_memory_v3/WORKFLOW.md": "c4450c6e302cb86c8096c535d63a71b3a773b79cc0d1f80ee6e1449274c343f7",
+  "agent/gm_motion_memory_v3/experiment_spec.json": "2969da0bfdfdade6b9f6487e219786e4efe6d032b8e90f72bc1adf60fd3451d7"
+}

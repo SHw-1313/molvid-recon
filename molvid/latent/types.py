@@ -6,7 +6,10 @@ import copy
 from dataclasses import dataclass, replace
 import hashlib
 import json
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..codec.learned_memory import RawHistoryObservation
 
 import torch
 from torch import Tensor
@@ -446,7 +449,7 @@ class FrameLatentBatch:
             raise ValueError("frame features and topology must share a device")
         if not torch.isfinite(self.h).all() or not torch.isfinite(self.v).all():
             raise ValueError("frame latent contains NaN or Inf")
-        clock = self.time_ps.to(device=self.h.device, dtype=self.h.dtype)
+        clock = self.time_ps.to(device=self.h.device, dtype=torch.float32)
         mask = self.frame_mask.to(device=self.h.device, dtype=torch.bool)
         object.__setattr__(self, "time_ps", clock)
         object.__setattr__(self, "frame_mask", mask)
@@ -593,6 +596,7 @@ class ObservedContext:
     coordinates: Tensor
     sample_origin: Tensor
     loss_mask: Tensor
+    raw_history: RawHistoryObservation | None = None
 
     def __post_init__(self) -> None:
         if self.coordinates.shape != (self.latent.frames, self.latent.num_atoms, 3):
