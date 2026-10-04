@@ -129,14 +129,19 @@ def physical_time_features(
         previous_time_ps, device=time.device, dtype=time.dtype).reshape(batch)
     # Decoder concatenates two valid prefixes: padding between them must not
     # become the previous physical observation. Invalid clock values are inert.
-    positions = torch.arange(frames, device=time.device).expand(batch, -1)
-    last_valid = torch.where(mask, positions, -1).cummax(dim=1).values
-    previous_index = torch.cat((last_valid.new_full((batch, 1), -1), last_valid[:, :-1]), dim=1)
-    previous = time.gather(1, previous_index.clamp_min(0))
-    previous = torch.where(previous_index >= 0, previous, first[:, None])
-    safe_time = torch.where(mask, time, reference[:, None])
-    relative = (safe_time - reference[:, None]) / float(scale_ps)
-    delta = torch.where(mask, safe_time - previous, 0.) / float(scale_ps)
+    if bool(mask.all()):
+        previous = torch.cat((first[:, None], time[:, :-1]), dim=1)
+        relative = (time - reference[:, None]) / float(scale_ps)
+        delta = (time - previous) / float(scale_ps)
+    else:
+        positions = torch.arange(frames, device=time.device).expand(batch, -1)
+        last_valid = torch.where(mask, positions, -1).cummax(dim=1).values
+        previous_index = torch.cat((last_valid.new_full((batch, 1), -1), last_valid[:, :-1]), dim=1)
+        previous = time.gather(1, previous_index.clamp_min(0))
+        previous = torch.where(previous_index >= 0, previous, first[:, None])
+        safe_time = torch.where(mask, time, reference[:, None])
+        relative = (safe_time - reference[:, None]) / float(scale_ps)
+        delta = torch.where(mask, safe_time - previous, 0.) / float(scale_ps)
     valid = mask.to(dtype=time.dtype)
     relative = relative * valid
     delta = delta * valid

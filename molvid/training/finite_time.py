@@ -11,6 +11,7 @@ from ..finite_time import FiniteTimeResponse,fit_response_regions,response_kerne
 from ..evaluation.predictive import HORIZONS,system_report,paired_report,kernel_calibration
 from ..runtime import configure_device,atomic_write_json,sha256_file
 from .predictive_data import load_cache,atomic_torch_save
+from ..provenance import freeze_run_identity
 
 
 @torch.no_grad()
@@ -22,23 +23,26 @@ def predict(model,payload,*,chunk=2048):
     return torch.stack(outputs,2)
 
 
-def train_k(cache,output,*,steps=2000,seeds=(101,102,103),generation=True):
+def train_k(cache,output,*,steps=2000,seeds=(101,102,103),generation=True,include_delta=False):
     output=Path(output)
     if output.exists() or steps<1: raise ValueError('fresh K output and positive steps required')
     device=configure_device('cuda',deterministic=True)
     torch.cuda.set_per_process_memory_fraction(.25)
     data,stats,manifest=load_cache(cache,device)
     output.mkdir(parents=True)
+    arms={'K_last':False,'K_history':True}
+    if include_delta: arms['K_delta']=True
     regions=fit_response_regions(data['fit']['y'])
     atomic_torch_save(output/'regions.pt',regions)
     targets={split:response_kernels(p['y'],regions) for split,p in data.items()}
     protocol=dict(schema='molvid.k.probe.v1',source_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
         cache=str(cache),cache_manifest_sha256=sha256_file(Path(cache)/'complete.json'),regions_sha256=sha256_file(output/'regions.pt'),
-        steps=steps,seeds=list(seeds),arms=['K_last','K_history'],lr=3e-4,batch_size=512,weight_decay=1e-4,
+        steps=steps,seeds=list(seeds),arms=list(arms),include_delta=include_delta,lr=3e-4,batch_size=512,weight_decay=1e-4,
         horizons_ps=list(HORIZONS),generator_updates=0,K2_enabled=False,test_opened=False,pid=os.getpid(),
         target='conditional expectation of 16 Gaussian response kernels; not categorical probabilities',
         loss='squared error on bounded real-MD kernel targets',generation_diagnostic=generation)
     atomic_write_json(output/'protocol.json',protocol)
+    freeze_run_identity(output,inputs=[Path(cache)/'complete.json',Path(cache)/'protocol.json'],purpose='K/head controls',protocol=protocol)
     x=data['fit']['x'];target=targets['fit'];last_width=data['fit']['last_width']
     horizons=x.new_tensor(HORIZONS);valid=data['valid'];truth=targets['valid'];metadata=valid['metadata']
     marginal=target.mean((0,1));persistent=response_kernels(torch.zeros_like(valid['y']),regions)
@@ -48,9 +52,10 @@ def train_k(cache,output,*,steps=2000,seeds=(101,102,103),generation=True):
     try:
         for seed in seeds:
             errors={}
-            for arm,history in [('K_last',False),('K_history',True)]:
+            for arm,history in arms.items():
                 torch.manual_seed(seed);torch.cuda.manual_seed_all(seed)
-                config=dict(input_width=x.shape[-1],regions=truth.shape[-1],last_width=last_width,history=history)
+                config=dict(input_width=x.shape[-1],regions=truth.shape[-1],last_width=last_width,history=history,
+                            feature_mode='delta' if arm=='K_delta' else 'all')
                 model=FiniteTimeResponse(**config).to(device)
                 optimizer=torch.optim.AdamW(model.parameters(),lr=3e-4,weight_decay=1e-4)
                 rng=torch.Generator(device=device).manual_seed(seed+10000);rows=[];tick=time.monotonic()
@@ -87,8 +92,12 @@ def train_k(cache,output,*,steps=2000,seeds=(101,102,103),generation=True):
                 'history_minus_lag_only':paired_report(errors['K_history'],baseline_values['lag_only'],metadata),
                 'history_minus_persistence':paired_report(errors['K_history'],baseline_values['persistence'],metadata)}
             atomic_write_json(output/'paired_comparisons.json',comparisons)
+            if include_delta:
+                comparisons[str(seed)]['history_minus_delta']=paired_report(errors['K_history'],errors['K_delta'],metadata)
+                comparisons[str(seed)]['delta_minus_last']=paired_report(errors['K_delta'],errors['K_last'],metadata)
+                atomic_write_json(output/'paired_comparisons.json',comparisons)
         atomic_write_json(output/'training_summary.json',dict(status='completed',steps_per_arm=steps,seeds=list(seeds),
-            seconds=time.monotonic()-started,checkpoints=2*len(seeds),test_opened=False))
+            seconds=time.monotonic()-started,checkpoints=len(arms)*len(seeds),test_opened=False))
         if generation:
             from ..evaluation.finite_time import diagnose_generator
             # Fixed first declared seed, NOT the validation-best head.

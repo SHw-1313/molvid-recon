@@ -5,19 +5,19 @@ first-passage event, committor, or full path distribution.
 """
 import torch
 from torch import nn
+from .observed_features import select_observed_features
 
 
 class FiniteTimeResponse(nn.Module):
-    def __init__(self,input_width,regions,last_width,*,history=True):
+    def __init__(self,input_width,regions,last_width,*,history=True,feature_mode='all'):
         super().__init__();self.last_width=last_width;self.history=history
+        self.feature_mode=feature_mode
         self.network=nn.Sequential(nn.Linear(input_width+4,128),nn.SiLU(),nn.Linear(128,128),nn.SiLU(),nn.Linear(128,regions))
 
     def forward(self,observed_features,horizon_ps):
         if not bool(torch.isfinite(horizon_ps).all()) or bool((horizon_ps<=0).any()):
             raise ValueError('finite positive horizon in ps required')
-        x=observed_features
-        if not self.history:
-            x=torch.cat((x[...,:self.last_width],torch.zeros_like(x[...,self.last_width:])),dim=-1)
+        x=select_observed_features(observed_features,self.last_width,self.feature_mode if self.history else 'last')
         t=horizon_ps.float()/100.
         clock=torch.stack((torch.log1p(t),t/12.,torch.sin(t/12.),torch.cos(t/12.)),dim=-1)
         return torch.sigmoid(self.network(torch.cat((x,clock),dim=-1)))

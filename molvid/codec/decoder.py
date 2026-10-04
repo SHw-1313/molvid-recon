@@ -181,10 +181,11 @@ class TrajectoryDecoder(nn.Module):
             time_ps = torch.cat((observed.time_ps, query.time_ps), dim=1)
             frame_mask = torch.cat((observed.frame_mask, query.frame_mask), dim=1)
             query_frames = future.frames
-        valid = frame_mask.index_select(0, observed.abid).transpose(0, 1)
-        h = torch.where(valid.unsqueeze(-1), h, 0.)
-        v = torch.where(valid.unsqueeze(-1).unsqueeze(-1), v, 0.)
-        time_ps = torch.where(frame_mask, time_ps, observed.time_ps[:, :1])
+        if not bool(frame_mask.all()):
+            valid = frame_mask.index_select(0, observed.abid).transpose(0, 1)
+            h = torch.where(valid.unsqueeze(-1), h, 0.)
+            v = torch.where(valid.unsqueeze(-1).unsqueeze(-1), v, 0.)
+            time_ps = torch.where(frame_mask, time_ps, observed.time_ps[:, :1])
         h = h + self.time_embedding(
             time_ps,
             frame_mask,

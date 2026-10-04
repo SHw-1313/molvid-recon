@@ -11,6 +11,7 @@ from ..temporal_moments import FutureMoments,gaussian_nll
 from ..evaluation.predictive import HORIZONS,gaussian_metrics,variance_temperature,system_report,paired_report
 from ..runtime import configure_device,atomic_write_json,sha256_file
 from .predictive_data import load_cache,atomic_torch_save
+from ..provenance import freeze_run_identity
 
 
 @torch.no_grad()
@@ -26,22 +27,25 @@ def predict(model,payload,*,chunk=2048):
     return torch.stack([o[0] for o in outputs],2),torch.stack([o[1] for o in outputs],2)
 
 
-def train_u(cache,output,*,steps=2000,seeds=(101,102,103)):
+def train_u(cache,output,*,steps=2000,seeds=(101,102,103),arms=None,feature_modes=None,comparisons=None):
     output=Path(output)
     if output.exists() or steps<1: raise ValueError('fresh U output and positive steps required')
     device=configure_device('cuda',deterministic=True)
     torch.cuda.set_per_process_memory_fraction(.20)
     data,stats,manifest=load_cache(cache,device)
     output.mkdir(parents=True)
-    arms={'U_last':(False,True),'U_history_mu':(True,False),'U_history_muvar':(True,True)}
+    arms=arms or {'U_last':(False,True),'U_history_mu':(True,False),'U_history_muvar':(True,True)}
+    feature_modes=feature_modes or {}
+    comparisons=comparisons or [('U_last','U_history_muvar'),('U_history_mu','U_history_muvar')]
     protocol=dict(schema='molvid.u.probe.v1',source_commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
         cache=str(cache),cache_manifest_sha256=sha256_file(Path(cache)/'complete.json'),steps=steps,seeds=list(seeds),
-        arms=arms,lr=3e-4,batch_size=512,weight_decay=1e-4,grad_clip=1.,
+        arms=arms,feature_modes=feature_modes,lr=3e-4,batch_size=512,weight_decay=1e-4,grad_clip=1.,
         horizons_ps=list(HORIZONS),generator_updates=0,teacher_updates=0,history_updates=0,
         variance='diagonal Gaussian, log variance in [-6,4]; not full covariance or multimodality',
         calibration='one temperature per horizon on 24 head-held-out training systems, clipped [0.05,20]',
         test_opened=False,pid=os.getpid())
     atomic_write_json(output/'protocol.json',protocol)
+    freeze_run_identity(output,inputs=[Path(cache)/'complete.json',Path(cache)/'protocol.json'],purpose='U/head controls',protocol=protocol)
     x=data['fit']['x'];y=data['fit']['y'];last_width=data['fit']['last_width']
     horizons=x.new_tensor(HORIZONS);reports={};paired={};started=time.monotonic()
     fit_mean=y.mean((0,1));fit_var=y.var((0,1),unbiased=False).clamp_min(1e-4)
@@ -56,7 +60,8 @@ def train_u(cache,output,*,steps=2000,seeds=(101,102,103)):
             metrics_by_arm={}
             for arm,(history,hetero) in arms.items():
                 torch.manual_seed(seed);torch.cuda.manual_seed_all(seed)
-                model=FutureMoments(x.shape[-1],y.shape[-1],last_width,history=history,heteroscedastic=hetero).to(device)
+                mode=feature_modes.get(arm,'all')
+                model=FutureMoments(x.shape[-1],y.shape[-1],last_width,history=history,heteroscedastic=hetero,feature_mode=mode).to(device)
                 optimizer=torch.optim.AdamW(model.parameters(),lr=3e-4,weight_decay=1e-4)
                 rng=torch.Generator(device=device).manual_seed(seed+10000)
                 rows=[];tick=time.monotonic();model.train()
@@ -86,7 +91,7 @@ def train_u(cache,output,*,steps=2000,seeds=(101,102,103)):
                 atomic_torch_save(path,dict(schema='molvid.u.probe.checkpoint.v1',model=model.state_dict(),
                     optimizer=optimizer.state_dict(),rng=rng.get_state().cpu(),step=steps,seed=seed,arm=arm,
                     model_config=dict(input_width=x.shape[-1],target_width=y.shape[-1],last_width=last_width,
-                                      history=history,heteroscedastic=hetero),
+                                      history=history,heteroscedastic=hetero,feature_mode=mode),
                     temperature=temperature,statistics=stats,protocol=protocol))
                 # Model-only reload parity; no generator weight is copied.
                 payload=torch.load(path,map_location=device,weights_only=False)
@@ -97,7 +102,7 @@ def train_u(cache,output,*,steps=2000,seeds=(101,102,103)):
                 del check,payload,model,optimizer
             paired[str(seed)]={f'{b}_minus_{a}':{metric:paired_report(metrics_by_arm[b][metric],metrics_by_arm[a][metric],metadata)
                 for metric in ('mse','nll','coverage90','interval_width90')}
-                for a,b in [('U_last','U_history_muvar'),('U_history_mu','U_history_muvar')]}
+                for a,b in comparisons}
             atomic_write_json(output/'paired_comparisons.json',paired)
         atomic_write_json(output/'summary.json',dict(status='completed',steps_per_arm=steps,seeds=list(seeds),
             arms=list(arms),seconds=time.monotonic()-started,checkpoints=len(arms)*len(seeds),test_opened=False,
