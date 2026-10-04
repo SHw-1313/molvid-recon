@@ -10,6 +10,13 @@
 - [ ] Judge shortcut/denoising diagnostics and dynamic geometry/motion together.
 - [ ] Additional seeds/full validation only after the bounded result is understood.
 - [ ] U/K remain deferred design hypotheses, not implemented modules.
+## Independent U probe
+
+- [x] Frozen observed-only feature cache and whole-system head splits.
+- [x] Mean/variance heads, simple controls and held-out calibration.
+- [x] Six targeted CUDA tests, including full tiny head-training/reload.
+- [ ] Complete real feature extraction, nine 2,000-step head fits and validation.
+- [ ] Decide whether future moments add calibrated information; no automatic integration.
 
 ## ABCD integration follow-up (2026-10-04)
 

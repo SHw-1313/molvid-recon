@@ -8,6 +8,12 @@ gradient control, train-only module-budget calibration, and paired generated
 validation. No Mamba changes were imported; do not confuse this branch with
 `feat/d2-mamba-20261004`. See [current report](agent/static_response_20261004/REPORT.md).
 S/U/K are not all implemented: only S is selected for this first experiment.
+## U probe (2026-10-04)
+
+Branch `exp/u-future-probe-20261004`, base `946917b`. Shared A1 feature-cache
+producer is active; U trains last-only / history-mean / history-mean-variance
+heads, not the generator. See [protocol and evidence](agent/u_probe_20261004/REPORT.md).
+Do not interpret these probes as new memory modules or dynamic-generation gains.
 
 ## ABCD integration (2026-10-04, current worktree)
 

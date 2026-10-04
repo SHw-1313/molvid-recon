@@ -4,6 +4,8 @@ Independent static-response branch (2026-10-04):
 [design, controls and evidence](agent/static_response_20261004/REPORT.md).
 Starts directly from the ABCD integration; S0/Sdec/Strunk isolate static
 gradient routing without Mamba, capacity or external-data changes.
+Independent U branch: [frozen-history future-moment probe](agent/u_probe_20261004/REPORT.md).
+No generator updates, S/D2 or Mamba changes; fixed ABCD/A1 parent.
 
 Current code lives in the shallow root package [`molvid/`](molvid/). Use the
 versioned templates in [`configs/`](configs/) and the current inspection tools

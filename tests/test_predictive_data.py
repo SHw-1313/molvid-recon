@@ -49,3 +49,20 @@ def test_variance_calibration_has_horizon_axes():
     metrics=gaussian_metrics(mu,v*temp[None,None,:,None],y)
     assert metrics['mse'].shape==(2,4,3)
     assert bool((metrics['coverage90']==1).all())
+
+def make_small_cache(root):
+    from molvid.runtime import atomic_write_json,sha256_file
+    from molvid.training.predictive_data import atomic_torch_save
+    root.mkdir()
+    atomic_write_json(root/'protocol.json',{'schema':'numerical_fixture','test_opened':False})
+    digest=sha256_file(root/'protocol.json');identities={}
+    rng=torch.Generator().manual_seed(19)
+    for split,count in [('fit',3),('calibration',2),('valid',2)]:
+        payload=dict(x=torch.randn(count,8,12,generator=rng),y=torch.randn(count,8,3,4,generator=rng),
+            last_width=4,projection=torch.eye(4),protocol_sha256=digest,
+            metadata=[{'system':f'{split}_{i}','sample_id':f'{split}_{i}'} for i in range(count)])
+        path=root/f'{split}.pt';atomic_torch_save(path,payload)
+        identities[split]={'path':path.name,'sha256':sha256_file(path),'clips':count}
+    atomic_write_json(root/'complete.json',dict(status='completed',test_opened=False,
+        protocol_sha256=digest,identities=identities))
+    return root
