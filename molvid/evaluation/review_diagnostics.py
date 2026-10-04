@@ -114,7 +114,7 @@ def internal_geometry(pred,truth,bonds):
 
 
 @torch.no_grad()
-def run_diagnostic(output):
+def run_diagnostic(output, *, solver_extension=False):
     output=Path(output)
     if output.exists(): raise FileExistsError(output)
     device=configure_device('cuda',deterministic=True)
@@ -124,9 +124,15 @@ def run_diagnostic(output):
         extra_grid_solver=16,extra_grid_seed=0,draw_cap=48,gpu_wall_cap_seconds=7200,
         oracle='true future latent for scoring only, never generation condition',test_opened=False,
         scope='bounded development diagnostic; grid extension has one draw per system, no equivalence claims')
+    if solver_extension:
+        protocol.update(schema='molvid.review.N1.solver32.v1',query_lags_ps=[100],
+            primary_solvers=[32],extra_grid_solver=None,extra_grid_seed=None,draw_cap=16,
+            trigger='8 to 16 improves amplitude but worsens geometry; check continued solver tradeoff',
+            scope='paired solver extension only, same primary contexts/seeds as first batch')
     freeze_run_identity(output,inputs=[release['selected_checkpoint']['path'],release['configuration']['path'],
         VIEWS/'paired_view_manifest.json'],purpose='N1 frozen decoder solver time',protocol=protocol)
     records=native_records(output)
+    if solver_extension: records=[r for r in records if r['lag_ps']==100]
     recipe=Path('/workspace/molvid-recon-gm-motion-v3')/release['auxiliary_recipe']['path']
     assert sha256_file(recipe)==release['auxiliary_recipe']['sha256']
     physical=PhysicalAuxiliaryConfig.resolve(json.loads(recipe.read_text())['physical'])
@@ -138,6 +144,7 @@ def run_diagnostic(output):
         arms=[('oracle',0,-1),('persistence',0,-1)]
         if record['lag_ps']==100: arms += [('generated',steps,seed) for steps in (8,16) for seed in (0,1)]
         else: arms += [('generated',16,0)]
+        if solver_extension: arms=[('generated',32,seed) for seed in (0,1)]
         # Fixed atom pairs carry invariant common-endpoint descriptors.
         pair_a=torch.linspace(0,len(cpu.atype)-1,min(64,len(cpu.atype)),device=device).long()
         pair_b=pair_a.roll(17)
@@ -147,7 +154,7 @@ def run_diagnostic(output):
             if variant=='oracle': latent=batch.target_future;future=model.decoder(context,latent,query).coordinates.float()
             elif variant=='persistence': latent=None;future=context.coordinates[-1:].expand(12,-1,-1).float()
             else:
-                assert draws<48
+                assert draws<protocol['draw_cap']
                 latent,_=euler_sample_frames(model,context=context,query=query,steps=steps,seed=seed)
                 future=model.decoder(context,latent,query).coordinates.float();draws+=1
             if not bool(torch.isfinite(future).all()): raise FloatingPointError('nonfinite N1 generated coordinates')
@@ -176,7 +183,7 @@ def run_diagnostic(output):
             atomic_write_json(output/'rows.json',rows)
         print(json.dumps({'phase':'N1','sample':record['sample_id'],'draws':draws,'seconds':time.monotonic()-started}),flush=True)
     comparisons={}
-    for system in sorted({r['system_id'] for r in records}):
+    for system in ([] if solver_extension else sorted({r['system_id'] for r in records})):
         ref=endpoint_features[f'{system}_100'];table={}
         for lag in (80,200,400):
             other=endpoint_features[f'{system}_{lag}']

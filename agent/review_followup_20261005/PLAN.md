@@ -47,3 +47,11 @@ Each new runner records code tree/diff, source commit, input SHAs and protocol
 before execution. Generated outputs stay under runs/review_20261005 and are
 not mixed into original review snapshots. Final decision explains which
 conditional experiments were not justified, versus failed or unimplemented.
+
+## N1 second batch (registered after first-batch inspection)
+
+First batch: oracle bond RMSE 0.01970 A, generated8/16 0.22781/0.25522 A;
+RMSF ratio 0.82407/0.92754. Solver refinement improves amplitude but worsens
+geometry. This triggers only the recommended 32-step clarification: same four
+systems/two anchors/seeds0/1, native100ps, exactly16 additional draws, <=2GPUh.
+No re-selection, weights or new time grids. No model promotion from this test.
