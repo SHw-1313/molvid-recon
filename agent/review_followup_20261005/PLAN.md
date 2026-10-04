@@ -55,3 +55,11 @@ RMSF ratio 0.82407/0.92754. Solver refinement improves amplitude but worsens
 geometry. This triggers only the recommended 32-step clarification: same four
 systems/two anchors/seeds0/1, native100ps, exactly16 additional draws, <=2GPUh.
 No re-selection, weights or new time grids. No model promotion from this test.
+
+## N1 separate observation-density control
+
+Keep first four systems, anchor450, identical 300ps observed span, native100ps
+future Q12, solver16, seeds0/1. Add H7 at native50ps against existing H4 at100ps:
+8 generated draws, <=0.5GPUh, frozen checkpoint. Query intervention and density
+intervention remain distinct. H7 was not the parent training history: this is
+OOD sensitivity, not proof that training on dense histories helps/hurts.

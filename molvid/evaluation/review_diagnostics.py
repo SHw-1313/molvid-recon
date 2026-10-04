@@ -21,7 +21,7 @@ from .physical import sampled_clash_metrics
 from .temporal import temporal_metrics_v3
 
 
-def native_records(output):
+def native_records(output, *, density_extension=False):
     """Read exact XTC frames, not interpolation. Fixed observed span=300 ps."""
     import mdtraj as md
     manifest=json.loads((VIEWS/'paired_view_manifest.json').read_text())
@@ -33,9 +33,11 @@ def native_records(output):
             raise FileNotFoundError(f'native reference missing, cannot invent time labels: {pdb}, {xtc}')
         metadata=topology_metadata(read_topology(pdb),complex_topology=False)
         specs=[(anchor,100) for anchor in (450,2450)]+[(450,lag) for lag in (80,200,400,1000)]
+        if density_extension: specs=[(450,100)]
         indices={}
         for anchor,lag in specs:
-            indices[anchor,lag]=[anchor-30,anchor-20,anchor-10,anchor]+[anchor+i*(lag//10) for i in range(1,13)]
+            observed=list(range(anchor-30,anchor+1,5)) if density_extension else [anchor-30,anchor-20,anchor-10,anchor]
+            indices[anchor,lag]=observed+[anchor+i*(lag//10) for i in range(1,13)]
         wanted={i for values in indices.values() for i in values};selected={};offset=0;previous=None
         for chunk in md.iterload(str(xtc),top=str(pdb),chunk=256):
             for j,timestamp in enumerate(chunk.time):
@@ -50,9 +52,12 @@ def native_records(output):
         sources.append(dict(system=system,pdb=str(pdb),pdb_sha256=sha256_file(pdb),xtc=str(xtc),xtc_sha256=sha256_file(xtc)))
         for anchor,lag in specs:
             ids=indices[anchor,lag];frames=np.stack([selected[i][0] for i in ids]);times=np.array([selected[i][1] for i in ids])
-            record=make_clip_record(frames,times,metadata,sample_id=f'{system}_R1_native{anchor}_q{lag}',source='atlas',
+            suffix='_H7' if density_extension else ''
+            record=make_clip_record(frames,times,metadata,sample_id=f'{system}_R1_native{anchor}_q{lag}{suffix}',source='atlas',
                 system_id=system,replica='R1',split='valid',source_stride=1,native_dt_ps=10.,timestamp_provenance='native_XTC_exact_frame_selection')
-            record['time_bucket_id']=f'fixed_H4_100ps_query_{lag}ps';record['lag_ps']=lag
+            history=7 if density_extension else 4
+            record['time_bucket_id']=f'fixed_H{history}_{50 if density_extension else 100}ps_query_{lag}ps';record['lag_ps']=lag
+            record['history_frames']=history
             record['native_frame_indices']=ids;record['anchor']=anchor
             records.append(record)
         # Observed coordinates and times must remain bit-identical across grids.
@@ -114,7 +119,8 @@ def internal_geometry(pred,truth,bonds):
 
 
 @torch.no_grad()
-def run_diagnostic(output, *, solver_extension=False):
+def run_diagnostic(output, *, solver_extension=False, density_extension=False):
+    if solver_extension and density_extension: raise ValueError('separate interventions require separate runs')
     output=Path(output)
     if output.exists(): raise FileExistsError(output)
     device=configure_device('cuda',deterministic=True)
@@ -129,22 +135,29 @@ def run_diagnostic(output, *, solver_extension=False):
             primary_solvers=[32],extra_grid_solver=None,extra_grid_seed=None,draw_cap=16,
             trigger='8 to 16 improves amplitude but worsens geometry; check continued solver tradeoff',
             scope='paired solver extension only, same primary contexts/seeds as first batch')
+    if density_extension:
+        protocol.update(schema='molvid.review.N1.density.v1',anchors=[450],history_frames=7,observed_dt_ps=50,
+            query_lags_ps=[100],primary_solvers=[16],extra_grid_solver=None,extra_grid_seed=None,draw_cap=8,
+            trigger='separate observed-density control required; fix observed span 300ps and all future query times',
+            scope='H7/50ps vs existing H4/100ps; frozen H4-trained A1, OOD sensitivity not retrained ablation')
     freeze_run_identity(output,inputs=[release['selected_checkpoint']['path'],release['configuration']['path'],
         VIEWS/'paired_view_manifest.json'],purpose='N1 frozen decoder solver time',protocol=protocol)
-    records=native_records(output)
+    records=native_records(output,density_extension=density_extension)
     if solver_extension: records=[r for r in records if r['lag_ps']==100]
     recipe=Path('/workspace/molvid-recon-gm-motion-v3')/release['auxiliary_recipe']['path']
     assert sha256_file(recipe)==release['auxiliary_recipe']['sha256']
     physical=PhysicalAuxiliaryConfig.resolve(json.loads(recipe.read_text())['physical'])
     rows=[];draws=0;started=time.monotonic();endpoint_features={}
     for record in records:
+        history=record['history_frames']
         cpu=collate_clip_records([record])
-        batch=prepare_frame_joint_batch(model.target_teacher,cpu,device=device,normalizer=model,history_frames=4)
+        batch=prepare_frame_joint_batch(model.target_teacher,cpu,device=device,normalizer=model,history_frames=history)
         truth=batch.coordinate_batch.x.float();context=batch.observed_context;query=batch.query
         arms=[('oracle',0,-1),('persistence',0,-1)]
         if record['lag_ps']==100: arms += [('generated',steps,seed) for steps in (8,16) for seed in (0,1)]
         else: arms += [('generated',16,0)]
         if solver_extension: arms=[('generated',32,seed) for seed in (0,1)]
+        if density_extension: arms=[('oracle',0,-1)]+[('generated',16,seed) for seed in (0,1)]
         # Fixed atom pairs carry invariant common-endpoint descriptors.
         pair_a=torch.linspace(0,len(cpu.atype)-1,min(64,len(cpu.atype)),device=device).long()
         pair_b=pair_a.roll(17)
@@ -159,17 +172,17 @@ def run_diagnostic(output, *, solver_extension=False):
                 future=model.decoder(context,latent,query).coordinates.float();draws+=1
             if not bool(torch.isfinite(future).all()): raise FloatingPointError('nonfinite N1 generated coordinates')
             prediction=torch.cat((context.coordinates.float(),future))
-            temporal=temporal_metrics_v3(prediction,truth,batch.coordinate_batch,history_frames=4)
+            temporal=temporal_metrics_v3(prediction,truth,batch.coordinate_batch,history_frames=history)
             clash=sampled_clash_metrics(future,batch,physical)
-            metrics={**temporal.metrics,**bond_errors(prediction,truth,batch.coordinate_batch,list(range(4,16))),
-                     **{k:v for k,v in clash.items() if k!='samples'},**internal_geometry(future,truth[4:],cpu.bond_index)}
+            metrics={**temporal.metrics,**bond_errors(prediction,truth,batch.coordinate_batch,list(range(history,history+12))),
+                     **{k:v for k,v in clash.items() if k!='samples'},**internal_geometry(future,truth[history:],cpu.bond_index)}
             if latent is not None:
                 normalized=model.normalize(latent)
                 metrics['latent_h_mse']=float((normalized.h-batch.normalized_target.h).square().mean())
                 metrics['latent_v_mse']=float((normalized.v-batch.normalized_target.v).square().mean())
             horizons=(query.time_ps[0]-context.latent.time_ps[0,-1]).cpu().tolist()
             predicted_pair=torch.linalg.vector_norm(future[:,pair_a]-future[:,pair_b],dim=-1)
-            true_pair=torch.linalg.vector_norm(truth[4:,pair_a]-truth[4:,pair_b],dim=-1)
+            true_pair=torch.linalg.vector_norm(truth[history:,pair_a]-truth[history:,pair_b],dim=-1)
             reference_pair=torch.linalg.vector_norm(context.coordinates[-1,pair_a]-context.coordinates[-1,pair_b],dim=-1)
             curve=[dict(horizon_ps=h,internal_pair_mse=float((p-t).square().mean()),
                 predicted_internal_change_A2=float((p-reference_pair).square().mean()),
@@ -179,11 +192,11 @@ def run_diagnostic(output, *, solver_extension=False):
                 i=horizons.index(400.);endpoint_features[f"{record['system_id']}_{record['lag_ps']}"]=dict(
                     prediction=predicted_pair[i].cpu(),target=true_pair[i].cpu())
             rows.append(dict(system=record['system_id'],sample_id=record['sample_id'],anchor=record['anchor'],
-                lag_ps=record['lag_ps'],variant=variant,steps=steps,seed=seed,metrics=metrics,response_curve=curve))
+                lag_ps=record['lag_ps'],history_frames=history,variant=variant,steps=steps,seed=seed,metrics=metrics,response_curve=curve))
             atomic_write_json(output/'rows.json',rows)
         print(json.dumps({'phase':'N1','sample':record['sample_id'],'draws':draws,'seconds':time.monotonic()-started}),flush=True)
     comparisons={}
-    for system in ([] if solver_extension else sorted({r['system_id'] for r in records})):
+    for system in ([] if solver_extension or density_extension else sorted({r['system_id'] for r in records})):
         ref=endpoint_features[f'{system}_100'];table={}
         for lag in (80,200,400):
             other=endpoint_features[f'{system}_{lag}']
