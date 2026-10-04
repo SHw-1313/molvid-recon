@@ -1,5 +1,20 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
 
+## Current review follow-up — 2026-10-05
+
+- [x] Fix E1–E5, expose role-aware complex preprocessing, retain real A1 exact parity.
+- [x] N1 oracle/8/16/32 solver, native-time and separate fixed-span density controls.
+- [x] N2 final stable S0/Sdec/Strunk aggregation and identity gate.
+- [x] N3 three-seed last/delta/history U/K controls plus fixed ridge.
+- [x] N4 bounded replica/block correlation, metadata and exposure audit.
+- [x] Record decisions, stop conditions and unresolved scientific gates in
+  [the current report](agent/review_followup_20261005/REPORT.md).
+- [ ] Independent confirmation: homologous-family/ligand isolation, new systems,
+  common-endpoint distribution consistency and thermodynamic qualification.
+
+Historical checklists below are snapshots; their unchecked run items do not
+override the current completed evidence and explicit stop decisions above.
+
 ## Independent static response (2026-10-04)
 
 - [x] Branch from ABCD `946917b`; import static paths only, no Mamba.

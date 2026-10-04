@@ -1,5 +1,12 @@
 # Molvid
 
+Current worktree (2026-10-05): `fix/review-followup-20261005`.
+[Independent-review fixes and completed N0–N4 diagnostics](agent/review_followup_20261005/REPORT.md),
+[engineering fix response](agent/review_followup_20261005/FIX_RESPONSE.md).
+E1–E5 repaired; S/U/K tools consolidated, A1 remains the scientific reference.
+No Mamba/default checkpoint promotion or U/K generator loss. Sections below
+describe the inherited branch history, not unfinished current work.
+
 Independent static-response branch (2026-10-04):
 [design, controls and evidence](agent/static_response_20261004/REPORT.md).
 Starts directly from the ABCD integration; S0/Sdec/Strunk isolate static
@@ -17,7 +24,8 @@ in [`tools/`](tools/). New run artifacts go in `runs/` (ignored by Git).
 The selected scientific baseline remains A1/4-block; B/C/D are retained optional
 capabilities, not jointly promoted experiments. Next-stage designs:
 [shared-trunk static pretraining](docs/static_backbone_pretraining_v2.md) and
-[physical-time Mamba](docs/mamba_temporal_v1.md); neither is implemented yet.
+[physical-time Mamba](docs/mamba_temporal_v1.md). Shared-static support is now
+implemented here; Mamba remains an isolated candidate outside this tree.
 
 ```bash
 enter-container

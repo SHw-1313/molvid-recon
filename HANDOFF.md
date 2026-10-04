@@ -1,5 +1,17 @@
 # Refactor handoff
 
+## Current authoritative handoff — 2026-10-05
+
+Branch `fix/review-followup-20261005`, worktree `molvid-review-followup-20261005`.
+Read [completed review follow-up](agent/review_followup_20261005/REPORT.md) and
+[fix response](agent/review_followup_20261005/FIX_RESPONSE.md) first. N0 repairs,
+72 frozen-A1 draws, stable three-arm S aggregation, 27 U/K head fits, three
+ridge fits and 12-reference audit are complete. Scientific stop conditions,
+not missing user confirmation, prevent static scale-up/default Mamba/U-K loss.
+Artifacts: `runs/review_20261005/aggregate-v2.json` plus each stage directory.
+No sealed data or original worktree modified; no checkpoint promoted.
+All older sections below are historical handoffs at their stated dates.
+
 ## Independent static-response branch (2026-10-04)
 
 This worktree is `exp/static-response-abcd-20261004`, based on `946917b`.
@@ -7,7 +19,7 @@ It contains only the shared-static-path transplant plus a matched decoder-only
 gradient control, train-only module-budget calibration, and paired generated
 validation. No Mamba changes were imported; do not confuse this branch with
 `feat/d2-mamba-20261004`. See [current report](agent/static_response_20261004/REPORT.md).
-S/U/K are not all implemented: only S is selected for this first experiment.
+At that historical cutoff only S was selected; U/K were subsequently completed.
 ## U probe (2026-10-04)
 
 Branch `exp/u-future-probe-20261004`, base `946917b`. Shared A1 feature-cache
