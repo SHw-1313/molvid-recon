@@ -1,5 +1,14 @@
 # Refactor handoff
 
+## Independent static-response branch (2026-10-04)
+
+This worktree is `exp/static-response-abcd-20261004`, based on `946917b`.
+It contains only the shared-static-path transplant plus a matched decoder-only
+gradient control, train-only module-budget calibration, and paired generated
+validation. No Mamba changes were imported; do not confuse this branch with
+`feat/d2-mamba-20261004`. See [current report](agent/static_response_20261004/REPORT.md).
+S/U/K are not all implemented: only S is selected for this first experiment.
+
 ## ABCD integration (2026-10-04, current worktree)
 
 This isolated worktree is `integration/abcd-20261004`, merged in A → D → C → B

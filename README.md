@@ -1,5 +1,10 @@
 # Molvid
 
+Independent static-response branch (2026-10-04):
+[design, controls and evidence](agent/static_response_20261004/REPORT.md).
+Starts directly from the ABCD integration; S0/Sdec/Strunk isolate static
+gradient routing without Mamba, capacity or external-data changes.
+
 Current code lives in the shallow root package [`molvid/`](molvid/). Use the
 versioned templates in [`configs/`](configs/) and the current inspection tools
 in [`tools/`](tools/). New run artifacts go in `runs/` (ignored by Git).

@@ -11,7 +11,7 @@ from torch import Tensor, nn
 from ..codec.motion_context import MotionContext
 from ..codec.learned_memory import GroupMemory
 from ..latent.adapter import FrameLatentAdapter
-from ..latent.types import FrameLatentBatch, HistoryMemory, ObservedContext, QuerySpec
+from ..latent.types import FrameLatentBatch, HistoryMemory, ObservedContext, QuerySpec, StructureCondition
 from ..time import PhysicalTimeEmbedding, pairwise_time_features
 from .backend import FactorizedLayout, block_spatial_attention, build_factorized_layout
 from .blocks import FrameDiTBlock
@@ -139,6 +139,53 @@ class FrameDiT(nn.Module):
         ).unsqueeze(0)
         return time + flow + identity + self.reference_scalar(reference_h).unsqueeze(0)
 
+    def _spatial_update(self, block, h, v, condition, noisy, context, layout):
+        h_norm, v_norm, h_gate, v_gate = block.spatial_adaln(h, v, condition)
+        spatial_h, spatial_v = block_spatial_attention(h_norm, v_norm, noisy, block.spatial, layout)
+        h = h + torch.tanh(h_gate) * spatial_h
+        v = v + torch.tanh(v_gate).unsqueeze(-2) * spatial_v
+        if block.local_geometry is not None:
+            local_h, local_v = block.local_geometry(h, v, noisy, context)
+            h = h + local_h
+            v = v + local_v
+        return h, v
+
+    @staticmethod
+    def _ffn_update(block, h, v, condition):
+        h_norm, v_norm, h_gate, v_gate = block.ffn_adaln(h, v, condition)
+        ffn_h, ffn_v = block.ffn(h_norm, v_norm)
+        return (h + torch.tanh(h_gate) * ffn_h,
+                v + torch.tanh(v_gate).unsqueeze(-2) * ffn_v)
+
+    def forward_static(
+        self, noisy: FrameLatentBatch, *, condition: StructureCondition, flow_time: Tensor,
+    ) -> FrameLatentBatch:
+        """Shared spatial RF trunk, explicitly bypassing every time module."""
+        context = condition.geometry
+        if noisy.frames != 1 or noisy.topology.contract() != context.topology.contract():
+            raise ValueError("static RF expects one structure with matching topology")
+        s = torch.as_tensor(flow_time, device=noisy.h.device, dtype=noisy.h.dtype).reshape(noisy.batch_size)
+        if not bool(torch.isfinite(s).all()) or bool(((s < 0) | (s > 1)).any()):
+            raise ValueError("static flow progress must lie in [0,1]")
+        features = torch.stack((s, torch.sin(torch.pi * s), torch.cos(torch.pi * s)), dim=-1)
+        flow = self.flow_time(features).index_select(0, noisy.abid).unsqueeze(0)
+        identity = (
+            self.atom_embedding(_safe_ids(noisy.atom_type, self.atom_embedding.num_embeddings))
+            + self.block_embedding(_safe_ids(noisy.block_type, self.block_embedding.num_embeddings))
+            + self.component_embedding(_safe_ids(noisy.component_id, self.component_embedding.num_embeddings))
+        ).unsqueeze(0)
+        content = flow + identity + self.reference_scalar(context.latent.h[0]).unsqueeze(0)
+        h, v = self.adapter.project_inputs(noisy)
+        h = h + content
+        v = v + self.reference_vector(context.latent.v[0]).unsqueeze(0)
+        layout = build_factorized_layout(noisy)
+        for block in self.blocks:
+            h, v = self._spatial_update(block, h, v, content, noisy, context, layout)
+            h, v = self._ffn_update(block, h, v, content)
+        mask = noisy.atom_frame_mask()
+        return self.adapter.project_outputs(noisy, h * mask.unsqueeze(-1),
+                                            v * mask.unsqueeze(-1).unsqueeze(-1))
+
     def forward(
         self,
         noisy: FrameLatentBatch,
@@ -207,14 +254,7 @@ class FrameDiT(nn.Module):
             h = h + torch.tanh(h_gate) * cross_h.permute(1, 0, 2)
             v = v + torch.tanh(v_gate).unsqueeze(-2) * cross_v.permute(1, 0, 2, 3)
 
-            h_norm, v_norm, h_gate, v_gate = block.spatial_adaln(h, v, condition)
-            spatial_h, spatial_v = block_spatial_attention(h_norm, v_norm, noisy, block.spatial, layout)
-            h = h + torch.tanh(h_gate) * spatial_h
-            v = v + torch.tanh(v_gate).unsqueeze(-2) * spatial_v
-            if block.local_geometry is not None:
-                local_h, local_v = block.local_geometry(h, v, noisy, context)
-                h = h + local_h
-                v = v + local_v
+            h, v = self._spatial_update(block, h, v, condition, noisy, context, layout)
 
             h_norm, v_norm, h_gate, v_gate = block.temporal_adaln(h, v, condition)
             temporal_bias = block.temporal_time_bias(temporal_features).permute(0, 3, 1, 2)
@@ -236,10 +276,7 @@ class FrameDiT(nn.Module):
             h = h + torch.tanh(h_gate) * temporal_h.permute(1, 0, 2)
             v = v + torch.tanh(v_gate).unsqueeze(-2) * temporal_v.permute(1, 0, 2, 3)
 
-            h_norm, v_norm, h_gate, v_gate = block.ffn_adaln(h, v, condition)
-            ffn_h, ffn_v = block.ffn(h_norm, v_norm)
-            h = h + torch.tanh(h_gate) * ffn_h
-            v = v + torch.tanh(v_gate).unsqueeze(-2) * ffn_v
+            h, v = self._ffn_update(block, h, v, condition)
         atom_mask = noisy.atom_frame_mask()
         h = h * atom_mask.unsqueeze(-1)
         v = v * atom_mask.unsqueeze(-1).unsqueeze(-1)

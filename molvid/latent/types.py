@@ -654,3 +654,22 @@ class HistoryMemory:
     def representative_time_ps(self) -> Tensor:
         valid = self.group_frame_mask.to(dtype=self.group_time_ps.dtype)
         return (self.group_time_ps * valid).sum(dim=-1) / valid.sum(dim=-1).clamp_min(1.0)
+
+
+@dataclass(frozen=True)
+class StructureCondition:
+    """One corrupted structure, not a one-frame dynamical observation.
+
+    The geometry container reuses teacher/topology/origin fields. Its T=1
+    storage coordinate is not a physical timestamp; static model methods
+    never read it or construct a future QuerySpec.
+    """
+
+    geometry: ObservedContext
+    task_kind: str = "static"
+
+    def __post_init__(self) -> None:
+        if self.task_kind != "static" or self.geometry.latent.frames != 1:
+            raise ValueError("StructureCondition requires one static structure")
+        if self.geometry.raw_history is not None:
+            raise ValueError("static structures cannot carry a raw history")

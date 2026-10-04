@@ -32,6 +32,7 @@ from ..model import FrameJointCondition, FrameJointModel, FrameJointOutput
 from ..runtime import sha256_file
 from .batches import PreparedFrameJointBatch
 from .dit import module_state_hash
+from .static_backbone import PreparedStaticBackboneBatch, StaticBackboneConfig, static_backbone_loss, backward_static_loss
 
 
 STAGES = ("decoder_warmup", "flow_start", "joint", "continuation", "frozen_decoder")
@@ -761,6 +762,7 @@ class FrameJointTrainer:
         sampled_config: SampledAuxiliaryConfig | None = None,
         static_auxiliary_contract: Mapping[str, Any] | None = None,
         checkpoint_flow_field: bool = False,
+        static_backbone_config: StaticBackboneConfig | None = None,
     ) -> None:
         self.model = model
         self.base_model = model.module if hasattr(model, "module") else model
@@ -776,6 +778,17 @@ class FrameJointTrainer:
             else dict(static_auxiliary_contract)
         )
         self.checkpoint_flow_field = bool(checkpoint_flow_field)
+        self.static_backbone_config = static_backbone_config
+        self.static_generator = None
+        self.static_corruption_generator = None
+        if static_backbone_config is not None:
+            if static_auxiliary_contract is not None or stage not in {"joint", "continuation"}:
+                raise ValueError("D2 requires joint/continuation and cannot combine with decoder-only static updates")
+            if hasattr(model, "module") or (dist.is_initialized() and dist.get_world_size() > 1):
+                raise ValueError("D2 currently requires single-process training")
+            device = next(self.base_model.dit.parameters()).device
+            self.static_generator = torch.Generator(device=device).manual_seed(static_backbone_config.seed)
+            self.static_corruption_generator = torch.Generator(device=device).manual_seed(static_backbone_config.seed + 1)
         self.learning_rates = {name: float(learning_rates[name]) for name in ("history_encoder", "dit", "decoder")}
         self.weight_decay = float(weight_decay)
         self.grad_clip = float(grad_clip)
@@ -803,6 +816,8 @@ class FrameJointTrainer:
     def configure_stage(self, stage: str) -> None:
         if stage not in STAGES:
             raise ValueError(f"unknown Frame Joint stage {stage!r}")
+        if self.static_backbone_config is not None and stage not in {"joint", "continuation"}:
+            raise ValueError("D2 requires an active shared backbone and decoder")
         active = {
             "decoder_warmup": {"decoder"},
             "flow_start": {"history_encoder", "dit"},
@@ -869,7 +884,10 @@ class FrameJointTrainer:
         sampled_generator: torch.Generator | None = None,
         auxiliary_active: bool | None = None,
         diagnose_gradients: bool = False,
+        static_batch: PreparedStaticBackboneBatch | None = None,
     ) -> dict[str, Any]:
+        if (self.static_backbone_config is None) != (static_batch is None):
+            raise ValueError("D2 config and static microbatch must be supplied together on every joint update")
         self.model.train()
         self.base_model.target_teacher.eval()
         sample = self.flow.sample(
@@ -902,6 +920,7 @@ class FrameJointTrainer:
                 return self._train_step_streamed(
                     batch, sample, sampled_sources,
                     diagnose_gradients=diagnose_gradients,
+                    static_batch=static_batch,
                 )
         with self._autocast():
             output = self.model(
@@ -951,6 +970,7 @@ class FrameJointTrainer:
         scaled = self._distributed_total(losses)
         with torch.profiler.record_function("frame_joint.backward"):
             scaled.backward()
+        static_metrics = self._backward_static(static_batch)
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
         decoder_grad_norm = sum(
             (
@@ -981,11 +1001,26 @@ class FrameJointTrainer:
         }
         result.update({f"raw_{name}": float(value.detach()) for name, value in losses.raw.items()})
         result.update({f"weighted_{name}": float(value.detach()) for name, value in losses.weighted.items()})
+        result.update(static_metrics)
+        result["loss"] += static_metrics.get("static_weighted_total", 0.0)
         if losses.sampled_diagnostics:
             result["sampled_diagnostics"] = dict(losses.sampled_diagnostics)
         if diagnose_gradients:
             result["gradient_diagnostics"] = gradient_diagnostics
         return result
+
+    def _backward_static(self, batch: PreparedStaticBackboneBatch | None) -> dict[str, float]:
+        """Accumulate static gradients without zeroing dynamic grads or stepping AdamW."""
+        if batch is None:
+            return {}
+        assert self.static_backbone_config is not None and self.static_generator is not None
+        with self._autocast():
+            loss, metrics = static_backbone_loss(self.base_model, batch, self.static_backbone_config,
+                generator=self.static_generator, successful_updates=self.successful_updates)
+        if not torch.isfinite(loss):
+            raise FloatingPointError("non-finite static shared-trunk loss")
+        backward_static_loss(loss, self.base_model, self.static_backbone_config)
+        return metrics
 
     def _train_step_streamed(
         self,
@@ -994,6 +1029,7 @@ class FrameJointTrainer:
         sources: tuple[FrameLatentBatch, ...],
         *,
         diagnose_gradients: bool,
+        static_batch: PreparedStaticBackboneBatch | None = None,
     ) -> dict[str, Any]:
         """Accumulate the same K=2 physical gradient one source at a time.
 
@@ -1082,6 +1118,7 @@ class FrameJointTrainer:
             del generated, coordinates, branch_raw, branch_counts, branch_total
         if proxy is not None:
             proxy.backward_original(condition_gradients)
+        static_metrics = self._backward_static(static_batch)
         active = [parameter for parameter in self.base_model.parameters() if parameter.requires_grad]
         decoder_grad_norm = sum(
             (
@@ -1127,6 +1164,8 @@ class FrameJointTrainer:
         }
         result.update({f"raw_{name}": float(value.detach()) for name, value in raw.items()})
         result.update({f"weighted_{name}": float(value.detach()) for name, value in weighted.items()})
+        result.update(static_metrics)
+        result["loss"] += static_metrics.get("static_weighted_total", 0.0)
         if diagnose_gradients:
             result["gradient_diagnostics"] = {
                 "streamed": {"active": True, "per_term_norms_available": False,
@@ -1161,6 +1200,8 @@ class FrameJointTrainer:
             result["static_decoder_auxiliary"] = dict(
                 self.static_auxiliary_contract
             )
+        if self.static_backbone_config is not None:
+            result["static_backbone"] = self.static_backbone_config.contract()
         return result
 
     def save_checkpoint(
@@ -1191,6 +1232,11 @@ class FrameJointTrainer:
                 ),
                 "rank_states": dict(rank_states or {}),
                 "continuation_parent": self.continuation_parent,
+                "static_backbone_state": (
+                    {"rf_rng": self.static_generator.get_state().cpu(),
+                     "corruption_rng": self.static_corruption_generator.get_state().cpu()}
+                    if self.static_backbone_config is not None else None
+                ),
             },
         )
 
@@ -1204,6 +1250,17 @@ class FrameJointTrainer:
         rank: int = 0,
     ) -> Mapping[str, Any]:
         stage = self.stage
+        if self.static_backbone_config is not None:
+            # Validate D2 RNG fields before loading model/optimizer state.
+            if expected_sha256 is not None and sha256_file(path) != expected_sha256:
+                raise ValueError("D2 checkpoint SHA-256 mismatch")
+            preview = torch.load(path, map_location="cpu", weights_only=False)
+            state = preview.get("extra_state", {}).get("static_backbone_state")
+            if not isinstance(state, Mapping) or any(not isinstance(state.get(k), Tensor) for k in ("rf_rng", "corruption_rng")):
+                raise ValueError("D2 checkpoint lacks independent static RNG streams")
+            for key in ("rf_rng", "corruption_rng"):
+                torch.Generator(device=next(self.base_model.dit.parameters()).device).set_state(state[key].cpu())
+            del preview
         # Moment validation requires parameters owning moments to be marked
         # trainable during restoration; restore the requested stage afterward.
         for name in ("history_encoder", "dit", "decoder"):
@@ -1220,6 +1277,10 @@ class FrameJointTrainer:
             expected_sha256=expected_sha256,
         )
         extra = payload["extra_state"]
+        if self.static_backbone_config is not None:
+            state = extra["static_backbone_state"]
+            self.static_generator.set_state(state["rf_rng"].cpu())
+            self.static_corruption_generator.set_state(state["corruption_rng"].cpu())
         rank_states = extra.get("rank_states")
         rank_state = rank_states.get(str(int(rank))) if isinstance(rank_states, Mapping) else None
         state = (

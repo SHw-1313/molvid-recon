@@ -1,5 +1,16 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
 
+## Independent static response (2026-10-04)
+
+- [x] Branch from ABCD `946917b`; import static paths only, no Mamba.
+- [x] Implement matched S0/Sdec/Strunk and fixed per-module gradient budgeting.
+- [x] CUDA gradient/resume tests, paired evaluator tests and real A1 parity.
+- [x] Real bounded dynamic/static evaluator smoke; sealed test untouched.
+- [ ] Run 512 updates per arm and collect paired generated validation.
+- [ ] Judge shortcut/denoising diagnostics and dynamic geometry/motion together.
+- [ ] Additional seeds/full validation only after the bounded result is understood.
+- [ ] U/K remain deferred design hypotheses, not implemented modules.
+
 ## ABCD integration follow-up (2026-10-04)
 
 - [x] Isolate integration worktree; merge A → D → C → B; preserve source trees,

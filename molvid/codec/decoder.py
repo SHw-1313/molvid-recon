@@ -11,7 +11,7 @@ from torch import Tensor, nn
 from ..dit.blocks import ScalarVectorAttention, ScalarVectorFFN
 from ..equivariant import AxisPreservingLinear, SO3ChannelNorm
 from ..geometry.coordinates import restore_origin
-from ..latent.types import FrameLatentBatch, ObservedContext, QuerySpec
+from ..latent.types import FrameLatentBatch, ObservedContext, QuerySpec, StructureCondition
 from ..time import PhysicalTimeEmbedding, pairwise_time_features
 from .heads import EquivariantCoordinateHead
 
@@ -111,14 +111,19 @@ class TrajectoryDecoderBlock(nn.Module):
         )
         h = h + torch.tanh(self.temporal_scalar_gate) * temporal_h.permute(1, 0, 2)
         v = v + torch.tanh(self.temporal_vector_gate).view(1, 1, 1, -1) * temporal_v.permute(1, 0, 2, 3)
+        h, v = self.spatial_update(h, v, context)
+        valid = atom_mask.transpose(0, 1)
+        return h * valid.unsqueeze(-1), v * valid.unsqueeze(-1).unsqueeze(-1)
+
+    def spatial_update(self, h: Tensor, v: Tensor, context: ObservedContext) -> tuple[Tensor, Tensor]:
+        """The identical local/FFN weights serve static and dynamic tasks."""
         local_h, local_v = self.local(self.scalar_norm(h), self.vector_norm(v), context)
         h = h + torch.tanh(self.local_scalar_gate) * local_h
         v = v + torch.tanh(self.local_vector_gate).view(1, 1, 1, -1) * local_v
         ffn_h, ffn_v = self.ffn(self.scalar_norm(h), self.vector_norm(v))
         h = h + torch.tanh(self.ffn_scalar_gate) * ffn_h
         v = v + torch.tanh(self.ffn_vector_gate).view(1, 1, 1, -1) * ffn_v
-        valid = atom_mask.transpose(0, 1)
-        return h * valid.unsqueeze(-1), v * valid.unsqueeze(-1).unsqueeze(-1)
+        return h, v
 
 
 class TrajectoryDecoder(nn.Module):
@@ -196,3 +201,18 @@ class TrajectoryDecoder(nn.Module):
             v=v,
             frame_mask=frame_mask,
         )
+
+    def forward_static(self, latent: FrameLatentBatch, *, condition: StructureCondition) -> TrajectoryDecoderOutput:
+        """Decode Q1 generated structure without clock, history concatenation or temporal mixing."""
+        context = condition.geometry
+        if latent.frames != 1 or latent.topology.contract() != context.topology.contract():
+            raise ValueError("static decoder requires one structure with matching topology")
+        h, v = latent.h, latent.v
+        mask = latent.atom_frame_mask()
+        for block in self.blocks:
+            h, v = block.spatial_update(h, v, context)
+            h = h * mask.unsqueeze(-1)
+            v = v * mask.unsqueeze(-1).unsqueeze(-1)
+        centered = self.coordinate_head(h, v)
+        coordinates = restore_origin(centered, context.sample_origin.to(dtype=centered.dtype), latent.abid)
+        return TrajectoryDecoderOutput(coordinates, centered, h, v, latent.frame_mask)
