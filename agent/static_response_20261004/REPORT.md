@@ -93,6 +93,8 @@ and observed latent only. The latter two are **OOD sensitivity**, not evidence
 from separately trained ablations. If the output cannot beat simply retaining
 the noisy input, do not call the task successful denoising. If removing the
 trunk does not degrade results, investigate decoder shortcuts before scaling.
+The inherited static-loss `clash=0` field is a disabled-term placeholder,
+not a measured absence of clashes. Dynamic vdW metrics are actually measured.
 
 No automatic default-model promotion. A candidate needs independently
 interpretable static behavior and generated dynamic gains over both S0 and
@@ -120,7 +122,22 @@ python -u -m tools.run_static_response \
   --output runs/static_response_20261004/pilot512 --updates 512
 ```
 
-This first source checkpoint is prepared for launch. Runtime status must be
-read from `pilot512.log`, `pilot512/protocol.json`, `calibration.json`, per-arm
+Launched from fixed source commit `7eee2ee` on GPU UUID
+`GPU-4172773f-10fa-ce97-72e6-1c582bdcb615` (GPU 2), using `nohup` in the prescribed
+container/environment. Container PID `392876`, host PID `2467402`.
+At handoff the train-only calibration has produced its first four of sixteen
+pairs without error; optimizer training and three-arm validation are still
+pending. The runner will sequentially execute S0, Sdec, Strunk (512 updates
+each), strict final reloads, validation, and a paired comparison. It does not
+automatically promote weights or launch a longer follow-up.
+
+Runtime status must be read from `pilot512.log`, `pilot512/protocol.json`, `calibration.json`, per-arm
 `steps.json`/`summary.json`, and final `comparison.json`; do not infer completion
 from this design document.
+
+Initial A1 static diagnostic warning (one system, not a population result):
+at sigma .1/.3/.8 Å, sampled-trunk coordinate MSE is 3.351/2.329/1.858 Å²,
+versus noisy-input identity 0.01019/0.09171/0.65218 Å². Merely bypassing physical
+time in the dynamic parent does not create a useful static denoiser. This is
+why true source reconstruction and the identity-input control are required;
+successful execution is not evidence for scaling this task.
