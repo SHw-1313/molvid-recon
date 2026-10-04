@@ -120,7 +120,38 @@ class HistoryEncoder(nn.Module):
 
     def forward(self, context: ObservedContext) -> HistoryMemory:
         latent = context.latent
-        h, v = self.temporal(latent.h, latent.v, latent.time_ps, latent.frame_mask, latent.abid)
+        lengths = latent.frame_mask.sum(1).tolist()
+        if all(length == latent.frames for length in lengths):
+            return self._encode(latent.h, latent.v, latent.time_ps, latent.frame_mask, latent.abid)
+        # Each sample has its own complete groups/tail. Encode compact prefixes
+        # so padding values and a partner's length cannot change its function.
+        memories = []
+        for sample, length in enumerate(lengths):
+            start, stop = (int(x) for x in latent.atom_ptr[sample:sample + 2])
+            memories.append(self._encode(
+                latent.h[:length, start:stop], latent.v[:length, start:stop],
+                latent.time_ps[sample:sample + 1, :length],
+                latent.frame_mask[sample:sample + 1, :length],
+                latent.abid[start:stop].new_zeros(stop - start)))
+        tokens = max(m.tokens for m in memories)
+        def packed(name):
+            parts = []
+            for m in memories:
+                x = getattr(m, name)
+                parts.append(torch.cat((x, x.new_zeros((tokens - m.tokens, *x.shape[1:]))), 0))
+            return torch.cat(parts, 1)
+        def clocks(name):
+            parts = []
+            for m in memories:
+                x = getattr(m, name)
+                parts.append(torch.cat((x, x.new_zeros((1, tokens - m.tokens, *x.shape[2:]))), 1))
+            return torch.cat(parts, 0)
+        return HistoryMemory(h=packed('h'), v=packed('v'), detail_h=packed('detail_h'),
+            detail_v=packed('detail_v'), token_mask=clocks('token_mask'),
+            group_time_ps=clocks('group_time_ps'), group_frame_mask=clocks('group_frame_mask'), abid=latent.abid)
+
+    def _encode(self, scalar, vector, time, mask, abid) -> HistoryMemory:
+        h, v = self.temporal(scalar, vector, time, mask, abid)
         scalar_tokens: list[Tensor] = []
         vector_tokens: list[Tensor] = []
         detail_h_tokens: list[Tensor] = []
@@ -128,25 +159,22 @@ class HistoryEncoder(nn.Module):
         token_masks: list[Tensor] = []
         group_times: list[Tensor] = []
         group_masks: list[Tensor] = []
-        complete_prefix = 4 * (int(latent.frame_mask.sum(dim=1).min()) // 4)
+        complete_prefix = 4 * (h.shape[0] // 4)
         frame = 0
-        while frame < latent.frames:
-            # Mixed-length batches use the shortest complete prefix.  This is
-            # one metadata decision per call; no partial four-frame group is
-            # ever sent through Haar.
+        while frame < h.shape[0]:
             full = frame + 4 <= complete_prefix
             if full:
                 state_h, state_v, detail_h, detail_v = self._full_group(
                     h[frame:frame + 4], v[frame:frame + 4],
-                    latent.time_ps[:, frame:frame + 4], latent.frame_mask[:, frame:frame + 4], latent.abid,
+                    time[:, frame:frame + 4], mask[:, frame:frame + 4], abid,
                 )
                 scalar_tokens.append(self.scalar_memory(torch.cat((state_h, detail_h), dim=-1)))
                 vector_tokens.append(self.vector_memory(torch.cat((state_v, detail_v), dim=-1)))
                 detail_h_tokens.append(detail_h)
                 detail_v_tokens.append(detail_v)
-                token_masks.append(latent.frame_mask[:, frame:frame + 4].all(dim=-1, keepdim=True))
-                group_times.append(latent.time_ps[:, frame:frame + 4].unsqueeze(1))
-                group_masks.append(latent.frame_mask[:, frame:frame + 4].unsqueeze(1))
+                token_masks.append(mask[:, frame:frame + 4].all(dim=-1, keepdim=True))
+                group_times.append(time[:, frame:frame + 4].unsqueeze(1))
+                group_masks.append(mask[:, frame:frame + 4].unsqueeze(1))
                 frame += 4
             else:
                 state_h = self.state_detail.state_encode_h(h[frame:frame + 1])
@@ -157,11 +185,11 @@ class HistoryEncoder(nn.Module):
                 vector_tokens.append(self.vector_memory(torch.cat((state_v, detail_v), dim=-1)))
                 detail_h_tokens.append(detail_h)
                 detail_v_tokens.append(detail_v)
-                token_masks.append(latent.frame_mask[:, frame:frame + 1])
-                padded_time = latent.time_ps.new_zeros((latent.batch_size, 1, 4))
-                padded_mask = latent.frame_mask.new_zeros((latent.batch_size, 1, 4))
-                padded_time[:, 0, 0] = latent.time_ps[:, frame]
-                padded_mask[:, 0, 0] = latent.frame_mask[:, frame]
+                token_masks.append(mask[:, frame:frame + 1])
+                padded_time = time.new_zeros((time.shape[0], 1, 4))
+                padded_mask = mask.new_zeros((time.shape[0], 1, 4))
+                padded_time[:, 0, 0] = time[:, frame]
+                padded_mask[:, 0, 0] = mask[:, frame]
                 group_times.append(padded_time)
                 group_masks.append(padded_mask)
                 frame += 1
@@ -171,7 +199,7 @@ class HistoryEncoder(nn.Module):
             token_mask=torch.cat(token_masks, dim=1),
             group_time_ps=torch.cat(group_times, dim=1),
             group_frame_mask=torch.cat(group_masks, dim=1),
-            abid=latent.abid,
+            abid=abid,
             detail_h=torch.cat(detail_h_tokens, dim=0),
             detail_v=torch.cat(detail_v_tokens, dim=0),
         )

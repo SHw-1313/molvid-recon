@@ -162,7 +162,7 @@ class FrameDiT(nn.Module):
     ) -> FrameLatentBatch:
         """Shared spatial RF trunk, explicitly bypassing every time module."""
         context = condition.geometry
-        if noisy.frames != 1 or noisy.topology.contract() != context.topology.contract():
+        if noisy.frames != 1 or not noisy.topology.same_identity(context.topology):
             raise ValueError("static RF expects one structure with matching topology")
         s = torch.as_tensor(flow_time, device=noisy.h.device, dtype=noisy.h.dtype).reshape(noisy.batch_size)
         if not bool(torch.isfinite(s).all()) or bool(((s < 0) | (s > 1)).any()):
@@ -201,7 +201,7 @@ class FrameDiT(nn.Module):
             and not torch.equal(noisy.frame_mask, query.frame_mask)
         ):
             raise ValueError("noisy future latent and QuerySpec disagree")
-        if noisy.topology is not context.topology and noisy.topology.contract() != context.topology.contract():
+        if not noisy.topology.same_identity(context.topology):
             raise ValueError("observed and query topology differ")
         if self.motion_enabled != (motion_context is not None):
             raise ValueError("motion context presence must match the explicit M switch")

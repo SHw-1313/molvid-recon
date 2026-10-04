@@ -13,7 +13,7 @@ import numpy as np
 
 from ..geometry.coordinates import align_and_center
 from .batch import canonical_time_fields
-from .chemistry import get_block_from_complex, get_block_from_top
+from .chemistry import select_topology
 from .io import read_topology, read_trajectory, read_static_records
 from .store import ClipMMapWriter, STORAGE_FORMAT, StaticClipDataset
 
@@ -79,16 +79,19 @@ def _atom_identity(atom: Any) -> str:
     )
 
 
-def topology_metadata(top: Any, *, complex_topology: bool) -> dict[str, Any]:
+def topology_metadata(top: Any, *, complex_topology: bool, residue_roles=None,
+                      expected_ligand_residues=None) -> dict[str, Any]:
     """Return atom/block/component metadata in the model's stable atom order."""
 
-    if complex_topology:
-        atype, btype, atom_index, block_index, bond_index, edge_mask = (
-            get_block_from_complex(top)
-        )
-    else:
-        atype, btype, atom_index, block_index, bond_index = get_block_from_top(top)
-        edge_mask = np.zeros(len(atom_index), dtype=np.int64)
+    try:
+        fields, selection = select_topology(top, complex_topology=complex_topology,
+                                            residue_roles=residue_roles)
+    except ValueError as error:
+        raise SourceDataError(str(error)) from error
+    atype, btype, atom_index, block_index, bond_index, edge_mask = fields
+    ligands = {r['residue_index'] for r in selection if r['role'] == 'ligand' and r['model_index'] is not None}
+    if expected_ligand_residues is not None and ligands != set(expected_ligand_residues):
+        raise SourceDataError('selected ligand residues differ from expected components')
 
     atom_index = np.asarray(atom_index, dtype=np.int64)
     block_index = np.asarray(block_index, dtype=np.int64)
@@ -152,6 +155,7 @@ def topology_metadata(top: Any, *, complex_topology: bool) -> dict[str, Any]:
         "bond_index": bonds,
         "atom_identity": identities,
         "topology_fingerprint": topology_fingerprint,
+        "selection_audit": selection,
     }
 
 
@@ -241,6 +245,7 @@ def make_clip_record(
         "bond_index": metadata["bond_index"],
         "topology_fingerprint": metadata["topology_fingerprint"],
         "alignment": transform,
+        "selection_audit": metadata.get('selection_audit', []),
     }
     return record
 

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, replace, field
+import hashlib
 from typing import Any, Mapping
 
 import torch
@@ -94,6 +95,9 @@ class StaticTopologyMetadata:
     topology_id: tuple[str, ...] = ()
     sample_id: tuple[str, ...] = ()
     schema_version: str = STATIC_TOPOLOGY_SCHEMA
+    atom_identity_sha256: tuple[str, ...] = ()
+    _semantic_sha256: str = field(init=False, repr=False, compare=False)
+    _versions: tuple = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if self.schema_version != STATIC_TOPOLOGY_SCHEMA:
@@ -148,6 +152,52 @@ class StaticTopologyMetadata:
             raise ValueError("topology_id must contain one entry per latent sample")
         if self.sample_id and len(self.sample_id) != batch_size:
             raise ValueError("sample_id must contain one entry per latent sample")
+        if self.atom_identity_sha256 and len(self.atom_identity_sha256) != batch_size:
+            raise ValueError('atom identities must have one digest per sample')
+        expected_abid = torch.repeat_interleave(torch.arange(batch_size, device=self.abid.device),
+                                               atom_ptr[1:] - atom_ptr[:-1])
+        if not torch.equal(self.abid, expected_abid):
+            raise ValueError('abid must agree with contiguous packed atom_ptr')
+        object.__setattr__(self, '_semantic_sha256', self._content_digest())
+        object.__setattr__(self, '_versions', self._tensor_versions())
+
+    def _identity_tensors(self):
+        return (self.atom_type, self.block_type, self.abid, self.block_id, self.component_id,
+                self.atom_ptr, self.covalent_bond_index, self.covalent_bond_type)
+
+    def _tensor_versions(self):
+        versions = []
+        for tensor in self._identity_tensors():
+            try:
+                versions.append(tensor._version)
+            except RuntimeError:  # inference-mode tensors have no version counter
+                versions.append(None)
+        return tuple(versions)
+
+    def _content_digest(self):
+        digest = hashlib.sha256()
+        digest.update(repr((self.schema_version, self.topology_id, self.atom_identity_sha256)).encode())
+        for tensor in self._identity_tensors():
+            value = tensor.detach().to(device='cpu', dtype=torch.int64).contiguous()
+            digest.update(repr(tuple(value.shape)).encode())
+            digest.update(value.numpy().tobytes())
+        return digest.hexdigest()
+
+    def semantic_identity(self) -> str:
+        """Sample meaning, separate from the checkpoint-compatible schema contract.
+
+        Metadata is immutable after validation. Reconstruct via replace when
+        changing topology. Inference-mode tensors require content revalidation.
+        """
+        versions = self._tensor_versions()
+        if versions != self._versions:
+            raise ValueError('topology tensors mutated after validation; rebuild metadata')
+        if None in versions and self._content_digest() != self._semantic_sha256:
+            raise ValueError('inference topology mutated after validation')
+        return self._semantic_sha256
+
+    def same_identity(self, other: 'StaticTopologyMetadata') -> bool:
+        return self.semantic_identity() == other.semantic_identity()
 
     @property
     def num_atoms(self) -> int:
@@ -199,9 +249,11 @@ class StaticTopologyMetadata:
         if isinstance(batch, Mapping):
             topology_values = batch.get("topology_id", ())
             sample_values = batch.get("sample_id", ())
+            atom_identities = batch.get('atom_identity_sha256', ())
         else:
             topology_values = getattr(batch, "topology_id", ())
             sample_values = getattr(batch, "sample_id", ())
+            atom_identities = getattr(batch, 'atom_identity_sha256', ())
         topology_id = tuple(str(value) for value in topology_values)
         sample_id = tuple(str(value) for value in sample_values)
         return cls(
@@ -215,6 +267,7 @@ class StaticTopologyMetadata:
             covalent_bond_type=bond_type,
             topology_id=topology_id,
             sample_id=sample_id,
+            atom_identity_sha256=tuple(atom_identities),
         )
 
     def to(self, device: torch.device | str, *, non_blocking: bool = False) -> "StaticTopologyMetadata":

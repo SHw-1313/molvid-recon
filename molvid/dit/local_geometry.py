@@ -33,8 +33,7 @@ class LocalTopologyCache:
 
     @staticmethod
     def _key(topology: StaticTopologyMetadata) -> tuple[Any, ...]:
-        atom_ptr = tuple(int(value) for value in topology.atom_ptr.detach().cpu().tolist())
-        return (tuple(topology.topology_id), atom_ptr, int(topology.covalent_bond_index.shape[1]))
+        return (topology.semantic_identity(),)
 
     def _build_host(self, topology: StaticTopologyMetadata) -> tuple[Tensor, Tensor, Tensor]:
         key = self._key(topology)

@@ -297,7 +297,7 @@ class FrameJointModel(nn.Module):
             source.statistics_hash != self.statistics_hash
             or source.time_ps.shape != query.time_ps.shape
             or not torch.equal(source.frame_mask, query.frame_mask)
-            or source.topology.contract() != context.topology.contract()
+            or not source.topology.same_identity(context.topology)
         ):
             raise ValueError("actual-source latent differs from the normalized query contract")
         current = source

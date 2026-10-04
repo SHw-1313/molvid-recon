@@ -172,7 +172,7 @@ class TrajectoryDecoder(nn.Module):
             query_frames = 0
         else:
             assert query is not None
-            if future.width != self.channels or future.topology.contract() != observed.topology.contract():
+            if future.width != self.channels or not future.topology.same_identity(observed.topology):
                 raise ValueError("decoder future latent differs from observed feature contract")
             if future.time_ps.shape != query.time_ps.shape or not torch.equal(future.frame_mask, query.frame_mask):
                 raise ValueError("decoder future latent and QuerySpec disagree")
@@ -181,6 +181,10 @@ class TrajectoryDecoder(nn.Module):
             time_ps = torch.cat((observed.time_ps, query.time_ps), dim=1)
             frame_mask = torch.cat((observed.frame_mask, query.frame_mask), dim=1)
             query_frames = future.frames
+        valid = frame_mask.index_select(0, observed.abid).transpose(0, 1)
+        h = torch.where(valid.unsqueeze(-1), h, 0.)
+        v = torch.where(valid.unsqueeze(-1).unsqueeze(-1), v, 0.)
+        time_ps = torch.where(frame_mask, time_ps, observed.time_ps[:, :1])
         h = h + self.time_embedding(
             time_ps,
             frame_mask,
@@ -205,7 +209,7 @@ class TrajectoryDecoder(nn.Module):
     def forward_static(self, latent: FrameLatentBatch, *, condition: StructureCondition) -> TrajectoryDecoderOutput:
         """Decode Q1 generated structure without clock, history concatenation or temporal mixing."""
         context = condition.geometry
-        if latent.frames != 1 or latent.topology.contract() != context.topology.contract():
+        if latent.frames != 1 or not latent.topology.same_identity(context.topology):
             raise ValueError("static decoder requires one structure with matching topology")
         h, v = latent.h, latent.v
         mask = latent.atom_frame_mask()

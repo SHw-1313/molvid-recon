@@ -56,52 +56,69 @@ BOND_TYPE = [
 NUM_BOND_TYPE = len(BOND_TYPE)
 
 
-def get_block_from_complex(top):
+def select_topology(top, *, complex_topology=False, residue_roles=None):
+    """Select heavy atoms with an auditable source-to-model mapping.
+
+    Roles are keyed by topology-unique residue.index, never resSeq or name.
+    Unknown non-protein residues require an explicit ligand/solvent/ion/exclude
+    role. MOL/UNK remain legacy adapter defaults, not a universal ligand rule.
+    Atom/bond order is preserved for existing protein and legacy inputs.
     """
-    parse complex (.pdb) to blocks
-    :param top: mdtraj Topology
-    """
+    roles = dict(residue_roles or {})
+    residues = list(top.residues)
+    if set(roles) - {r.index for r in residues}:
+        raise ValueError('residue_roles contains an unknown topology residue index')
     atype, btype, a_pos_index, b_pos_index, edge_mask = [], [], [], [], []
-    res2ca = {}
-    for residue in top.residues:
-        res_name = residue.name.upper()
-        if res_name == 'MOL' or res_name == 'UNK':
-            for atom in residue.atoms:
-                atomic_num = atom.element.atomic_number
-                # rule out H
-                if atomic_num == 1:
-                    continue
-                symbol = atom.element.symbol
-                block_symbol = (symbol.lower(), symbol.upper())
-                atype.append(atomic_num - 1)
-                btype.append(BLOCK_TYPE.index(block_symbol))
-                a_pos_index.append(atom.index)
-                b_pos_index.append(atom.index)
-                edge_mask.append(1)
-        else:
-            if res_name == 'MSE':
-                res_name = 'MET'    # MET is usually transformed to MSE for structural analysis
-            if not res_name in RES_TYPE_3:
-                continue
+    audit = []
+    for residue in residues:
+        res_name = 'MET' if residue.name.upper() == 'MSE' else residue.name.upper()
+        role = roles.get(residue.index)
+        if role is None:
+            if res_name in RES_TYPE_3:
+                role = 'protein'
+            elif bool(getattr(residue, 'is_water', False)):
+                role = 'solvent'
+            elif complex_topology and res_name in {'MOL', 'UNK'}:
+                role = 'ligand'
+            else:
+                raise ValueError(f'Unclassified residue {residue.index} ({residue.name}); '
+                                 'supply residue_roles explicitly; refusing silent atom loss')
+        if role not in {'protein', 'ligand', 'solvent', 'ion', 'exclude'}:
+            raise ValueError(f'unsupported molecular role: {role}')
+        if role == 'ligand' and not complex_topology:
+            raise ValueError('ligand requires complex_topology=True')
+        atoms = list(residue.atoms)
+        if role == 'protein':
+            if res_name not in RES_TYPE_3:
+                raise ValueError(f'unsupported protein residue {residue.name}')
+            anchors = [a.index for a in atoms if a.name.strip().upper() == 'CA']
+            if len(anchors) != 1:
+                raise ValueError(f'residue {residue.index} must have exactly one CA anchor')
+            ca_idx = anchors[0]
             res_idx = RES_TYPE_3.index(res_name)
             block_symbol = (RES_TYPE_1[res_idx], RES_TYPE_3[res_idx])
-            if residue.resSeq in res2ca:
-                ca_idx = res2ca[residue.resSeq]
-            else:
-                ca_idx = [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
-                res2ca[residue.resSeq] = ca_idx
-            for atom in residue.atoms:
-                atomic_num = atom.element.atomic_number
-                # rule out H
-                if atomic_num == 1:
-                    continue
-                atype.append(atomic_num - 1)     # start from 0
-                btype.append(BLOCK_TYPE.index(block_symbol))
-                a_pos_index.append(atom.index)
-                b_pos_index.append(ca_idx)
-                edge_mask.append(0)
+        for atom in atoms:
+            excluded = role in {'solvent', 'ion', 'exclude'}
+            if not excluded and atom.element is None:
+                raise ValueError(f'atom {atom.index} has no chemical element')
+            hydrogen = atom.element is not None and atom.element.atomic_number == 1
+            selected = not excluded and not hydrogen
+            audit.append(dict(source_index=atom.index, residue_index=residue.index,
+                              role=role, model_index=len(atype) if selected else None,
+                              reason='selected' if selected else 'hydrogen' if hydrogen else role))
+            if not selected:
+                continue
+            atomic_num = atom.element.atomic_number
+            if not 1 <= atomic_num <= NUM_ATOM_TYPE:
+                raise ValueError(f'unsupported element for atom {atom.index}')
+            symbol = atom.element.symbol
+            atype.append(atomic_num - 1)
+            btype.append(BLOCK_TYPE.index(block_symbol if role == 'protein' else (symbol.lower(), symbol.upper())))
+            a_pos_index.append(atom.index)
+            b_pos_index.append(ca_idx if role == 'protein' else atom.index)
+            edge_mask.append(int(role == 'ligand'))
     bond_index = []
-    index_mapping = {x: a_pos_index.index(x) for x in a_pos_index}
+    index_mapping = {source: index for index, source in enumerate(a_pos_index)}
     for bond in top.bonds:
         begin, end = bond[0].index, bond[1].index
         begin = index_mapping.get(begin, -1)
@@ -110,60 +127,21 @@ def get_block_from_complex(top):
             continue
         bond_index.append([begin, end])
         bond_index.append([end, begin])
-    bond_index = np.array(bond_index, dtype=np.int64).T   # (2, E)
+    bond_index = np.array(bond_index, dtype=np.int64).reshape(-1, 2).T
     atype = np.array(atype, dtype=np.int64)
     btype = np.array(btype, dtype=np.int64)
     a_pos_index = np.array(a_pos_index, dtype=np.int64)
     b_pos_index = np.array(b_pos_index, dtype=np.int64)
     edge_mask = np.array(edge_mask, dtype=np.int64)
-    return atype, btype, a_pos_index, b_pos_index, bond_index, edge_mask
+    return (atype, btype, a_pos_index, b_pos_index, bond_index, edge_mask), audit
 
 
-def get_block_from_top(top):
-    """
-    parse proteins to blocks
-    :param top: mdtraj Topology
-    """
-    atype, btype, a_pos_index, b_pos_index = [], [], [], []
-    res2ca = {}
-    for residue in top.residues:
-        res_name = residue.name.upper()
-        if res_name == 'MSE':
-            res_name = 'MET'    # MET is usually transformed to MSE for structural analysis
-        if not res_name in RES_TYPE_3:
-            continue
-        res_idx = RES_TYPE_3.index(res_name)
-        block_symbol = (RES_TYPE_1[res_idx], RES_TYPE_3[res_idx])
-        if residue.resSeq in res2ca:
-            ca_idx = res2ca[residue.resSeq]
-        else:
-            ca_idx = [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
-            res2ca[residue.resSeq] = ca_idx
-        for atom in residue.atoms:
-            atomic_num = atom.element.atomic_number
-            # rule out H
-            if atomic_num == 1:
-                continue
-            atype.append(atomic_num - 1)     # start from 0
-            btype.append(BLOCK_TYPE.index(block_symbol))
-            a_pos_index.append(atom.index)
-            b_pos_index.append(ca_idx)
-    bond_index = []
-    index_mapping = {x: a_pos_index.index(x) for x in a_pos_index}
-    for bond in top.bonds:
-        begin, end = bond[0].index, bond[1].index
-        begin = index_mapping.get(begin, -1)
-        end = index_mapping.get(end, -1)
-        if begin == -1 or end == -1:
-            continue
-        bond_index.append([begin, end])
-        bond_index.append([end, begin])
-    bond_index = np.array(bond_index, dtype=np.int64).T   # (2, E)
-    atype = np.array(atype, dtype=np.int64)
-    btype = np.array(btype, dtype=np.int64)
-    a_pos_index = np.array(a_pos_index, dtype=np.int64)
-    b_pos_index = np.array(b_pos_index, dtype=np.int64)
-    return atype, btype, a_pos_index, b_pos_index, bond_index
+def get_block_from_complex(top, *, residue_roles=None):
+    return select_topology(top, complex_topology=True, residue_roles=residue_roles)[0]
+
+
+def get_block_from_top(top, *, residue_roles=None):
+    return select_topology(top, residue_roles=residue_roles)[0][:5]
 
 
 def parse_static_molecule(mol):
