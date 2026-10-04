@@ -6,6 +6,8 @@ Starts directly from the ABCD integration; S0/Sdec/Strunk isolate static
 gradient routing without Mamba, capacity or external-data changes.
 Independent U branch: [frozen-history future-moment probe](agent/u_probe_20261004/REPORT.md).
 No generator updates, S/D2 or Mamba changes; fixed ABCD/A1 parent.
+Independent K branch: [finite-time response-kernel probe](agent/k_probe_20261004/REPORT.md).
+K0 predictors plus bounded K1 diagnosis; no K2 or generator updates.
 
 Current code lives in the shallow root package [`molvid/`](molvid/). Use the
 versioned templates in [`configs/`](configs/) and the current inspection tools

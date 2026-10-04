@@ -14,6 +14,12 @@ Branch `exp/u-future-probe-20261004`, base `946917b`. Shared A1 feature-cache
 producer is active; U trains last-only / history-mean / history-mean-variance
 heads, not the generator. See [protocol and evidence](agent/u_probe_20261004/REPORT.md).
 Do not interpret these probes as new memory modules or dynamic-generation gains.
+## K probe (2026-10-04)
+
+Branch `exp/k-finite-time-20261004`, base `946917b`. K consumes only the
+read-only shared A1 feature cache, not U model predictions. K0 fits finite-time
+response kernels; K1 compares decoded A1 samples with real MD and predictors.
+K2 is disabled. See [protocol and evidence](agent/k_probe_20261004/REPORT.md).
 
 ## ABCD integration (2026-10-04, current worktree)
 

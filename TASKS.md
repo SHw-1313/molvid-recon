@@ -17,6 +17,14 @@
 - [x] Six targeted CUDA tests, including full tiny head-training/reload.
 - [ ] Complete real feature extraction, nine 2,000-step head fits and validation.
 - [ ] Decide whether future moments add calibrated information; no automatic integration.
+## Independent K probe
+
+- [x] Separate ABCD branch, shared input cache only, no U predictor dependency.
+- [x] Fit-only kernel dictionary, last/history heads and simple controls.
+- [x] CUDA model/data boundaries and tiny complete head-training/reload.
+- [x] Implement decoded-generation K1 metrics with observed-only bpos construction.
+- [ ] Complete six real 2,000-step head fits and bounded K1 generation diagnosis.
+- [ ] Check predictor usefulness before considering any K2 coupling.
 
 ## ABCD integration follow-up (2026-10-04)
 
