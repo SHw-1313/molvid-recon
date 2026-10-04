@@ -310,6 +310,8 @@ def iter_misato_records(
     split: str,
     hdf5: Any,
     config: ClipPreprocessConfig,
+    residue_roles=None,
+    expected_ligand_residues=None,
 ) -> Iterator[dict[str, Any]]:
     root = Path(misato_root)
     top_path = _misato_top_path(root, system_id)
@@ -325,7 +327,8 @@ def iter_misato_records(
             f"MISATO topology/coordinate atom mismatch for {key}: "
             f"{top.n_atoms} != {coordinates.shape[1]}"
         )
-    metadata = topology_metadata(top, complex_topology=True)
+    metadata = topology_metadata(top, complex_topology=True, residue_roles=residue_roles,
+                                 expected_ligand_residues=expected_ligand_residues)
     frames = read_trajectory(
         "misato",
         coordinates,
@@ -393,13 +396,16 @@ def preprocess_misato(
     split: str,
     config: ClipPreprocessConfig,
     overwrite: bool = False,
+    residue_roles=None,
+    expected_ligand_residues=None,
 ) -> int:
     import h5py
 
     config.validate()
     with h5py.File(Path(raw_root) / "MD.hdf5", "r") as hdf5:
         return write_records(
-            iter_misato_records(raw_root, system_id, split=split, hdf5=hdf5, config=config),
+            iter_misato_records(raw_root, system_id, split=split, hdf5=hdf5, config=config,
+                               residue_roles=residue_roles, expected_ligand_residues=expected_ligand_residues),
             output_dir,
             overwrite=overwrite,
         )

@@ -32,6 +32,7 @@ from ..data.preprocess import (
     select_fraction,
 )
 from ..data.manifest import source_inventory as _inventory, write_split_manifest
+from ..runtime import sha256_file
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -52,6 +53,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--atlas-native-dt-ps", type=float, default=10.0)
     parser.add_argument("--misato-native-dt-ps", type=float, default=80.0)
     parser.add_argument("--max-systems", type=int, default=None)
+    parser.add_argument('--residue-roles',type=Path,
+        help='MISATO JSON: system -> {topology_sha256, residue_roles: {residue.index: role}, expected_ligand_residues: []}')
     parser.add_argument(
         "--strict",
         action="store_true",
@@ -63,6 +66,17 @@ def _parser() -> argparse.ArgumentParser:
         help="explicitly replace output stores created by an earlier run",
     )
     return parser
+
+
+def _system_roles(manifest, root, system):
+    if manifest is None: return {}
+    entry=manifest[system]
+    pdb=root/'parameter_restart_files_MD'/system.lower()/f'{system.upper()}.pdb'
+    if sha256_file(pdb)!=entry['topology_sha256']:
+        raise SourceDataError(f'residue-role topology SHA mismatch: {system}')
+    roles={int(k):v for k,v in entry['residue_roles'].items()}
+    if len(roles)!=len(entry['residue_roles']): raise SourceDataError('duplicate numeric role indices')
+    return dict(residue_roles=roles,expected_ligand_residues=entry['expected_ligand_residues'])
 
 
 def _read_atlas_ids(root: Path) -> list[str]:
@@ -160,6 +174,7 @@ def _process(
     bucket_root = args.output_root / "clips" / source / _bucket_id(source_dt * config.source_stride)
     counts: dict[str, int] = {}
     skipped: list[dict[str, Any]] = []
+    role_manifest=getattr(args,'role_manifest',None)
     hdf5 = None
     if source == "misato":
         hdf5 = h5py.File(root / "MD.hdf5", "r")
@@ -194,6 +209,7 @@ def _process(
                                 split=split,
                                 hdf5=hdf5,
                                 config=config,
+                                **_system_roles(role_manifest,root,system),
                             )
                         system_records = 0
                         for record in records:
@@ -249,6 +265,13 @@ def main(argv: list[str] | None = None) -> None:
         seed=args.seed,
         max_systems=args.max_systems,
     )
+    args.role_manifest=None
+    if args.residue_roles is not None:
+        if args.source!='misato': raise ValueError('--residue-roles currently applies to MISATO only')
+        args.role_manifest=json.loads(args.residue_roles.read_text())
+        # Validate every mapping before creating stores; incomplete manifests fail closed.
+        for systems in systems_by_split.values():
+            for system in systems: _system_roles(args.role_manifest,args.root,system)
     counts, skipped = _process(args, config, systems_by_split)
     inventory = _inventory(_inventory_paths(args.source, args.root, systems_by_split), args.root)
     source_dt = config.atlas_native_dt_ps if args.source == "atlas" else config.misato_native_dt_ps
@@ -269,7 +292,7 @@ def main(argv: list[str] | None = None) -> None:
         topology_policy=(
             "PDB topology, heavy supported protein atoms, bonds from topology"
             if args.source == "atlas"
-            else "provided MISATO PDB topology, heavy supported protein+MOL atoms, bonds from topology"
+            else "provided topology, explicit residue roles or legacy MOL/UNK; unknown residues rejected; selection audited"
         ),
         split_policy=(
             f"system-level deterministic hash split/filter; fraction={args.fraction}; seed={args.seed}"
@@ -281,6 +304,9 @@ def main(argv: list[str] | None = None) -> None:
         counts=counts,
     )
     manifest["skipped"] = skipped
+    if args.residue_roles is not None:
+        manifest['residue_role_manifest']={'path':str(args.residue_roles),
+            'sha256':sha256_file(args.residue_roles),'systems':args.role_manifest}
     (bucket_root / "manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )

@@ -2,6 +2,29 @@ from __future__ import annotations
 
 import numpy as np
 
+
+def test_misato_adapter_passes_explicit_roles_and_validates_topology(tmp_path):
+    import mdtraj as md
+    import pytest
+    from molvid.cli.preprocess import _system_roles
+    from molvid.data.preprocess import iter_misato_records, SourceDataError
+    from molvid.runtime import sha256_file
+    top=_protein_topology();ligand=top.add_residue('LIG',top.chain(0))
+    top.add_atom('C1',md.element.carbon,ligand)
+    folder=tmp_path/'parameter_restart_files_MD'/'abc';folder.mkdir(parents=True)
+    pdb=folder/'ABC.pdb'
+    xyz=np.array([[[0,0,0],[.1,0,0],[.1,.1,0],[0,.1,.1],[.3,.3,.3]]],dtype=np.float32)
+    md.Trajectory(xyz,top).save_pdb(str(pdb))
+    manifest={'ABC':dict(topology_sha256=sha256_file(pdb),residue_roles={'1':'ligand'},expected_ligand_residues=[1])}
+    options=_system_roles(manifest,tmp_path,'ABC')
+    data={'ABC':{'trajectory_coordinates':np.repeat(xyz*10,2,axis=0)}}
+    rows=list(iter_misato_records(tmp_path,'ABC',split='valid',hdf5=data,
+        config=ClipPreprocessConfig(clip_len=2,window_stride=2,source_stride=1),**options))
+    assert len(rows)==1 and rows[0]['x'].shape[1]==5
+    assert rows[0]['selection_audit'][-1]['role']=='ligand'
+    manifest['ABC']['topology_sha256']='wrong'
+    with pytest.raises(SourceDataError,match='SHA mismatch'):_system_roles(manifest,tmp_path,'ABC')
+
 from molvid.data.batch import validate_clip_record
 from molvid.data.io import read_trajectory, write_trajectory
 from molvid.data.preprocess import (
