@@ -160,3 +160,12 @@ external-static pretraining. Evaluate raw A1 and repaired predictions on the
 same frozen48 development clips, with no checkpoint selection on development.
 Do not merge if geometry gain trades away motion or if only train improves.
 No thermodynamic/kinetic correctness claim follows from local recovery.
+
+Expanded followup queue uses GPU5 only after its A1 job ends: C4/C8 at11000,
+C4/C8 at13575 (wait for real C8 completion), then all four final Gcoord models
+on identical cached A1 draws. Geometry screening is exploratory development:
+target >=20% bond and >=30% clash reduction; motion noninferiority margin5%
+for MSD/residueRMSF errors, and at least one clear motion improvement before
+claiming joint improvement. Cluster/system-paired uncertainty and seed spread
+must be reported. Passing this screen advances to long/native-time tests,
+not automatic competitive or thermodynamic claims.
