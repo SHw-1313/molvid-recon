@@ -55,3 +55,29 @@ reference context, while the query encoder uses the current state. Legacy
 history only in this first prototype; no claim of learned-memory/Mamba
 compatibility. Static/dynamic balancing, complexes, equilibrium distribution
 and kinetics are open, not solved by a change of ODE coordinates.
+
+## Registered first full-data campaign
+
+Two independent fresh A1 warm starts, seeds71/72,2048 updates each, all192
+training systems. Reuse the exact source-training unit71/72 ordered clip/H
+schedule and data identity; no hidden future input. Objective is coordinate
+CFM only, not a geometry-repair penalty; static auxiliary is deliberately off
+to establish the new generation path first. FP32, source sigma1 Angstrom,
+DiT5e-5/history2.5e-5/new readout5e-4,5% warmup/cosine to10%.
+Architecture, objective, new readout and precision differ from latent A1;
+this candidate comparison does not isolate a single mechanistic cause.
+
+Own GPU5 queue waits for all C4/C8 capacity evaluations to finish. Before
+formal seed71:one disposable update on the largest nominal atom-frame batch;
+then uninterrupted17 versus16→17 exact full-checkpoint resume gate. Failure
+aborts the queue with a persistent error, never silently reduces batch/data.
+The accepted step17 continues to2048; seed72 starts fresh. Save16/1024/final
+plus resume evidence, no validation-selected best checkpoint. Each run has
+a6h budget and8GiB disk reserve; wait budget24h. Do not count the duplicate
+resume update or disposable profile as distinct training exposure.
+
+After each final:48 systems×2 anchors×2 seeds native100ps, H4/Q12, Euler16,
+same raw-coordinate metrics as A1/PVB, followed by CA stereochemistry and
+system-paired comparison. Missing/OOM cases make evaluation incomplete;
+no CPU fallback, no partial-case ranking. Internal ordered-motion rescoring
+uses the parent campaign's evaluator after these artifacts complete.

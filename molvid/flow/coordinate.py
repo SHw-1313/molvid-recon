@@ -55,7 +55,7 @@ class CoordinateFlowModel(nn.Module):
             device=self.frame_h_mean.device,
         )
         nn.init.zeros_(self.readout.out.weight)
-        self.history_encoder.requires_grad_(True)
+        self.history_encoder.set_trainable(True)
         if self.motion_encoder is not None:
             self.motion_encoder.requires_grad_(True)
         self.dit.set_trainable(True)

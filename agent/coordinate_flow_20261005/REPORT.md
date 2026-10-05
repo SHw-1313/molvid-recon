@@ -69,3 +69,16 @@ Six CUDA tests now pass in13.73 s, including exact optimizer/RNG next-update
 resume on a packed two-system fixture. Saved logs, including initial failed
 fixture attempt, are under `runs/coordinate_flow_20261005/fixture_evidence/`.
 Real full-dataset resume and largest-batch feasibility remain to be checked.
+
+Pre-launch audit found generic `history_encoder.requires_grad_(True)` had
+re-enabled unused inverse-Haar decoder parameter flags. Replaced it with the
+existing `set_trainable(True)` contract, preserving their frozen non-role.
+Those weights had no forward path/gradient/optimizer updates in the earlier
+gate/overfit; their numerical results remain valid, but the earlier gate's
+nominal trainable-parameter count includes unused flags. Added an explicit
+regression assertion. Do not present unused weights as trained capacity.
+
+`tools/run_coordinate_campaign.py` now implements the registered own-GPU
+wait/profile/real-resume/final-training/evaluation sequence. CLI import/help
+checks passed in torch-ito. The queue is prepared for launch; formal quality
+results still unavailable. See PLAN for changed factors and fixed budgets.

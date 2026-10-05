@@ -13,7 +13,8 @@ from molvid.checkpoints import load_frame_joint_inference
 from molvid.codec.frame import slice_clip_frames
 from molvid.data.batch import collate_clip_records
 from molvid.evaluation.ca_detail import score, system_estimate
-from molvid.evaluation.native_forecast import molvid_forecast, load_pvb, pvb_observation, pvb_forecast
+from molvid.evaluation.native_forecast import molvid_forecast, coordinate_forecast, load_pvb, pvb_observation, pvb_forecast
+from molvid.flow.coordinate import CoordinateFlowModel
 from molvid.geometry.ca_detail import condition_from_record
 from molvid.geometry.projection import ProjectionConfig, repair_coordinates
 from molvid.geometry.types import StaticTopologyMetadata
@@ -28,7 +29,7 @@ def run(args):
     if args.output.exists(): raise FileExistsError(args.output)
     if args.arm!='a1' and args.checkpoint is None: raise ValueError('checkpoint required')
     if args.arm=='pvb' and args.project: raise ValueError('register a separate equal-treatment postprocessing campaign')
-    if args.variant is not None and args.arm!='checkpoint': raise ValueError('custom variant names require checkpoint arm')
+    if args.variant is not None and args.arm not in ('checkpoint','coordinate'): raise ValueError('custom variant names require checkpoint arm')
     variant_name=args.variant or args.arm
     device=configure_device('cuda', deterministic=args.arm!='pvb')
     torch.cuda.set_per_process_memory_fraction(.9)
@@ -47,7 +48,15 @@ def run(args):
         inputs.append(args.checkpoint)
     else:
         model,raw,_=load_parent(device)
-        if args.arm!='a1':
+        if args.arm=='coordinate':
+            saved=torch.load(args.checkpoint,map_location='cpu',weights_only=False)
+            if saved['cursor']!=2048 or saved['contract']['largest_nominal_batch_profile_only']:
+                raise ValueError('only fixed-final2048 coordinate checkpoints qualify')
+            model=CoordinateFlowModel(model)
+            if model.contract()!=saved['contract']['model']: raise ValueError('coordinate model contract differs')
+            model.load_state_dict(saved['model'],strict=True)
+            model.eval().requires_grad_(False);del saved
+        elif args.arm!='a1':
             del model;torch.cuda.empty_cache()
             model=load_frame_joint_inference(args.checkpoint,expected_sha256=sha256_file(args.checkpoint),
                 codec_path=raw['codec']['checkpoint'],codec_sha256=raw['codec']['sha256'],device=device)['model']
@@ -59,7 +68,7 @@ def run(args):
         records=entries,projection=asdict(ProjectionConfig()) if args.project else None,
         baseline_pretraining_exposure_audit='pending; not a qualified held-out competition result',
         parameter_count=sum(p.numel() for p in model.parameters()),external_source_sha256=external_files,
-        model_source_config=None if args.arm=='pvb' else model.source_config.contract(),
+        model_source_config=(None if args.arm=='pvb' else model.contract() if args.arm=='coordinate' else model.source_config.contract()),
         numpy_version=np.__version__,numpy_source=np.__file__,
         original_pvb_refiner=False,physical_units='Angstrom, ps',max_seconds=21600,
         limitations=['ATLAS protein-only','R1 two anchors','short horizon is not equilibrium validation',
@@ -84,8 +93,9 @@ def run(args):
             try:
                 for seed in (17,29):
                     with torch.no_grad():
+                        forecast=coordinate_forecast if args.arm=='coordinate' else molvid_forecast
                         predicted=(pvb_forecast(model,pvb_batch,origin,seed=seed) if args.arm=='pvb' else
-                            molvid_forecast(model,observed,cpu.time_ps[:,4:],device=device,seed=seed))
+                            forecast(model,observed,cpu.time_ps[:,4:],device=device,seed=seed))
                     variants=[(variant_name,predicted)]
                     if args.project:
                         batch=cpu.to(device)
@@ -118,7 +128,7 @@ def run(args):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--cache',type=Path,required=True)
-    p.add_argument('--output',type=Path,required=True);p.add_argument('--arm',choices=['a1','c4','c8','pvb','checkpoint'],required=True)
+    p.add_argument('--output',type=Path,required=True);p.add_argument('--arm',choices=['a1','c4','c8','pvb','checkpoint','coordinate'],required=True)
     p.add_argument('--variant')
     p.add_argument('--checkpoint',type=Path);p.add_argument('--pvb-root',type=Path,default=Path('/workspace/PVB_origin'))
     p.add_argument('--project',action='store_true');p.add_argument('--pilot',action='store_true');run(p.parse_args())

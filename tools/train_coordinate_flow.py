@@ -53,6 +53,12 @@ def run(args):
         runtime_root = Path(__file__).resolve().parents[1] / "molvid"
         contract["runtime_source_sha256"] = {str(p.relative_to(runtime_root)): sha256_file(p)
             for p in sorted(runtime_root.rglob("*.py")) if "evaluation" not in p.parts}
+        contract["largest_nominal_batch_profile_only"] = args.profile_largest
+        if args.profile_largest:
+            if args.max_steps != 1 or args.resume:
+                raise ValueError("largest-batch profile is a separate one-update disposable run")
+            largest = max(entries[:2048], key=lambda e: sum(specs[i].atoms * specs[i].frames for i in e.indices))
+            entries = (largest,)
         cursor = 0
         inputs = [args.config, Path(release["selected_checkpoint"]["path"])]
         if args.resume:
@@ -90,7 +96,7 @@ def run(args):
                            execution_sha256=manifest["sha256"], peak_cuda_bytes=torch.cuda.max_memory_allocated())
                 log.write(json.dumps(row) + "\n"); log.flush()
                 print(json.dumps(row), flush=True)
-                if index + 1 in (16, 1024, 2048, args.max_steps):
+                if not args.profile_largest and index + 1 in (16, 1024, 2048, args.max_steps):
                     atomic_torch_save(args.output / f"coordinate_step_{index+1:04d}.pt", dict(
                         contract=contract, model=model.state_dict(), optimizer=optimizer.state_dict(),
                         cursor=index + 1, rng=capture_coordinate_rng(generator)))
@@ -110,4 +116,5 @@ if __name__ == "__main__":
     p.add_argument("--max-steps", type=int, default=2048)
     p.add_argument("--resume", type=Path)
     p.add_argument("--resume-sha256")
+    p.add_argument("--profile-largest", action="store_true")
     run(p.parse_args())

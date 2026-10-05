@@ -23,6 +23,19 @@ def molvid_forecast(model, observed_cpu, query_times_ps, *, device, seed, diagno
     return model.decoder(context, generated, query).coordinates.float()
 
 
+@torch.no_grad()
+def coordinate_forecast(model, observed_cpu, query_times_ps, *, device, seed):
+    """Same observed/query boundary, experimental XYZ-state generation."""
+    model.prepare_batch(observed_cpu)
+    observed = observed_cpu.to(device)
+    context = model.prepare_condition(observed)
+    times = query_times_ps.to(device)
+    query = QuerySpec(times, torch.ones_like(times, dtype=torch.bool))
+    source = model.source(condition=context, query=query,
+                          generator=torch.Generator(device=device).manual_seed(seed))
+    return model.rollout(source, condition=context, query=query, steps=16).float()
+
+
 def load_pvb(checkpoint, root, device):
     # Pickled official model needs its original import namespace, not modified PVB.
     sys.path.insert(0, str(root))

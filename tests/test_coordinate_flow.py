@@ -133,6 +133,8 @@ def test_initialization_is_zero_coordinate_velocity_not_old_forecast():
     assert torch.equal(source, output)
     assert model.warm_start_report["retired_state_keys"]
     assert model.contract()["state"] == "coordinates_angstrom_Q_N_3"
+    for name in ("state_decode_h", "state_decode_v", "detail_decode_h", "detail_decode_v"):
+        assert all(not p.requires_grad for p in getattr(model.history_encoder.state_detail, name).parameters())
 
 
 def test_coordinate_optimizer_rng_resume_is_exact_on_cuda():
