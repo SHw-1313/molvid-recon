@@ -21,6 +21,7 @@ from molvid.data.manifest import load_datasets
 from molvid.data.store import ClipMMapDataset
 from molvid.flow.objective import FrameRectifiedFlowObjective
 from molvid.flow.source import sample_frame_source
+from molvid.flow.coordinate import CoordinateFlowModel
 from molvid.generation import _block_positions, _observed_scaffold
 from molvid.latent.conditioning import build_observation_condition
 from molvid.runtime import atomic_write_json, configure_device
@@ -47,7 +48,7 @@ def model_summary(model: nn.Module) -> dict[str, Any]:
                 parameter.numel() for parameter in owned if not parameter.requires_grad
             ),
         })
-    return {
+    result = {
         "tree": str(model),
         "total_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "trainable_parameters": sum(
@@ -58,6 +59,15 @@ def model_summary(model: nn.Module) -> dict[str, Any]:
         ],
         "modules": modules,
     }
+    if isinstance(model, CoordinateFlowModel):
+        result["coordinate_flow"] = dict(contract=model.contract(),
+            state="XYZ[Q,N,3] Angstrom only; features are deterministic current-state evaluations",
+            dynamic="observed history -> history/motion context; XYZ -> frozen current graph encoder -> normalized features -> time-conditioned DiT -> XYZ velocity",
+            static="corrupted single structure -> same spatial DiT/readout; physical time/history bypassed",
+            training="last observed + Cartesian noise -> interpolate with target at RF progress -> coordinate velocity MSE; targets never enter generation condition",
+            gradients="teacher weights frozen; query-coordinate autograd retained; history/DiT/readout trainable",
+            retired="latent trajectory decoder; independently sampled scalar/vector state")
+    return result
 
 
 @torch.no_grad()

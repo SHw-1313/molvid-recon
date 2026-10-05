@@ -17,6 +17,7 @@ from molvid.training.coordinate import CoordinateTrainConfig, make_coordinate_op
 from molvid.training.execution import execution_schedule, execution_manifest
 from molvid.training.execution_evidence import ExecutionEvidence
 from molvid.training.predictive_data import load_parent, atomic_torch_save, group_identity
+from tools.inspect_model import model_summary
 
 
 def run(args):
@@ -81,6 +82,7 @@ def run(args):
                 trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad),
                 comparison="same data/H schedule as source unit/v02, but architecture/objective/precision/readout LR differ; not single-factor causality"))
         atomic_write_json(args.output / "contract.json", contract)
+        atomic_write_json(args.output / "model_inspection.json", model_summary(model))
         started = time.monotonic()
         with ExecutionEvidence(args.output), (args.output / "updates.jsonl").open("x") as log:
             for index in range(cursor, args.max_steps):

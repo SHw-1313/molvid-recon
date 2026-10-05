@@ -22,6 +22,24 @@ Retire the old latent decoder, explicitly initialize new velocity to zero.
 This is a changed-architecture warm start with a fresh optimizer, not an
 exact continuation or a single-factor source-scale ablation.
 
+One dynamic step (the conditional model never receives a clean future):
+
+```text
+observed prefix ──frozen encoding──> history/motion memories ──────┐
+last observed + Cartesian noise = X0                            │
+target X1 (loss side only)                                      │
+          Xτ = (1−τ)X0 + τX1                                    │
+           └─current graph/encoding─> normalized h,v ─> DiT <─────┘
+physical query time ps + flow progress τ ──────────────> DiT
+DiT features ─> equivariant velocity readout ─> uθ[Q,N,3]
+loss: per-system masked mean ||uθ − (X1−X0)||²
+generation: Euler updates XYZ only; no X1, no independent h/v state
+```
+
+The existing model inspector now reports this state/dataflow and full owned
+parameter counts for CoordinateFlowModel. Each formal run emits it before
+training, rather than presenting unused decoder weights as model capacity.
+
 ## Boundaries and gates
 
 - Coordinates: Angstrom; query clock: physical ps; RF progress: dimensionless.
