@@ -19,7 +19,7 @@ def await_complete(path,*,seconds=21600):
 
 
 def run(args):
-    output=args.root/'expanded_followup_queue'
+    output=args.root/args.queue_name
     if output.exists(): raise FileExistsError(output)
     output.mkdir(parents=True)
     atomic_write_json(output/'status.json',dict(status='waiting_for_own_A1_evaluation'))
@@ -42,10 +42,10 @@ def run(args):
             subprocess.run(command,check=True,stdout=log,stderr=subprocess.STDOUT,timeout=22000)
     atomic_write_json(output/'status.json',dict(status='waiting_for_Gcoord_training'))
     for name in ('static_71','mixed_71','static_72','mixed_72'):
-        await_complete(args.root/f'gcoord_campaign/{name}/execution_end.json',seconds=86400)
+        await_complete(args.recovery_root/name/'execution_end.json',seconds=86400)
     atomic_write_json(output/'status.json',dict(status='evaluating_Gcoord'))
     command=[sys.executable,'-m','tools.evaluate_current_recovery','--cache',str(args.root/'development48_v2'),
-        '--generated',str(args.root/'expanded_a1'),'--training',str(args.root/'gcoord_campaign'),
+        '--generated',str(args.root/'expanded_a1'),'--training',str(args.recovery_root),
         '--output',str(args.root/'expanded_gcoord')]
     with (output/'gcoord.log').open('x') as log:
         subprocess.run(command,check=True,stdout=log,stderr=subprocess.STDOUT,timeout=22000)
@@ -53,4 +53,6 @@ def run(args):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True);run(p.parse_args())
+    p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True)
+    p.add_argument('--recovery-root',type=Path,required=True)
+    p.add_argument('--queue-name',default='expanded_followup_queue');run(p.parse_args())

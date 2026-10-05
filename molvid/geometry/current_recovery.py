@@ -9,6 +9,7 @@ import torch
 from torch import nn
 
 from .neighbors import CudaRadiusNeighborList
+from ..data.chemistry import NUM_ATOM_TYPE,NUM_BLOCK_TYPE
 
 
 @dataclass(frozen=True)
@@ -60,8 +61,8 @@ class CurrentGeometryRecovery(nn.Module):
     def __init__(self,config=RecoveryConfig()):
         super().__init__();self.config=config
         if config.depth<1 or config.width<1 or config.max_layer_shift_A<=0: raise ValueError('invalid recovery config')
-        self.atom_embedding=nn.Embedding(128,config.width)
-        self.block_embedding=nn.Embedding(128,config.width)
+        self.atom_embedding=nn.Embedding(NUM_ATOM_TYPE,config.width)
+        self.block_embedding=nn.Embedding(NUM_BLOCK_TYPE,config.width)
         self.layers=nn.ModuleList([RecoveryLayer(config.width,config.max_layer_shift_A,
             update_hidden=i<config.depth-1) for i in range(config.depth)])
         self.register_buffer('centers',torch.linspace(0,config.cutoff_A,16))

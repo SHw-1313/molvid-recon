@@ -6,7 +6,7 @@ from molvid.geometry.types import StaticTopologyMetadata
 
 def topology():
     z=torch.tensor([5,6,5,6],device='cuda')
-    return StaticTopologyMetadata(atom_type=z,block_type=torch.zeros_like(z),
+    return StaticTopologyMetadata(atom_type=z,block_type=torch.tensor([118,118,137,137],device='cuda'),
         abid=torch.tensor([0,0,1,1],device='cuda'),block_id=torch.tensor([0,0,1,1],device='cuda'),
         component_id=torch.zeros_like(z),atom_ptr=torch.tensor([0,2,4],device='cuda'),
         covalent_bond_index=torch.tensor([[0,2],[1,3]],device='cuda'),
