@@ -60,3 +60,18 @@ automatic scientific promotion or independent/complex/thermodynamic success.
 rejection and both-profile coverage. Host archive script passed `bash -n` syntax
 check; it has not relocated any of this campaign's not-yet-created weights.
 Its exact targets and recoverability rules are registered in PLAN.md.
+
+19:15 both automatic services submitted, source8c7fff3:
+
+- Container session89404 / PID2778420:full training/evaluation controller,
+  GPU5,OMP/MKL4,log `/tmp/molvid-coordinate-chirality-training-v1.log`.
+  Sibling status `runs/coordinate_chirality_training_20261005/formal_v1_training_queue_v1/status.json`
+  confirms `waiting_for_own_GPU_profiles`. Future formal_v1 still nonexistent,
+  so the waiter does not invalidate the freezer's fresh-output gate.
+- Host session58826 / PID2778693:recoverable completed-intermediate archive
+  service,log `/tmp/molvid-chirality-archive-v1.log`,waiting for successful final
+  training/audit markers. No files relocated by this service yet.
+
+This submits the complete conditional workflow, not a completed training run.
+At submission original coordinate72 evaluation remained live; native data
+materializer passed187/192 and its GPU6/7 pipelines remain separate.
