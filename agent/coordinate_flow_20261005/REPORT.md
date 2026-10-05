@@ -80,5 +80,7 @@ regression assertion. Do not present unused weights as trained capacity.
 
 `tools/run_coordinate_campaign.py` now implements the registered own-GPU
 wait/profile/real-resume/final-training/evaluation sequence. CLI import/help
-checks passed in torch-ito. The queue is prepared for launch; formal quality
-results still unavailable. See PLAN for changed factors and fixed budgets.
+checks passed in torch-ito. Queue `full192_v1` is launched and waiting for the
+parent's GPU5 capacity queue to complete; no formal optimizer update yet.
+Final pre-launch CUDA6 regression passed in9.46s after the trainability fix.
+See PLAN for changed factors and fixed budgets. Formal quality unavailable.
