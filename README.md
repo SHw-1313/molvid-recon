@@ -1,5 +1,10 @@
 # Molvid
 
+Current independent branch: `exp/coordinate-chirality-training-20261005`.
+[Matched coordinate continuation design](agent/coordinate_chirality_training_20261005/PLAN.md).
+Optional sampled-handedness training implemented; formal runs not launched yet.
+Inherited diagnostic branch status below is not this candidate's training result.
+
 Current independent branch: `exp/coordinate-stereochemistry-20261005`.
 [Observed-only chirality gradient experiment](agent/coordinate_stereochemistry_20261005/PLAN.md).
 Soft Cα handedness margin implemented; no generator training or promotion yet.
