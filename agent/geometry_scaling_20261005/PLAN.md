@@ -79,3 +79,18 @@ RNG were checked and identical. Resolve artifacts by evaluated SHA, never by
 retained metadata alone. The attempted redundant C4 evaluation was interrupted
 and its evidence retained; verify existing coverage instead of repeating it.
 CPU aggregation is never labeled GPU training. Old valid8 remains development.
+
+## Observed-coordinate geometry control, registered before execution
+
+Before a new learned architecture, test an explicit geometry repair baseline
+on the same eight selected TRAIN systems, cached A1 seed11.32 coordinate updates,
+step0.03A, maximum per-atom shift0.5A. Objective: observed bond-length MSE×10,
+reviewed clash severity×1, original-coordinate retention×0.1 and original
+increment retention×0.1. No true future coordinate/bond target. Scalar second
+moments shared over xyz preserve rotational covariance. Existing A1 latent and
+neural weights frozen; this is coordinate optimization, NOT neural training.
+Primary diagnostic: whether current-coordinate geometry can be repaired without
+losing RMSF/MSD; also inspect angles/torsions and inter-residue bonds. Fixed
+weights before results, no validation tuning, max2GPUh. This cannot establish
+kinetic/thermodynamic correctness, and any later benchmark must report raw and
+postprocessed output separately with equal postprocessing opportunities.
