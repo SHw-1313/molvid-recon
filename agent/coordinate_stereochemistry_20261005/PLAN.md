@@ -38,3 +38,15 @@ with auxiliary gradients through all16 Euler steps (`probe_v3 --aux-steps16`).
 Same15-minute budget and20GiB process cap. No new data or weight update, and no
 development selection. Keep v2 intact; v3 rows use `generated_auxiliary` with
 the actual step count in protocol, rather than the older `generated4` key.
+
+## Full-query feasibility registration,18:53
+
+Q2 Euler16 passed, but auxiliary/RF ratios differ materially from Euler4; do not
+choose the final weight from a different solver or short query. Next `probe_q12_v1`
+uses the same8 training proteins, H4/Q12 and full16-step gradients,75% GPU-memory
+cap and1h loop budget (2h external timeout). Wait for **completed coordinate
+seed72 full evaluation/chemistry/paired comparison** onGPU5 first. This is a
+new train-only Q12 gradient/memory gate, not a48-system quality experiment.
+Native-clock GPU6/7 lanes remain independent and are not delayed by this gate.
+No optimizer updates or automatic model promotion; a failure preserves artifacts
+and must not be treated as successful full-query qualification.

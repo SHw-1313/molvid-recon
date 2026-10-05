@@ -64,3 +64,19 @@ diagnostic. **Euler16 has more errors than Euler4**, so do not infer that adding
 more Euler steps fixes geometry or that a4-step auxiliary matches16-step error.
 Follow-up `probe_v3` registers actual16-step gradients on the identical inputs.
 Neither probe is a trained candidate or a validation/kinetic result.
+
+## Solver-matched Euler16 diagnostic completed,18:51
+
+`probe_v3`, source3d4e0ba, same8 train proteins/H4/Q2 and coordinate71 weights:
+**103.444s**,peak8,990,479,360B,16RF +8actual16-step auxiliary backwards,
+0updates and full model bitwise unchanged. Auxiliary generated metrics exactly
+match the separate no-grad Euler16 metrics in all16 rows.14/16 pairings have
+nonzero gradients:DiT mean cosine+.156049 (4/14 negative), median norm ratio
+.037177,max.804989;readout mean cosine+.377572 (1/14 negative), median ratio
+.062785,max.319435. Gradient magnitudes are materially different from Euler4;
+using Euler4 calibration for formal Euler16 training would be unjustified.
+
+Decision:the observed-only handedness term has a feasible, mostly aligned local
+training signal, not proven efficacy. Next Q12 gate is separately registered
+and queued after coordinate GPU5 evaluation, before setting a formal auxiliary
+weight or training schedule. Do not call these zero-update probes model training.

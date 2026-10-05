@@ -42,7 +42,7 @@ def run(args):
     if len(systems) != 8:
         raise ValueError('eight training proteins required')
     device = configure_device('cuda',deterministic=True)
-    torch.cuda.set_per_process_memory_fraction(.25)
+    torch.cuda.set_per_process_memory_fraction(args.memory_fraction)
     torch.manual_seed(20261005)
     parent,_,_ = load_parent(device)
     model = CoordinateFlowModel(parent).to(device).eval(); del parent
@@ -50,7 +50,7 @@ def run(args):
         raise ValueError('trained model contract differs')
     model.load_state_dict(saved['model'],strict=True)
     before = saved['model']; del saved['optimizer'],saved['rng']
-    protocol = dict(systems=systems,training_only=True,history_frames=4,query_frames=2,
+    protocol = dict(systems=systems,training_only=True,history_frames=4,query_frames=args.query_frames,
         flow_times=[.25,.75],actual_source_steps=args.aux_steps,reference_solver_steps=16,
         source_seeds=[4000+i for i in range(8)],precision='FP32',model_mode='eval_autograd_enabled',
         margin=.1,minimum_reference_volume_A3=.2,optimizer_updates=0,test_opened=False,
@@ -58,6 +58,7 @@ def run(args):
         checkpoint_sha256=args.checkpoint_sha256,checkpoint_cursor=2048,
         gradient_groups='existing dynamic/static comparison field names: static means chirality auxiliary here',
         full_velocity_field_checkpointing=True,
+        memory_fraction=args.memory_fraction,max_seconds=args.max_seconds,
         purpose='train-only gradient feasibility, not model efficacy or kinetics')
     freeze_run_identity(args.output,inputs=[args.checkpoint,args.cache/'complete.json',args.cache/'protocol.json'],
         purpose=protocol['purpose'],protocol=protocol)
@@ -65,10 +66,10 @@ def run(args):
     rows=[]; started=time.monotonic()
     with ExecutionEvidence(args.output):
         for i,system in enumerate(systems):
-            if time.monotonic()-started > 900:
-                raise TimeoutError('15-minute bounded GPU probe')
+            if time.monotonic()-started > args.max_seconds:
+                raise TimeoutError('registered bounded GPU probe budget')
             record=by_system[system]['record']
-            cpu=slice_clip_frames(collate_clip_records([record]),0,6)
+            cpu=slice_clip_frames(collate_clip_records([record]),0,4+args.query_frames)
             observed_cpu=slice_clip_frames(cpu,0,4)
             model.prepare_batch(observed_cpu); observed=observed_cpu.to(device)
             query=QuerySpec(cpu.time_ps[:,4:].to(device),cpu.frame_mask[:,4:].to(device))
@@ -131,4 +132,7 @@ if __name__ == '__main__':
     p.add_argument('--checkpoint-sha256',required=True)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--aux-steps',type=int,choices=[4,16],default=4)
+    p.add_argument('--query-frames',type=int,choices=[2,12],default=2)
+    p.add_argument('--memory-fraction',type=float,choices=[.25,.75],default=.25)
+    p.add_argument('--max-seconds',type=int,choices=[900,3600],default=900)
     run(p.parse_args())
