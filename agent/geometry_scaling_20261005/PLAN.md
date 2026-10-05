@@ -123,3 +123,11 @@ not mislabeled whole-file SHA. Confirmation targets remain closed.
 First common benchmark uses100ps, both anchors, seeds17/29, A1 and C4/C8;
 PVB native100ps with same last-observed structure is a legal H1 baseline, not
 an equal-history comparison to H4. All raw/postprocessed results separated.
+
+PVB native adapter pilot exposed NumPy2 incompatibility (`np.compat.long`) in
+the untouched official topology builder. Install NumPy1.26.4 into ignored
+`.runtime/pvb_numpy126` and activate via process-local PYTHONPATH for PVB only;
+do not monkeypatch official source or downgrade the shared training environment.
+Record NumPy version/source, original source hashes and checkpoint hash.
+The failed first pilot stays preserved. Pilot A1 completed (two generated
+draws plus observed-only projection), then expanded A1 was launched.

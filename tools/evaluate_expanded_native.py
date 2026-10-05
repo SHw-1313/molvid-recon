@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import shutil
 import time
+import numpy as np
 import torch
 
 from molvid.checkpoints import load_frame_joint_inference
@@ -56,6 +57,7 @@ def run(args):
         records=entries,projection=asdict(ProjectionConfig()) if args.project else None,
         baseline_pretraining_exposure_audit='pending; not a qualified held-out competition result',
         parameter_count=sum(p.numel() for p in model.parameters()),external_source_sha256=external_files,
+        numpy_version=np.__version__,numpy_source=np.__file__,
         original_pvb_refiner=False,physical_units='Angstrom, ps',max_seconds=21600,
         limitations=['ATLAS protein-only','R1 two anchors','short horizon is not equilibrium validation',
             'trajectory/path RMSE is diagnostic, not distributional likelihood'])

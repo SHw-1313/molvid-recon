@@ -15,7 +15,9 @@ def test_cuda_projection_equivariance_identity_and_bound():
     result,trace=repair_coordinates(generated,observed=observed,**kwargs)
     assert trace[-1]['bond_mse_A2']<trace[0]['bond_mse_A2']
     assert (result-generated).norm(dim=-1).max()<=.50001
-    rotation=torch.tensor([[0.,-1,0],[1.,0,0],[0,0,1]],device='cuda')
+    # Dense proper rotation catches coordinatewise adaptive-optimizer errors;
+    # a signed-axis permutation cannot detect them.
+    rotation=torch.tensor([[.36,.48,-.8],[-.8,.6,0.],[.48,.64,.6]],device='cuda')
     offset=torch.tensor([3.,2.,1.],device='cuda')
     other,_=repair_coordinates(generated@rotation+offset,observed=observed@rotation+offset,**kwargs)
     torch.testing.assert_close(other,result@rotation+offset,atol=3e-5,rtol=1e-5)
