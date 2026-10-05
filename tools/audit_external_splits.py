@@ -28,7 +28,9 @@ def run(args):
     freeze_run_identity(args.output,inputs=inputs,purpose='External baseline split overlap audit',protocol=protocol)
     overlap={}
     for group in ('development','confirmation_reserved','known_exposed'):
-        overlap[group]={k:sorted(set(manifest[group])&v) for k,v in splits.items()}
+        members=({s for s,e in manifest['entries'].items() if e['exposed']}
+                 if group=='known_exposed' else set(manifest[group]))
+        overlap[group]={k:sorted(members&v) for k,v in splits.items()}
     cluster_file=args.manifest.parent/'clusters_cluster.tsv'
     cluster={member:representative for representative,member in
         (line.split('\t') for line in cluster_file.read_text().splitlines())}
