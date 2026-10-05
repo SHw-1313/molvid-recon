@@ -25,6 +25,14 @@ from molvid.training.execution_evidence import ExecutionEvidence
 from molvid.training.predictive_data import load_parent, RELEASE, atomic_torch_save
 
 
+def require_final_coordinate_checkpoint(saved):
+    contract=saved['contract']
+    keys=('largest_nominal_batch_profile_only','largest_query_atom_frame_profile_only')
+    present=[key for key in keys if key in contract]
+    if saved['cursor']!=2048 or len(present)!=1 or contract[present[0]] is not False:
+        raise ValueError('only fixed-final2048 non-profile coordinate checkpoints qualify')
+
+
 def run(args):
     if args.output.exists(): raise FileExistsError(args.output)
     if args.arm!='a1' and args.checkpoint is None: raise ValueError('checkpoint required')
@@ -50,8 +58,7 @@ def run(args):
         model,raw,_=load_parent(device)
         if args.arm=='coordinate':
             saved=torch.load(args.checkpoint,map_location='cpu',weights_only=False)
-            if saved['cursor']!=2048 or saved['contract']['largest_nominal_batch_profile_only']:
-                raise ValueError('only fixed-final2048 coordinate checkpoints qualify')
+            require_final_coordinate_checkpoint(saved)
             model=CoordinateFlowModel(model)
             if model.contract()!=saved['contract']['model']: raise ValueError('coordinate model contract differs')
             model.load_state_dict(saved['model'],strict=True)

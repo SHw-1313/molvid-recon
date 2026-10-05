@@ -128,3 +128,12 @@ was used for that audit. CUDA test log is retained under
 `runs/coordinate_flow_20261005/fixture_evidence/checkpoint_blocks_cuda7.log`.
 Formal peak through step60 is15,341,581,312bytes. No generated-validation result
 exists yet; the single-clip overfit numbers are not substituted for one.
+# Final-evaluation metadata repair — 2026-10-05 16:36
+
+Review caught a stale CLI field before the final evaluation launched: trainer
+v3 stores `largest_query_atom_frame_profile_only`, whereas evaluator still read
+`largest_nominal_batch_profile_only`. Fixed the **tools-only** metadata gate to
+accept exactly one explicit recognized field set to False and cursor2048;
+reject missing/ambiguous flags, numeric0 masquerading as False, intermediate
+steps and profile runs. Model/training/runtime files and active optimizer state
+were not edited. This prevents a KeyError; it does not establish model quality.
