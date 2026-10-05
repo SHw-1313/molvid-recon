@@ -1,5 +1,10 @@
 # Molvid
 
+Current independent branch: `exp/coordinate-stereochemistry-20261005`.
+[Observed-only chirality gradient experiment](agent/coordinate_stereochemistry_20261005/PLAN.md).
+Soft Cα handedness margin implemented; no generator training or promotion yet.
+Other branch status below is inherited history, not this experiment's result.
+
 Current diagnostic branch: `exp/coordinate-static-balance-20261005`.
 [Train-only static/dynamic gradient plan](agent/coordinate_static_balance_20261005/PLAN.md).
 No training updates or default promotion in this probe; inherited campaigns
