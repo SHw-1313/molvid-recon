@@ -30,6 +30,24 @@ BioKinema 竞争。用户已授权阶段间自动推进；失败诊断保留，�
 - PVB 原始仓库与发布版 ATLAS checkpoint 已实际 CUDA 推理；模型约997万参数。
   原库未改动；进程隔离 NumPy1.26.4 解决旧 `np.compat.long` 兼容问题。
   不是全环境降级。原子顺序、类型、键图核对通过。
+- PVB 扩展48体系已完成192次真实生成，1371.6秒，0训练更新。
+  体系等权：bond RMSE .04015 Å、clash/1000atoms1.3715、MSD MAE2.0927 Å²、
+  RMSF幅度比 .88726。不能与旧8体系均值直接比较，等待同48体系 A1 配对统计。
+- CA/N/C/CB 有向体积审计发现 PVB 约2.09% Cα手性翻转（MD为0）；
+  因此漂亮的键长/clash 不等于全部化学正确。该指标不是全分子 R/S 指派。
+  仅第一个开发片段中，A1→固定投影的翻转率 .254%→3.150%，
+  这是单片段预警，不能与 PVB48均值作优劣比较。
+- Gcoord四个正式模型已完成，每个171,744参数、2048次更新、192个静态训练体系，
+  合计8192更新；static/mixed各两种子。mixed每组512个生成辅助更新。
+  全部优化器状态step2048、日志1..2048、权重有限性通过CPU审计；配对组静态
+  曝光完全一致，首次干预第4步之前三步精确一致。各运行135–214秒是小模块
+  训练，不是全DiT训练。静态输入来自MD快照，不冒称外部PDB预训练。
+- BioKinema发布sqrt权重原生1ns、12未来帧pilot已完成，约47.3秒，0训练。
+  MSA实际深度4738；698原子逐帧对应。只用观测首帧求一个SO(3)+平移，
+  撤销原生整体增强后首帧最大误差3.24e-6 Å。CPU输出审计通过，可在本片段
+  计分，但没有跨体系性能结论。原库/模型权重没有改动。
+- A1真实权重CUDA检查：隐藏未来坐标改写不改变输出；显式源尺度(1,1)与旧
+  默认采样逐位一致。源尺度改动只作为训练集推理分布诊断，尚无重训练结果。
 
 ## 正在运行 / 排队
 
@@ -37,15 +55,22 @@ BioKinema 竞争。用户已授权阶段间自动推进；失败诊断保留，�
 |---|---|---|
 |C8 continuation|全模型真实训练11000→13575，原目标/数据/优化器/RNG|`c8_continuation_v2/formal/train_metrics.jsonl`|
 |expanded A1|48体系、2anchors、2seeds；原始与固定坐标投影分列|`expanded_a1/rows.json`|
-|expanded PVB|同一观测末帧，原生 H1、100ps、SDE10、12步，无 refiner|`expanded_pvb/rows.json`|
-|Gcoord static/mixed|各2seeds×2048真实几何模块更新，192静态训练体系；mixed加32体系真实生成样本|`gcoord_campaign/queue.json`|
+|expanded PVB|已完成48体系、192次生成|`expanded_pvb/summary.json`|
+|Gcoord static/mixed|已完成4×2048真实更新|`gcoord_campaign_v2/queue.json`、`gcoord_training_audit/summary.json`|
+|Gcoord expanded|GPU7等A1完成；用相同缓存draw评估4个最终模型|`gcoord_evaluation_queue_v2/status.json`|
+|expanded capacity|GPU5等A1；依次C4/C8@11000、C4/C8@13575|`expanded_followup_queue_v3/status.json`|
+|source-bank diagnostic|GPU7等Gcoord验证；8训练体系×2seeds×4源尺度，0更新|`source_bank_diagnostic/`（尚未启动模型）|
+|BioKinema native1ns pilot|已完成并通过I/O审计；单体系，不是benchmark|`biokinema_matched1ns_audit/summary.json`|
 
-Gcoord 等待本轮 PVB 释放 GPU7，再自动16步执行检查及4个正式训练。
-它用当前预测坐标逐层重建半径图，和此前 S 静态 latent 梯度路由不同。
+Gcoord 用当前预测坐标逐层重建半径图，和此前 S 静态 latent 梯度路由不同。
 只训练新几何模块，**不声称在训练 DiT 或新的动力学生成器**。
 通过几何/运动共同检验后才考虑整合到主干。CUDA检查已覆盖稠密旋转、
 平移、跨体系隔离、padding、identity初始化与反向传播。
 首次梯度检查发现最后一层存在不会影响坐标输出的隐层更新参数，已删除。
+首个真实pilot因旧128类型表不覆盖蛋白残基118–137失败，0更新；已使用
+共享138类型词表，边界检查和CUDA测试通过后重启v2，失败产物保留。
+当前距离/中心力结构为O(3)等变，不能凭架构独自选择正确手性；后续验证
+把手性/近平面退化作为否决条件，不以几何两项单独晋级。
 
 ## 外部对照边界
 
@@ -54,6 +79,14 @@ Gcoord 等待本轮 PVB 释放 GPU7，再自动16步执行检查及4个正式训
 单条随机轨迹对单条 MD 的路径 RMSE 也不是生成分布正确性的充分指标。
 正式竞争结论需要补充独立体系、原生物理时间、长程/多副本、分布与时间
 相关量，以及 MD 对 MD 的抽样误差参考。
+
+官方动态split元数据审计（`external_overlap_v3`）：开发48中BioKinema train46、
+val1、test1；PVB train26。预留96中Bio train88、val3、test5，PVB train56。
+因而这96也不能直接充当公平基线独立确认集。已识别16个已知动态训练
+序列簇干净候选，但尚不能证明外部静态预训练独立；未打开其轨迹目标。
+本模型192训练体系相对PVB790/Bio1266存在明显动态数据覆盖差距，不能把
+差距完全归结于模型参数。已仅按元数据冻结512训练体系候选（192+320），
+保护开发/确认/外部测试簇；**尚未材料化、未开始512体系训练**。
 
 官方来源核实：
 
@@ -75,6 +108,6 @@ Gcoord 等待本轮 PVB 释放 GPU7，再自动16步执行检查及4个正式训
 checkpoint键名错误、开发材料首版 atype键名错误、PVB首版 NumPy错误。
 这些都不是已完成实验，不计入有效样本或训练结果。
 
-仍需：完整扩展评估、Gcoord正式训练及同样本验证、C8最终checkpoint比较、
-原始基线预训练曝光审计、BioKinema匹配物理时间的公平比较、长程动力学
+仍需：完整扩展评估、Gcoord同样本验证、C8最终checkpoint比较、
+原始基线完整静态预训练曝光审计、BioKinema多体系匹配物理时间比较、长程动力学
 和热力学验证。没有自动把局部改善升级为最终成功。

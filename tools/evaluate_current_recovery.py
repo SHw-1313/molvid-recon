@@ -48,6 +48,9 @@ def run(args):
         protocol=dict(models=list(models),generator='frozen A1 Euler16 cached actual draws',
             generator_calls=0,training_updates=0,test_opened=False,confirmation_opened=False,
             checkpoint_selection='all final2048, no best-valid choice',development_only=True))
+    atomic_write_json(args.output/'protocol.json',dict(records=protocol['records'],
+        models=list(models),source_protocol_sha256=sha256_file(args.generated/'protocol.json'),
+        generator_calls=0,training_updates=0,development_only=True))
     rows=[];started=time.monotonic()
     with ExecutionEvidence(args.output),torch.no_grad():
         for index,entry in enumerate(protocol['records']):

@@ -1,5 +1,19 @@
 # Refactor handoff
 
+## Active continuous campaign — 2026-10-05
+
+Branch `exp/geometry-scaling-20261005`, worktree `molvid-geometry-scaling-20261005`.
+Authoritative current status: [geometry/scaling report](agent/geometry_scaling_20261005/REPORT.md).
+User authorizes continued scientific experiments without stage confirmation.
+Goal is NOT achieved; no default promotion. C8 exact continuation is running on
+GPU6; A1 expanded48 on GPU5, then queued matched capacity evaluations. PVB48
+and all four Gcoord2048 trainings completed. GPU7 BioKinema native1ns pilot
+completed and I/O audit passed; queued Gcoord48 uses cached A1 draws, followed
+by train-only source-bank diagnostic. Queue paths are in the report.
+Baseline train overlap invalidates an independent-test claim for dev48/reserve96.
+All experiments use `enter-container` / `torch-ito`; GPU0–4 belong to other work.
+Parent Cα handoff below is historical, not the active worktree.
+
 ## Current authoritative handoff — 2026-10-05
 
 Branch `exp/ca-detail-20261005`, worktree `molvid-ca-detail-20261005`.

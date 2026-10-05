@@ -1,5 +1,18 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
 
+## Active geometry/scaling campaign — 2026-10-05
+
+- [x] Correct SHA-resolved matched C4/C8 audit and exact C8 next-update parity.
+- [x] Train-only latent/projection diagnostics; expanded48 native cache.
+- [x] Original PVB48 GPU inference; baseline dynamic split overlap audit.
+- [x] Four Gcoord2048 CUDA trainings and optimizer/exposure audit.
+- [x] BioKinema released-sqrt native1ns pilot, MSA and atom/frame qualification.
+- [ ] Complete paired A1/PVB/Gcoord48 geometry, motion and stereochemistry review.
+- [ ] Complete C8 full continuation and expanded matched capacity evaluations.
+- [ ] Train-only source-distribution causal diagnostic, then decide paired retraining.
+- [ ] Controlled training-data expansion; independent, long-time and complex validation.
+- No default promotion; no joint competitive success claimed. See current report.
+
 ## Current Cα detail experiment — 2026-10-05
 
 - [x] Independent branch; observed-only recovery with explicit generated/oracle Cα.
