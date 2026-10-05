@@ -15,10 +15,12 @@ from test_static_decoder import _model, _Encoder, _Stem, _static_record
 
 def test_clone_preserves_rng_weights_observation_and_default_keys():
     model = CoordinateFlowModel(_model(torch.device('cpu')))
+    model.target_teacher.frame_chunk_size = 1
     original_keys = set(model.state_dict())
     old_contract = model.contract()
     rng = torch.get_rng_state().clone()
     model.enable_query_geometry()
+    assert model.query_encoder.frame_chunk_size == 1
     assert torch.equal(rng, torch.get_rng_state())
     assert model.contract()['query_encoder'] != old_contract['query_encoder']
     assert set(model.state_dict()) - original_keys == {

@@ -89,6 +89,10 @@ class CoordinateFlowModel(nn.Module):
             copy.deepcopy(self.target_teacher.frame_encoder),
             copy.deepcopy(self.target_teacher.coordinate_stem),
         ).requires_grad_(True).eval()
+        # load_parent sets the real teacher to one frame per encoder call.
+        # This is runtime metadata, not a state_dict tensor: copy it explicitly
+        # to preserve arithmetic grouping and the existing activation budget.
+        self.query_encoder.frame_chunk_size = self.target_teacher.frame_chunk_size
 
     def contract(self) -> dict:
         return dict(schema="molvid.coordinate_flow.prototype.v1",
