@@ -80,3 +80,13 @@ Decision:the observed-only handedness term has a feasible, mostly aligned local
 training signal, not proven efficacy. Next Q12 gate is separately registered
 and queued after coordinate GPU5 evaluation, before setting a formal auxiliary
 weight or training schedule. Do not call these zero-update probes model training.
+
+Full-Q12 gate submitted18:55, source d8d5897, session71174 (torch-ito), GPU5 only
+after `molvid-coordinate-flow-20261005/runs/coordinate_flow_20261005/full192_v3/status.json`
+is completed. Exact command arguments:aux-steps16,query-frames12,memory-fraction.75,
+max-seconds3600; external probe timeout7200s, prerequisite timeout10800s.
+Output `runs/coordinate_stereochemistry_20261005/probe_q12_v1`; container log
+`/tmp/molvid-coordinate-stereochemistry-q12-v1.log`. **Waiting, not running yet**.
+First shell waiter was stopped before any neural work because container lacks
+`rg`; resubmission uses available `grep`. No dependent training/evaluation was
+restarted and original coordinate evaluation remains live.
