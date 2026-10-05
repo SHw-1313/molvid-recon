@@ -69,7 +69,7 @@ def run(args):
         limitation='single-case I/O and native-time qualification, not a competitive benchmark')
     freeze_run_identity(args.output,inputs=[record_path,input_file,checkpoint],purpose='Native1ns matched BioKinema pilot',protocol=protocol)
     atomic_write_json(args.output/'protocol.json',protocol)
-    atomic_write_json(args.output/'status.json',dict(status='prepared_waiting_for_own_C8_GPU',wait_for=str(args.wait_for)))
+    atomic_write_json(args.output/'status.json',dict(status='prepared_waiting_for_GPU_release',wait_for=str(args.wait_for)))
     started=time.monotonic()
     while not args.wait_for.exists():
         if time.monotonic()-started>64800: raise TimeoutError('C8 prerequisite18h')
