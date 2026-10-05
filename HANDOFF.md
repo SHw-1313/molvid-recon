@@ -6,6 +6,9 @@ Read `agent/coordinate_static_balance_20261005/PLAN.md`. Parent5885eab,
 fixed trained seed71 checkpoint, train-only GPU gradient measurements.
 No optimizer or validation-based weight selection. Parent coordinate48 and
 BioKinema48 evaluation remain untouched. This branch is not a trained model.
+Probev1 completed:16 train systems,32 dynamic+96 static CUDA backwards,80.803s,
+0 updates, bitwise unchanged model. Strong mostly-negative DiT gradient
+alignment; see `agent/coordinate_static_balance_20261005/REPORT.md`.
 
 ## Active independent coordinate-state prototype
 
