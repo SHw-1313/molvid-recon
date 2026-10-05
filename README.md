@@ -23,13 +23,25 @@ changed. Corrected outputs are writable workspace paths. Host archive helper
 PID335241/session50570 copies completed prefixes to `/data2`,verifies byte/SHA
 identity,then atomically replaces originals with readable symlinks. No checkpoint
 bytes deleted. This helper and both qualification services are actually live.
-Formal2048 training/evaluation controller remains to be submitted after these
-gates are wired; no formal GQ training or efficacy result is claimed.
+03:21:the complete formal controller is now actually submitted from main source
+52b30bb,hostPID361468/session72464,`formal_v1/status.json=waiting` for real GQ
+qualification. Eleven CPU gate/contract-confound tests passed1.80s. It resumes
+the qualified17 prefixes for2031 further updates per seed,then runs192 raw
+forecasts each,chemistry,matched-control comparisons and unchanged ordered
+scoring. Final checkpoints and fixed controls are audited; no intermediate
+checkpoint selection or default promotion. Log inside container:
+`/tmp/molvid-query-geometry-training-v1.log`. Submission is not executed training.
 
 Current independent branch: `exp/query-geometry-training-20261006` (GQ),
 forked from coordinate continuation4505d3d. Only generated-state frame geometry
 is made trainable; the observed teacher remains frozen/no-grad. No current-local
-input change, source correlation, Mamba, capacity increase or static-mix loss.
+input change, source correlation, Mamba, DiT depth/width change or static-mix loss.
+The separate query copy DOES add parameters:the original model inspection's
+teacher owns560,712 parameters,so expected total/trainable counts are19,174,177 /
+18,481,753 versus18,613,465 /17,921,041. These are arithmetic expectations from
+the loaded-parent inventory,not a newly executed full-GQ inspection. Equal update
+counts also do not imply equal backward compute. Treat GQ as independently
+trainable query geometry,not a parameter-budget-matched capacity experiment.
 The shared frame arithmetic now has an explicit differentiable encoder and
 strictly frozen teacher wrapper; disabled GQ preserves existing state keys and
 contracts. All inherited campaign sections below are historical context.
@@ -43,6 +55,10 @@ Training and inference both retain the new geometry weights in their contracts
 and strict checkpoints. Static/dynamic forwards share the same query encoder,
 but **no static training is claimed**. This is not a shared trainable observation
 encoder experiment and does not establish the complete final architecture.
+The inherited inspector's `coordinate_flow.dynamic/gradients` prose still
+describes the frozen default; for GQ use the resolved `contract.query_encoder`,
+owned module parameter counts and this explicit dataflow description. Do not
+infer GQ gradient boundaries from that inherited generic sentence.
 
 Qualification status:4 targeted CPU checks passed3.32s,2 CUDA tests skipped with
 CUDA hidden. These CPU tests cover ownership,RNG/state initialization and toy
