@@ -40,6 +40,9 @@ def run(args):
             '--output',str(args.root/name),'--arm',arm,'--checkpoint',str(checkpoint)]
         with (output/f'{name}.log').open('x') as log:
             subprocess.run(command,check=True,stdout=log,stderr=subprocess.STDOUT,timeout=22000)
+    if args.capacity_only:
+        atomic_write_json(output/'status.json',dict(status='completed',scope='capacity only; Gcoord separate GPU queue'))
+        return
     atomic_write_json(output/'status.json',dict(status='waiting_for_Gcoord_training'))
     for name in ('static_71','mixed_71','static_72','mixed_72'):
         await_complete(args.recovery_root/name/'execution_end.json',seconds=86400)
@@ -55,4 +58,5 @@ def run(args):
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--root',type=Path,required=True)
     p.add_argument('--recovery-root',type=Path,required=True)
+    p.add_argument('--capacity-only',action='store_true')
     p.add_argument('--queue-name',default='expanded_followup_queue');run(p.parse_args())
