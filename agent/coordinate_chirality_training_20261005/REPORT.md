@@ -102,3 +102,31 @@ Its exact targets and recoverability rules are registered in PLAN.md.
 This submits the complete conditional workflow, not a completed training run.
 At submission original coordinate72 evaluation remained live; native data
 materializer passed187/192 and its GPU6/7 pipelines remain separate.
+
+## Control71 training completed; full48 evaluation active,20:26
+
+The weight-zero control has reached2048 real optimizer updates. Its final
+checkpoint SHA256 is
+`4346e024289719cc7ad6f7de3acbafae547eae7b213000df8b1fc5cff13028bd`.
+`control_71/final_audit.json` independently confirms cursor2048,348 optimizer
+states,102 runtime hashes and all floating model values finite; this audit
+made0 model calls. `formal/summary.json` records2023 continuation updates in
+2243.691252832301 seconds, in addition to the completed25-update prefix.
+That time is not the wall time of the entire2048-update experiment.
+
+The live controller is now `control_71_evaluate`, running actual CUDA full48
+forecasts from that exact final checkpoint. No chirality-minus-control effect
+can yet be claimed; the auxiliary arm and remaining seed are pending.
+
+The completed-intermediate archive service moved only this control's
+`pilot25/coordinate_step_0016.pt`, `pilot25/coordinate_step_0025.pt` and
+`resume25/coordinate_step_0025.pt` to
+`/data2/sihao/molvid-research-20261005/chirality-training-intermediates-v1/control_71`.
+Original paths are symlinks; independent in-container byte-hash reads passed.
+Total655,024,602 bytes relocated recoverably, not deleted. Respective SHA256:
+
+- `5c52e04d0189b114bc6080197fe2fd9bd7f6c2be660175ca6075efc7a965de59`
+- `321d94438ece8ef3a84c0fb609785f1f7f4d1de32c5df13d6543ae682067a09b`
+- `a0e88659eb606ce5d2a9a20d27d461f2f55cef5c04911b9b34d653e65bc5a37f`
+
+Final weights, logs, predictions and raw trajectories were left in place.
