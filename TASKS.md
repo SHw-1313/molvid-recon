@@ -7,7 +7,9 @@
 - [x] Original PVB48 GPU inference; baseline dynamic split overlap audit.
 - [x] Four Gcoord2048 CUDA trainings and optimizer/exposure audit.
 - [x] BioKinema released-sqrt native1ns pilot, MSA and atom/frame qualification.
-- [ ] Complete paired A1/PVB/Gcoord48 geometry, motion and stereochemistry review.
+- [x] Complete paired A1/PVB/Gcoord48 geometry, motion and stereochemistry review.
+- [x] Reject projection and all four Gcoord candidates: geometry gain trades away motion/handedness.
+- [x] Shared optional source-scale contract; CPU30 and CUDA4 targeted gates passed.
 - [ ] Complete C8 full continuation and expanded matched capacity evaluations.
 - [ ] Train-only source-distribution causal diagnostic, then decide paired retraining.
 - [ ] Controlled training-data expansion; independent, long-time and complex validation.

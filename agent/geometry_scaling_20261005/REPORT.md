@@ -31,6 +31,26 @@ MD参考的Cα翻转/近平面比例均为0。PVB在键长、clash和MSD明显�
 是体系，不把192个相关draw当192个独立体系。证据：`paired_a1_pvb/summary.json`、
 `stereochemistry_a1/summary.json`、`stereochemistry_pvb/summary.json`。
 
+### Gcoord四个正式模型：否决合并
+
+同192个A1真实draw，4个最终2048权重，768行，626.7秒CUDA；没有新生成器
+调用、没有挑选最佳验证checkpoint。所有版本均改善部分几何但损伤运动。
+
+|版本|bond RMSE Å|clash/1000|MSD MAE Å²|残基RMSF MAE Å|RMSF幅度比|Cα翻转率|
+|---|---:|---:|---:|---:|---:|---:|
+|static71|.138114|52.3253|2.559664|.315494|.812903|.005195|
+|static72|.147143|57.1136|2.548318|.313588|.819507|.005005|
+|mixed71|.104228|61.1727|2.547598|.313643|.818722|.005305|
+|mixed72|.110400|52.6661|2.559207|.314272|.813723|.005071|
+
+四组相对A1的MSD误差增量 .07444–.08650 Å²、残基RMSF增量
+.01031–.01222 Å，各自体系bootstrap95%CI均高于0；幅度下降，CA翻转也增加。
+虽达到几何下降筛查量级且部分运动劣化小于5%非劣界，没有任何明确运动
+改善，不能声称共同进步。混合生成辅助改善键长，但未解决运动折损。
+保留为负结果和当前坐标反馈的诊断，不继续仅凭验证集调后处理权重。
+下一步转向生成源/表示/主干训练路径。证据：`expanded_gcoord`、
+`stereochemistry_gcoord`、`paired_gcoord`，均已完成。
+
 ## 已完成的可靠证据
 
 - 实际 checkpoint SHA 核查确认已有 C4/C8 比较都是11000更新，训练曝光、
@@ -84,7 +104,7 @@ MD参考的Cα翻转/近平面比例均为0。PVB在键长、clash和MSD明显�
 |expanded A1|已完成48体系、192次生成与192个固定投影|`expanded_a1/summary.json`|
 |expanded PVB|已完成48体系、192次生成|`expanded_pvb/summary.json`|
 |Gcoord static/mixed|已完成4×2048真实更新|`gcoord_campaign_v2/queue.json`、`gcoord_training_audit/summary.json`|
-|Gcoord expanded|GPU7等A1完成；用相同缓存draw评估4个最终模型|`gcoord_evaluation_queue_v2/status.json`|
+|Gcoord expanded|已完成4模型×192缓存draw及CPU配对/手性审计；否决合并|`expanded_gcoord/summary.json`、`paired_gcoord/summary.json`|
 |expanded capacity|GPU5等A1；依次C4/C8@11000、C4/C8@13575|`expanded_followup_queue_v3/status.json`|
 |source-bank diagnostic|GPU7等Gcoord验证；先CUDA配置门禁，再8训练体系×2seeds×4源尺度，0正式更新|`source_bank_queue_v2/status.json`|
 |BioKinema native1ns pilot|已完成并通过I/O审计；单体系，不是benchmark|`biokinema_matched1ns_audit/summary.json`|
@@ -101,7 +121,8 @@ Gcoord 用当前预测坐标逐层重建半径图，和此前 S 静态 latent �
 
 新增可选源尺度配置已贯通RF训练、辅助真实源rollout、D2静态RF、推理和
 checkpoint；默认单位源保持旧合同/数值路径。CPU配置/代数检查30项通过。
-真实CUDA旧缓存一致性、非单位源恢复拒错、辅助完整/分块反传仍排队待验。
+真实CUDA旧缓存逐位一致性、非单位源恢复拒错、辅助完整/分块反传4项已通过，
+13.09秒；包含小fixture优化器更新，不是正式模型训练。训练集源诊断已启动。
 **未训练任何新源尺度模型，未声称新源有效。** 旧等待诊断进程在0模型调用时
 停止，由新进程启动队列替代，避免等待期间旧Python导入与新源码hash不一致。
 
