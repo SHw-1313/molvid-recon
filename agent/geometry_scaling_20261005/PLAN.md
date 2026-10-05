@@ -107,3 +107,19 @@ read-only. Save1000-step intervals and final; max18GPUh, >=8GiB disk reserve.
 This is genuine full C8 training, not the geometry-projection diagnostic or
 a new independent training seed. After completion compare C4/C8 at13575 and
 on expanded development; continue exposure/scale experiments based on curves.
+
+## Expanded development protocol, frozen before reading trajectory targets
+
+Sequence-only audit:1382 nonsealed sequences,202 known exposed/development
+systems excluded,1082 eligible clean clusters under MMseqs30% identity/50%
+bidirectional coverage; choose48 developer systems and reserve96 confirmation
+systems, one representative per cluster, hash order balanced across length bins.
+This is known-parent sequence isolation, NOT a completed whole-pretraining or
+structural-family independence claim. Old sealed8 PDBs/trajectories not read.
+Materialize developer48 only: R1, anchors450/2450, fixed observed H4/100ps,
+native future12 frames at100/400/1000ps, no interpolation. Hash selected raw
+frame/timestamp arrays and saved records; source XTC path/size/mtime retained,
+not mislabeled whole-file SHA. Confirmation targets remain closed.
+First common benchmark uses100ps, both anchors, seeds17/29, A1 and C4/C8;
+PVB native100ps with same last-observed structure is a legal H1 baseline, not
+an equal-history comparison to H4. All raw/postprocessed results separated.
