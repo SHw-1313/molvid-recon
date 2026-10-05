@@ -8,6 +8,7 @@ from pathlib import Path
 from molvid.evaluation.ca_detail import flat_metrics,system_estimate
 from molvid.provenance import freeze_run_identity
 from molvid.runtime import atomic_write_json,sha256_file
+from tools.run_gm_capacity import _verify_paired_checkpoint
 
 METRICS=('geometry.bond_rmse','physical.clashes_per_1000_atoms',
          'physical.vdw_severity_A2_per_atom','msd.curve_mae_A2',
@@ -25,7 +26,20 @@ def audit(root,output):
     for identity in retained.values():
         if sha256_file(identity['checkpoint'])!=identity['checkpoint_sha256']:
             raise ValueError('retained checkpoint SHA mismatch')
-    exposure_matched=retained['C4']['successful_updates']==retained['C8']['successful_updates']
+    evaluated={}
+    for arm in ('C4','C8'):
+        expected=json.loads((root/arm/'ordinary/protocol.json').read_text())['checkpoint_sha256']
+        directory=root.parent/'formal'/arm
+        hints=[directory/f'frame_joint_step_{i["successful_updates"]:08d}.pt' for i in retained.values()]
+        candidates=list(dict.fromkeys(hints+sorted(directory.glob('frame_joint_step_*.pt'))))
+        for candidate in candidates:
+            if candidate.is_file() and sha256_file(candidate)==expected:
+                evaluated[arm]=dict(path=str(candidate),sha256=expected,step=int(candidate.stem.rsplit('_',1)[1]),
+                    retained_metadata_matches=expected==retained[arm]['checkpoint_sha256'])
+                break
+        if arm not in evaluated:raise ValueError('evaluated checkpoint cannot be resolved by SHA')
+    exposure_matched=evaluated['C4']['step']==evaluated['C8']['step']
+    exposure_verification=_verify_paired_checkpoint(Path(evaluated['C4']['path']),Path(evaluated['C8']['path'])) if exposure_matched else None
     results={}
     for family,expected in [('ordinary',1920),('fixed_history',960)]:
         arms={};protocols={}
@@ -35,7 +49,7 @@ def audit(root,output):
             summary=json.loads((path/'summary.json').read_text())
             if protocol['test_opened'] or summary['test_opened']:raise ValueError('sealed data violation')
             if summary['checkpoint_sha256']!=protocol['checkpoint_sha256']:raise ValueError('checkpoint identity mismatch')
-            if protocol['checkpoint_sha256']!=retained[arm]['checkpoint_sha256']:raise ValueError('retained/evaluated model mismatch')
+            if protocol['checkpoint_sha256']!=evaluated[arm]['sha256']:raise ValueError('families evaluated different checkpoints')
             rows=[json.loads(line) for line in (path/'rows.jsonl').read_text().splitlines()]
             if len(rows)!=expected or len(rows)!=summary['rows']:raise ValueError(f'incomplete {arm}/{family}')
             keyed={(r['meta']['sample_id'],r['path'],r['clock'],r['seed']):r for r in rows}
@@ -62,8 +76,9 @@ def audit(root,output):
             paired_C8_minus_C4={'|'.join(k):system_estimate(v) for k,v in paired.items()},
             checkpoint_sha256={a:p['checkpoint_sha256'] for a,p in protocols.items()})
     atomic_write_json(output/'summary.json',dict(status='completed',results=results,test_opened=False,
-        retained=retained,training_exposure_matched=exposure_matched,
-        interpretation='descriptive comparison only; mismatched training updates' if not exposure_matched else 'step-matched; exact exposure still requires checkpoint comparison',
+        retained=retained,evaluated=evaluated,training_exposure_matched=exposure_matched,
+        exact_exposure_verification=exposure_verification,
+        interpretation='descriptive comparison only; mismatched training updates' if not exposure_matched else 'exact exposure and training/auxiliary RNG matched',
         new_training_updates=0,limitations=['existing valid8 only','single training seed',
         'C4/C8 capacity intervention includes depth and added G blocks; not a pure parameter-count law']))
     print(json.dumps({f:{k:v['mean'] for k,v in r['paired_C8_minus_C4'].items() if k.startswith('generated|')}

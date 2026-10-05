@@ -9,6 +9,7 @@ from molvid.provenance import freeze_run_identity
 from molvid.runtime import atomic_write_json,sha256_file
 from molvid.training.execution_evidence import ExecutionEvidence
 from tools.run_gm_capacity import _verify_paired_checkpoint
+from tools.evaluate_gm_a import evaluation_protocol,validate_completed_evaluation
 
 
 def run(output):
@@ -26,6 +27,18 @@ def run(output):
         protocol=dict(paired_exposure=paired,training_updates=11000,seeds=[0,1,2],steps=16,
             c8_reuse=str(root/'evaluation/C8'),new_optimizer_updates=0,test_opened=False))
     atomic_write_json(output/'paired_exposure.json',paired)
+    c4_old=json.loads((root/'evaluation/C4/ordinary/protocol.json').read_text())
+    if c4_old['checkpoint_sha256']==c4_sha:
+        for arm in ('C4','C8'):
+            for family,(views,manifest) in families.items():
+                protocol=evaluation_protocol(checkpoint_sha256=sha256_file(checkpoints[arm]),recipe=recipe,
+                    store=views/'clip_store/valid',manifest=views/manifest)
+                validate_completed_evaluation(root/'evaluation'/arm/family,expected_protocol=protocol,
+                    expected_family=family,store=views/'clip_store/valid')
+        atomic_write_json(output/'complete.json',dict(status='verified_existing_matched_evaluation',
+            paired_exposure=paired,existing_evaluation=str(root/'evaluation'),new_model_calls=0,
+            new_training_updates=0,test_opened=False))
+        return
     with ExecutionEvidence(output):
         for family,(views,manifest) in families.items():
             command=[sys.executable,'-m','tools.evaluate_gm_a','--checkpoint',str(checkpoints['C4']),
