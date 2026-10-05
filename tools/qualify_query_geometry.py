@@ -11,6 +11,19 @@ from molvid.provenance import freeze_run_identity
 from molvid.runtime import atomic_write_json, sha256_file
 
 
+def qualification_environment(gpu_uuid):
+    # Must be set before the pytest process creates its first cuBLAS handle.
+    return dict(os.environ, CUDA_VISIBLE_DEVICES=gpu_uuid, OMP_NUM_THREADS='2',
+                MKL_NUM_THREADS='2', CUBLAS_WORKSPACE_CONFIG=':4096:8')
+
+
+def completed_solver(path):
+    summary = json.loads((path / 'summary.json').read_text())
+    if (summary['status'] != 'completed' or summary['rows'] != 192 or summary['systems'] != 48
+            or summary['failures'] or summary['coordinate_field_calls'] != 12288):
+        raise ValueError('full registered solver arm must complete before qualification')
+
+
 def process(pid):
     try:
         root = Path('/proc') / str(pid)
@@ -25,13 +38,22 @@ def process(pid):
 def run(args):
     if args.output.exists():
         raise FileExistsError(args.output)
-    original = process(args.wait_pid)
-    if original is None or 'tools.evaluate_expanded_native' not in original[1] or 'expanded_v1/parent64' not in original[1]:
-        raise ValueError('expected live parent64 solver must be identified before submission')
-    identity = freeze_run_identity(args.output, inputs=[args.solver_output / 'protocol.json'],
+    original = process(args.wait_pid) if args.wait_pid is not None else None
+    if args.wait_pid is not None:
+        if original is None or 'tools.evaluate_expanded_native' not in original[1] or 'expanded_v1/parent64' not in original[1]:
+            raise ValueError('expected live parent64 solver must be identified before submission')
+    else:
+        # A retry after a finished solver must verify completion, not invent a
+        # live PID or relax the dedicated-GPU no-sharing check below.
+        completed_solver(args.solver_output)
+    inputs = [args.solver_output / 'protocol.json']
+    if original is None:
+        inputs.append(args.solver_output / 'summary.json')
+    identity = freeze_run_identity(args.output, inputs=inputs,
         purpose='Deferred GQ numerical qualification, not protein efficacy',
         protocol=dict(wait_pid=args.wait_pid, process_identity=original, gpu_uuid=args.gpu_uuid,
                       formal_updates=0, protein_forecasts=0, test_opened=False,
+                      cublas_workspace_config=':4096:8',
                       tests=['tests/test_query_geometry.py', 'tests/test_coordinate_flow.py']))
     root = Path(__file__).resolve().parents[1]
     started = time.monotonic()
@@ -39,7 +61,7 @@ def run(args):
         while True:
             if time.monotonic() - started > 21600:
                 raise TimeoutError('six-hour owned-GPU wait budget')
-            current = process(args.wait_pid)
+            current = process(args.wait_pid) if args.wait_pid is not None else None
             if current is not None and current != original:
                 raise RuntimeError('solver PID reused')
             applications = subprocess.check_output(['nvidia-smi', '--query-compute-apps=gpu_uuid,pid',
@@ -50,10 +72,7 @@ def run(args):
             atomic_write_json(args.output / 'status.json', dict(status='waiting',
                 solver_live=current is not None, gpu_occupied=occupied))
             time.sleep(30)
-        summary = json.loads((args.solver_output / 'summary.json').read_text())
-        if (summary['status'] != 'completed' or summary['rows'] != 192 or summary['systems'] != 48
-                or summary['failures'] or summary['coordinate_field_calls'] != 12288):
-            raise ValueError('full registered solver arm must complete before qualification')
+        completed_solver(args.solver_output)
         for name, digest in identity['source_files_sha256'].items():
             if sha256_file(root / name) != digest:
                 raise ValueError(f'queued GQ source changed: {name}')
@@ -61,7 +80,7 @@ def run(args):
             if sha256_file(Path(name)) != digest:
                 raise ValueError(f'queued solver protocol changed: {name}')
         atomic_write_json(args.output / 'status.json', dict(status='cuda_tests_running'))
-        environment = dict(os.environ, CUDA_VISIBLE_DEVICES=args.gpu_uuid, OMP_NUM_THREADS='2', MKL_NUM_THREADS='2')
+        environment = qualification_environment(args.gpu_uuid)
         with (args.output / 'pytest.log').open('x') as log:
             subprocess.run([sys.executable, '-m', 'pytest', '-q', '-rs',
                 'tests/test_query_geometry.py', 'tests/test_coordinate_flow.py',
@@ -82,7 +101,7 @@ def run(args):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('--wait-pid', type=int, required=True)
+    p.add_argument('--wait-pid', type=int, help='live solver PID; omit only after verified full solver completion')
     p.add_argument('--gpu-uuid', choices=['GPU-3b8ea60f-89b6-7112-c41c-97a516b30b5d'], required=True)
     p.add_argument('--solver-output', type=Path, default=Path('/workspace/molvid-coordinate-solver-audit-20261005/runs/coordinate_solver_audit_20261005/expanded_v1/parent64'))
     p.add_argument('--output', type=Path, required=True)
