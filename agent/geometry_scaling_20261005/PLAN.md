@@ -94,3 +94,16 @@ losing RMSF/MSD; also inspect angles/torsions and inter-residue bonds. Fixed
 weights before results, no validation tuning, max2GPUh. This cannot establish
 kinetic/thermodynamic correctness, and any later benchmark must report raw and
 postprocessed output separately with equal postprocessing opportunities.
+
+## Capacity continuation, registered before training
+
+C8 was budget-stopped at11000, original schedule ends13575. Complete the
+remaining2575 updates under unchanged original objective/data/schedule after
+an exact next-update comparison between original source and this branch from
+the same11000 checkpoint. Compare model/optimizer/step/rank RNG states, not
+timestamp metadata. If parity fails, diagnose before longer training; do not
+weaken tolerances silently. New outputs only, original worktree/checkpoints
+read-only. Save1000-step intervals and final; max18GPUh, >=8GiB disk reserve.
+This is genuine full C8 training, not the geometry-projection diagnostic or
+a new independent training seed. After completion compare C4/C8 at13575 and
+on expanded development; continue exposure/scale experiments based on curves.
