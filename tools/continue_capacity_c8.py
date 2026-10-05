@@ -19,7 +19,7 @@ from molvid.training.execution_evidence import ExecutionEvidence
 from tools.check_gm_capacity_resume import _assert_equal
 
 
-def run(output):
+def run(output,parity_artifacts=None):
     if output.exists():raise FileExistsError(output)
     root=Path('/workspace/molvid-recon-gm-capacity-v3')
     config=root/'runs/gm_motion_memory_v3/C/r10/configs/formal_C8.json'
@@ -28,7 +28,10 @@ def run(output):
     if sha!='e6ed57fee02781ce6303fe56a079226fb32502c94c675c8e9181c20d6ff8239d':raise ValueError('C8 parent changed')
     if shutil.disk_usage(output.parent if output.parent.exists() else Path.cwd()).free<10*1024**3:
         raise RuntimeError('need10GiB free before starting training')
-    freeze_run_identity(output,inputs=[config,parent],purpose='Exact C8 resume with original-source next-update parity',
+    evidence=[] if parity_artifacts is None else [parity_artifacts/'run_identity.json',
+        parity_artifacts/'original_next_update/frame_joint_step_00011001.pt',
+        parity_artifacts/'current_next_update/frame_joint_step_00011001.pt']
+    freeze_run_identity(output,inputs=[config,parent,*evidence],purpose='Exact C8 resume with original-source next-update parity',
         protocol=dict(parent_step=11000,final_step=13575,expected_new_updates=2575,
             parity_step=11001,old_source=str(root),checkpoint_every=1000,test_opened=False,
             changed_objective=False,changed_schedule=False,max_seconds=64800))
@@ -44,15 +47,28 @@ def run(output):
                            timeout=max(1,64800-(time.monotonic()-started)))
         return target/f'frame_joint_step_{limit:08d}.pt'
     with ExecutionEvidence(output):
-        old=train('original_next_update',root,parent,11001)
-        new=train('current_next_update',Path.cwd(),parent,11001)
+        if parity_artifacts is None:
+            old=train('original_next_update',root,parent,11001)
+            new=train('current_next_update',Path.cwd(),parent,11001)
+        else:
+            identity=json.loads((parity_artifacts/'run_identity.json').read_text())
+            if identity['input_sha256'].get(str(parent))!=sha or identity['input_sha256'].get(str(config))!=sha256_file(config):
+                raise ValueError('cached next-update runs have different parents/config')
+            old=parity_artifacts/'original_next_update/frame_joint_step_00011001.pt'
+            new=parity_artifacts/'current_next_update/frame_joint_step_00011001.pt'
         left=torch.load(old,map_location='cpu',weights_only=False)
         right=torch.load(new,map_location='cpu',weights_only=False)
         # Compare numerical training state, not source provenance/creation timestamps.
         atomic_write_json(output/'checkpoint_keys.json',dict(old=sorted(left),new=sorted(right)))
-        keys=[k for k in ('model','optimizer','scheduler','step','successful_updates','rank_states','rng_state') if k in left]
-        if 'model' not in keys or 'optimizer' not in keys:raise ValueError('unknown checkpoint state schema')
+        keys=('model_state','optimizer_state','scheduler_state','scaler_state','parameter_names',
+              'step','cursor','rng_state','sampler_state')
+        if left['step']!=11001 or right['step']!=11001:raise ValueError('incorrect parity step')
         counts={k:_assert_equal(left[k],right[k],k) for k in keys}
+        for key,value in left['extra_state'].items():
+            counts['extra_state.'+key]=_assert_equal(value,right['extra_state'][key],'extra_state.'+key)
+        added=set(right['extra_state'])-set(left['extra_state'])
+        if any(right['extra_state'][key] is not None for key in added):
+            raise ValueError('new source enabled additional training state')
         atomic_write_json(output/'next_update_parity.json',dict(status='passed',exact=True,checked=counts,
             old_sha256=sha256_file(old),new_sha256=sha256_file(new),step=11001))
         del left,right
@@ -64,4 +80,6 @@ def run(output):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True)
-    run(parser.parse_args().output.resolve())
+    parser.add_argument('--parity-artifacts',type=Path)
+    args=parser.parse_args()
+    run(args.output.resolve(),None if args.parity_artifacts is None else args.parity_artifacts.resolve())
