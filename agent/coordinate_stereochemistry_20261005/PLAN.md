@@ -28,3 +28,13 @@ No formal auxiliary weight selected yet. Do not label this a training success.
 If usable gradients exist, follow with a bounded train-only scale/profile and
 matched continuation control/aux arms with independent seeds and Q12 fixed-final
 evaluation. Keep native-clock changes and static mixing out of this comparison.
+
+## Solver-matched follow-up registration,18:49
+
+Completed Euler4 gradient gate showed fewer flips than its Euler16 inference
+reference, so an Euler4-only training auxiliary cannot be assumed to target
+the actual sampling error. Repeat the **same8 train proteins/H4/Q2/noise/weights**
+with auxiliary gradients through all16 Euler steps (`probe_v3 --aux-steps16`).
+Same15-minute budget and20GiB process cap. No new data or weight update, and no
+development selection. Keep v2 intact; v3 rows use `generated_auxiliary` with
+the actual step count in protocol, rather than the older `generated4` key.

@@ -51,7 +51,7 @@ def run(args):
     model.load_state_dict(saved['model'],strict=True)
     before = saved['model']; del saved['optimizer'],saved['rng']
     protocol = dict(systems=systems,training_only=True,history_frames=4,query_frames=2,
-        flow_times=[.25,.75],actual_source_steps=4,reference_solver_steps=16,
+        flow_times=[.25,.75],actual_source_steps=args.aux_steps,reference_solver_steps=16,
         source_seeds=[4000+i for i in range(8)],precision='FP32',model_mode='eval_autograd_enabled',
         margin=.1,minimum_reference_volume_A3=.2,optimizer_updates=0,test_opened=False,
         centers='protein Cα with all N/C/CB bonds; not ligand stereochemistry',
@@ -85,9 +85,9 @@ def run(args):
             condition=model.prepare_condition(observed)
             source=model.source(condition=condition,query=query,
                 generator=torch.Generator(device=device).manual_seed(4000+i))
-            state=checkpointed_coordinate_rollout(model,source,condition=condition,query=query,steps=4)
+            state=checkpointed_coordinate_rollout(model,source,condition=condition,query=query,steps=args.aux_steps)
             auxiliary=handedness_margin_loss(state,reference,frame_mask=query.frame_mask)
-            generated4=metrics(state); auxiliary.backward()
+            generated_auxiliary=metrics(state); auxiliary.backward()
             aux_grad=gradient_snapshot(model)
             if any(n.startswith('target_teacher.') for n in aux_grad):
                 raise RuntimeError('frozen teacher acquired gradients')
@@ -109,7 +109,7 @@ def run(args):
                 comparison=gradient_comparison(dynamic_grad,aux_grad)
                 rows.append(dict(system=system,sample_id=record['sample_id'],flow_time=progress,
                     source=metrics(source),interpolation=metrics(noisy),endpoint=endpoint_metrics,
-                    generated4=generated4,generated16=generated16,target=metrics(target),
+                    generated_auxiliary=generated_auxiliary,generated16=generated16,target=metrics(target),
                     rf_loss_A2=float(loss.detach()),groups=comparison))
                 del condition,noisy,prediction,endpoint,loss,dynamic_grad
             del aux_grad
@@ -130,4 +130,5 @@ if __name__ == '__main__':
     p.add_argument('--checkpoint',type=Path,required=True)
     p.add_argument('--checkpoint-sha256',required=True)
     p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--aux-steps',type=int,choices=[4,16],default=4)
     run(p.parse_args())
