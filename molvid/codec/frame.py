@@ -61,6 +61,18 @@ class FrozenFrameTeacher(nn.Module):
     def forward(self, batch: ClipBatch, *, reference_origin: Tensor | None = None) -> tuple[FrameLatentBatch, Tensor]:
         """Encode exactly the supplied frames; no hidden future is accepted."""
 
+        return self.encode_with_coordinate_grad(batch, reference_origin=reference_origin)
+
+    def encode_with_coordinate_grad(
+        self, batch: ClipBatch, *, reference_origin: Tensor | None = None,
+    ) -> tuple[FrameLatentBatch, Tensor]:
+        """Frozen weights, differentiable coordinates for coordinate-flow states.
+
+        The ordinary teacher call remains no-grad. This explicit alternative
+        is needed when a generated coordinate state is encoded inside an
+        end-to-end rollout; freezing weights must not detach that state.
+        """
+
         if reference_origin is None:
             centered, origin = center_coordinates(
                 batch.x, frame_mask=batch.frame_mask, abid=batch.abid,

@@ -1,5 +1,12 @@
 # Refactor handoff
 
+## Active independent coordinate-state prototype
+
+Worktree `molvid-coordinate-flow-20261005`, parent `6441ce3`.
+Read `agent/coordinate_flow_20261005/{PLAN,REPORT}.md`.
+Core implemented; five CUDA fixture gates passed. Real4-update gate is next,
+not yet a trained improvement. Do not modify running parent experiments.
+
 ## Active continuous campaign — 2026-10-05
 
 Branch `exp/geometry-scaling-20261005`, worktree `molvid-geometry-scaling-20261005`.

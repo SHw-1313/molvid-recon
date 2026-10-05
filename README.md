@@ -1,5 +1,9 @@
 # Molvid
 
+Current independent worktree: `exp/coordinate-flow-20261005`.
+[Coordinate-state prototype and evidence](agent/coordinate_flow_20261005/REPORT.md).
+No default promotion; parent campaigns below continue in their own worktree.
+
 Current worktree (2026-10-05): `exp/geometry-scaling-20261005`.
 [Continuous geometry/scaling campaign](agent/geometry_scaling_20261005/REPORT.md)
 and [registered plan](agent/geometry_scaling_20261005/PLAN.md).
