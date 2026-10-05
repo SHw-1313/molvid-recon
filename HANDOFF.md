@@ -142,3 +142,19 @@ opened. This is exploratory validation evidence, not production parity. Full
 architecture, metrics, costs, hashes and limitations are in
 `docs/frame_gm_calibration_v2.md`; operational details are in
 `agent/frame_gm_calibration_v2/HANDOFF.md`.
+# Active continuous geometry/scaling work — 2026-10-05
+
+Branch `exp/geometry-scaling-20261005`, parent `a8da6de`.
+Read [report](agent/geometry_scaling_20261005/REPORT.md) and
+[registered plan](agent/geometry_scaling_20261005/PLAN.md).
+User authorized continued scientific implementation and real experiments,
+no stage-confirmation pauses. Goal not achieved; no new default model.
+
+Live outputs under `runs/geometry_scaling_20261005`:
+GPU5 expanded A1/raw+projection; GPU6 real C8 continuation13575;
+GPU7 expanded original PVB, followed automatically by Gcoord16-step pilot
+and static/mixed71/72 formal2048-step jobs. Gcoord queue checks PVB execution
+completion before launching. Keep other GPUs/processes untouched.
+Preserve every failure artifact; do not count CPU audits or coordinate
+optimization as neural training. Final reports must separate updated module,
+updates, systems, compute and completed versus queued work.

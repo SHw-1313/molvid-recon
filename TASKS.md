@@ -134,3 +134,17 @@ override the current completed evidence and explicit stop decisions above.
 - [x] Results archive: 15-family source-linked digest, 388-file hash-verified raw bundle, 43 original + 55 new figures, scoped evaluation CSV; original outputs unchanged.
 
 Detailed evidence, unresolved items and the next gate are kept in `docs/migration.md`.
+# Continuous geometry/scaling campaign — 2026-10-05
+
+- [x] Resolve C4/C8 actually evaluated checkpoint hashes and exact exposure.
+- [x] Run train-only CUDA latent/channel and observed-only projection controls.
+- [x] Freeze48 development /96 reserved confirmation candidate systems; native materialization.
+- [x] Exact old/new-source next-update C8 model/optimizer/RNG parity.
+- [ ] Finish real C8 continuation13575 and matched final/expanded evaluation.
+- [ ] Finish original PVB and A1 native100ps expanded48 comparison; qualify overlaps.
+- [x] Implement current-coordinate Gcoord geometry module and targeted CUDA checks.
+- [ ] Execute queued matched static/mixed training,2seeds×2048 each; evaluate without motion collapse.
+- [ ] BioKinema released-sqrt native1ns comparison and long-time/distribution qualification.
+
+Evidence: [continuous report](agent/geometry_scaling_20261005/REPORT.md).
+No new default promotion; goal remains active without per-stage confirmation.

@@ -1,6 +1,13 @@
 # Molvid
 
-Current worktree (2026-10-05): `exp/ca-detail-20261005`.
+Current worktree (2026-10-05): `exp/geometry-scaling-20261005`.
+[Continuous geometry/scaling campaign](agent/geometry_scaling_20261005/REPORT.md)
+and [registered plan](agent/geometry_scaling_20261005/PLAN.md).
+C8 exact next-update parity passed; real continuation and expanded48 native
+forecast evaluations are running. Current-coordinate geometry recovery is an
+independent matched static/mixed candidate, not a promoted default.
+
+Parent worktree: `exp/ca-detail-20261005`.
 [Generated Cα / oracle detail-recovery experiment](agent/ca_detail_20261005/REPORT.md)
 and [GPU execution audit](agent/ca_detail_20261005/EXECUTION_AUDIT.md).
 Completed 96 frozen-A1 draws, four 512-update detail heads and paired validation.
