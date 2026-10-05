@@ -26,3 +26,17 @@ Full Q12 calibration still waiting onGPU5 evaluation. Formal coefficient,
 configs and experiment training are not yet frozen/launched. Added freezer
 uses the preregistered maximum-gradient-budget rule and actual ordered train
 metadata qualification, without opening development or sealed targets.
+
+Expanded targeted suite:20 passed in6.61s, including calibration rejection
+(Q2,wrong solver,updates,missing/duplicate pairs,NaN/no gradients,solver mismatch)
+and inherited zero-auxiliary exact CUDA optimizer/RNG resume. All three CLI
+entrypoints imported and displayed help successfully without CUDA allocation.
+
+19:07 submission, source321f67c, session3478 in torch-ito:
+wait up to4h for diagnostic `probe_q12_v1/summary.json`, stop on recorded probe
+failure; then CPU freezer creates `runs/coordinate_chirality_training_20261005/formal_v1`.
+Only after qualified freezing, GPU5 executes both disposable largest-query
+profiles. Logs `/tmp/molvid-coordinate-chirality-{freeze,profile}-v1.log`.
+Current state is **waiting**; no frozen weight/configs or real protein optimizer
+updates from this branch yet. The formal model-training/resume/evaluation lane
+is not submitted by this command and remains the next implementation step.
