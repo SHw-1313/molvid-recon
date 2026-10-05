@@ -17,6 +17,7 @@ from molvid.losses.stereochemistry import observed_ca_reference, handedness_marg
 from molvid.provenance import freeze_run_identity
 from molvid.runtime import atomic_write_json, configure_device, sha256_file
 from molvid.training.ca_detail_data import load_ca_cache
+from molvid.training.coordinate_rollout import checkpointed_coordinate_rollout
 from molvid.training.execution_evidence import ExecutionEvidence
 from molvid.training.predictive_data import load_parent
 from tools.evaluate_expanded_native import require_final_coordinate_checkpoint
@@ -56,6 +57,7 @@ def run(args):
         centers='protein Cα with all N/C/CB bonds; not ligand stereochemistry',
         checkpoint_sha256=args.checkpoint_sha256,checkpoint_cursor=2048,
         gradient_groups='existing dynamic/static comparison field names: static means chirality auxiliary here',
+        full_velocity_field_checkpointing=True,
         purpose='train-only gradient feasibility, not model efficacy or kinetics')
     freeze_run_identity(args.output,inputs=[args.checkpoint,args.cache/'complete.json',args.cache/'protocol.json'],
         purpose=protocol['purpose'],protocol=protocol)
@@ -83,10 +85,7 @@ def run(args):
             condition=model.prepare_condition(observed)
             source=model.source(condition=condition,query=query,
                 generator=torch.Generator(device=device).manual_seed(4000+i))
-            state=source
-            for step in range(4):
-                state=state+model(state,condition=condition,query=query,
-                    flow_time=target.new_full((1,),step/4),checkpoint_blocks=True)/4
+            state=checkpointed_coordinate_rollout(model,source,condition=condition,query=query,steps=4)
             auxiliary=handedness_margin_loss(state,reference,frame_mask=query.frame_mask)
             generated4=metrics(state); auxiliary.backward()
             aux_grad=gradient_snapshot(model)

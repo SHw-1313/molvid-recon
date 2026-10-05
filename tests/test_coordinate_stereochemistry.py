@@ -70,3 +70,35 @@ def test_packed_sample_equal_and_nan_padding():
 def test_observed_planar_reference_excluded():
     x,args = fixture(); args['observed'][...,3,2] = 0
     assert observed_ca_reference(**args).indices.shape == (0,4)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason='CUDA required')
+@pytest.mark.parametrize('source_grad', [False,True])
+def test_full_field_checkpoint_forward_input_and_parameter_gradients(source_grad):
+    from test_coordinate_flow import fixture as model_fixture
+    from molvid.training.coordinate_rollout import checkpointed_coordinate_rollout
+    model,observed,query = model_fixture()
+    model.eval()
+    condition = model.prepare_condition(observed)
+    source = model.source(condition=condition,query=query,
+        generator=torch.Generator(device='cuda').manual_seed(431)).requires_grad_(source_grad)
+    raw = model.rollout(source,condition=condition,query=query,steps=4)
+    raw.square().mean().backward()
+    expected = {n:p.grad.clone() for n,p in model.named_parameters() if p.grad is not None}
+    expected_source = source.grad.clone() if source_grad else None
+    model.zero_grad(set_to_none=True); source.grad = None
+    condition = model.prepare_condition(observed)
+    checked = checkpointed_coordinate_rollout(model,source,condition=condition,query=query,steps=4)
+    torch.testing.assert_close(checked,raw,atol=0,rtol=0)
+    checked.square().mean().backward()
+    actual = {n:p.grad for n,p in model.named_parameters() if p.grad is not None}
+    assert actual.keys() == expected.keys()
+    for name in actual:
+        torch.testing.assert_close(actual[name],expected[name],atol=2e-6,rtol=2e-5,msg=name)
+    if source_grad:
+        torch.testing.assert_close(source.grad,expected_source,atol=2e-6,rtol=2e-5)
+    else:
+        assert source.grad is None
+    assert all(p.grad is None for p in model.target_teacher.parameters())
+    for prefix in ('dit.','readout.','history_encoder.'):
+        assert sum(float(g.norm()) for n,g in actual.items() if n.startswith(prefix)) > 0

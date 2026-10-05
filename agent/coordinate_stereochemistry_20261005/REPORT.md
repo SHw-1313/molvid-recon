@@ -19,3 +19,15 @@ collapse may have zero determinant gradient; the soft term is no hard guarantee.
 metadata are verified before GPU work. It measures auxiliary/RF gradients,
 does zero optimizer updates and requires unchanged full model state afterward.
 Real data execution is next, not yet a completed experiment at this commit.
+
+First real `probe_v1` terminated with CUDA OOM before any complete system row:
+20GiB process cap,peak21,006,126,592 allocated bytes. GPU itself had59GiB free;
+this was the deliberately bounded allocation, not another user's workload.
+Execution failure/telemetry retained,0 updates,no efficacy result. Four-step
+actual-source gradients retained spatial-encoder activations that block-only
+DiT checkpointing cannot eliminate. Added full velocity-field non-reentrant
+recomputation in a separate training helper; no time-step detach/truncation.
+Original100 trained runtime file hashes still unchanged. Initial6 targeted
+CPU/CUDA tests passed4.70s, including exact forward and numerical full parameter/
+source-gradient parity against original Euler4, frozen teacher boundary and
+nonzero history gradients. Registration otherwise unchanged for `probe_v2`.
