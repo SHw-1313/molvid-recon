@@ -58,6 +58,11 @@ def score(future,record,c,physical):
     ca_metrics=temporal_metrics_v3(prediction,truth,replace(batch,loss_mask=ca_mask,align_mask=ca_mask),history_frames=4).metrics
     result['ca_msd_mae_A2']=ca_metrics['msd']['curve_mae_A2']
     result['ca_rmsf_amplitude_ratio']=ca_metrics['rmsf']['mean_amplitude_ratio']
+    residue_pairs=torch.stack((c.residue_index[a[mask]],c.residue_index[b[mask]])).T.unique(dim=0).T
+    left,right=c.ca_index[residue_pairs]
+    ca_distance_error=(torch.linalg.vector_norm(future[:,left]-future[:,right],dim=-1)-
+        torch.linalg.vector_norm(truth[4:,left]-truth[4:,right],dim=-1))
+    result['linked_residue_ca_distance_rmse_A']=float(ca_distance_error.square().mean().sqrt())
     return result
 
 
