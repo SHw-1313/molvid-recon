@@ -59,7 +59,8 @@ def run(args):
         if args.arm=='coordinate':
             saved=torch.load(args.checkpoint,map_location='cpu',weights_only=False)
             require_final_coordinate_checkpoint(saved)
-            model=CoordinateFlowModel(model)
+            model=CoordinateFlowModel(model, train_query_geometry=(saved['contract']['model']['query_encoder'] ==
+                'trainable_query_copy_frozen_observation_current_radius_graph'))
             if model.contract()!=saved['contract']['model']: raise ValueError('coordinate model contract differs')
             model.load_state_dict(saved['model'],strict=True)
             model.eval().requires_grad_(False);del saved

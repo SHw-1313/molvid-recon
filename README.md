@@ -1,5 +1,32 @@
 # Molvid
 
+Current independent branch: `exp/query-geometry-training-20261006` (GQ),
+forked from coordinate continuation4505d3d. Only generated-state frame geometry
+is made trainable; the observed teacher remains frozen/no-grad. No current-local
+input change, source correlation, Mamba, capacity increase or static-mix loss.
+The shared frame arithmetic now has an explicit differentiable encoder and
+strictly frozen teacher wrapper; disabled GQ preserves existing state keys and
+contracts. All inherited campaign sections below are historical context.
+
+Set `coordinate_train_query_geometry: true` only in an explicit seed-specific
+coordinate-parent continuation recipe with schedule offset2048 and handedness
+weight0. The query encoder/stem copy the loaded teacher without RNG draws;
+their optimizer group uses the existing history learning rate and schedule.
+Eval-mode geometry-layer behavior remains unchanged while weights learn.
+Training and inference both retain the new geometry weights in their contracts
+and strict checkpoints. Static/dynamic forwards share the same query encoder,
+but **no static training is claimed**. This is not a shared trainable observation
+encoder experiment and does not establish the complete final architecture.
+
+Qualification status:4 targeted CPU checks passed3.32s,2 CUDA tests skipped with
+CUDA hidden. These CPU tests cover ownership,RNG/state initialization and toy
+teacher boundaries,not protein model execution. CUDA parity/live gradients,
+active-GQ exact optimizer/RNG resume and inherited default CUDA tests are still
+required. Then both-seed largest real-query profiles, old-control16-update
+parity and17vs16→17 resume must precede fixed2048 GQ training. No formal GQ GPU
+training or forecasts exist yet; no default promotion. Existing control runs,
+original PVB/BioKinema and sealed/reserve data are untouched.
+
 Current independent branch: `exp/coordinate-chirality-training-20261005`.
 [Matched coordinate continuation design](agent/coordinate_chirality_training_20261005/PLAN.md).
 Optional sampled-handedness training implemented; formal runs not launched yet.

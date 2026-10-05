@@ -7,12 +7,14 @@ contains only observed coordinates. Targets belong exclusively to the loss.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import copy
 import math
 
 import torch
 from torch import Tensor, nn
 
 from ..codec.heads import EquivariantCoordinateHead
+from ..codec.frame import FrameGeometryEncoder
 from ..data.batch import ClipBatch
 from ..latent.types import FrameLatentBatch, ObservedContext, QuerySpec, StructureCondition
 from ..model import FrameJointCondition, FrameJointModel
@@ -35,7 +37,8 @@ class CoordinateFlowModel(nn.Module):
     The initial prototype explicitly supports only the legacy history path.
     """
 
-    def __init__(self, parent: FrameJointModel, *, sigma_angstrom: float = 1.0):
+    def __init__(self, parent: FrameJointModel, *, sigma_angstrom: float = 1.0,
+                 train_query_geometry: bool = False):
         super().__init__()
         if parent.history_backend != "legacy":
             raise ValueError("coordinate prototype requires legacy observed history")
@@ -61,6 +64,7 @@ class CoordinateFlowModel(nn.Module):
         self.dit.set_trainable(True)
         self.target_teacher.requires_grad_(False)
         self.target_teacher.eval()
+        self.query_encoder = None
         self.warm_start_report = {
             "kind": "changed_architecture_warm_start_fresh_optimizer_required",
             "reused_state_keys": sorted(k for k in parent.state_dict() if not k.startswith("decoder.")),
@@ -68,23 +72,46 @@ class CoordinateFlowModel(nn.Module):
             "new_state_keys": ["readout." + k for k in self.readout.state_dict()],
             "initial_readout": "zero_velocity_not_parent_forecast_parity",
         }
+        if type(train_query_geometry) is not bool:
+            raise ValueError("train_query_geometry must be an explicit boolean")
+        if train_query_geometry:
+            self.enable_query_geometry()
+
+    def enable_query_geometry(self) -> None:
+        """Clone the LOADED teacher; no RNG draws or observed-path changes.
+
+        Call before optimizer creation. Eval-mode numerical behavior is kept
+        even during training; only geometry parameter gradients are enabled.
+        """
+        if self.query_encoder is not None:
+            raise ValueError("query geometry already enabled")
+        self.query_encoder = FrameGeometryEncoder(
+            copy.deepcopy(self.target_teacher.frame_encoder),
+            copy.deepcopy(self.target_teacher.coordinate_stem),
+        ).requires_grad_(True).eval()
 
     def contract(self) -> dict:
         return dict(schema="molvid.coordinate_flow.prototype.v1",
                     state="coordinates_angstrom_Q_N_3", source_sigma_angstrom=self.sigma_angstrom,
                     statistics_hash=self.statistics_hash, history_backend="legacy",
-                    query_encoder="frozen_weights_coordinate_grad_current_radius_graph",
+                    query_encoder=("trainable_query_copy_frozen_observation_current_radius_graph"
+                                   if self.query_encoder is not None else
+                                   "frozen_weights_coordinate_grad_current_radius_graph"),
                     static="corrupted_structure_condition_shared_spatial_trunk_no_physical_time",
                     decoder="equivariant_coordinate_velocity_readout")
 
     def train(self, mode: bool = True):
         super().train(mode)
         self.target_teacher.eval()
+        if self.query_encoder is not None:
+            self.query_encoder.eval()
         return self
 
     def prepare_batch(self, observed_cpu: ClipBatch) -> None:
         """Register supplied topology on CPU before transferring observations."""
         self.target_teacher.prepare_batch(observed_cpu)
+        if self.query_encoder is not None:
+            self.query_encoder.prepare_batch(observed_cpu)
 
     def prepare_condition(self, observed: ClipBatch, *, task: str = "dynamic") -> CoordinateCondition:
         """Static input must already be corrupted; clean targets are not accepted."""
@@ -134,7 +161,8 @@ class CoordinateFlowModel(nn.Module):
         current = replace(observed, x=coordinates, bpos=bpos,
                           time_ps=query.time_ps, frame_mask=query.frame_mask,
                           delta_time_ps=query.time_ps[:, 1:] - query.time_ps[:, :-1])
-        encoded, _ = self.target_teacher.encode_with_coordinate_grad(
+        encoder = self.target_teacher if self.query_encoder is None else self.query_encoder
+        encoded, _ = encoder.encode_with_coordinate_grad(
             current, reference_origin=condition.context.sample_origin,
         )
         return self.normalize(encoded)

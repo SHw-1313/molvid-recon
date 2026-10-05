@@ -1,4 +1,4 @@
-"""Frozen per-frame geometry target used by Frame Joint v1."""
+"""Shared frame geometry arithmetic and its strictly frozen teacher wrapper."""
 
 from __future__ import annotations
 
@@ -32,8 +32,8 @@ def slice_clip_frames(batch: ClipBatch, start: int, stop: int) -> ClipBatch:
     )
 
 
-class FrozenFrameTeacher(nn.Module):
-    """A strictly frozen TorchMD frame encoder plus coordinate vector stem."""
+class FrameGeometryEncoder(nn.Module):
+    """TorchMD frame geometry plus coordinate stem, with explicit gradients."""
 
     frame_chunk_size = 4
 
@@ -41,23 +41,16 @@ class FrozenFrameTeacher(nn.Module):
         super().__init__()
         self.frame_encoder = frame_encoder
         self.coordinate_stem = coordinate_stem
-        for parameter in self.parameters():
-            parameter.requires_grad_(False)
-        super().train(False)
 
     @classmethod
-    def from_codec(cls, codec: nn.Module) -> "FrozenFrameTeacher":
+    def from_codec(cls, codec: nn.Module) -> "FrameGeometryEncoder":
         if getattr(codec, "coordinate_stem", None) is None:
             raise ValueError("Frame Joint target codec must contain the centered coordinate stem")
         return cls(copy.deepcopy(codec.frame_encoder), copy.deepcopy(codec.coordinate_stem))
 
-    def train(self, mode: bool = True):
-        return super().train(False)
-
     def prepare_batch(self, batch: ClipBatch) -> None:
         self.frame_encoder.prepare_batch(batch)
 
-    @torch.no_grad()
     def forward(self, batch: ClipBatch, *, reference_origin: Tensor | None = None) -> tuple[FrameLatentBatch, Tensor]:
         """Encode exactly the supplied frames; no hidden future is accepted."""
 
@@ -66,11 +59,10 @@ class FrozenFrameTeacher(nn.Module):
     def encode_with_coordinate_grad(
         self, batch: ClipBatch, *, reference_origin: Tensor | None = None,
     ) -> tuple[FrameLatentBatch, Tensor]:
-        """Frozen weights, differentiable coordinates for coordinate-flow states.
+        """Encode current coordinates without detaching parameter/input graphs.
 
-        The ordinary teacher call remains no-grad. This explicit alternative
-        is needed when a generated coordinate state is encoded inside an
-        end-to-end rollout; freezing weights must not detach that state.
+        The frozen subclass controls parameter gradients and no-grad calls;
+        this shared arithmetic does not change graph construction or units.
         """
 
         if reference_origin is None:
@@ -132,7 +124,6 @@ class FrozenFrameTeacher(nn.Module):
         )
         return latent, origin
 
-    @torch.no_grad()
     def observed_context(self, batch: ClipBatch) -> ObservedContext:
         latent, origin = self(batch)
         return ObservedContext(
@@ -141,3 +132,23 @@ class FrozenFrameTeacher(nn.Module):
             sample_origin=origin,
             loss_mask=batch.loss_mask.to(dtype=torch.bool),
         )
+
+
+class FrozenFrameTeacher(FrameGeometryEncoder):
+    """Strictly frozen targets/observations; coordinate-grad method is explicit."""
+
+    def __init__(self, frame_encoder: nn.Module, coordinate_stem: nn.Module) -> None:
+        super().__init__(frame_encoder, coordinate_stem)
+        self.requires_grad_(False)
+        super().train(False)
+
+    def train(self, mode: bool = True):
+        return super().train(False)
+
+    @torch.no_grad()
+    def forward(self, batch: ClipBatch, *, reference_origin: Tensor | None = None):
+        return super().forward(batch, reference_origin=reference_origin)
+
+    @torch.no_grad()
+    def observed_context(self, batch: ClipBatch) -> ObservedContext:
+        return super().observed_context(batch)

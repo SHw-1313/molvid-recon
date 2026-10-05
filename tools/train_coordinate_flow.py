@@ -64,6 +64,16 @@ def run(args):
         del saved
     if (offset or config.handedness_weight > 0) and initialization is None:
         raise ValueError('new chirality phase requires an explicit coordinate parent')
+    query_geometry = raw.get('coordinate_train_query_geometry', False)
+    if type(query_geometry) is not bool:
+        raise ValueError('coordinate_train_query_geometry must be boolean')
+    if query_geometry:
+        if initialization is None or offset != 2048 or config.handedness_weight != 0:
+            raise ValueError('GQ requires next2048 coordinate continuation without chirality')
+        model.enable_query_geometry()
+        model.warm_start_report.update(kind='coordinate_parent_plus_copied_query_geometry_fresh_optimizer',
+            new_state_keys=sorted(k for k in model.state_dict() if k.startswith('query_encoder.')),
+            query_geometry_initialization='exact copy of loaded frozen teacher; no RNG draw')
     optimizer = make_coordinate_optimizer(model, config)
     flow_seed = args.seed + (18000 if initialization else 8000)
     generator = torch.Generator(device=device).manual_seed(flow_seed)

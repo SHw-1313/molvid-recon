@@ -44,6 +44,12 @@ def make_coordinate_optimizer(model, config):
               dict(params=list(model.readout.parameters()), lr=config.readout_lr, name="readout")]
     if model.motion_encoder is not None:
         groups.append(dict(params=[p for p in model.motion_encoder.parameters() if p.requires_grad], lr=config.history_lr, name="motion"))
+    if model.query_encoder is not None:
+        groups.append(dict(params=list(model.query_encoder.parameters()), lr=config.history_lr, name="query_geometry"))
+    owned = [id(p) for group in groups for p in group['params']]
+    expected = {id(p) for p in model.parameters() if p.requires_grad}
+    if len(owned) != len(set(owned)) or set(owned) != expected:
+        raise ValueError('optimizer must own each trainable parameter exactly once')
     return torch.optim.AdamW(groups, weight_decay=config.weight_decay)
 
 
@@ -74,7 +80,8 @@ def coordinate_update(model, optimizer, cpu_batch, *, history_frames, generator,
     warmup = max(1, int(np.ceil(.05 * config.total_updates)))
     factor = ((step + 1) / warmup if step < warmup else
               .1 + .45 * (1 + np.cos(np.pi * min((step - warmup) / max(1, config.total_updates - warmup - 1), 1))))
-    rates = dict(dit=config.dit_lr, history=config.history_lr, readout=config.readout_lr, motion=config.history_lr)
+    rates = dict(dit=config.dit_lr, history=config.history_lr, readout=config.readout_lr,
+                 motion=config.history_lr, query_geometry=config.history_lr)
     for group in optimizer.param_groups:
         group["lr"] = rates[group["name"]] * factor
     optimizer.zero_grad(set_to_none=True)
