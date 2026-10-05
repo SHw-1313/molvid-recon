@@ -37,11 +37,13 @@ def run(args):
     if sha256_file(pdb)!=item['source']['pdb_sha256']: raise ValueError('PDB changed')
     atoms=load_structure(str(pdb),model=1)[np.asarray(record['atom_source_index'])]
     expected=[str(identity).rsplit(':',2)[-2].strip() for identity in record['atom_identity']]
-    if list(atoms.atom_name)!=expected: raise ValueError('Biotite/MD atom order differs')
     aliases=[]
     for index,(name,residue) in enumerate(zip(atoms.atom_name,atoms.res_name)):
         new='CD1' if residue=='ILE' and name=='CD' else {'OT1':'O','OT2':'OXT'}.get(name,name)
         if new!=name: aliases.append(dict(index=index,old=name,new=new));atoms.atom_name[index]=new
+    # MDTraj already applies these standard aliases while Biotite preserves
+    # source spelling. Compare identities after the declared I/O canonicalization.
+    if list(atoms.atom_name)!=expected: raise ValueError('Biotite/MD atom order differs beyond known aliases')
     atoms.coord=np.asarray(record['x'][3],dtype=np.float32).copy()
     input_file=args.output/'observed.cif';save_structure(str(input_file),atoms)
     reread=load_structure(str(input_file),model=1)
