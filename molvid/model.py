@@ -16,6 +16,7 @@ from .codec.learned_memory import LearnedHistoryMemory, GroupMemory
 from .codec.motion_context import MotionContext, MotionContextEncoder
 from .dit.frame import FrameDiT
 from .flow.objective import frame_endpoint_from_velocity
+from .flow.source import FrameSourceConfig
 from .latent.adapter import FrameLatentAdapter
 from .latent.statistics import FrameLatentStatistics
 from .latent.types import FrameLatentBatch, HistoryMemory, ObservedContext, QuerySpec
@@ -60,6 +61,7 @@ class FrameJointModel(nn.Module):
         decoder: TrajectoryDecoder,
         statistics: FrameLatentStatistics,
         motion_encoder: MotionContextEncoder | None = None,
+        source_config: FrameSourceConfig = FrameSourceConfig(),
     ) -> None:
         super().__init__()
         if statistics.width != history_encoder.channels:
@@ -71,6 +73,7 @@ class FrameJointModel(nn.Module):
         self.dit = dit
         self.decoder = decoder
         self.motion_encoder = motion_encoder
+        self.source_config = source_config
         self.history_backend = "learned_memory" if isinstance(history_encoder, LearnedHistoryMemory) else "legacy"
         if dit.history_backend != self.history_backend:
             raise ValueError("DiT and history encoder backends differ")
@@ -99,6 +102,7 @@ class FrameJointModel(nn.Module):
         geometry_block_indices: Sequence[int] | None = None,
         history_backend: str = "legacy",
         analysis_mode: str = "physical",
+        source_config: FrameSourceConfig = FrameSourceConfig(),
     ) -> "FrameJointModel":
         channels = int(statistics.width)
         if channels != 128:
@@ -140,6 +144,7 @@ class FrameJointModel(nn.Module):
             dit=dit,
             decoder=decoder,
             statistics=statistics,
+            source_config=source_config,
             motion_encoder=(
                 MotionContextEncoder(channels, scalar_width, vector_width)
                 if motion_enabled else None
@@ -356,4 +361,6 @@ class FrameJointModel(nn.Module):
             result.update(schema_version="molvid.frame_joint.model.learned_memory.v1",
                           history_backend="learned_memory", history_ratio=None, history_tail=None,
                           learned_memory=self.history_encoder.contract())
+        if not self.source_config.is_unit:
+            result['frame_source'] = self.source_config.contract()
         return result

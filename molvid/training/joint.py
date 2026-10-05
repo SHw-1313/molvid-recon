@@ -501,7 +501,7 @@ def calibrate_generated_bond_weight(
     parameters = [parameter for parameter in model.dit.parameters() if parameter.requires_grad]
     if not parameters:
         raise ValueError("generated-bond calibration requires trainable DiT parameters")
-    objective = FrameRectifiedFlowObjective()
+    objective = FrameRectifiedFlowObjective(model.source_config)
     flow_norms: list[Tensor] = []
     bond_norms: list[Tensor] = []
     was_training = model.training
@@ -612,7 +612,7 @@ def calibrate_sampled_auxiliary_weights(
     parameters = [parameter for parameter in model.dit.parameters() if parameter.requires_grad]
     if not parameters:
         raise ValueError("sampled auxiliary calibration requires trainable DiT parameters")
-    objective = FrameRectifiedFlowObjective()
+    objective = FrameRectifiedFlowObjective(model.source_config)
     flow_norms: list[Tensor] = []
     energy_norms: list[Tensor] = []
     bond_norms: list[Tensor] = []
@@ -629,7 +629,7 @@ def calibrate_sampled_auxiliary_weights(
             generator=main_generator,
         )
         sources = tuple(
-            sample_frame_source(batch.source_center, generator=sampled_generator)[0]
+            sample_frame_source(batch.source_center, generator=sampled_generator,config=model.source_config)[0]
             for _ in range(2)
         )
         output = model(
@@ -796,7 +796,7 @@ class FrameJointTrainer:
         self.data_hash = str(data_hash)
         self.teacher_artifact_sha256 = str(teacher_artifact_sha256)
         self.schedule_contract = dict(schedule_contract or {})
-        self.flow = FrameRectifiedFlowObjective()
+        self.flow = FrameRectifiedFlowObjective(self.base_model.source_config)
         self.optimizer = optimizer or torch.optim.AdamW(
             _component_parameter_groups(
                 self.base_model,
@@ -906,7 +906,7 @@ class FrameJointTrainer:
             if sampled_generator is None:
                 raise ValueError("enabled sampled auxiliary requires its independent generator")
             sampled_sources = tuple(
-                sample_frame_source(batch.source_center, generator=sampled_generator)[0]
+                sample_frame_source(batch.source_center, generator=sampled_generator,config=self.base_model.source_config)[0]
                 for _ in range(self.sampled_config.draws)
             )
             atom_frames = (
@@ -1196,6 +1196,9 @@ class FrameJointTrainer:
         }
         if self.sampled_config.enabled:
             result["sampled_auxiliary"] = self.sampled_config.contract()
+            if not self.base_model.source_config.is_unit:
+                result['sampled_auxiliary']['source']='repeat(last_observed_normalized_latent)+scaled_gaussian'
+                result['sampled_auxiliary']['frame_source']=self.base_model.source_config.contract()
         if self.static_auxiliary_contract is not None:
             result["static_decoder_auxiliary"] = dict(
                 self.static_auxiliary_contract

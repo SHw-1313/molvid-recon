@@ -155,11 +155,13 @@ def euler_sample_frames(
     normalized_observed = model.normalize(context.latent)
     center = repeat_last_frame_center(normalized_observed, query)
     current, noise = sample_frame_source(
-        center, generator=_make_generator(context.latent.h.device, seed)
+        center, generator=_make_generator(context.latent.h.device, seed),config=model.source_config
     )
     # Explicit inference-only diagnostic, not a changed trained source contract.
     # The default path performs exactly the previous arithmetic and RNG draws.
     if diagnostic_source_scales is not None:
+        if not model.source_config.is_unit:
+            raise ValueError('inference-only source diagnostic is registered for unit-source parents only')
         if len(diagnostic_source_scales)!=2 or any(not math.isfinite(s) or s<0 for s in diagnostic_source_scales):
             raise ValueError('diagnostic h/v source scales must be finite and nonnegative')
         sh,sv=diagnostic_source_scales
@@ -201,6 +203,8 @@ def euler_sample_frames(
         "future_fields": ["h", "v"],
         "condition_prepared_by_caller": prepared_condition is not None,
     }
+    if not model.source_config.is_unit:
+        metadata['model_source_contract']=model.source_config.contract()
     if diagnostic_source_scales is not None:
         metadata['diagnostic_source_scales']=list(diagnostic_source_scales)
         metadata['source_differs_from_training']=list(diagnostic_source_scales)!=[1.,1.]

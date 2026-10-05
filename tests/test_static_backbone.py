@@ -162,10 +162,13 @@ def test_calibration_requires_training_pairs_and_uses_gradient_ratio():
         assert profile_history('dt_400ps',i)==(4 if i%2==0 else 8)
 
 
-def test_d2_with_sampled_physical_full_and_streamed_backward():
+@pytest.mark.parametrize('source_scale',[1.,.2])
+def test_d2_with_sampled_physical_full_and_streamed_backward(source_scale):
     from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
     from molvid.training.joint import SampledAuxiliaryConfig
-    model=_model(cuda());other=deepcopy(model)
+    from molvid.flow.source import FrameSourceConfig
+    model=_model(cuda());model.source_config=FrameSourceConfig(v_scale=source_scale)
+    other=deepcopy(model)
     physical=PhysicalAuxiliaryConfig.resolve(dict(clash_weight=.01,vdw_radii_A={'5':2.,'6':2.},
         allowed_overlap_A=.8,one_four_overlap_A=1.2,distance_chunk_size=2,
         table_provenance={'split':'train','source_hash':'fixture'}))

@@ -162,8 +162,8 @@ Do not merge if geometry gain trades away motion or if only train improves.
 No thermodynamic/kinetic correctness claim follows from local recovery.
 
 Expanded followup queue uses GPU5 only after its A1 job ends: C4/C8 at11000,
-C4/C8 at13575 (wait for real C8 completion), then all four final Gcoord models
-on identical cached A1 draws. Geometry screening is exploratory development:
+C4/C8 at13575 (wait for real C8 completion). All four final Gcoord models run
+separately on GPU7, on identical cached A1 draws. Geometry screening is exploratory development:
 target >=20% bond and >=30% clash reduction; motion noninferiority margin5%
 for MSD/residueRMSF errors, and at least one clear motion improvement before
 claiming joint improvement. Cluster/system-paired uncertainty and seed spread
@@ -181,6 +181,24 @@ experiment. Explicit(1,1) must match the unchanged default exactly on a real
 CUDA forecast; count its extra parity draw separately(64+1 total). All
 geometry/motion/CA-handedness metrics retained,2h cap. The global default
 remains unit noise; diagnostic arguments never change checkpoint identity.
+
+Source-retraining infrastructure, not a launched training claim: optional
+`model.frame_source={h_scale,v_scale}` is a positive finite scalar/vector
+standard-deviation contract in normalized latent units. One configuration
+feeds RF interpolation, actual-source auxiliary rollouts, static backbone RF,
+generation and calibration; checkpoint model contracts preserve nonunit values
+and strict resume must reject a mismatch. Old unit-source constructor contracts,
+state tensors, arithmetic and RNG must remain identical. Changing the source
+requires model-only warm start with fresh optimizer, never exact-resume labeling.
+Do not scale the velocity targets or loss weights independently in this first
+intervention. Validate full/streamed auxiliary gradients and old real-A1 cached
+draw parity before any new-source training. The inference-only diagnostic is
+restricted to the old unit-source parent; do not multiply two hidden temperatures.
+
+GPU7 queue now launches fresh subprocesses AFTER prerequisites. This avoids a
+waiting Python process importing old model code then hashing newer disk source.
+The old idle source diagnostic controller was stopped before any GPU/model call;
+no training or evaluation was interrupted. Source CUDA gates precede the diagnostic.
 
 Training-data expansion reservation completed separately:192 existing +320
 additional=512, no new trajectory targets opened at reservation. Protect

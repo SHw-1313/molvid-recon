@@ -695,6 +695,7 @@ def load_frame_joint_inference(
         raise ValueError("Frame Joint checkpoint lacks latent statistics")
     from .latent.statistics import FrameLatentStatistics
     from .model import FrameJointModel
+    from .flow.source import FrameSourceConfig
 
     statistics = FrameLatentStatistics.from_state_dict(extra["statistics_state"])
     if statistics.hash != contracts.get("statistics_hash"):
@@ -767,6 +768,7 @@ def load_frame_joint_inference(
         geometry_block_indices=geometry_block_indices,
         history_backend=history_backend,
         analysis_mode=analysis_mode,
+        source_config=FrameSourceConfig.resolve(model_contract.get('frame_source')),
     ).to(device)
     if dict(model.contract()) != dict(model_contract):
         raise ValueError("reconstructed Frame Joint model contract differs")

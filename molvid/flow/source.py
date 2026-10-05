@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from typing import Any, Optional
+from dataclasses import asdict, dataclass, replace
+import math
+from typing import Any, Mapping, Optional
 
 import torch
 from torch import Tensor
@@ -16,6 +17,36 @@ SOURCE_SCHEMA = "pvb.dit.state_detail.source.v1"
 SOURCE_MODES = ("gaussian", "conditional")
 CENTER_KINDS = ("repeat_last_coordinate_encode", "block_state_zero_detail")
 FIELD_NAMES = ("state_h", "detail_h", "state_v", "detail_v")
+
+
+@dataclass(frozen=True)
+class FrameSourceConfig:
+    """Scalar/vector Gaussian standard deviations in normalized latent units.
+
+    Vector coordinates always share one scale, preserving SO(3) covariance.
+    This is a training AND inference contract, not a sampler-only temperature.
+    """
+    h_scale: float = 1.0
+    v_scale: float = 1.0
+
+    def __post_init__(self):
+        for value in (self.h_scale,self.v_scale):
+            if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or value<=0:
+                raise ValueError('frame source scales must be finite positive numbers')
+
+    @classmethod
+    def resolve(cls,value: Mapping[str,Any] | None):
+        if value is None: return cls()
+        if not isinstance(value,Mapping) or set(value)-{'h_scale','v_scale'}:
+            raise ValueError('invalid frame source configuration')
+        return cls(**value)
+
+    @property
+    def is_unit(self):
+        return self.h_scale==1.0 and self.v_scale==1.0
+
+    def contract(self):
+        return asdict(self)
 
 
 def sample_isotropic_noise(
@@ -300,11 +331,17 @@ def sample_frame_source(
     center: FrameLatentBatch,
     *,
     generator: Optional[torch.Generator] = None,
+    config: FrameSourceConfig = FrameSourceConfig(),
 ) -> tuple[FrameLatentBatch, FrameLatentBatch]:
-    """Return ``repeat(last_observed)+N(0,1)`` and the sampled noise."""
+    """Return observed center plus contracted Gaussian noise, and scaled noise.
+
+    Unit configuration preserves old arithmetic/RNG exactly.
+    """
 
     noise_h = torch.randn(center.h.shape, device=center.h.device, dtype=center.h.dtype, generator=generator)
     noise_v = torch.randn(center.v.shape, device=center.v.device, dtype=center.v.dtype, generator=generator)
+    if config.h_scale!=1.0: noise_h=noise_h*config.h_scale
+    if config.v_scale!=1.0: noise_v=noise_v*config.v_scale
     atom_mask = center.atom_frame_mask()
     noise = center.with_features(
         noise_h * atom_mask.unsqueeze(-1),

@@ -10,7 +10,7 @@ from torch import Tensor, nn
 
 from ..latent.types import FrameLatentBatch, LatentBatch, LatentFields
 from .sampling import apply_observation_clamp
-from .source import FIELD_NAMES, _mask_fields, sample_isotropic_noise, sample_source
+from .source import FIELD_NAMES, FrameSourceConfig, _mask_fields, sample_isotropic_noise, sample_source
 
 
 def broadcast_sample_time(
@@ -245,6 +245,10 @@ def frame_endpoint_from_velocity(
 class FrameRectifiedFlowObjective(nn.Module):
     """Two-field per-frame RF objective with equal sample weighting."""
 
+    def __init__(self, source_config: FrameSourceConfig = FrameSourceConfig()):
+        super().__init__()
+        self.source_config=source_config
+
     def sample(
         self,
         target: FrameLatentBatch,
@@ -267,7 +271,7 @@ class FrameRectifiedFlowObjective(nn.Module):
                 raise ValueError("flow_time override must contain one finite value per sample")
             if torch.any(flow_time < 0) or torch.any(flow_time > 1):
                 raise ValueError("flow_time override must lie in [0,1]")
-        source, noise = sample_frame_source(source_center, generator=generator)
+        source, noise = sample_frame_source(source_center, generator=generator,config=self.source_config)
         h = rectified_flow_interpolate(target.h, source.h, flow_time, sample_ids=target.abid)
         v = rectified_flow_interpolate(target.v, source.v, flow_time, sample_ids=target.abid)
         interpolated = target.with_features(h, v)

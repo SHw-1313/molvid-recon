@@ -21,6 +21,7 @@ from torch.utils.data import ConcatDataset, Subset
 from ..checkpoints import capture_rng_state, frame_target_provenance, load_codec_artifact
 from ..codec.frame import FrozenFrameTeacher
 from ..config import load_config
+from ..flow.source import FrameSourceConfig
 from ..data.batch import collate_clip_records
 from ..data.manifest import load_datasets
 from ..data.sampling import (
@@ -72,7 +73,7 @@ _SECTION_KEYS = {
     "statistics": {"path", "sha256", "statistics_hash", "max_atom_frames_per_gpu"},
     "model": {
         "scalar_width", "vector_width", "depth", "heads", "geometry_enabled",
-        "motion_enabled", "geometry_block_indices",
+        "motion_enabled", "geometry_block_indices", "frame_source",
     },
     "loss": {
         "bond_enabled", "generated_bond", "clean_coordinate", "clean_bond", "near_coordinate",
@@ -225,6 +226,7 @@ def _validate_frame_joint_config(raw: Mapping[str, Any]) -> None:
         _require_number(statistics["max_atom_frames_per_gpu"], "statistics.max_atom_frames_per_gpu", integer=True, positive=True)
 
     model = raw["model"]
+    FrameSourceConfig.resolve(model.get('frame_source'))
     for name in ("scalar_width", "vector_width", "depth", "heads"):
         if name in model:
             _require_number(model[name], f"model.{name}", integer=True, positive=True)
@@ -1036,6 +1038,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             geometry_enabled=bool(model_config.get("geometry_enabled", False)),
             motion_enabled=bool(model_config.get("motion_enabled", False)),
             geometry_block_indices=model_config.get("geometry_block_indices"),
+            source_config=FrameSourceConfig.resolve(model_config.get('frame_source')),
         ).to(device)
         stages = _stages(training)
         histories = tuple(int(value) for value in training.get("history_order", (4, 8)))

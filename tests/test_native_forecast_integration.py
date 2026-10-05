@@ -22,6 +22,10 @@ def test_cuda_real_A1_unit_source_parity_and_future_boundary():
         torch.testing.assert_close(getattr(observed,name),getattr(mutated,name),atol=0,rtol=0)
     model,_,_=load_parent(torch.device('cuda'))
     original=molvid_forecast(model,observed,first.time_ps[:,4:],device=torch.device('cuda'),seed=17)
+    cache=Path('runs/geometry_scaling_20261005/expanded_a1/coordinates_0000.pt')
+    saved=torch.load(cache,map_location='cpu',weights_only=False)
+    previous=next(d['coordinates'] for d in saved['predictions'] if d['variant']=='a1' and d['seed']==17)
+    torch.testing.assert_close(original.cpu(),previous,atol=0,rtol=0)
     explicit=molvid_forecast(model,mutated,second.time_ps[:,4:],device=torch.device('cuda'),seed=17,
         diagnostic_source_scales=(1.,1.))
     torch.testing.assert_close(original,explicit,atol=0,rtol=0)

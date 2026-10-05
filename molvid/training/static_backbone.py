@@ -96,7 +96,7 @@ def static_backbone_loss(
     *, generator: torch.Generator, successful_updates: int,
 ) -> tuple[Tensor, dict[str, float]]:
     """RF + differentiable endpoint/actual-source geometry; target is loss-only."""
-    objective = FrameRectifiedFlowObjective()
+    objective = FrameRectifiedFlowObjective(model.source_config)
     draw = objective.sample(batch.normalized_target, batch.source_center, generator=generator)
     velocity = model.dit.forward_static(draw.interpolated, condition=batch.condition, flow_time=draw.flow_time)
     flow = objective.loss(velocity, draw.target_velocity)
