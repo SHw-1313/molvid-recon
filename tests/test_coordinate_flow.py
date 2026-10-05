@@ -1,5 +1,6 @@
 """CUDA numerical boundaries for the isolated coordinate-state prototype."""
 from dataclasses import replace
+import copy
 
 import pytest
 import torch
@@ -8,6 +9,8 @@ from molvid.codec.frame import slice_clip_frames
 from molvid.data.batch import collate_clip_records
 from molvid.flow.coordinate import CoordinateFlowModel, coordinate_flow_loss
 from molvid.latent.types import QuerySpec
+from molvid.training.coordinate import (CoordinateTrainConfig, make_coordinate_optimizer,
+    coordinate_update, capture_coordinate_rng, restore_coordinate_rng)
 from test_static_decoder import _model, _static_record
 
 
@@ -130,3 +133,34 @@ def test_initialization_is_zero_coordinate_velocity_not_old_forecast():
     assert torch.equal(source, output)
     assert model.warm_start_report["retired_state_keys"]
     assert model.contract()["state"] == "coordinates_angstrom_Q_N_3"
+
+
+def test_coordinate_optimizer_rng_resume_is_exact_on_cuda():
+    model, observed, _ = fixture()
+    target = observed.x[-1:].expand(2, -1, -1) + .05
+    time = torch.arange(6, device="cuda")[None].expand(2, -1).float() * 100
+    batch = replace(observed, x=torch.cat((observed.x, target)),
+                    bpos=torch.cat((observed.bpos, target)), time_ps=time,
+                    frame_mask=torch.ones(2, 6, device="cuda", dtype=torch.bool),
+                    delta_time_ps=time[:, 1:] - time[:, :-1]).to("cpu")
+    config = CoordinateTrainConfig()
+    optimizer = make_coordinate_optimizer(model, config)
+    generator = torch.Generator(device="cuda").manual_seed(818)
+    coordinate_update(model, optimizer, batch, history_frames=4, generator=generator, step=0, config=config)
+    saved_model = copy.deepcopy(model.state_dict())
+    saved_optimizer = copy.deepcopy(optimizer.state_dict())
+    rng = capture_coordinate_rng(generator)
+    expected = coordinate_update(model, optimizer, batch, history_frames=4, generator=generator, step=1, config=config)
+    resumed, _, _ = fixture()
+    resumed.load_state_dict(saved_model, strict=True)
+    opt2 = make_coordinate_optimizer(resumed, config)
+    opt2.load_state_dict(saved_optimizer)
+    gen2 = torch.Generator(device="cuda")
+    restore_coordinate_rng(rng, gen2)
+    actual = coordinate_update(resumed, opt2, batch, history_frames=4, generator=gen2, step=1, config=config)
+    assert actual == expected
+    for key, value in model.state_dict().items():
+        assert torch.equal(value, resumed.state_dict()[key]), key
+    for key, state in optimizer.state_dict()["state"].items():
+        for name, value in state.items():
+            assert torch.equal(value, opt2.state_dict()["state"][key][name]), (key, name)

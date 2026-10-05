@@ -45,3 +45,27 @@ clip, H4/Q2,512 updates, Cartesian RF only. LR DiT5e-5/history2.5e-5/readout5e-4
 three fixed held-out noise seeds, Euler16, initial versus fixed final only.
 Unadapted A1 and persistence are descriptive references, not matched-training
 controls. A memorized single clip cannot validate kinetics/generalization.
+
+Completed `overfit512_v1`:512 real updates,524.39 s, peak1,386,487,808 bytes;
+checkpoint SHA `ce7aa5ec5290d004c47ab4580959934f9a271361d03d81f89ec70ec89951d5df`.
+Final three noise draws:bond .13033/.13832/.13607 Å; coordinate RMSE
+.52662/.56507/.57956 Å. Initial source bond1.60/1.63/1.59 Å; unadapted A1
+single draw bond .39748 Å. Persistence bond .04179 Å but coordinate RMSE1.39771
+Å and zero motion. Thus geometry alone would misleadingly prefer persistence.
+This remains **one memorized train clip, not improved generalization**.
+
+## Full-data candidate preparation
+
+Added coordinate RF trainer using the exact source71/72 data/H execution
+schedule, including packed systems, padding and physical clocks; target
+coordinates enter only interpolation/loss. Frozen teacher, FP32, RF-only;
+fresh A1 warm start, readout5e-4/DiT5e-5/history2.5e-5,5% warmup/cosine over2048.
+This changes architecture, objective and precision versus source-unit training;
+it is an architecture candidate, not a one-factor causal attribution.
+No static or sampled-physical losses in this first full-data candidate.
+One-clip overfit checkpoint is NOT reused. Formal runs are not launched yet.
+
+Six CUDA tests now pass in13.73 s, including exact optimizer/RNG next-update
+resume on a packed two-system fixture. Saved logs, including initial failed
+fixture attempt, are under `runs/coordinate_flow_20261005/fixture_evidence/`.
+Real full-dataset resume and largest-batch feasibility remain to be checked.

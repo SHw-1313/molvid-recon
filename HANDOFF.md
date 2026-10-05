@@ -4,8 +4,10 @@
 
 Worktree `molvid-coordinate-flow-20261005`, parent `6441ce3`.
 Read `agent/coordinate_flow_20261005/{PLAN,REPORT}.md`.
-Core implemented; five CUDA fixture gates passed. Real4-update gate is next,
-not yet a trained improvement. Do not modify running parent experiments.
+Core implemented; six CUDA gates including exact optimizer/RNG resume passed.
+Real4-update gate and one-train-clip512 overfit completed; neither establishes
+generalization. Full192 trainer exists but formal jobs are not launched yet.
+Do not modify running parent experiments. Overfit checkpoint is not a parent.
 
 ## Active continuous campaign — 2026-10-05
 
