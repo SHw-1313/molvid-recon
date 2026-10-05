@@ -10,7 +10,7 @@ from ..flow.sampling import euler_sample_frames
 
 
 @torch.no_grad()
-def molvid_forecast(model, observed_cpu, query_times_ps, *, device, seed):
+def molvid_forecast(model, observed_cpu, query_times_ps, *, device, seed, diagnostic_source_scales=None):
     """H observed frames only, query clock [1,Q]; return [Q,N,3] Angstrom."""
     observed = prepare_batch_then_to_device(model.target_teacher, observed_cpu, device)
     latent, origin = model.target_teacher(observed)
@@ -18,7 +18,8 @@ def molvid_forecast(model, observed_cpu, query_times_ps, *, device, seed):
         sample_origin=origin, loss_mask=observed.loss_mask.bool())
     times = query_times_ps.to(device)
     query = QuerySpec(time_ps=times, frame_mask=torch.ones_like(times, dtype=torch.bool))
-    generated, _ = euler_sample_frames(model, context=context, query=query, steps=16, seed=seed)
+    generated, _ = euler_sample_frames(model, context=context, query=query, steps=16, seed=seed,
+        diagnostic_source_scales=diagnostic_source_scales)
     return model.decoder(context, generated, query).coordinates.float()
 
 

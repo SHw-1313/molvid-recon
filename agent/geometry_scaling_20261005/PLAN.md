@@ -169,3 +169,20 @@ for MSD/residueRMSF errors, and at least one clear motion improvement before
 claiming joint improvement. Cluster/system-paired uncertainty and seed spread
 must be reported. Passing this screen advances to long/native-time tests,
 not automatic competitive or thermodynamic claims.
+
+## Source-bank amplitude diagnostic (training systems only)
+
+After the Gcoord GPU evaluation, run8 fixed training systems ×2 seeds(83/84)
+×4 inference source settings: original(h1,v1),h-only(.2,1),v-only(1,.2),both(.2,.2).
+No model training and no claim that a different sampling distribution is a
+trained improvement. This isolates the vector/scalar source burden suggested
+by measured source-to-motion norms before committing to a source-retraining
+experiment. Explicit(1,1) must match the unchanged default exactly on a real
+CUDA forecast; count its extra parity draw separately(64+1 total). All
+geometry/motion/CA-handedness metrics retained,2h cap. The global default
+remains unit noise; diagnostic arguments never change checkpoint identity.
+
+Training-data expansion reservation completed separately:192 existing +320
+additional=512, no new trajectory targets opened at reservation. Protect
+expanded48,reserved96,old sealed/valid and known-clean official baseline test
+clusters. This is a future controlled data-size arm, not a completed training.

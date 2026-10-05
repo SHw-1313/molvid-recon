@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional
+import math
 
 import torch
 from torch import Tensor, nn
@@ -145,6 +146,7 @@ def euler_sample_frames(
     steps: int = 16,
     seed: int,
     prepared_condition: object | None = None,
+    diagnostic_source_scales: tuple[float, float] | None = None,
 ) -> tuple[FrameLatentBatch, dict[str, Any]]:
     """Jointly update every future frame at each Euler flow step."""
 
@@ -152,9 +154,16 @@ def euler_sample_frames(
         raise ValueError("Euler steps must be positive")
     normalized_observed = model.normalize(context.latent)
     center = repeat_last_frame_center(normalized_observed, query)
-    current, _ = sample_frame_source(
+    current, noise = sample_frame_source(
         center, generator=_make_generator(context.latent.h.device, seed)
     )
+    # Explicit inference-only diagnostic, not a changed trained source contract.
+    # The default path performs exactly the previous arithmetic and RNG draws.
+    if diagnostic_source_scales is not None:
+        if len(diagnostic_source_scales)!=2 or any(not math.isfinite(s) or s<0 for s in diagnostic_source_scales):
+            raise ValueError('diagnostic h/v source scales must be finite and nonnegative')
+        sh,sv=diagnostic_source_scales
+        current=center.with_features(center.h+sh*noise.h,center.v+sv*noise.v)
     condition = (
         model.prepare_condition(context)
         if prepared_condition is None else prepared_condition
@@ -183,7 +192,7 @@ def euler_sample_frames(
     physical = model.inverse(current)
     if was_training:
         model.train()
-    return physical, {
+    metadata = {
         "solver": "euler",
         "steps": int(steps),
         "seed": int(seed),
@@ -192,3 +201,7 @@ def euler_sample_frames(
         "future_fields": ["h", "v"],
         "condition_prepared_by_caller": prepared_condition is not None,
     }
+    if diagnostic_source_scales is not None:
+        metadata['diagnostic_source_scales']=list(diagnostic_source_scales)
+        metadata['source_differs_from_training']=list(diagnostic_source_scales)!=[1.,1.]
+    return physical,metadata
