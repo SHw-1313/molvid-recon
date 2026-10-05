@@ -131,3 +131,32 @@ do not monkeypatch official source or downgrade the shared training environment.
 Record NumPy version/source, original source hashes and checkpoint hash.
 The failed first pilot stays preserved. Pilot A1 completed (two generated
 draws plus observed-only projection), then expanded A1 was launched.
+
+## Gcoord: current-coordinate geometry recovery (independent, no default change)
+
+Motivation: decoder covalent messages and DiT geometry directions currently
+come from the observed structure, whereas newly generated nonbonded clashes
+depend on current coordinates. Test that missing spatial feedback directly.
+Four radius-graph layers, width96, radius4.5A, cap128 plus unconditional
+covalent edges. Rebuild graph each layer; gradients through distances and
+directions, not discrete edge membership. Atom/block embeddings, scalar
+messages and scalar-gated vector corrections. Preserve per-system centroid;
+SO3 covariance, packed-system isolation and padded-frame tests required.
+Zero-initialize coordinate gates, so starting predictions are exactly A1.
+Last layer has no unused hidden-state update parameters.
+
+Compare Gcoord-static versus Gcoord-mixed, seeds71/72,2048 optimizer updates
+each after a16-update execution pilot (pilot never parent). Identical static
+exposure/noise schedules: all192 parent training systems, random native
+snapshots, noise sigma0/.05/.15/.3/.6A with atom+residue components and zero
+translation. Coordinate MSE+0.5 bond MSE. Mixed adds an actual frozen-A1
+generated consecutive-frame pair every4 updates, from the preexisting32-system
+training cache:5 observed-bond MSE+clash severity+0.1 coordinate retention+
+0.1 increment-change penalty. Never regress actual draws against their single
+future target. AdamW3e-4,wd0.01,clip1,FP32.6h maximum per arm,8GiB reserve.
+This trains only a new geometry module, not a DiT; C8 continuation is the
+separate full-model training experiment. Reusing MD snapshots is not new
+external-static pretraining. Evaluate raw A1 and repaired predictions on the
+same frozen48 development clips, with no checkpoint selection on development.
+Do not merge if geometry gain trades away motion or if only train improves.
+No thermodynamic/kinetic correctness claim follows from local recovery.
