@@ -115,3 +115,16 @@ all7 targeted CUDA tests passed in9.12s at2.5% process memory cap. The corrected
 profile selects largest query-atom-frame cost. Register fresh-source-contract
 `full192_v3` with recomputation, same192 data/H schedule, FP32 objective, two
 seeds and fixed2048 budget. v2 discarded updates are not counted in that budget.
+
+v3 is now in real formal training (observed through step60, past v2's failed
+step49). The maximum-query profile uses H4/59,700 query-atoms, sample
+atlas_4yal_A_R1_dt_100ps_w000007:6.53485s, peak16,305,031,168bytes. Its real
+17/resume16→17 whole-checkpoint comparison is again bitwise exact. Step17 SHAs:
+45a75480…52b1 uninterrupted,685d48a4…e7621 resumed (serialization bytes differ;
+all compared tensor/state/RNG values agree). A CPU comparison of the saved v2
+and v3 step17 checkpoints finds ZERO differing floating model-state tensors
+and identical flow RNG despite the execution optimization; no fresh model call
+was used for that audit. CUDA test log is retained under
+`runs/coordinate_flow_20261005/fixture_evidence/checkpoint_blocks_cuda7.log`.
+Formal peak through step60 is15,341,581,312bytes. No generated-validation result
+exists yet; the single-clip overfit numbers are not substituted for one.

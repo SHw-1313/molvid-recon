@@ -191,3 +191,15 @@ completion before launching. Keep other GPUs/processes untouched.
 Preserve every failure artifact; do not count CPU audits or coordinate
 optimization as neural training. Final reports must separate updated module,
 updates, systems, compute and completed versus queued work.
+# Active execution correction — 2026-10-05
+
+Current source0782453 adds optional block recomputation;7 CUDA gates passed.
+`runs/coordinate_flow_20261005/full192_v3` is the CURRENT GPU5 campaign, using
+`--checkpoint-blocks`, fresh A1, same192 data/H exposure and two2048 budgets.
+Largest-query H4 profile16.3GB and real17 exact-resume passed; formal seed71
+observed through60. v1 failed on container-readonlydata2 (0 updates); v2 passed
+real-resume but OOM after18–48 because original C8@6000 evaluation sharesGPU5.
+Do not interrupt that original lane. Keep both failures; never aggregate their
+discarded updates into v3. All outputs now use writabledata4, not data2 links.
+Runtime model files must stay frozen while the strict-contract training runs.
+Final-only48 evaluation and seed72 follow automatically. No quality result yet.
