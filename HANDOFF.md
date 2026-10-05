@@ -1,5 +1,12 @@
 # Refactor handoff
 
+## Active independent coordinate static-balance diagnostic
+
+Read `agent/coordinate_static_balance_20261005/PLAN.md`. Parent5885eab,
+fixed trained seed71 checkpoint, train-only GPU gradient measurements.
+No optimizer or validation-based weight selection. Parent coordinate48 and
+BioKinema48 evaluation remain untouched. This branch is not a trained model.
+
 ## Active independent coordinate-state prototype
 
 Worktree `molvid-coordinate-flow-20261005`, parent `6441ce3`.

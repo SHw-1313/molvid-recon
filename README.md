@@ -1,5 +1,10 @@
 # Molvid
 
+Current diagnostic branch: `exp/coordinate-static-balance-20261005`.
+[Train-only static/dynamic gradient plan](agent/coordinate_static_balance_20261005/PLAN.md).
+No training updates or default promotion in this probe; inherited campaigns
+below run in their original worktrees.
+
 Current independent worktree: `exp/coordinate-flow-20261005`.
 [Coordinate-state prototype and evidence](agent/coordinate_flow_20261005/REPORT.md).
 No default promotion; parent campaigns below continue in their own worktree.
