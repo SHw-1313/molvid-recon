@@ -204,3 +204,27 @@ Training-data expansion reservation completed separately:192 existing +320
 additional=512, no new trajectory targets opened at reservation. Protect
 expanded48,reserved96,old sealed/valid and known-clean official baseline test
 clusters. This is a future controlled data-size arm, not a completed training.
+
+## Bounded source-retraining experiment (after completed source diagnostic)
+
+The inference-only v0.2 intervention was strongly NEGATIVE (bond1.001A versus
+0.263A; clashes1365.9 versus93.35). Scalar-only reduction also suppresses motion.
+Do not call these trained candidates or conclude that a smaller source is better.
+The result shows a strong learned-field/source dependence; it does not identify
+the quality of a model trained consistently with a changed source. Test that
+remaining hypothesis with a bounded matched pair, rather than change defaults.
+
+Freeze unit(h1,v1) versus v02(h1,v0.2), two seeds71/72,2048 full-model updates
+each, same A1 parent and fresh optimizer/scheduler/cursor/RNG. All192 parent
+training systems are exposed by2048;512/1024 cover fewer systems and are not
+substituted for a full data-coverage claim. Exact data/H/auxiliary schedule within
+seed; teacher/normalization/losses/auxiliary8-step rollout held fixed. BF16,
+20000 atom-frames/update, lr history2.5e-5/DiT5e-5/decoder1.25e-5,
+5percent warmup and cosine to0.1. First16 updates are an execution smoke under
+the SAME2048 schedule, then exact resume WITHIN that arm. This is never exact
+continuation from A1. Final2048 only for development comparisons; no best-valid
+selection. Maximum6h/arm,10GiB free before arm, no automatic retry of failures.
+Seed71 runs v02 then unit on GPU7;seed72 runs unit then v02 on GPU6 only after
+its existing C8 continuation finishes.8192 planned full-model updates are NOT
+the already completed8192 small Gcoord updates. All final arms must pass both
+motion and chemistry; the default remains A1 even if training loss decreases.
