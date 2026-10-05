@@ -5,6 +5,7 @@ from molvid.evaluation.latent_geometry import channel_spectrum, matched_norm, no
 
 def test_cuda_channel_spectrum_and_perturbation_rotation():
     assert torch.cuda.is_available(), 'This numerical test requires CUDA'
+    torch.use_deterministic_algorithms(True)
     generator=torch.Generator(device='cuda').manual_seed(177)
     direction=torch.randn(4,19,3,1,device='cuda',generator=generator)
     channels=torch.arange(1,9,device='cuda').float()

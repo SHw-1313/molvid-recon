@@ -35,10 +35,12 @@ def channel_spectrum(values, *, vector):
     basis = basis.flip(1).float()
     fraction = eigenvalues / eigenvalues.sum().clamp_min(1e-30)
     entropy = -(fraction * fraction.clamp_min(1e-30).log()).sum()
+    # Only the 128-value reporting reduction is CPU; model/eigensolve stay CUDA.
+    cumulative = fraction.cpu().cumsum(0)
     return dict(eigenvalues=eigenvalues.tolist(), energy_fraction=fraction.tolist(),
                 effective_rank=float(entropy.exp()),
-                rank90=int(torch.searchsorted(fraction.cumsum(0), .9).item() + 1),
-                rank99=int(torch.searchsorted(fraction.cumsum(0), .99).item() + 1),
+                rank90=int(torch.searchsorted(cumulative, .9).item() + 1),
+                rank99=int(torch.searchsorted(cumulative, .99).item() + 1),
                 rows=len(x), centered=not vector), basis
 
 
