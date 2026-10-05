@@ -1,5 +1,6 @@
 from dataclasses import replace
 import torch
+import pytest
 from molvid.geometry.current_recovery import CurrentGeometryRecovery,RecoveryConfig
 from molvid.geometry.types import StaticTopologyMetadata
 
@@ -20,6 +21,9 @@ def test_cuda_current_geometry_identity_equivariance_gradients_and_padding():
     t=topology();mask=torch.tensor([[True,True],[True,False]],device='cuda')
     x=torch.tensor([[[0.,0,0],[1.6,.2,0],[0,0,0],[1.1,.4,.2]]],device='cuda').repeat(2,1,1)
     expected=x.clone();expected[1,2:]=0
+    with pytest.raises(ValueError,match='block type'):
+        invalid=replace(t,block_type=torch.full_like(t.block_type,138))
+        model(x,topology=invalid,frame_mask=mask)
     torch.testing.assert_close(model(x,topology=t,frame_mask=mask),expected,atol=0,rtol=0)
     for layer in model.layers: torch.nn.init.normal_(layer.force.weight,std=.1)
     x.requires_grad_(True);result=model(x,topology=t,frame_mask=mask)

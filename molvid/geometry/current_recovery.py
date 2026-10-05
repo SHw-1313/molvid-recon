@@ -81,6 +81,10 @@ class CurrentGeometryRecovery(nn.Module):
         if coordinates.ndim!=3 or coordinates.shape[1:]!=(topology.num_atoms,3):
             raise ValueError('expected [T,N,3]')
         if frame_mask.shape!=(topology.batch_size,len(coordinates)): raise ValueError('frame mask shape')
+        if bool(((topology.atom_type<0)|(topology.atom_type>=NUM_ATOM_TYPE)).any()):
+            raise ValueError('atom type outside shared chemistry vocabulary')
+        if bool(((topology.block_type<0)|(topology.block_type>=NUM_BLOCK_TYPE)).any()):
+            raise ValueError('block type outside shared chemistry vocabulary')
         h0=self.atom_embedding(topology.atom_type)+self.block_embedding(topology.block_type)
         n=topology.num_atoms;a,b=topology.covalent_bond_index
         bonds=torch.cat((a*n+b,b*n+a)).unique(sorted=True)
