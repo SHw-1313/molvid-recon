@@ -37,6 +37,17 @@ Log `/tmp/molvid-query-geometry-qualification-v1.log` inside the container.
 This queue does not submit any real-protein GQ optimizer updates. Runtime/tools/
 tests are now frozen until qualification finishes; documentation may update.
 
+Paired `recipes_v1` are now prepared (not submitted) by the main research
+worktree's `tools.prepare_query_geometry`, source9825530. Existing control
+manifest/exposure/configs and both seed-specific parent weights passed SHA
+verification. Only `coordinate_train_query_geometry=true` is added; every
+inherited setting, including inactive legacy settings, is preserved. Eleven
+CPU configuration/confound tests passed1.77s. Recipe SHAs71/72:
+`67b8e6ebec5d46db4a56d8a071823bb3c2b2b857fe54ea25a11b632d260659ae` /
+`68c6598a53ff1a091d2d003fdc2ea39aff3c326bcd698fb911009d55f2b79eed`.
+Preparation made0 model calls and0 updates; do not mistake it for formal
+training submission. The frozen GQ runtime and numerical waiter are unchanged.
+
 Current independent branch: `exp/coordinate-chirality-training-20261005`.
 [Matched coordinate continuation design](agent/coordinate_chirality_training_20261005/PLAN.md).
 Optional sampled-handedness training implemented; formal runs not launched yet.
