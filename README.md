@@ -1,5 +1,31 @@
 # Molvid
 
+Latest scheduling correction,2026-10-06 03:13:source7a953fe explicitly copies
+`target_teacher.frame_chunk_size` when enabling GQ. The real loader sets1,
+whereas the generic encoder defaults4; omitting this metadata would change
+grouped arithmetic and activation memory. Four CPU checks passed again3.04s,
+including the one-frame copy regression; two CUDA cases remain unexecuted.
+The original CUDA waiter was cancelled before any GPU test (`KeyboardInterrupt`
+marker retained). New `cuda_qualification_v2` is live,hostPID334618/session58743.
+
+Real qualification is now queued externally from main-worktree source53aa3d0:
+hostPID334940/session94778, workspace output `qualification_v2`. It will require
+all13 numerical tests,then per seed exact new-runtime default16 versus the
+actual original control16,one discarded largest-query profile,and active17
+versus16→17 exact resume. These34 candidate prefix updates are retained for
+later formal continuation,not claimed as completed2048 training. Four CPU
+external checkpoint-boundary tests passed8.81s;0 real GQ updates so far.
+
+An earlier real-qualification submission failed before output creation because
+`/data2` is read-only **inside the container**; log retained at
+`/tmp/molvid-query-geometry-real-qualification-v1.log`. No mount permissions were
+changed. Corrected outputs are writable workspace paths. Host archive helper
+PID335241/session50570 copies completed prefixes to `/data2`,verifies byte/SHA
+identity,then atomically replaces originals with readable symlinks. No checkpoint
+bytes deleted. This helper and both qualification services are actually live.
+Formal2048 training/evaluation controller remains to be submitted after these
+gates are wired; no formal GQ training or efficacy result is claimed.
+
 Current independent branch: `exp/query-geometry-training-20261006` (GQ),
 forked from coordinate continuation4505d3d. Only generated-state frame geometry
 is made trainable; the observed teacher remains frozen/no-grad. No current-local
