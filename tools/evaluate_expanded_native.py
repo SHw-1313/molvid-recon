@@ -28,6 +28,8 @@ def run(args):
     if args.output.exists(): raise FileExistsError(args.output)
     if args.arm!='a1' and args.checkpoint is None: raise ValueError('checkpoint required')
     if args.arm=='pvb' and args.project: raise ValueError('register a separate equal-treatment postprocessing campaign')
+    if args.variant is not None and args.arm!='checkpoint': raise ValueError('custom variant names require checkpoint arm')
+    variant_name=args.variant or args.arm
     device=configure_device('cuda', deterministic=args.arm!='pvb')
     torch.cuda.set_per_process_memory_fraction(.9)
     manifest=json.loads((args.cache/'complete.json').read_text())
@@ -51,12 +53,13 @@ def run(args):
                 codec_path=raw['codec']['checkpoint'],codec_sha256=raw['codec']['sha256'],device=device)['model']
             model.eval().requires_grad_(False);model.target_teacher.frame_chunk_size=1
         inputs.extend([args.checkpoint or Path(release['selected_checkpoint']['path']),Path(raw['codec']['checkpoint'])])
-    protocol=dict(arm=args.arm,development=True,confirmation_opened=False,test_opened=False,
+    protocol=dict(arm=args.arm,variant=variant_name,development=True,confirmation_opened=False,test_opened=False,
         history_frames=1 if args.arm=='pvb' else 4,query_frames=12,query_dt_ps=100,seeds=[17,29],
         solver_steps=10 if args.arm=='pvb' else 16,neural_training_updates=0,pilot=args.pilot,
         records=entries,projection=asdict(ProjectionConfig()) if args.project else None,
         baseline_pretraining_exposure_audit='pending; not a qualified held-out competition result',
         parameter_count=sum(p.numel() for p in model.parameters()),external_source_sha256=external_files,
+        model_source_config=None if args.arm=='pvb' else model.source_config.contract(),
         numpy_version=np.__version__,numpy_source=np.__file__,
         original_pvb_refiner=False,physical_units='Angstrom, ps',max_seconds=21600,
         limitations=['ATLAS protein-only','R1 two anchors','short horizon is not equilibrium validation',
@@ -83,13 +86,13 @@ def run(args):
                     with torch.no_grad():
                         predicted=(pvb_forecast(model,pvb_batch,origin,seed=seed) if args.arm=='pvb' else
                             molvid_forecast(model,observed,cpu.time_ps[:,4:],device=device,seed=seed))
-                    variants=[(args.arm,predicted)]
+                    variants=[(variant_name,predicted)]
                     if args.project:
                         batch=cpu.to(device)
                         repaired,_=repair_coordinates(predicted,observed=c.observed,
                             topology=StaticTopologyMetadata.from_batch(batch),loss_mask=batch.loss_mask,
                             frame_mask=batch.frame_mask[:,4:],physical=physical)
-                        variants.append((args.arm+'_projection',repaired))
+                        variants.append((variant_name+'_projection',repaired))
                     for variant,coordinates in variants:
                         if not torch.isfinite(coordinates).all(): raise FloatingPointError('nonfinite prediction')
                         with torch.no_grad(): metrics=score(coordinates,record,c,physical)
@@ -115,6 +118,7 @@ def run(args):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--cache',type=Path,required=True)
-    p.add_argument('--output',type=Path,required=True);p.add_argument('--arm',choices=['a1','c4','c8','pvb'],required=True)
+    p.add_argument('--output',type=Path,required=True);p.add_argument('--arm',choices=['a1','c4','c8','pvb','checkpoint'],required=True)
+    p.add_argument('--variant')
     p.add_argument('--checkpoint',type=Path);p.add_argument('--pvb-root',type=Path,default=Path('/workspace/PVB_origin'))
     p.add_argument('--project',action='store_true');p.add_argument('--pilot',action='store_true');run(p.parse_args())

@@ -56,6 +56,10 @@ def run(args):
     pairs=[(name,'a1') for name in sorted(groups) if name!='a1']
     if 'pvb' in groups:
         pairs += [(name,'pvb') for name in sorted(groups) if name not in ('pvb','a1')]
+    for pair in args.pair:
+        names=pair.split(':')
+        if len(names)!=2 or any(n not in groups for n in names): raise ValueError('explicit pair must name two available variants')
+        if tuple(names) not in pairs: pairs.append(tuple(names))
     comparisons={}
     for left,right in pairs:
         comparisons[f'{left}_minus_{right}']={label:paired_rows(groups[left],groups[right],members)
@@ -74,4 +78,5 @@ def run(args):
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--generated',type=Path,nargs='+',required=True)
     p.add_argument('--exposure',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--pair',action='append',default=[],help='additional left:right matched comparison')
     run(p.parse_args())
