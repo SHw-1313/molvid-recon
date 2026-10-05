@@ -15,6 +15,7 @@ def topology():
 
 def test_cuda_current_geometry_identity_equivariance_gradients_and_padding():
     assert torch.cuda.is_available();torch.manual_seed(42)
+    torch.use_deterministic_algorithms(True)
     model=CurrentGeometryRecovery(RecoveryConfig(width=16,depth=2)).cuda()
     t=topology();mask=torch.tensor([[True,True],[True,False]],device='cuda')
     x=torch.tensor([[[0.,0,0],[1.6,.2,0],[0,0,0],[1.1,.4,.2]]],device='cuda').repeat(2,1,1)
@@ -22,6 +23,8 @@ def test_cuda_current_geometry_identity_equivariance_gradients_and_padding():
     torch.testing.assert_close(model(x,topology=t,frame_mask=mask),expected,atol=0,rtol=0)
     for layer in model.layers: torch.nn.init.normal_(layer.force.weight,std=.1)
     x.requires_grad_(True);result=model(x,topology=t,frame_mask=mask)
+    torch.testing.assert_close(result[:,:2].mean(1),x[:,:2].mean(1),atol=1e-6,rtol=1e-6)
+    torch.testing.assert_close(result[0,2:].mean(0),x[0,2:].mean(0),atol=1e-6,rtol=1e-6)
     rotation=torch.tensor([[.36,.48,-.8],[-.8,.6,0.],[.48,.64,.6]],device='cuda')
     offset=torch.tensor([3.,2.,1.],device='cuda')
     transformed=model(x@rotation+offset,topology=t,frame_mask=mask)

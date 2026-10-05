@@ -42,11 +42,16 @@ def run(args):
     candidates={name:sorted(clean&split) for name,split in splits.items() if name.endswith('_test')}
     candidates['both_official_test']=sorted(clean&splits['pvb_test']&splits['biokinema_test'])
     candidates['biokinema_test_not_in_pvb_dynamic_train']=sorted((clean&splits['biokinema_test'])-splits['pvb_train'])
+    all_dynamic_train=splits['pvb_train']|splits['biokinema_train']|splits['biokinema_val']
+    baseline_train_clusters={cluster[s] for s in all_dynamic_train if s in cluster}
+    candidates['both_known_dynamic_cluster_clean']=sorted(s for s in
+        candidates['biokinema_test_not_in_pvb_dynamic_train'] if cluster[s] not in baseline_train_clusters)
     atomic_write_json(args.output/'summary.json',dict(status='completed',protocol=protocol,
         split_counts={k:len(v) for k,v in splits.items()},overlap=overlap,
         overlap_counts={g:{k:len(v) for k,v in data.items()} for g,data in overlap.items()},
         known_parent_clean_official_test_candidates=candidates,
         candidate_cluster_counts={k:len({cluster[s] for s in v}) for k,v in candidates.items()},
+        baseline_dynamic_sequences_not_in_inventory=sorted(all_dynamic_train-set(cluster)),
         trajectory_targets_read=0,qualification='known dynamic exposure only; external static pretraining still unqualified',
         confirmation96_qualification='do not call independent against BioKinema when overlapping its training split'))
     print(json.dumps(dict(overlap_counts={g:{k:len(v) for k,v in d.items()} for g,d in overlap.items()},
