@@ -84,3 +84,11 @@ checks passed in torch-ito. Queue `full192_v1` is launched and waiting for the
 parent's GPU5 capacity queue to complete; no formal optimizer update yet.
 Final pre-launch CUDA6 regression passed in9.46s after the trainability fix.
 See PLAN for changed factors and fixed budgets. Formal quality unavailable.
+# Storage qualification (before formal192 starts)
+
+The waiting `full192_v1` controller and protocol paths are unchanged. Its
+not-yet-written `seed71` and `seed72` directories are symlinks to new per-seed
+directories under the existing user's `/data2/sihao/molvid-research-20261005/`.
+Host/container both resolve these paths; data2 had183GiB free versus data4 16GiB.
+No active checkpoint was moved or deleted. This is storage routing only, not
+a scientific configuration or exposure change.
