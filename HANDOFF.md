@@ -6,10 +6,19 @@ Branch `exp/geometry-scaling-20261005`, worktree `molvid-geometry-scaling-202610
 Authoritative current status: [geometry/scaling report](agent/geometry_scaling_20261005/REPORT.md).
 User authorizes continued scientific experiments without stage confirmation.
 Goal is NOT achieved; no default promotion. C8 exact continuation is running on
-GPU6; A1 expanded48 on GPU5, then queued matched capacity evaluations. PVB48
-and all four Gcoord2048 trainings completed. GPU7 BioKinema native1ns pilot
-completed and I/O audit passed; queued Gcoord48 uses cached A1 draws, followed
-by train-only source-bank diagnostic. Queue paths are in the report.
+GPU6; expanded capacity queue on GPU5 (C4@11000 complete, C8@11000 running).
+A1/PVB48 and Gcoord48 completed: reject projection/all Gcoord due motion and
+chemistry regressions. C4 extra training improves geometry/motion but still
+far from PVB clash quality. BioKinema native1ns pilot and I/O audit completed.
+Train-only source-scale inference interventions FAILED; no sampler promotion.
+Optional source contract implemented, CPU30/CUDA4 gates passed, old real A1 draw
+bitwise identical. Bounded consistent-source full-model retraining is running:
+unit/v02 × seeds71/72 ×2048 updates (8192 PLANNED, not yet completed).
+GPU7 seed71 v02 then unit; GPU6 seed72 unit then v02 waits C8 completion.
+Each lane has final-only48 evaluation/chemistry/paired comparison queued.
+v02_71 real16-step checkpoint CPU reload/optimizer audit passed. Details and
+exact queue paths are in the report. Do not confuse these with completed
+171744-parameter Gcoord head updates. Source framework defaults remain unit.
 Baseline train overlap invalidates an independent-test claim for dev48/reserve96.
 All experiments use `enter-container` / `torch-ito`; GPU0–4 belong to other work.
 Parent Cα handoff below is historical, not the active worktree.

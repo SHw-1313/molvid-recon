@@ -51,6 +51,46 @@ MD参考的Cα翻转/近平面比例均为0。PVB在键长、clash和MSD明显�
 下一步转向生成源/表示/主干训练路径。证据：`expanded_gcoord`、
 `stereochemistry_gcoord`、`paired_gcoord`，均已完成。
 
+### C4额外训练：有共同收益，仍远未追上PVB几何
+
+新增48体系实测C4@11000（相对A1额外11000次更新，不是总训练步数11000）：
+bond .249362 Å，clash102.2453/1000，MSD2.181260 Å²，残基RMSF MAE .263631 Å，
+幅度比 .909996，Cα翻转 .003110、近平面 .004565。
+相对A1四项误差差值及体系bootstrap95%CI：bond−.02189 [−.02386,−.02011]；
+clash−17.52265 [−22.30302,−12.20848]；MSD−.29190 [−.40009,−.20170]；
+残基RMSF−.03964 [−.05457,−.02585]。这是相同4-block模型更多训练的收益，
+不能归功于增加容量。PVB clash仍为1.37，不能宣称已经竞争成功。
+证据：`expanded_c4_11000`、`paired_c4_11000`、`stereochemistry_c4_11000`。
+
+### 源尺度诊断：推理捷径失败，启动一致分布配对重训练
+
+8训练体系×2seeds×4设置，64次生成+1逐位一致性draw，179.5秒，0训练。
+
+|推理源尺度 h/v|bond Å|clash/1000|MSD MAE Å²|残基RMSF MAE Å|RMSF幅度比|
+|---|---:|---:|---:|---:|---:|
+|1/1|.262769|93.3525|3.350152|.299447|.847886|
+|.2/1|.232682|57.3089|3.565857|.410213|.647708|
+|1/.2|1.000799|1365.9383|16.968504|.706048|1.643441|
+|.2/.2|.821059|936.5073|9.324282|.359367|.751905|
+
+不采用任何推理尺度替换。向量降噪导致严重失真，不能用低维谱直接断言
+“噪声少就更好”；标量降噪也牺牲运动。它揭示旧生成场对训练源分布的强
+依赖，不回答重新训练该源能否改善。现在以有上限的真实实验检验后者。
+
+`source_training` 已冻结 unit(1/1) vs v02(1/.2)，种子71/72各2048更新，共
+计划8192次**全模型**更新，区别于已经完成的8192次小Gcoord更新。
+父权重A1、192体系、损失、主/辅助采样曝光、教师与归一化相同；新优化器，
+不是A1原优化器精确续训。每种子2048步覆盖全部192体系；1024只覆盖191，
+已实查，不能称全覆盖。学习率hist2.5e-5/DiT5e-5/decoder1.25e-5。
+GPU7种子71先v02后unit；GPU6种子72等C8完成再先unit后v02。
+
+v02/71已经完成最初16步并在同2048计划内精确恢复继续；已CPU重载真实
+16步checkpoint，源配置1/.2正确、481模型张量有限、424个优化器状态step16。
+这只验证真实训练和可恢复性，没有16步生成效果结论。每组固定final2048
+的48体系生成、手性和配对对照已自动排队，训练失败不会静默继续。
+运行证据：`source_training/queue_{71,72}/status.json`、
+`source_evaluation_queue_{71,72}/status.json`、`source_training_audit_v02_71_step16`。
+
 ## 已完成的可靠证据
 
 - 实际 checkpoint SHA 核查确认已有 C4/C8 比较都是11000更新，训练曝光、
@@ -106,7 +146,9 @@ MD参考的Cα翻转/近平面比例均为0。PVB在键长、clash和MSD明显�
 |Gcoord static/mixed|已完成4×2048真实更新|`gcoord_campaign_v2/queue.json`、`gcoord_training_audit/summary.json`|
 |Gcoord expanded|已完成4模型×192缓存draw及CPU配对/手性审计；否决合并|`expanded_gcoord/summary.json`、`paired_gcoord/summary.json`|
 |expanded capacity|GPU5等A1；依次C4/C8@11000、C4/C8@13575|`expanded_followup_queue_v3/status.json`|
-|source-bank diagnostic|GPU7等Gcoord验证；先CUDA配置门禁，再8训练体系×2seeds×4源尺度，0正式更新|`source_bank_queue_v2/status.json`|
+|source-bank diagnostic|已完成，推理替换均不晋升|`source_bank_diagnostic/summary.json`|
+|source retraining|GPU7运行seed71；GPU6等C8后seed72；4组各2048全模型更新|`source_training/queue_71/status.json`、`queue_72/status.json`|
+|source final evaluation|各自GPU等该种子两组训练全部完成；固定final2048|`source_evaluation_queue_71/status.json`、`source_evaluation_queue_72/status.json`|
 |BioKinema native1ns pilot|已完成并通过I/O审计；单体系，不是benchmark|`biokinema_matched1ns_audit/summary.json`|
 
 Gcoord 用当前预测坐标逐层重建半径图，和此前 S 静态 latent 梯度路由不同。
@@ -123,7 +165,7 @@ Gcoord 用当前预测坐标逐层重建半径图，和此前 S 静态 latent �
 checkpoint；默认单位源保持旧合同/数值路径。CPU配置/代数检查30项通过。
 真实CUDA旧缓存逐位一致性、非单位源恢复拒错、辅助完整/分块反传4项已通过，
 13.09秒；包含小fixture优化器更新，不是正式模型训练。训练集源诊断已启动。
-**未训练任何新源尺度模型，未声称新源有效。** 旧等待诊断进程在0模型调用时
+源诊断本身0训练；随后新源全模型训练已启动，**未声称新源有效**。旧等待诊断进程在0模型调用时
 停止，由新进程启动队列替代，避免等待期间旧Python导入与新源码hash不一致。
 
 ## 外部对照边界

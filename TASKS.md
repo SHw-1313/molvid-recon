@@ -11,7 +11,9 @@
 - [x] Reject projection and all four Gcoord candidates: geometry gain trades away motion/handedness.
 - [x] Shared optional source-scale contract; CPU30 and CUDA4 targeted gates passed.
 - [ ] Complete C8 full continuation and expanded matched capacity evaluations.
-- [ ] Train-only source-distribution causal diagnostic, then decide paired retraining.
+- [x] Train-only source-distribution diagnostic: reject inference-only replacements.
+- [ ] Complete paired unit/v02 source retraining:4×2048 full-model updates and fixed-final48 evaluation.
+- [x] First realv02/71 16-step checkpoint reload/optimizer/source contract audit.
 - [ ] Controlled training-data expansion; independent, long-time and complex validation.
 - No default promotion; no joint competitive success claimed. See current report.
 
