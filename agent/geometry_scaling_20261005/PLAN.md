@@ -69,3 +69,13 @@ GPU identity/telemetry, all optimizer steps, initial/final hashes, source/data
 identity and reload verification accompany new training. Stage updates are
 informational, not requests for user confirmation. Continue automatically when
 the next safe, scientifically useful action is available.
+
+## Audit finding and next registered action
+
+Existing capacity evaluator used C4 step13000 versus C8 step11000 (budget stop),
+despite matched original schedules. Initial descriptive aggregation is not a
+matched-exposure capacity result. Verify both11000 checkpoint exposure and RNG
+states exactly, then evaluate C4/11000 on the original ordinary384/fixed192
+records and seeds0/1/2; reuse immutable C8/11000 scores with matching protocol.
+No new optimizer steps. This repairs the comparison, not the old valid8's lack
+of independence. CPU aggregation is never labeled GPU training.
