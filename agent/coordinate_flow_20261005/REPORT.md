@@ -84,11 +84,34 @@ checks passed in torch-ito. Queue `full192_v1` is launched and waiting for the
 parent's GPU5 capacity queue to complete; no formal optimizer update yet.
 Final pre-launch CUDA6 regression passed in9.46s after the trainability fix.
 See PLAN for changed factors and fixed budgets. Formal quality unavailable.
-# Storage qualification (before formal192 starts)
+## Storage gate failure and corrected restart
 
-The waiting `full192_v1` controller and protocol paths are unchanged. Its
-not-yet-written `seed71` and `seed72` directories are symlinks to new per-seed
-directories under the existing user's `/data2/sihao/molvid-research-20261005/`.
-Host/container both resolve these paths; data2 had183GiB free versus data4 16GiB.
-No active checkpoint was moved or deleted. This is storage routing only, not
-a scientific configuration or exposure change.
+`full192_v1` failed before any optimizer update: data2 is readable but mounted
+read-only INSIDE the container. Merely resolving a path was not a sufficient
+writeability test. Preserve the controller traceback and unused links as the
+failed attempt; no active checkpoint was moved or deleted, no mount changed.
+After a real temporary-directory write check in the container and checking
+15.49GiB free, restart identical code/data/config as `full192_v2` on writable
+data4. The BioKinema unused read-only links were separately unlinked; their
+target directories and all result files remain intact.
+
+v2 largest nominal79,600atom-frame/H8 profile completed a real CUDA update:
+sample atlas_4yal_A_R2_dt_400ps_w000001,39,800 valid query-atoms,
+4.68249s, peak29,753,665,024bytes. This disposable profile update is not counted
+as formal training or evidence of quality. Real17/resume16→17 gates follow.
+
+v2 real17/resume16→17 **passed bitwise** over model, optimizer, all RNG,
+cursor and contract. Formal continuation logged updates18–48 (31 successful
+updates), then OOM on the next forward. The original capacity lane's
+checkpoint6000 evaluation was concurrently using47.52GiB on GPU5; it is not
+this campaign's completed final-capacity queue and was not stopped. A profile
+maximizing total16-frame atom cost selectedH8 and missed the larger H4 query
+activation cost. v2 has no completed formal2048 checkpoint; no quality claim.
+
+Optional DiT-block non-reentrant activation recomputation implemented, default
+off; static/inference semantics and model state keys unchanged. Three distinct
+test blocks cover forward/RNG identity, gradient and update numerical parity;
+all7 targeted CUDA tests passed in9.12s at2.5% process memory cap. The corrected
+profile selects largest query-atom-frame cost. Register fresh-source-contract
+`full192_v3` with recomputation, same192 data/H schedule, FP32 objective, two
+seeds and fixed2048 budget. v2 discarded updates are not counted in that budget.

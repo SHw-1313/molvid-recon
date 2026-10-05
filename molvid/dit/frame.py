@@ -7,6 +7,7 @@ from typing import Sequence
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint as activation_checkpoint
 
 from ..codec.motion_context import MotionContext
 from ..codec.learned_memory import GroupMemory
@@ -195,6 +196,7 @@ class FrameDiT(nn.Module):
         history_memory: HistoryMemory | GroupMemory,
         flow_time: Tensor,
         motion_context: MotionContext | None = None,
+        checkpoint_blocks: bool = False,
     ) -> FrameLatentBatch:
         if noisy.time_ps.shape != query.time_ps.shape or (
             noisy.frame_mask is not query.frame_mask
@@ -229,54 +231,61 @@ class FrameDiT(nn.Module):
         memory_h = gathered_h.permute(1, 0, 2)
         memory_v = gathered_v.permute(1, 0, 2, 3)
         for block in self.blocks:
-            if block.motion_context is not None:
-                assert motion_context is not None
-                motion_h, motion_v = block.motion_context(
-                    motion_context, condition, context, query
+            # Bind this block NOW: a late-bound loop variable would recompute
+            # every saved segment with the last block during backward.
+            def step(h, v, block=block):
+                if block.motion_context is not None:
+                    assert motion_context is not None
+                    motion_h, motion_v = block.motion_context(
+                        motion_context, condition, context, query
+                    )
+                    h = h + motion_h
+                    v = v + motion_v
+                h_norm, v_norm, h_gate, v_gate = block.history_adaln(h, v, condition)
+                cross_bias = block.history_time_bias(cross_features).permute(0, 3, 1, 2)
+                if block.history_time_decay_raw is not None:
+                    cross_bias = cross_bias - F.softplus(
+                        block.history_time_decay_raw
+                    ).view(1, -1, 1, 1) * cross_distance.unsqueeze(1)
+                cross_h, cross_v = block.history(
+                    h_norm.permute(1, 0, 2),
+                    v_norm.permute(1, 0, 2, 3),
+                    memory_h,
+                    memory_v,
+                    key_mask=history_atom_mask,
+                    query_mask=query_atom_mask,
+                    pair_bias=cross_bias,
                 )
-                h = h + motion_h
-                v = v + motion_v
-            h_norm, v_norm, h_gate, v_gate = block.history_adaln(h, v, condition)
-            cross_bias = block.history_time_bias(cross_features).permute(0, 3, 1, 2)
-            if block.history_time_decay_raw is not None:
-                cross_bias = cross_bias - F.softplus(
-                    block.history_time_decay_raw
-                ).view(1, -1, 1, 1) * cross_distance.unsqueeze(1)
-            cross_h, cross_v = block.history(
-                h_norm.permute(1, 0, 2),
-                v_norm.permute(1, 0, 2, 3),
-                memory_h,
-                memory_v,
-                key_mask=history_atom_mask,
-                query_mask=query_atom_mask,
-                pair_bias=cross_bias,
-            )
-            h = h + torch.tanh(h_gate) * cross_h.permute(1, 0, 2)
-            v = v + torch.tanh(v_gate).unsqueeze(-2) * cross_v.permute(1, 0, 2, 3)
+                h = h + torch.tanh(h_gate) * cross_h.permute(1, 0, 2)
+                v = v + torch.tanh(v_gate).unsqueeze(-2) * cross_v.permute(1, 0, 2, 3)
 
-            h, v = self._spatial_update(block, h, v, condition, noisy, context, layout)
+                h, v = self._spatial_update(block, h, v, condition, noisy, context, layout)
 
-            h_norm, v_norm, h_gate, v_gate = block.temporal_adaln(h, v, condition)
-            temporal_bias = block.temporal_time_bias(temporal_features).permute(0, 3, 1, 2)
-            if block.temporal_time_decay_raw is not None:
-                temporal_distance = (
-                    (query.time_ps[:, :, None] - query.time_ps[:, None, :]).abs()
-                    / 100.0
-                ).sqrt().index_select(0, noisy.abid)
-                temporal_bias = temporal_bias - F.softplus(
-                    block.temporal_time_decay_raw
-                ).view(1, -1, 1, 1) * temporal_distance.unsqueeze(1)
-            temporal_h, temporal_v = block.temporal(
-                h_norm.permute(1, 0, 2),
-                v_norm.permute(1, 0, 2, 3),
-                query_atom_mask,
-                query_mask=query_atom_mask,
-                pair_bias=temporal_bias,
-            )
-            h = h + torch.tanh(h_gate) * temporal_h.permute(1, 0, 2)
-            v = v + torch.tanh(v_gate).unsqueeze(-2) * temporal_v.permute(1, 0, 2, 3)
+                h_norm, v_norm, h_gate, v_gate = block.temporal_adaln(h, v, condition)
+                temporal_bias = block.temporal_time_bias(temporal_features).permute(0, 3, 1, 2)
+                if block.temporal_time_decay_raw is not None:
+                    temporal_distance = (
+                        (query.time_ps[:, :, None] - query.time_ps[:, None, :]).abs()
+                        / 100.0
+                    ).sqrt().index_select(0, noisy.abid)
+                    temporal_bias = temporal_bias - F.softplus(
+                        block.temporal_time_decay_raw
+                    ).view(1, -1, 1, 1) * temporal_distance.unsqueeze(1)
+                temporal_h, temporal_v = block.temporal(
+                    h_norm.permute(1, 0, 2),
+                    v_norm.permute(1, 0, 2, 3),
+                    query_atom_mask,
+                    query_mask=query_atom_mask,
+                    pair_bias=temporal_bias,
+                )
+                h = h + torch.tanh(h_gate) * temporal_h.permute(1, 0, 2)
+                v = v + torch.tanh(v_gate).unsqueeze(-2) * temporal_v.permute(1, 0, 2, 3)
+                return self._ffn_update(block, h, v, condition)
 
-            h, v = self._ffn_update(block, h, v, condition)
+            if checkpoint_blocks and self.training and torch.is_grad_enabled():
+                h, v = activation_checkpoint(step, h, v, use_reentrant=False, preserve_rng_state=True)
+            else:
+                h, v = step(h, v)
         atom_mask = noisy.atom_frame_mask()
         h = h * atom_mask.unsqueeze(-1)
         v = v * atom_mask.unsqueeze(-1).unsqueeze(-1)

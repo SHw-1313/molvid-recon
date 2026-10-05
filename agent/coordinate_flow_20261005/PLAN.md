@@ -99,3 +99,26 @@ same raw-coordinate metrics as A1/PVB, followed by CA stereochemistry and
 system-paired comparison. Missing/OOM cases make evaluation incomplete;
 no CPU fallback, no partial-case ranking. Internal ordered-motion rescoring
 uses the parent campaign's evaluator after these artifacts complete.
+# Execution-memory correction after observed shared-GPU OOM
+
+No data/architecture/objective/batch-size truncation is authorized by this
+correction. Existing GPU5 also hosts the original capacity checkpoint6000
+evaluation (not this campaign's completed13575 evaluation), about47.5GiB.
+Do not stop that external original lane. The first coordinate nominal-largest
+profile selected H8; H4 has more query activations at the same16-frame nominal
+cost. Correct the disposable profile selection to maximum query-atom-frames
+within the exact fixed2048 schedule.
+
+Use an optional non-reentrant DiT-block activation-recomputation execution
+path; preserve RNG and bind each distinct block in the backward closure.
+Default inference remains non-checkpointed. Before real use, CUDA test three
+different blocks: identical forward loss/source RNG, gradients within
+atol1e-7/rtol1e-5 and updated parameters withinatol2e-8/rtol1e-6; these tolerances
+are set before running this test, not widened after failure. Resume within a
+fixed new execution contract must still pass the existing bitwise real17 gate.
+Re-register the changed runtime source and execution flag, fresh A1 start;
+do not label an old-source checkpoint reload as exact continuation. Failed
+v2 updates18–48 and gate/profile artifacts remain retained, not counted toward
+the new final2048 exposure. Retain two seeds and all192 systems. If the profile
+still exceeds available memory, wait for safe GPU release instead of dropping
+large systems or changing precision unnoticed.

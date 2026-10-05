@@ -166,3 +166,41 @@ def test_coordinate_optimizer_rng_resume_is_exact_on_cuda():
     for key, state in optimizer.state_dict()["state"].items():
         for name, value in state.items():
             assert torch.equal(value, opt2.state_dict()["state"][key][name]), (key, name)
+
+
+def test_three_distinct_blocks_recompute_matches_forward_gradients_and_update():
+    torch.use_deterministic_algorithms(True)
+    model, observed, _ = fixture()
+    # More than one distinct block is essential: a late-bound closure can
+    # appear correct in a one-block fixture while recomputing the wrong layer.
+    for scale in (.01,.02):
+        block=copy.deepcopy(model.dit.blocks[0])
+        with torch.no_grad():
+            for parameter in block.parameters(): parameter.add_(scale*torch.randn_like(parameter))
+        model.dit.blocks.append(block)
+    model.dit.depth=3
+    other=copy.deepcopy(model)
+    target=observed.x[-1:].expand(2,-1,-1)+.05
+    time=torch.arange(6,device='cuda')[None].expand(2,-1).float()*100
+    batch=replace(observed,x=torch.cat((observed.x,target)),bpos=torch.cat((observed.bpos,target)),
+        time_ps=time,frame_mask=torch.ones(2,6,device='cuda',dtype=torch.bool),
+        delta_time_ps=time[:,1:]-time[:,:-1]).to('cpu')
+    config=CoordinateTrainConfig();checkpointed=replace(config,checkpoint_blocks=True)
+    opt1=make_coordinate_optimizer(model,config);opt2=make_coordinate_optimizer(other,checkpointed)
+    gen1=torch.Generator(device='cuda').manual_seed(19);gen2=torch.Generator(device='cuda')
+    initial=capture_coordinate_rng(gen1)
+    left=coordinate_update(model,opt1,batch,history_frames=4,generator=gen1,step=5,config=config)
+    final_rng=capture_coordinate_rng(gen1)
+    restore_coordinate_rng(initial,gen2)
+    right=coordinate_update(other,opt2,batch,history_frames=4,generator=gen2,step=5,config=checkpointed)
+    assert left['loss']==right['loss'] and left['flow_time_mean']==right['flow_time_mean']
+    assert torch.equal(final_rng['flow'],gen2.get_state())
+    assert torch.equal(final_rng['torch_cpu'],torch.get_rng_state())
+    for a,b in zip(final_rng['torch_cuda'],torch.cuda.get_rng_state_all()): assert torch.equal(a,b)
+    for (name,p),(other_name,q) in zip(model.named_parameters(),other.named_parameters()):
+        assert name==other_name and (p.grad is None)==(q.grad is None)
+        if p.grad is not None:
+            torch.testing.assert_close(p.grad,q.grad,atol=1e-7,rtol=1e-5,msg=name)
+        torch.testing.assert_close(p,q,atol=2e-8,rtol=1e-6,msg=name)
+    for block in other.dit.blocks:
+        assert any(p.grad is not None and p.grad.norm()>0 for p in block.parameters())

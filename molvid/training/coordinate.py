@@ -16,6 +16,7 @@ class CoordinateTrainConfig:
     weight_decay: float = .01
     clip_grad: float = 1.
     total_updates: int = 2048
+    checkpoint_blocks: bool = False
 
 
 def make_coordinate_optimizer(model, config):
@@ -53,7 +54,8 @@ def coordinate_update(model, optimizer, cpu_batch, *, history_frames, generator,
     progress = torch.rand(observed.batch_size, generator=generator, device=device)
     atom_progress = progress.index_select(0, observed.abid)[None, :, None]
     noisy = torch.lerp(source, target, atom_progress)
-    prediction = model(noisy, condition=condition, query=query, flow_time=progress)
+    prediction = model(noisy, condition=condition, query=query, flow_time=progress,
+                       checkpoint_blocks=config.checkpoint_blocks)
     loss = coordinate_flow_loss(prediction, target - source, batch=observed, query=query)
     loss.backward()
     norm = torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip_grad)

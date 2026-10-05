@@ -149,14 +149,15 @@ class CoordinateFlowModel(nn.Module):
         return t
 
     def forward(self, coordinates: Tensor, *, condition: CoordinateCondition,
-                query: QuerySpec, flow_time: Tensor) -> Tensor:
+                query: QuerySpec, flow_time: Tensor, checkpoint_blocks: bool = False) -> Tensor:
         if condition.task != "dynamic" or condition.temporal is None:
             raise ValueError("dynamic forward requires observed temporal condition")
         noisy = self._encode_state(coordinates, condition, query)
         features = self.dit(noisy, context=condition.context, query=query,
                             flow_time=self._flow_time(flow_time, condition),
                             history_memory=condition.temporal.history_memory,
-                            motion_context=condition.temporal.motion_context)
+                            motion_context=condition.temporal.motion_context,
+                            checkpoint_blocks=checkpoint_blocks)
         return self.readout(features.h, features.v) * noisy.atom_frame_mask()[..., None]
 
     def forward_static(self, coordinates: Tensor, *, condition: CoordinateCondition,

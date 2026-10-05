@@ -58,6 +58,8 @@ def run(args):
             root = args.output / f"seed{seed}"
             config = args.parent_root / f"source_training/unit_{seed}.json"
             base = [sys.executable, "-u", "-m", "tools.train_coordinate_flow", "--config", str(config), "--seed", str(seed)]
+            if args.checkpoint_blocks:
+                base.append("--checkpoint-blocks")
             if seed == 71:
                 call("largest_nominal_profile", base + ["--output", str(root / "profile"), "--max-steps", "1", "--profile-largest"])
                 call("uninterrupted17", base + ["--output", str(root / "pilot17"), "--max-steps", "17"])
@@ -94,4 +96,5 @@ if __name__ == "__main__":
     p.add_argument("--parent-root", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--wait-for", type=Path, required=True)
+    p.add_argument("--checkpoint-blocks", action="store_true")
     run(p.parse_args())

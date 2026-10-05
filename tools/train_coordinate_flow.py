@@ -27,7 +27,7 @@ def run(args):
     torch.cuda.set_per_process_memory_fraction(.88)
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
     raw = json.loads(args.config.read_text())
-    config = CoordinateTrainConfig()
+    config = CoordinateTrainConfig(checkpoint_blocks=args.checkpoint_blocks)
     if not 1 <= args.max_steps <= config.total_updates:
         raise ValueError("max_steps must lie within the fixed2048 schedule")
     parent, _, release = load_parent(device)
@@ -54,11 +54,14 @@ def run(args):
         runtime_root = Path(__file__).resolve().parents[1] / "molvid"
         contract["runtime_source_sha256"] = {str(p.relative_to(runtime_root)): sha256_file(p)
             for p in sorted(runtime_root.rglob("*.py")) if "evaluation" not in p.parts}
-        contract["largest_nominal_batch_profile_only"] = args.profile_largest
+        contract["largest_query_atom_frame_profile_only"] = args.profile_largest
         if args.profile_largest:
             if args.max_steps != 1 or args.resume:
                 raise ValueError("largest-batch profile is a separate one-update disposable run")
-            largest = max(entries[:2048], key=lambda e: sum(specs[i].atoms * specs[i].frames for i in e.indices))
+            # Query activations dominate this model. H4 has12 future frames,
+            # H8 only8; equal nominal16-frame cost is not equal memory cost.
+            largest = max(entries[:2048], key=lambda e: sum(
+                specs[i].atoms * (specs[i].frames-e.history_frames) for i in e.indices))
             entries = (largest,)
         cursor = 0
         inputs = [args.config, Path(release["selected_checkpoint"]["path"])]
@@ -119,4 +122,5 @@ if __name__ == "__main__":
     p.add_argument("--resume", type=Path)
     p.add_argument("--resume-sha256")
     p.add_argument("--profile-largest", action="store_true")
+    p.add_argument("--checkpoint-blocks", action="store_true")
     run(p.parse_args())
