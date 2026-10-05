@@ -40,3 +40,23 @@ profiles. Logs `/tmp/molvid-coordinate-chirality-{freeze,profile}-v1.log`.
 Current state is **waiting**; no frozen weight/configs or real protein optimizer
 updates from this branch yet. The formal model-training/resume/evaluation lane
 is not submitted by this command and remains the next implementation step.
+
+## Formal controller implemented,19:15
+
+`tools.run_coordinate_chirality_training` now joins profile completion to all
+four formal arms, active-auxiliary exact resume verification, final CPU checkpoint
+audit and real full48 CUDA forecasts. It checks that each paired recipe differs
+only in the registered weight, not data/parent/LR/time/solver/budget. Native100ps
+geometry comparisons include A1/originalPVB/corresponding coordinate parent and
+explicit chirality-minus-control. Chemistry and the existing native-time
+worktree's ordered-motion scorer are reused, no baseline retraining.
+
+Resume gate upgraded to25 versus16→25 so step24 actually exercises the auxiliary.
+Successful formal trajectory retains2048 updates;9 replay verification updates
+per arm are separately accounted. Queue completion is execution completion, not
+automatic scientific promotion or independent/complex/thermodynamic success.
+
+18 CPU queue/calibration tests passed2.41s, including paired-recipe confound
+rejection and both-profile coverage. Host archive script passed `bash -n` syntax
+check; it has not relocated any of this campaign's not-yet-created weights.
+Its exact targets and recoverability rules are registered in PLAN.md.

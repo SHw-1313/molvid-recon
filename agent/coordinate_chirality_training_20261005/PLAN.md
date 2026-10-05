@@ -49,3 +49,26 @@ same-seed chirality recipe but explicit cadence1. Profile tool executes one real
 largest-query update for each seed's selected2048 schedule; no saved profile
 weights or promotion. Both gates must show actual auxiliary execution and finite
 gradient/loss. These2 discarded engineering updates are not formal training.
+
+## Registered automatic formal sequence,19:13
+
+After both actual largest profiles pass, run on the same freedGPU5 in order:
+control71,chirality71,chirality72,control72. Each arm first trains25 actual prefix
+steps, then resumes its saved16 checkpoint through25 and compares the entire
+model/optimizer/all RNG/cursor/contract bitwise. Resumed step24 includes the
+active auxiliary, unlike a16→17-only check. The9 replay updates are numerical
+verification overhead, not added to the2048 per-arm formal exposure budget.
+Continue the verified25 checkpoint to2048; audit runtime hashes/finite model/
+optimizer cursor/config and exposure before full48 native100ps evaluation.
+Use seeds17/29,H4/Q12,Euler16; original PVB/A1 and corresponding coordinate parent,
+plus explicit auxiliary-minus-control and continued-minus-parent paired results.
+Chemistry and existing native-time branch's ordered-motion scorer are reused.
+No validation-selected checkpoint and no automatic promotion.
+
+Keep9GiB reserve before each new arm and8GiB trainer/evaluator reserves. Host-only
+archive helper waits for each successful final training/audit marker, verifies
+final SHA, then copies+bytewise checks its completed pilot16/pilot25/replay25
+weights to data2 and replaces original files with symlinks. No final weights,
+active writers, logs, predictions or original data are removed. Every archived
+checkpoint remains recoverable; hashes/sizes go to the archive log. This avoids
+accumulating about2.6GiB of duplicate prefix/replay weights across four arms.
