@@ -1,6 +1,37 @@
 # Molvid
 
-Latest scheduling correction,2026-10-06 03:13:source7a953fe explicitly copies
+Latest actual state,2026-10-06 04:53: **GQ71 formal GPU training is running**
+in `formal_v2`, childPID704824 on GPU4; controllerPID695241/session5710. Both
+seeds passed real `qualification_v3`:default16 whole-state parity,largest-query
+one-update profiles,and active17 versus16→17 complete checkpoint equality.
+Real qualification ledger:32 discarded defaults,2 discarded profiles,34
+retained candidate prefix updates,2 extra resume-verification updates. No
+quality forecasts yet. Formal resumes each17 prefix for2031 additional updates,
+then fixed-final development48 evaluation and matched audits,without promotion.
+
+The initial CUDA qualification_v2 **failed**:12 passed,1 deterministic cuBLAS
+environment error in inherited multiblock recomputation test,5.54s. Real-v2
+qualification/formal-v1 stopped automatically,with0 real GQ updates from those
+queues. Failure logs remain. Launcher fix00b10ef sets CUBLAS_WORKSPACE_CONFIG
+before child Python startup and supports explicitly verified completed-solver
+entry,without bypassing GPU-idle or full-solver checks. No model/recipe change.
+Two launcher CPU tests passed1.59s; fresh CUDA qualification_v3 passed all13
+cases,none skipped,6.08s. Model runtime remains7a953fe; launcher changed only.
+
+Actual real-profile71 inspection confirms19,174,177 total/18,481,753 trainable
+parameters. Largest profiles:71 has59,700 atom-queries,3.925614s,
+peak55,468,918,784bytes;72 has29,850 atom-queries,3.178998s,
+peak36,141,647,360bytes. `query_geometry` LR/gradient path is active. This is
+compute feasibility,not equal-compute comparison or evidence of improved motion.
+Selected resume17 SHAs:71
+8cc1c94511f0ac9dc76ffc9e12af9f3805dcdcbfb4f9754a482b4eea9d10f363;
+72 e9a1dfe7e1f5af0a5f696e03d00af6738d65a3bc5dfba23176e798bd1b95c256.
+Host archive v3PID687915/session35072 uses explicit qualification_v3 paths,
+verified-copy/recoverable-link rules; no checkpoint bytes deleted.
+
+Historical scheduling snapshots below are retained,not current status.
+
+Scheduling correction,2026-10-06 03:13:source7a953fe explicitly copies
 `target_teacher.frame_chunk_size` when enabling GQ. The real loader sets1,
 whereas the generic encoder defaults4; omitting this metadata would change
 grouped arithmetic and activation memory. Four CPU checks passed again3.04s,
@@ -37,9 +68,9 @@ forked from coordinate continuation4505d3d. Only generated-state frame geometry
 is made trainable; the observed teacher remains frozen/no-grad. No current-local
 input change, source correlation, Mamba, DiT depth/width change or static-mix loss.
 The separate query copy DOES add parameters:the original model inspection's
-teacher owns560,712 parameters,so expected total/trainable counts are19,174,177 /
-18,481,753 versus18,613,465 /17,921,041. These are arithmetic expectations from
-the loaded-parent inventory,not a newly executed full-GQ inspection. Equal update
+teacher owns560,712 parameters,so total/trainable counts are19,174,177 /
+18,481,753 versus18,613,465 /17,921,041. The original arithmetic expectation is
+now confirmed by qualification_v3/profile_71/model_inspection.json. Equal update
 counts also do not imply equal backward compute. Treat GQ as independently
 trainable query geometry,not a parameter-budget-matched capacity experiment.
 The shared frame arithmetic now has an explicit differentiable encoder and
