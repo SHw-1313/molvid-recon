@@ -63,7 +63,7 @@ def materialize(manifest_path,output):
             path=output/f'{len(files):04d}.pt'
             atomic_torch_save(path,dict(record=record,source=source))
             files.append(dict(path=path.name,sha256=sha256_file(path),system=system,anchor=anchor,
-                              lag_ps=lag,sample_id=record['sample_id'],atoms=len(record['atom_type'])))
+                              lag_ps=lag,sample_id=record['sample_id'],atoms=len(record['atype'])))
         atomic_write_json(output/'progress.json',dict(systems=len(sources),records=len(files),total_systems=48,
             seconds=time.monotonic()-started,test_opened=False))
         print(json.dumps(dict(systems=len(sources),records=len(files),system=system,seconds=time.monotonic()-started)),flush=True)
