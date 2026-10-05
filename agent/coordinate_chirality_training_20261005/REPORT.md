@@ -1,5 +1,32 @@
 # Coordinate handedness continuation — implementation, not efficacy
 
+## Frozen recipes, completed real profiles and formal start,19:39
+
+Q12 prerequisite completed with0 updates/unchanged model. `formal_v1` now
+exists and its four paired recipes are frozen. Registered rule selected
+handedness_weight=.2637673163334546, every8 updates, actual-source Euler16,
+margin.1,minimum observed-reference volume.2Å³. Maximum Q12 probe gradient
+ratio=.3791220284228847; coefficient×maximum=.1 on those train8 measurements,
+not a bound throughout training or for another seed. No development tuning.
+
+Largest-query profiles both completed real GPU auxiliary+RF updates:
+seed71 59,700 atom-queries,72.470s,peak57,792,257,536B;
+seed72 29,850 atom-queries,49.291s,peak38,447,456,256B.
+Both profile updates were discarded, no profile checkpoint used for training.
+`profile_queue/status.json` is completed. This proves execution feasibility,
+not geometry/motion improvement.
+
+Automatic formal controller has passed control71 prefix25 versus exact
+resume16to25 and entered `control_71_formal` onGPU5. Its final budget is2048
+new updates from that seed's coordinate2048 parent. Remaining control/chirality
+arms, full evaluations and paired audits remain queued. The manifest's
+`formal_training_submitted:false` is the immutable freezer-time snapshot;
+live state is sibling `formal_v1_training_queue_v1/status.json`. Its historical
+17-step minimum was strengthened by the controller to25 steps, which exercises
+active auxiliary step24 in the chirality arms. No recipe was changed.
+
+Older paragraphs below are historical snapshots; no efficacy claim yet.
+
 Independent branch `exp/coordinate-chirality-training-20261005`, parent6b0b754.
 Only this branch's existing training step/CLI changed; active coordinate
 evaluation, queued Q12 probe and native-clock jobs remain in their original
