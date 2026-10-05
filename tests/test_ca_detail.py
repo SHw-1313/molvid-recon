@@ -2,7 +2,7 @@ from dataclasses import replace
 import copy
 import torch
 import pytest
-from molvid.geometry.ca_detail import condition_from_record,rigid_transport
+from molvid.geometry.ca_detail import CADetailCondition,condition_from_record,rigid_transport,ca_frame_transport
 from molvid.codec.ca_detail import CADetailDecoder,detail_loss
 from molvid.runtime import configure_device
 
@@ -51,3 +51,22 @@ def test_cuda_equivariance_hard_anchors_and_real_update(tmp_path):
     before=model(c,ca);target.add_(1000)
     assert torch.equal(before,model(c,ca))
     assert not torch.equal(before,model(c,ca+1))
+
+
+def test_ca_frame_transport_rotates_details_and_has_explicit_degenerate_fallback():
+    device=configure_device('cuda',deterministic=True)
+    backbone=torch.tensor([[0.,0,0],[3,1,0],[5,3,1],[6,4,3]],device=device)
+    ref=torch.stack((backbone,backbone+torch.tensor([.3,.4,.2],device=device)),1).reshape(8,3)
+    bonds=torch.tensor([[0,1,2,3,4,5,6],[1,2,3,4,5,6,7]],device=device)
+    c=CADetailCondition(ref[None].repeat(4,1,1),torch.arange(4,device=device)*100.,
+        torch.arange(4,7,device=device)*100.,torch.zeros(8,device=device,dtype=torch.long),
+        torch.ones(8,device=device,dtype=torch.long)*118,torch.arange(0,8,2,device=device),
+        torch.arange(4,device=device).repeat_interleave(2),bonds,bonds)
+    rotation=torch.tensor([[0.,-1.,0.],[1.,0.,0.],[0.,0.,1.]],device=device)
+    ca=(backbone@rotation+3)[None].repeat(3,1,1)
+    predicted,info=ca_frame_transport(c,ca)
+    torch.testing.assert_close(predicted,(ref@rotation+3)[None].expand_as(predicted),rtol=2e-6,atol=2e-6)
+    assert info['fallback_fraction']==0 and torch.equal(predicted[:,c.ca_index],ca)
+    collapsed=torch.zeros_like(ca)
+    prediction,info=ca_frame_transport(c,collapsed)
+    assert info['fallback_fraction']==1 and prediction.isfinite().all()

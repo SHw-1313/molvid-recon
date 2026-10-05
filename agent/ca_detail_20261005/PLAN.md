@@ -54,3 +54,15 @@ nvidia-smi periodic log; synchronized CUDA event time, peak allocated bytes,
 per-step loss/gradient and optimizer step, initial/final parameter comparison,
 checkpoint SHA, strict reload/held-out metric reproduction. Prior-run audit
 checks old artifacts without inventing retroactive GPU utilization telemetry.
+
+## Post-pilot orientation control (registered before running it)
+
+Initial paired results: clean-generated seed71 improves total bond RMSE but
+worsens inter-residue bond RMSE versus A1 (0.5154 vs0.3678A); even true CA has
+0.3366A inter-residue error. Translation-only residue placement may omit local
+frame orientation. Test a parameter-free CA-neighbor frame rotation baseline
+under the SAME generated/oracle CA, all16validwindows/2generatedseeds:48 scoring
+interventions, no new A1 draws or optimizer steps, <=0.5 GPUh. Fixed CA graph
+defines frames, with explicit degenerate/short-chain translation fallback.
+Do not alter/retrain the four original checkpoints. This is an exploratory
+post-pilot control, not independent confirmation or automatic model promotion.

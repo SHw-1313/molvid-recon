@@ -56,3 +56,42 @@ def rigid_transport(condition,ca):
     # Exact anchors, also if low-precision roundoff would affect zero offsets.
     xyz[:,condition.ca_index]=ca
     return xyz
+
+
+def ca_frame_transport(condition,ca):
+    """Parameter-free local-frame rotation control, defined by CA graph only.
+
+    Interior residues use their two chain neighbors; termini use two-hop CA
+    neighbors. Degenerate/missing frames explicitly fall back to translation.
+    This is a diagnostic baseline, not a trainable detail generator.
+    """
+    c=condition;r=len(c.ca_index);neighbors=[set() for _ in range(r)]
+    for a,b in c.residue_index[c.bond_index].detach().cpu().T.tolist():
+        if a!=b:neighbors[a].add(b);neighbors[b].add(a)
+    pairs=[];supported=[]
+    for i,first in enumerate(neighbors):
+        candidates=sorted(first)
+        if len(candidates)==1:
+            candidates+=sorted(neighbors[candidates[0]]-{i}-set(candidates))[:1]
+        ok=len(candidates)==2
+        pairs.append(candidates[:2] if ok else [i,i]);supported.append(ok)
+    pair=torch.tensor(pairs,device=ca.device).T
+    supported=torch.tensor(supported,device=ca.device,dtype=torch.bool)
+    def frames(x):
+        u=x[...,pair[0],:]-x;v=x[...,pair[1],:]-x
+        axis=torch.nn.functional.normalize(u,dim=-1,eps=1e-6)
+        normal=torch.cross(axis,v,dim=-1)
+        valid=(u.norm(dim=-1)>1e-5)&(normal.norm(dim=-1)>1e-5)&supported
+        normal=torch.nn.functional.normalize(normal,dim=-1,eps=1e-6)
+        second=torch.cross(normal,axis,dim=-1)
+        return torch.stack((axis,second,normal),-1),valid
+    ref=c.observed[-1];reference_frame,reference_valid=frames(ref[c.ca_index])
+    target_frame,target_valid=frames(ca)
+    parent=c.residue_index;offset=ref-ref[c.ca_index][parent]
+    local=torch.einsum('ni,nij->nj',offset,reference_frame[parent])
+    rotated=torch.einsum('ni,qnki->qnk',local,target_frame[:,parent])
+    valid=target_valid[:,parent]&reference_valid[parent][None]
+    xyz=ca[:,parent]+torch.where(valid[...,None],rotated,offset[None])
+    xyz[:,c.ca_index]=ca
+    return xyz,dict(frame_supported_residues=int(supported.sum()),total_residues=r,
+        fallback_fraction=float((~valid).float().mean()))
