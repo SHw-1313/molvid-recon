@@ -1,5 +1,16 @@
 # Refactor tasks — current layout follow-up (2026-09-18)
 
+## Current Cα detail experiment — 2026-10-05
+
+- [x] Independent branch; observed-only recovery with explicit generated/oracle Cα.
+- [x] 96 real frozen-A1 draws; matched clean/mixed arms, two seeds, 512 updates each.
+- [x] Paired geometry/motion validation and explicit inter-residue failure analysis.
+- [x] Registered post-pilot local-frame orientation diagnostic; no extra training.
+- [x] Three CUDA tests; fresh checkpoint verification and historical execution audit.
+- [x] Record negative joint outcome and limitations in [report](agent/ca_detail_20261005/REPORT.md).
+- No default promotion. Backbone orientation/closure and stochastic detail recovery
+  are future proposals, not implemented or queued experiments in this task.
+
 ## Current review follow-up — 2026-10-05
 
 - [x] Fix E1–E5, expose role-aware complex preprocessing, retain real A1 exact parity.

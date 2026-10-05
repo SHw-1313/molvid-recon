@@ -1,6 +1,13 @@
 # Molvid
 
-Current worktree (2026-10-05): `fix/review-followup-20261005`.
+Current worktree (2026-10-05): `exp/ca-detail-20261005`.
+[Generated Cα / oracle detail-recovery experiment](agent/ca_detail_20261005/REPORT.md)
+and [GPU execution audit](agent/ca_detail_20261005/EXECUTION_AUDIT.md).
+Completed 96 frozen-A1 draws, four 512-update detail heads and paired validation.
+No joint geometry/motion win; no default promotion. Local-frame orientation is
+a completed post-pilot diagnostic, not a trained replacement or independent test.
+
+Parent worktree: `fix/review-followup-20261005`.
 [Independent-review fixes and completed N0–N4 diagnostics](agent/review_followup_20261005/REPORT.md),
 [engineering fix response](agent/review_followup_20261005/FIX_RESPONSE.md).
 E1–E5 repaired; S/U/K tools consolidated, A1 remains the scientific reference.

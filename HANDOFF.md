@@ -2,6 +2,22 @@
 
 ## Current authoritative handoff — 2026-10-05
 
+Branch `exp/ca-detail-20261005`, worktree `molvid-ca-detail-20261005`.
+Read [Cα detail report](agent/ca_detail_20261005/REPORT.md) and
+[execution audit](agent/ca_detail_20261005/EXECUTION_AUDIT.md) first.
+96 frozen-A1 draws; clean/mixed × two training seeds × 512 updates; 288 paired
+scores and 48 parameter-free orientation-control scores completed on CUDA.
+Three targeted CUDA tests passed. All four initial/final checkpoints freshly
+reloaded and scored; historical U/K evidence also checked. No joint win:
+learned recovery improves total geometry but worsens inter-residue bonds and
+motion amplitude; generated-CA frame transport increases clashes. Oracle
+frame transport diagnoses missing orientation, not deployable model success.
+Artifacts: `runs/ca_detail_20261005/`; sealed test closed, no default promotion.
+No experiment from this task remains running. Later scientific proposals are
+not implemented. All sections below are inherited historical handoffs.
+
+## Parent review follow-up — 2026-10-05
+
 Branch `fix/review-followup-20261005`, worktree `molvid-review-followup-20261005`.
 Read [completed review follow-up](agent/review_followup_20261005/REPORT.md) and
 [fix response](agent/review_followup_20261005/FIX_RESPONSE.md) first. N0 repairs,
