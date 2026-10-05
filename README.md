@@ -27,6 +27,16 @@ parity and17vs16→17 resume must precede fixed2048 GQ training. No formal GQ GP
 training or forecasts exist yet; no default promotion. Existing control runs,
 original PVB/BioKinema and sealed/reserve data are untouched.
 
+2026-10-06 02:58:CUDA qualification actually queued from source97cb424,
+hostPID280506/session58743, `cuda_qualification_v1/status.json=waiting`.
+It observes live parent64 solver containerPID538074/host117656 andGPU4 UUID,
+requires completed192-draw/12288-call evidence AND no compute processes on that
+GPU,then executes both GQ and inherited coordinate-flow numerical tests. Source
+hashes are pinned,skip cases cannot count as CUDA success,10-minute test budget.
+Log `/tmp/molvid-query-geometry-qualification-v1.log` inside the container.
+This queue does not submit any real-protein GQ optimizer updates. Runtime/tools/
+tests are now frozen until qualification finishes; documentation may update.
+
 Current independent branch: `exp/coordinate-chirality-training-20261005`.
 [Matched coordinate continuation design](agent/coordinate_chirality_training_20261005/PLAN.md).
 Optional sampled-handedness training implemented; formal runs not launched yet.
