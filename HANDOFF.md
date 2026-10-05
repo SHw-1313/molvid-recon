@@ -4,10 +4,14 @@
 
 Worktree `molvid-coordinate-flow-20261005`, parent `6441ce3`.
 Read `agent/coordinate_flow_20261005/{PLAN,REPORT}.md`.
-Core implemented; six CUDA gates including exact optimizer/RNG resume passed.
-Real4-update gate and one-train-clip512 overfit completed; neither establishes
-generalization. `full192_v1` queue is launched, waiting for parent's GPU5
-capacity evaluations to complete. Profile/real-resume gates precede training.
+Core implemented; real gates/overfit and recomputation CUDA7 gates passed.
+`full192_v3` seed71 formal2048 completed, final SHA ac896856…6c46085;100 runtime
+hashes match,348 optimizer states at2048, all model tensors finite. Fixed-final48
+CUDA evaluation is active, no quality conclusion yet; seed72 follows that queue.
+v1 storage and v2 shared-GPU OOM failures retained. CLI profile-field gate fixed
+before final evaluation (3 CPU tests), no model/runtime edit during training.
+No formal static updates yet. Separate native80ps evaluation branch is
+`molvid-native-time-response-20261005`, not a changed training parent.
 Do not modify running parent experiments. Overfit checkpoint is not a parent.
 
 ## Active continuous campaign — 2026-10-05

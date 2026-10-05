@@ -130,6 +130,19 @@ Formal peak through step60 is15,341,581,312bytes. No generated-validation result
 exists yet; the single-clip overfit numbers are not substituted for one.
 # Final-evaluation metadata repair — 2026-10-05 16:36
 
+16:53 update: seed71 full192_v3 logical2048 completed; resumed17→2048 segment
+**4410.505s /2031 additional updates**. Fixed-final SHA
+`ac89685606c058ff9afba8e0364a06fea693eb278c3d77ae80229510f6c46085`.
+Fresh CPU checkpoint audit: **100 runtime hashes match**,348 optimizer states
+all step2048, floating model tensors all finite, `static_updates=False`.
+This audit used0 model calls and does not prove geometry quality. Fixed-final48
+CUDA evaluation is running; no partial-score ranking. CLI gate tests3 passed
+in2.63s and the real final checkpoint passed the repaired gate. Seed72 remains
+registered after seed71 evaluation, not yet trained by this campaign.
+
+Independent native80ps evaluation tooling/data lives in worktree
+`molvid-native-time-response-20261005`; no active runtime files here were edited.
+
 Review caught a stale CLI field before the final evaluation launched: trainer
 v3 stores `largest_query_atom_frame_profile_only`, whereas evaluator still read
 `largest_nominal_batch_profile_only`. Fixed the **tools-only** metadata gate to
