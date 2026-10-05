@@ -4,6 +4,33 @@
 BioKinema 竞争。用户已授权阶段间自动推进；失败诊断保留，不等待确认。
 默认科学参考仍为 A1，不把新模块自动合入默认模型。
 
+## 扩展48体系配对结果（已完成，不是独立基线测试）
+
+A1已完成192次真实生成、同样本192个投影结果，共384行；3360.9秒，0训练。
+每体系2anchors×2seeds；表格体系等权。H4 A1 对 H1原生 PVB，均100ps/12帧。
+
+|指标|A1|A1固定投影|原始PVB|
+|---|---:|---:|---:|
+|bond RMSE Å|.271255|.058551|.040154|
+|clash/1000 atoms|119.767955|75.741292|1.371463|
+|MSD曲线 MAE Å²|2.473159|2.518938|2.092712|
+|残基RMSF MAE Å|.303274|.308664|.323675|
+|RMSF幅度比（理想1）|.857332|.838761|.887260|
+|Cα手性翻转比例|.003734|.022928|.020883|
+|Cα近平面比例|.005112|.030938|.000243|
+
+MD参考的Cα翻转/近平面比例均为0。PVB在键长、clash和MSD明显领先，
+但并非所有指标胜出：A1的残基RMSF误差、CA翻转率更低。不要选择性报告。
+投影的MSD差值+.04578（体系bootstrap95%CI [.03879,.05302]），残基RMSF
+差值+.00539（[.00231,.00825]）；加上手性退化，**否决合并固定投影**。
+
+26个PVB已知动态训练重叠体系和22个非已知重叠体系分别统计；后者依然
+不是全预训练独立。22体系中PVB−A1的MSD差值−.55721
+（[−1.04092,−.18761]），bond−.22859，clash−111.72406，几何/运动差距并非
+只存在于那26个ID重叠体系。所有锚点/种子先在体系内平均，bootstrap单位
+是体系，不把192个相关draw当192个独立体系。证据：`paired_a1_pvb/summary.json`、
+`stereochemistry_a1/summary.json`、`stereochemistry_pvb/summary.json`。
+
 ## 已完成的可靠证据
 
 - 实际 checkpoint SHA 核查确认已有 C4/C8 比较都是11000更新，训练曝光、
@@ -54,12 +81,12 @@ BioKinema 竞争。用户已授权阶段间自动推进；失败诊断保留，�
 |实验|实际工作|状态文件（以下相对 runs/geometry_scaling_20261005）|
 |---|---|---|
 |C8 continuation|全模型真实训练11000→13575，原目标/数据/优化器/RNG|`c8_continuation_v2/formal/train_metrics.jsonl`|
-|expanded A1|48体系、2anchors、2seeds；原始与固定坐标投影分列|`expanded_a1/rows.json`|
+|expanded A1|已完成48体系、192次生成与192个固定投影|`expanded_a1/summary.json`|
 |expanded PVB|已完成48体系、192次生成|`expanded_pvb/summary.json`|
 |Gcoord static/mixed|已完成4×2048真实更新|`gcoord_campaign_v2/queue.json`、`gcoord_training_audit/summary.json`|
 |Gcoord expanded|GPU7等A1完成；用相同缓存draw评估4个最终模型|`gcoord_evaluation_queue_v2/status.json`|
 |expanded capacity|GPU5等A1；依次C4/C8@11000、C4/C8@13575|`expanded_followup_queue_v3/status.json`|
-|source-bank diagnostic|GPU7等Gcoord验证；8训练体系×2seeds×4源尺度，0更新|`source_bank_diagnostic/`（尚未启动模型）|
+|source-bank diagnostic|GPU7等Gcoord验证；先CUDA配置门禁，再8训练体系×2seeds×4源尺度，0正式更新|`source_bank_queue_v2/status.json`|
 |BioKinema native1ns pilot|已完成并通过I/O审计；单体系，不是benchmark|`biokinema_matched1ns_audit/summary.json`|
 
 Gcoord 用当前预测坐标逐层重建半径图，和此前 S 静态 latent 梯度路由不同。
@@ -71,6 +98,12 @@ Gcoord 用当前预测坐标逐层重建半径图，和此前 S 静态 latent �
 共享138类型词表，边界检查和CUDA测试通过后重启v2，失败产物保留。
 当前距离/中心力结构为O(3)等变，不能凭架构独自选择正确手性；后续验证
 把手性/近平面退化作为否决条件，不以几何两项单独晋级。
+
+新增可选源尺度配置已贯通RF训练、辅助真实源rollout、D2静态RF、推理和
+checkpoint；默认单位源保持旧合同/数值路径。CPU配置/代数检查30项通过。
+真实CUDA旧缓存一致性、非单位源恢复拒错、辅助完整/分块反传仍排队待验。
+**未训练任何新源尺度模型，未声称新源有效。** 旧等待诊断进程在0模型调用时
+停止，由新进程启动队列替代，避免等待期间旧Python导入与新源码hash不一致。
 
 ## 外部对照边界
 
