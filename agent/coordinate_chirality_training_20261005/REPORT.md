@@ -130,3 +130,44 @@ Total655,024,602 bytes relocated recoverably, not deleted. Respective SHA256:
 - `a0e88659eb606ce5d2a9a20d27d461f2f55cef5c04911b9b34d653e65bc5a37f`
 
 Final weights, logs, predictions and raw trajectories were left in place.
+
+## Full control71 result: more training improves geometry but damps motion,20:57
+
+Full48/192 CUDA forecasts completed in2357.486894702539s,0 failures. CPU
+`control71_training_effect_v1` compares all matched draws against coordinate71,
+A1 and original PVB;0 new neural calls. Existing chemistry audit completed;
+the unchanged native-time worktree scorer produced
+`control71_ordered_training_effect_v1` (48 systems,480 rows including MD,
+persistence and shuffled-MD controls;0 neural calls). No partial-case ranking.
+
+|Metric|coordinate71 parent2048|control71 +2048|original PVB|
+|---|---:|---:|---:|
+|bond RMSE Å|.163022|.115100|.040154|
+|clashes/1000 atoms|50.912283|29.469197|1.371463|
+|MSD curve MAE Å²|2.048901|2.329854|2.092712|
+|residue RMSF MAE Å|.278153|.335054|.323675|
+|RMSF amplitude ratio|.841226|.736375|.887260|
+|CA handedness flip fraction|.006707|.003876|.020883|
+|internal variogram MAE Å²|.208504|.106078|.093062|
+|internal fluctuation RMS error Å|.097257|.058810|.075604|
+|increment correlation MAE|.052467|.051934|.113386|
+
+Control-minus-parent paired system95%CIs:bond−.047922[−.049879,−.046077],
+clash−21.443086[−26.287642,−17.111388],MSD+.280953[+.228892,+.338566],
+residueRMSF+.056901[+.046808,+.066520],amplitude−.104852[−.110520,−.098909].
+Control-minus-PVB MSD+.237142[+.071936,+.427043]; residueRMSF+.011379
+[−.005259,+.028400] is inconclusive, whereas bond/clash gaps remain clear.
+
+This is NOT uniformly worse motion: internal-distance statistics improve while
+MSD/RMSF and amplitude deteriorate. Geometry/internal fluctuation improvements
+cannot establish correct global/concerted motion or thermodynamics. The
+additional-training arm uses a fresh optimizer and next ordered2048 exposure;
+it tests that continuation package, not a causal effect of parameter count.
+Only training seed71 is available; system CIs do not establish training-seed
+reproducibility. No joint-success or competitive-model promotion.
+
+The original automatic queue has moved through chirality71's25 versus16→25
+exact-resume gate and is now running its2048 formal continuation. Existing
+candidate/control recipes remain frozen despite this observed development
+tradeoff. Next independent diagnostic should test16/32/64 Euler convergence
+on fixed training-only systems before adding another distributional objective.
