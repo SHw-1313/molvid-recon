@@ -17,7 +17,7 @@ def audit(output):
     root=Path('/workspace/molvid-review-followup-20261005/runs/review_20261005')
     cache=Path('/workspace/molvid-u-probe-20261004/runs/uk_20261004/features_v1')
     device=configure_device('cuda',deterministic=True)
-    paths=sorted((root/'n3u').glob('*.pt'))+sorted((root/'n3k').glob('*.pt'))
+    paths=sorted((root/'n3u').glob('*.pt'))+sorted((root/'n3k').glob('K_*.pt'))
     freeze_run_identity(output,inputs=paths+[cache/'complete.json'],purpose='Previous artifact audit and fresh CUDA metric reproduction')
     with ExecutionEvidence(output):
         rows=[]

@@ -22,7 +22,7 @@ class DetailMessage(nn.Module):
         degree=torch.bincount(dest,minlength=xyz.shape[1]).clamp_min(1).to(xyz.dtype)[None,:,None]
         agg=torch.zeros_like(h).index_add(1,dest,message)/degree
         weights=.25*torch.tanh(self.coordinate(message))
-        move=torch.zeros_like(xyz).index_add(1,dest,delta/(1+distance.sqrt().clamp_min(1e-6))*weights)/degree
+        move=torch.zeros_like(xyz).index_add(1,dest,delta/(1+(distance+1e-8).sqrt())*weights)/degree
         xyz=xyz+move
         xyz=xyz.index_copy(1,ca_index,ca)
         return h+self.update(torch.cat((h,agg),-1)),xyz
