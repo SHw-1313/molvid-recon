@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-07",
+  "status": "completed_metadata_analysis_not_independent_test_qualification",
+  "training_scope": {"protein_systems": 192, "complex_systems": 128},
+  "validation_systems": 16,
+  "search_sequences": {"training": 462, "validation": 57},
+  "minimum_fragment_residues": 20,
+  "excluded_short_fragments": {"training": 31, "validation": 5},
+  "search_settings": {"method": "MMseqs2 easy-search", "sensitivity": 7.5, "min_identity": 0.3, "coverage": 0.5, "evalue": 0.001, "alignment_mode": 3},
+  "bidirectional_coverage_result": {"matching_validation_systems": 0, "evidence": "runs/complex_pretraining_20261007/sequence_generalization_v2/summary.json"},
+  "query_only_coverage_result": {"matching_validation_systems": 0, "evidence": "runs/complex_pretraining_20261007/sequence_generalization_querycov_v1/summary.json"},
+  "interpretation": "No sequence matches detected at the stated thresholds against current known training systems, including the more permissive query-only coverage search. MISATO molecule boundaries define connected fragments, not necessarily complete biological chains. This is evidence against one particular near-homology confound, not proof of biological independence.",
+  "not_covered": ["Complete parent pretraining exposure", "External static corpus exposure", "Released PVB/BioKinema training exposure", "Fold identity", "Ligand chemical scaffold identity", "Short fragments below20 residues", "All remote homologues"],
+  "evaluation_membership_changed": false,
+  "trajectory_coordinates_read": 0,
+  "sealed_test_opened": false,
+  "initial_parser_failure": "v1 stopped on the first Amber HIE residue before search. Parser now maps common protonation/disulfide labels to their amino-acid sequence identities; no exclusion of that system."
+}
