@@ -1,0 +1,20 @@
+{
+  "status": "core_model_temporal_conditioner_SDE_sampler_and_bridge_loss_written; not_executed_trained_or_evaluated",
+  "implementation": ["molvid/codec/bridge_history.py", "molvid/flow/pretrained_bridge.py", "molvid/training/pretrained_bridge.py"],
+  "branch_parent": "6339772",
+  "motivation": "Direct complex data/weighting experiments improve ligand geometry but remain far behind released PVB. Paper describes much richer chemical/geometric pretraining; local released static-pretrain weights are available. Test transfer of that prior, not more random small-head tweaks.",
+  "released_initialization": "/data1/repo/PVB/model_ckpt/ckpt/pvb_pretrain.ckpt",
+  "reference_source": "/workspace/PVB_origin",
+  "reference_policy": "Original PVB code and weights remain unchanged. Candidate owns its loaded geometry and writes only new checkpoints. Explicitly attribute inherited pretrained knowledge.",
+  "architecture": "Loaded2-layer256-wide geometry encoder and8-layer geometric decoder plus released velocity/drift heads; zero-output-initialized scalar/vector observed-history attention and joint-query attention before shared output heads",
+  "history": "All supplied observed frames with physical ages; scalar attention weights mix equivariant feature channels and relative observed displacement vectors; no dataset-specific input path",
+  "query": "Joint generated-state interaction at each bridge evaluation, physical ps distinct from flow progress; no hidden future conditioning",
+  "static": "Corrupted singleton input, same geometric encoder/decoder/heads, temporal adapters bypassed; clean structure only enters loss",
+  "objective": "Preserve released stochastic-interpolant velocity/drift targets and KL. Do not transplant weights into the incompatible coordinate-RF source/target objective.",
+  "current_missing_work": ["Training orchestration and explicit checkpoint loading report", "Complete mixed-data recipe and fixed training budget", "Real CUDA training; start from actual training, not a new smoke/unit-test campaign", "Full geometry/motion/protein-retention comparisons", "Independent confirmation and thermodynamics"],
+  "initial_training_design_not_yet_submitted": "Use completed expanded TRAIN corpus and the existing protein TRAIN store; system-equal data visits and true stored physical clocks, H4/H8 dynamic clips plus corrupted TRAIN singletons. Increase training exposure beyond2048; retain fixed final and one rolling recovery checkpoint. Final budget/controls must be explicit before submission. No new validation-based truncation or best-of-N sampling.",
+  "environment": "Local enter-container/torch-ito; when loading released objects use the already-working PVB numpy126 overlay and original source path, not dependency upgrades.",
+  "current_limits": ["Uniform unpadded H/Q per packed batch; H may vary between batches", "No Mamba replacement in this experiment", "No new scientific effectiveness claim", "Published static-pretraining exposure may overlap future evaluation families"],
+  "literature_source": "https://arxiv.org/html/2602.07588v2#A4",
+  "literature_context": "PVB reports58,576 training protein monomers and12,826 training crystal complexes, plus large small-molecule datasets; MISATO uses original13765/1595/1612 split. These are paper descriptions, not a reconstructed exact optimizer history of the downloaded checkpoint."
+}
