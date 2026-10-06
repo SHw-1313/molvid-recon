@@ -36,7 +36,11 @@ def load(root):
 
 def compare(candidate, reference, output):
     candidate_summary, a = load(candidate)
-    reference_summary, b = load(reference)
+    if reference == Path('persistence'):
+        reference_summary = dict(variant='last_observed_persistence')
+        b = {key: dict(row, metrics=row['persistence']) for key, row in a.items()}
+    else:
+        reference_summary, b = load(reference)
     if a.keys() != b.keys():
         raise ValueError('Candidate/reference conditions differ')
     results = {}
