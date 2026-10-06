@@ -1,5 +1,6 @@
 """Fixed-final full-model coordinate RF with the paired source-run data schedule."""
 import argparse
+from contextlib import ExitStack
 from dataclasses import asdict
 import json
 from pathlib import Path
@@ -21,15 +22,19 @@ from molvid.training.execution_evidence import ExecutionEvidence
 from molvid.training.predictive_data import load_parent, atomic_torch_save, group_identity
 from tools.inspect_model import model_summary
 from tools.evaluate_expanded_native import require_final_coordinate_checkpoint
+from molvid.training.data_scale_input import expanded_training_input, validate_reference, require_cuda_gate
 
 
 def run(args):
     if args.output.exists():
         raise FileExistsError(args.output)
+    raw = json.loads(args.config.read_text())
+    if 'coordinate_data_scale' in raw:
+        validate_reference(raw)
+        require_cuda_gate(raw['coordinate_data_scale'])
     device = configure_device("cuda", deterministic=True)
     torch.cuda.set_per_process_memory_fraction(.88)
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
-    raw = json.loads(args.config.read_text())
     settings = dict(raw.get('coordinate_training', {}))
     if args.checkpoint_blocks:
         settings['checkpoint_blocks'] = True
@@ -91,6 +96,7 @@ def run(args):
     flow_seed = args.seed + (18000 if initialization else 8000)
     generator = torch.Generator(device=device).manual_seed(flow_seed)
     train, _, data_hash, _, _, close = _open_data(raw["data"])
+    expanded_handles = ExitStack()
     try:
         sampler = _sampler(train, raw["training"], seed=args.seed, rank=0, world=1)
         entries = execution_schedule(sampler.global_batches, sampler.specs, histories=(4, 8), seed=args.seed, epoch=0)
@@ -100,9 +106,18 @@ def run(args):
         entries = entries[offset:offset+total_updates]
         selected_manifest = execution_manifest(entries)
         specs = {s.index: s for s in sampler.specs}
+        expansion = None
+        data_inputs = []
+        if 'coordinate_data_scale' in raw:
+            train, expanded_specs, entries, selected_manifest, data_hash, expansion, data_inputs = expanded_handles.enter_context(
+                expanded_training_input(train, data_hash, raw, args.seed, entries))
+            specs = {s.index:s for s in expanded_specs}
+            # Candidate is a registered selected calendar, not a fictitious
+            # offset slice into a newly sampled full-data stream.
+            manifest = selected_manifest
         systems = sorted({group_identity(specs[i].sample_id)[0] for e in entries for i in e.indices})
-        if len(systems) != 192:
-            raise ValueError("registered2048 schedule must cover all192 systems")
+        if len(systems) != (512 if expansion else 192):
+            raise ValueError("registered schedule must cover the complete training inventory")
         contract = dict(schema="molvid.coordinate_flow.training.v1", model=model.contract(),
             training=asdict(config), data_hash=data_hash, parent=release["selected_checkpoint"], seed=args.seed,
             prefix2048_sha256=canonical_hash(selected_manifest['entries']), execution_sha256=manifest["sha256"],
@@ -110,6 +125,11 @@ def run(args):
             input_config_sha256=sha256_file(args.config), precision="float32",
             objective='coordinate_RF_plus_actual_source_CA_handedness' if config.handedness_weight > 0 else 'coordinate_RF_only',
             static_updates=False, sampled_physical_auxiliary=config.handedness_weight > 0)
+        if expansion:
+            contract['data_scale_experiment'] = expansion
+            contract['reference_schedule_offset'] = offset
+            contract['schedule_offset_semantics'] = 'reference192 calendar only; candidate uses explicit registered entries'
+            contract['candidate_selected_schedule_offset'] = 0
         if total_updates == 8192:
             contract['selected_schedule_sha256'] = contract.pop('prefix2048_sha256')
             contract['coordinate_budget_experiment'] = dict(raw['coordinate_budget_experiment'])
@@ -128,7 +148,7 @@ def run(args):
             if config.handedness_weight > 0 and config.handedness_every != 1:
                 raise ValueError('auxiliary largest-profile must explicitly use cadence1 to exercise the loss')
         cursor = 0
-        inputs = [args.config, Path(release["selected_checkpoint"]["path"]), *initialization_inputs]
+        inputs = [args.config, Path(release["selected_checkpoint"]["path"]), *initialization_inputs, *data_inputs]
         if args.resume:
             inputs.append(args.resume)
             if sha256_file(args.resume) != args.resume_sha256:
@@ -143,11 +163,11 @@ def run(args):
             if not 0 <= cursor < args.max_steps:
                 raise ValueError("resume cursor outside requested continuation")
             del saved
-        freeze_run_identity(args.output, inputs=inputs, purpose="Full-model192 coordinate-state RF",
+        freeze_run_identity(args.output, inputs=inputs, purpose=f"Full-model{len(systems)} coordinate-state RF",
             protocol=dict(contract=contract, systems=systems, warm_start=model.warm_start_report,
                 cursor_start=cursor, max_steps=args.max_steps, final_step=total_updates, test_opened=False,
                 trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad),
-                comparison=('query4/8 versus frozen-query long controls: same data and long LR; trainable query geometry and compute differ; versus short changes both budget and LR'
+                comparison=(expansion['interpretation'] if expansion else 'query4/8 versus frozen-query long controls: same data and long LR; trainable query geometry and compute differ; versus short changes both budget and LR'
                     if total_updates == 8192 else 'paired chirality/control share coordinate parent,data,H,main RNG,LR and update budget; extra auxiliary compute differs'
                     if initialization else 'same data/H schedule as source unit/v02; architecture/objective/precision/readout LR differ')))
         atomic_write_json(args.output / "contract.json", contract)
@@ -166,8 +186,11 @@ def run(args):
                     generator=generator, step=index, config=config,
                     atom_identity=[identity for record in records for identity in record['atom_identity']])
                 row.update(step=index + 1, seconds=time.monotonic() - started,
-                           schedule_index=offset+index, execution_sha256=manifest["sha256"],
+                           schedule_index=(0 if expansion else offset)+index, execution_sha256=manifest["sha256"],
                            peak_cuda_bytes=torch.cuda.max_memory_allocated())
+                if expansion:
+                    row.update(reference_schedule_index=offset+index,
+                               candidate_global_batch_index=entry.global_batch_index)
                 log.write(json.dumps(row) + "\n"); log.flush()
                 print(json.dumps(row), flush=True)
                 checkpoint_steps = ((16,2048,4096,8192,args.max_steps) if total_updates == 8192 else
@@ -181,6 +204,7 @@ def run(args):
                 seconds=time.monotonic() - started, test_opened=False, checkpoint_selection="fixed_final_only",
                 static_updates=0, test_quality_available=False))
     finally:
+        expanded_handles.close()
         close()
 
 
