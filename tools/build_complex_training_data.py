@@ -29,10 +29,11 @@ def convert_system(root, handle, system, split):
     ligand=metadata['component_id']==1
     if ligand.sum()<2 or (~ligand).sum()<3:
         raise ValueError('complete protein and multiatom ligand required')
-    # MISATO molecule boundaries identify the protein then ligand, including H.
+    # Protein may contain several chains/fragments; the final molecule is ligand.
     boundaries=np.asarray(group['molecules_begin_atom_index'])
     selected=metadata['atom_source_index']
-    if len(boundaries)!=2 or boundaries[0]!=0 or not np.array_equal(ligand,selected>=boundaries[1]):
+    if (len(boundaries)<2 or boundaries[0]!=0 or np.any(np.diff(boundaries)<=0)
+            or not np.array_equal(ligand,selected>=boundaries[-1])):
         raise ValueError('topology roles disagree with HDF5 molecular components')
     bond=metadata['bond_index'];ligand_bonds=int((ligand[bond[0]] & ligand[bond[1]]).sum()//2)
     if ligand_bonds==0:
@@ -65,7 +66,7 @@ def run(args):
         raise ValueError('official train/val lists overlap or duplicate')
     args.output.mkdir(parents=True)
     atomic_write_json(args.output/'protocol.json',dict(raw_root=str(args.raw),
-        selection='official list order, first eligible128 train /16 validation; all exclusions recorded',
+        selection=f'official list order, first eligible{args.train_systems} train /{args.valid_systems} validation; all exclusions recorded',
         native_dt_ps=80,query_grids_ps=[80,160,320],frames_per_clip=16,
         crop=False,interpolation=False,units='Angstrom,ps',
         test_payload_opened=False,independent_family_scaffold_split=False,
