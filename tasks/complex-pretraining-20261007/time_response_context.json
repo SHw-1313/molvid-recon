@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-07",
+  "purpose": "Keep geometry improvement distinct from correctness of physical-time response",
+  "scope": "Existing frozen-query coordinate8192 controls, both training seeds, matched H4 history and native80/native100 forecasts on reused development48",
+  "source": "/workspace/molvid-coordinate-clock-response-20261006/runs/coordinate_clock_response_20261006/campaign_v3/long4_{seed}/clock_response/summary.json",
+  "delta_definition": "native80 result minus native100 result",
+  "internal_displacement_delta_A2": {"MD": -0.018268128082778504, "seed71": 0.0144783619, "seed72": 0.018385495289581822},
+  "internal_fluctuation_delta_A": {"MD": -0.00695967027233628, "seed71": 0.0165686160, "seed72": 0.018858355468481015},
+  "interpretation": "Both frozen-query seeds have opposite aggregate response direction to MD on this protocol. This is not explained away as one seed's fluctuation. It does not prove the Fourier basis is causal or establish a universal monotonic law for all trajectories.",
+  "intervention_status": "Nonperiodic-query-basis seed71 completed2048 actual updates and is generating native100 forecasts. Effects pending; seed72 pending.",
+  "mixture_status": "Current mixed complex/protein weights have not yet been assessed with this matched-clock intervention; improved ligand bonds are not evidence that their physical-time response is fixed."
+}
