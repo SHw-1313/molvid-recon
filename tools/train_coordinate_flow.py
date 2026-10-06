@@ -11,6 +11,8 @@ import torch
 from molvid.cli.train_frame_joint import _open_data, _sampler
 from molvid.data.batch import collate_clip_records
 from molvid.flow.coordinate import CoordinateFlowModel
+from molvid.dit.capacity import validate_coordinate_depth
+from molvid.training.coordinate_budget import resolve_coordinate_budget
 from molvid.provenance import freeze_run_identity
 from molvid.runtime import atomic_write_json, configure_device, sha256_file, canonical_hash
 from molvid.training.coordinate import CoordinateTrainConfig, make_coordinate_optimizer, coordinate_update, capture_coordinate_rng, restore_coordinate_rng
@@ -32,13 +34,21 @@ def run(args):
     if args.checkpoint_blocks:
         settings['checkpoint_blocks'] = True
     config = CoordinateTrainConfig(**settings)
-    if config.total_updates != 2048:
-        raise ValueError('registered fixed2048 training budget required')
+    total_updates = resolve_coordinate_budget(raw)
+    if args.max_steps is None:
+        args.max_steps = total_updates
+    depth = validate_coordinate_depth(raw.get('coordinate_dit_depth', 4))
     offset = raw.get('coordinate_schedule_offset', 0)
     if type(offset) is not int or offset not in (0,2048):
         raise ValueError('only original or next2048 schedule segment supported')
     if not 1 <= args.max_steps <= config.total_updates:
         raise ValueError("max_steps must lie within the fixed2048 schedule")
+    if depth == 8 and (offset != 2048 or not raw.get('coordinate_initialization')
+            or raw.get('coordinate_source_block_correlation', 0.) != 0.
+            or raw.get('coordinate_source_sigma_angstrom', 1.) != 1.
+            or raw.get('coordinate_local_geometry_input', 'observed') != 'observed'
+            or config.handedness_weight != 0.):
+        raise ValueError('depth expansion requires iid1 observed-geometry RF-only parent continuation')
     parent, _, release = load_parent(device)
     model = CoordinateFlowModel(parent).train()
     del parent
@@ -64,6 +74,8 @@ def run(args):
         del saved
     if (offset or config.handedness_weight > 0) and initialization is None:
         raise ValueError('new chirality phase requires an explicit coordinate parent')
+    if depth == 8:
+        model.expand_depth()
     query_geometry = raw.get('coordinate_train_query_geometry', False)
     if type(query_geometry) is not bool:
         raise ValueError('coordinate_train_query_geometry must be boolean')
@@ -72,8 +84,9 @@ def run(args):
             raise ValueError('GQ requires next2048 coordinate continuation without chirality')
         model.enable_query_geometry()
         model.warm_start_report.update(kind='coordinate_parent_plus_copied_query_geometry_fresh_optimizer',
-            new_state_keys=sorted(k for k in model.state_dict() if k.startswith('query_encoder.')),
+            new_state_keys=model.warm_start_report['new_state_keys'] + sorted(k for k in model.state_dict() if k.startswith('query_encoder.')),
             query_geometry_initialization='exact copy of loaded frozen teacher; no RNG draw')
+    model.set_query_geometry_recompute(raw.get('coordinate_query_geometry_recompute', False))
     optimizer = make_coordinate_optimizer(model, config)
     flow_seed = args.seed + (18000 if initialization else 8000)
     generator = torch.Generator(device=device).manual_seed(flow_seed)
@@ -81,13 +94,13 @@ def run(args):
     try:
         sampler = _sampler(train, raw["training"], seed=args.seed, rank=0, world=1)
         entries = execution_schedule(sampler.global_batches, sampler.specs, histories=(4, 8), seed=args.seed, epoch=0)
-        if len(entries) < offset+2048:
+        if len(entries) < offset+total_updates:
             raise ValueError("insufficient scheduled updates")
         manifest = execution_manifest(entries)
-        entries = entries[offset:offset+2048]
+        entries = entries[offset:offset+total_updates]
         selected_manifest = execution_manifest(entries)
         specs = {s.index: s for s in sampler.specs}
-        systems = sorted({group_identity(specs[i].sample_id)[0] for e in entries[:2048] for i in e.indices})
+        systems = sorted({group_identity(specs[i].sample_id)[0] for e in entries for i in e.indices})
         if len(systems) != 192:
             raise ValueError("registered2048 schedule must cover all192 systems")
         contract = dict(schema="molvid.coordinate_flow.training.v1", model=model.contract(),
@@ -97,6 +110,9 @@ def run(args):
             input_config_sha256=sha256_file(args.config), precision="float32",
             objective='coordinate_RF_plus_actual_source_CA_handedness' if config.handedness_weight > 0 else 'coordinate_RF_only',
             static_updates=False, sampled_physical_auxiliary=config.handedness_weight > 0)
+        if total_updates == 8192:
+            contract['selected_schedule_sha256'] = contract.pop('prefix2048_sha256')
+            contract['coordinate_budget_experiment'] = dict(raw['coordinate_budget_experiment'])
         runtime_root = Path(__file__).resolve().parents[1] / "molvid"
         contract["runtime_source_sha256"] = {str(p.relative_to(runtime_root)): sha256_file(p)
             for p in sorted(runtime_root.rglob("*.py")) if "evaluation" not in p.parts}
@@ -106,7 +122,7 @@ def run(args):
                 raise ValueError("largest-batch profile is a separate one-update disposable run")
             # Query activations dominate this model. H4 has12 future frames,
             # H8 only8; equal nominal16-frame cost is not equal memory cost.
-            largest = max(entries[:2048], key=lambda e: sum(
+            largest = max(entries, key=lambda e: sum(
                 specs[i].atoms * (specs[i].frames-e.history_frames) for i in e.indices))
             entries = (largest,)
             if config.handedness_weight > 0 and config.handedness_every != 1:
@@ -129,16 +145,17 @@ def run(args):
             del saved
         freeze_run_identity(args.output, inputs=inputs, purpose="Full-model192 coordinate-state RF",
             protocol=dict(contract=contract, systems=systems, warm_start=model.warm_start_report,
-                cursor_start=cursor, max_steps=args.max_steps, final_step=2048, test_opened=False,
+                cursor_start=cursor, max_steps=args.max_steps, final_step=total_updates, test_opened=False,
                 trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad),
-                comparison=('paired chirality/control share coordinate parent,data,H,main RNG,LR and update budget; extra auxiliary compute differs'
+                comparison=('query4/8 versus frozen-query long controls: same data and long LR; trainable query geometry and compute differ; versus short changes both budget and LR'
+                    if total_updates == 8192 else 'paired chirality/control share coordinate parent,data,H,main RNG,LR and update budget; extra auxiliary compute differs'
                     if initialization else 'same data/H schedule as source unit/v02; architecture/objective/precision/readout LR differ')))
         atomic_write_json(args.output / "contract.json", contract)
         atomic_write_json(args.output / "model_inspection.json", model_summary(model))
         started = time.monotonic()
         with ExecutionEvidence(args.output), (args.output / "updates.jsonl").open("x") as log:
             for index in range(cursor, args.max_steps):
-                if time.monotonic() - started > 21600:
+                if time.monotonic() - started > (43200 if total_updates == 8192 else 21600):
                     raise TimeoutError("six-hour execution budget")
                 if shutil.disk_usage(args.output).free < 8 * 2**30:
                     raise RuntimeError("8GiB disk reserve reached")
@@ -153,7 +170,8 @@ def run(args):
                            peak_cuda_bytes=torch.cuda.max_memory_allocated())
                 log.write(json.dumps(row) + "\n"); log.flush()
                 print(json.dumps(row), flush=True)
-                checkpoint_steps = (16,2048,args.max_steps) if initialization else (16,1024,2048,args.max_steps)
+                checkpoint_steps = ((16,2048,4096,8192,args.max_steps) if total_updates == 8192 else
+                    (16,2048,args.max_steps) if initialization else (16,1024,2048,args.max_steps))
                 if not args.profile_largest and index + 1 in checkpoint_steps:
                     atomic_torch_save(args.output / f"coordinate_step_{index+1:04d}.pt", dict(
                         contract=contract, model=model.state_dict(), optimizer=optimizer.state_dict(),
@@ -171,7 +189,7 @@ if __name__ == "__main__":
     p.add_argument("--config", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--seed", type=int, choices=(71, 72), required=True)
-    p.add_argument("--max-steps", type=int, default=2048)
+    p.add_argument("--max-steps", type=int, default=None)
     p.add_argument("--resume", type=Path)
     p.add_argument("--resume-sha256")
     p.add_argument("--profile-largest", action="store_true")

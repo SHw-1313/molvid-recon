@@ -26,11 +26,13 @@ from molvid.training.predictive_data import load_parent, RELEASE, atomic_torch_s
 
 
 def require_final_coordinate_checkpoint(saved):
+    from molvid.training.coordinate_budget import final_coordinate_budget
     contract=saved['contract']
+    final = final_coordinate_budget(contract)
     keys=('largest_nominal_batch_profile_only','largest_query_atom_frame_profile_only')
     present=[key for key in keys if key in contract]
-    if saved['cursor']!=2048 or len(present)!=1 or contract[present[0]] is not False:
-        raise ValueError('only fixed-final2048 non-profile coordinate checkpoints qualify')
+    if saved['cursor']!=final or len(present)!=1 or contract[present[0]] is not False:
+        raise ValueError('only fixed-final2048 or registered8192 non-profile coordinate checkpoints qualify')
 
 
 def run(args):
@@ -60,7 +62,9 @@ def run(args):
             saved=torch.load(args.checkpoint,map_location='cpu',weights_only=False)
             require_final_coordinate_checkpoint(saved)
             model=CoordinateFlowModel(model, train_query_geometry=(saved['contract']['model']['query_encoder'] ==
-                'trainable_query_copy_frozen_observation_current_radius_graph'))
+                'trainable_query_copy_frozen_observation_current_radius_graph'),
+                dit_depth=saved['contract']['model'].get('dit_depth', 4))
+            model.set_query_geometry_recompute('query_geometry_execution' in saved['contract']['model'])
             if model.contract()!=saved['contract']['model']: raise ValueError('coordinate model contract differs')
             model.load_state_dict(saved['model'],strict=True)
             model.eval().requires_grad_(False);del saved

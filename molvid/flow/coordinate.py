@@ -16,6 +16,7 @@ from torch import Tensor, nn
 from ..codec.heads import EquivariantCoordinateHead
 from ..codec.frame import FrameGeometryEncoder
 from ..data.batch import ClipBatch
+from ..dit.capacity import expand_coordinate_dit, validate_coordinate_depth
 from ..latent.types import FrameLatentBatch, ObservedContext, QuerySpec, StructureCondition
 from ..model import FrameJointCondition, FrameJointModel
 
@@ -38,8 +39,10 @@ class CoordinateFlowModel(nn.Module):
     """
 
     def __init__(self, parent: FrameJointModel, *, sigma_angstrom: float = 1.0,
-                 train_query_geometry: bool = False):
+                 train_query_geometry: bool = False, dit_depth: int = 4):
         super().__init__()
+        validate_coordinate_depth(dit_depth)
+        self._depth_expanded = False
         if parent.history_backend != "legacy":
             raise ValueError("coordinate prototype requires legacy observed history")
         if not math.isfinite(sigma_angstrom) or sigma_angstrom <= 0:
@@ -76,6 +79,20 @@ class CoordinateFlowModel(nn.Module):
             raise ValueError("train_query_geometry must be an explicit boolean")
         if train_query_geometry:
             self.enable_query_geometry()
+
+        if dit_depth == 8:
+            self.expand_depth()
+
+    def expand_depth(self):
+        """Expand the loaded parent before constructing a fresh optimizer."""
+        report = expand_coordinate_dit(self.dit)
+        self._depth_expanded = True
+        mapping = {'dit.' + a: 'dit.' + b for a, b in report['old_to_new_state_keys'].items()}
+        self.warm_start_report.update(
+            kind='coordinate_depth_model_only_fresh_optimizer', depth_expansion=report,
+            reused_state_keys=[mapping.get(k, k) for k in self.warm_start_report['reused_state_keys']],
+            new_state_keys=self.warm_start_report['new_state_keys'] + ['dit.' + k for k in report['new_state_keys']])
+        return report
 
     def enable_query_geometry(self) -> None:
         """Clone the LOADED teacher; no RNG draws or observed-path changes.
@@ -118,6 +135,10 @@ class CoordinateFlowModel(nn.Module):
         encoder = self.query_encoder if self.query_encoder is not None else self.target_teacher
         if encoder.checkpoint_frames:
             result["query_geometry_execution"] = "per_chunk_nonreentrant_recompute_preserve_rng_v1"
+        if self._depth_expanded:
+            result.update(dit_depth=self.dit.depth,
+                dit_geometry_blocks_one_based=list(self.dit.geometry_block_indices),
+                depth_expansion='identity_interleave_keep_geometry_count')
         return result
 
     def train(self, mode: bool = True):
