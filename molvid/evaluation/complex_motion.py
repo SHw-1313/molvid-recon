@@ -53,7 +53,8 @@ def score_complex(draws,record,history=4):
     residue_ids=np.asarray(record['block_id'])[protein]
     initial_distance=protein_ligand_distances(reference[None],ligand,protein,residue_ids)[0]
     pocket=initial_distance<8.
-    if not pocket.any():raise ValueError('no observed protein contact within8A')
+    # A dissociated observed ligand remains a valid forecast condition.
+    # Pocket-only observables are undefined, not zero or a dropped condition.
     true_distance=protein_ligand_distances(truth,ligand,protein,residue_ids)
     pred_distance=np.stack([protein_ligand_distances(draw,ligand,protein,residue_ids) for draw in predictions])
     contact_probability=(pred_distance<4.5).mean(0)
@@ -75,7 +76,9 @@ def score_complex(draws,record,history=4):
         ligand_center_msd_mae_A2=float(np.abs(np.square(pred_center-initial_center).sum(-1)
             -np.square(true_center-initial_center).sum(-1)).mean()),
         ligand_center_path_energy_score_A=energy_score(pred_center-initial_center,true_center-initial_center),
-        pocket_distance_path_energy_score_A=energy_score(pred_distance[:,:,pocket],true_distance[:,pocket]),
-        pocket_contact_brier=float(np.square(contact_probability[:,pocket]-true_contacts[:,pocket]).mean()),
+        pocket_distance_path_energy_score_A=(energy_score(pred_distance[:,:,pocket],true_distance[:,pocket])
+            if pocket.any() else None),
+        pocket_contact_brier=(float(np.square(contact_probability[:,pocket]-true_contacts[:,pocket]).mean())
+            if pocket.any() else None),
         all_residue_contact_occupancy_mae=float(np.abs(contact_probability.mean(0)-true_contacts.mean(0)).mean()),
         observed_pocket_residues=int(pocket.sum()),ligand_atoms=len(ligand),ligand_bonds=len(i))
