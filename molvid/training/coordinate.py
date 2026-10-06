@@ -25,8 +25,11 @@ class CoordinateTrainConfig:
     handedness_steps: int = 16
     handedness_margin: float = .1
     handedness_minimum_volume_A3: float = .2
+    ligand_rf_fraction: float | None = None
 
     def __post_init__(self):
+        if self.ligand_rf_fraction is not None and not 0 < self.ligand_rf_fraction < 1:
+            raise ValueError('ligand RF fraction must lie strictly between zero and one')
         if not math.isfinite(self.handedness_weight) or self.handedness_weight < 0:
             raise ValueError('handedness weight must be finite and nonnegative')
         if (type(self.handedness_every) is not int or self.handedness_every < 1
@@ -92,7 +95,8 @@ def coordinate_update(model, optimizer, cpu_batch, *, history_frames, generator,
     noisy = torch.lerp(source, target, atom_progress)
     prediction = model(noisy, condition=condition, query=query, flow_time=progress,
                        checkpoint_blocks=config.checkpoint_blocks)
-    loss = coordinate_flow_loss(prediction, target - source, batch=observed, query=query)
+    loss = coordinate_flow_loss(prediction, target - source, batch=observed, query=query,
+                                ligand_fraction=config.ligand_rf_fraction)
     loss.backward()
     rf_loss = float(loss.detach())
     auxiliary_value = 0.

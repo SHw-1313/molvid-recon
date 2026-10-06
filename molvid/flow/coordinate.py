@@ -267,7 +267,8 @@ class CoordinateFlowModel(nn.Module):
 
 
 def coordinate_flow_loss(predicted: Tensor, target_velocity: Tensor, *,
-                         batch: ClipBatch, query: QuerySpec) -> Tensor:
+                         batch: ClipBatch, query: QuerySpec,
+                         ligand_fraction: float | None = None) -> Tensor:
     """System-equal masked coordinate-velocity MSE, units Angstrom squared."""
     if predicted.shape != target_velocity.shape or predicted.shape != (query.frames, batch.atom_count, 3):
         raise ValueError("coordinate velocity loss requires matching [Q,N,3]")
@@ -277,4 +278,23 @@ def coordinate_flow_loss(predicted: Tensor, target_velocity: Tensor, *,
     counts = error.new_zeros(batch.batch_size).index_add_(0, batch.abid, mask.sum(0).float())
     if bool((counts <= 0).any()):
         raise ValueError("each system needs supervised coordinate velocities")
-    return (sums / counts).mean()
+    system_loss = sums / counts
+    if ligand_fraction is not None:
+        if not 0 < ligand_fraction < 1:
+            raise ValueError('ligand_fraction must lie strictly between zero and one')
+        # Each system retains equal outer weight. Only systems containing both
+        # roles use separate role means; protein-only behavior is unchanged.
+        role_losses = []
+        role_counts = []
+        for role in (0, 1):
+            selected = mask & (batch.component_id == role)[None]
+            total = error.new_zeros(batch.batch_size).index_add_(
+                0, batch.abid, (error * selected).sum(0))
+            count = error.new_zeros(batch.batch_size).index_add_(
+                0, batch.abid, selected.sum(0).float())
+            role_losses.append(total / count.clamp_min(1))
+            role_counts.append(count)
+        both = (role_counts[0] > 0) & (role_counts[1] > 0)
+        system_loss = torch.where(both, (1-ligand_fraction)*role_losses[0]
+                                  + ligand_fraction*role_losses[1], system_loss)
+    return system_loss.mean()

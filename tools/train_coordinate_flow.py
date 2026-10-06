@@ -1,6 +1,6 @@
 """Fixed-final full-model coordinate RF with the paired source-run data schedule."""
 import argparse
-from contextlib import ExitStack
+from contextlib import ExitStack, nullcontext
 from dataclasses import asdict
 import json
 from pathlib import Path
@@ -23,6 +23,7 @@ from molvid.training.predictive_data import load_parent, atomic_torch_save, grou
 from tools.inspect_model import model_summary
 from tools.evaluate_expanded_native import require_final_coordinate_checkpoint
 from molvid.training.data_scale_input import expanded_training_input, validate_reference, require_cuda_gate
+from molvid.training.complex_mixture import complex_training_input
 
 
 def run(args):
@@ -107,6 +108,7 @@ def run(args):
         selected_manifest = execution_manifest(entries)
         specs = {s.index: s for s in sampler.specs}
         expansion = None
+        mixture = None
         data_inputs = []
         if 'coordinate_data_scale' in raw:
             train, expanded_specs, entries, selected_manifest, data_hash, expansion, data_inputs = expanded_handles.enter_context(
@@ -115,8 +117,17 @@ def run(args):
             # Candidate is a registered selected calendar, not a fictitious
             # offset slice into a newly sampled full-data stream.
             manifest = selected_manifest
-        systems = sorted({group_identity(specs[i].sample_id)[0] for e in entries for i in e.indices})
-        if len(systems) != (512 if expansion else 192):
+        if 'coordinate_complex_mixture' in raw:
+            if expansion or total_updates != 2048 or config.handedness_weight:
+                raise ValueError('complex mixture is a separate RF2048 experiment')
+            train, mixed_specs, entries, selected_manifest, data_hash, mixture = expanded_handles.enter_context(
+                complex_training_input(train, data_hash, raw['coordinate_complex_mixture'], args.seed, entries))
+            specs = {s.index:s for s in mixed_specs}
+            manifest = selected_manifest
+            data_inputs.append(Path(raw['coordinate_complex_mixture']['data'])/'summary.json')
+        systems = (mixture['protein_systems'] + ['misato_'+s for s in mixture['complex_systems']]
+            if mixture else sorted({group_identity(specs[i].sample_id)[0] for e in entries for i in e.indices}))
+        if len(systems) != (320 if mixture else 512 if expansion else 192):
             raise ValueError("registered schedule must cover the complete training inventory")
         contract = dict(schema="molvid.coordinate_flow.training.v1", model=model.contract(),
             training=asdict(config), data_hash=data_hash, parent=release["selected_checkpoint"], seed=args.seed,
@@ -130,6 +141,10 @@ def run(args):
             contract['reference_schedule_offset'] = offset
             contract['schedule_offset_semantics'] = 'reference192 calendar only; candidate uses explicit registered entries'
             contract['candidate_selected_schedule_offset'] = 0
+        if mixture:
+            contract['complex_mixture'] = mixture
+            contract['schedule_offset_semantics'] = 'protein reference calendar; odd updates replaced by complexes'
+            contract['activation_offload_above_atoms'] = raw['coordinate_complex_mixture']['activation_offload_above_atoms']
         if total_updates == 8192:
             contract['selected_schedule_sha256'] = contract.pop('prefix2048_sha256')
             contract['coordinate_budget_experiment'] = dict(raw['coordinate_budget_experiment'])
@@ -182,9 +197,14 @@ def run(args):
                 entry = entries[index]
                 records = [train[i] for i in entry.indices]
                 batch = collate_clip_records(records)
-                row = coordinate_update(model, optimizer, batch, history_frames=entry.history_frames,
-                    generator=generator, step=index, config=config,
-                    atom_identity=[identity for record in records for identity in record['atom_identity']])
+                offload = bool(mixture and batch.atom_count > contract['activation_offload_above_atoms'])
+                with torch.autograd.graph.save_on_cpu(pin_memory=True) if offload else nullcontext():
+                    row = coordinate_update(model, optimizer, batch, history_frames=entry.history_frames,
+                        generator=generator, step=index, config=config,
+                        atom_identity=[identity for record in records for identity in record['atom_identity']])
+                if mixture:
+                    row.update(domain='complex' if index % 2 else 'protein', activation_offload=offload,
+                        ligand_atoms=int((batch.component_id == 1).sum()), ligand_rf_fraction=config.ligand_rf_fraction)
                 row.update(step=index + 1, seconds=time.monotonic() - started,
                            schedule_index=(0 if expansion else offset)+index, execution_sha256=manifest["sha256"],
                            peak_cuda_bytes=torch.cuda.max_memory_allocated())
