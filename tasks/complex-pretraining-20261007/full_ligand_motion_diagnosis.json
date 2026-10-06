@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-07",
+  "source": "runs/complex_pretraining_20261007/ligand_motion_full16_v1.json",
+  "systems": 16,
+  "conditions": 32,
+  "new_model_calls": 0,
+  "MD": {"center_rmsf_A": 1.5848046028308655, "bond_temporal_std_A": 0.03097575732555511, "mean_bond_length_A": 1.4559428878061973},
+  "PVB": {"center_rmsf_A": 0.9454888312288598, "bond_temporal_std_A": 0.04910264653920274, "mean_bond_length_A": 1.4409988823259396},
+  "balanced71": {"center_rmsf_A": 0.6270595704223905, "bond_temporal_std_A": 0.2299516989313719, "mean_bond_length_A": 1.4128819770907182},
+  "balanced72": {"center_rmsf_A": 0.6890455506228317, "bond_temporal_std_A": 0.2561931384004499, "mean_bond_length_A": 1.449579262964939},
+  "interpretation": "Mean ligand scale is largely recovered but internal bond fluctuations remain7-8 times MD while coherent center fluctuations are too small. Matching an average bond length or an aggregate atom RMSF cannot establish correct motion. Short-window MD includes rare large displacement conditions; per-system results are retained.",
+  "architecture_observation": "Spatial FrameEncoder already supplies covalent bond types to TorchMD; selected DiT blocks also use1-hop and1-3 topology. Do not infer missing topology from poor geometry. Observed/query geometry asymmetry is being tested separately; not established as cause.",
+  "next_decision": "Use shared-observation two-seed and protein-retention results before selecting a parent for full repeated static geometric pretraining. A useful geometry intervention must reduce internal distortion without further suppressing coherent translation and flexible conformation changes.",
+  "not_claimed": ["Equilibrium or kinetic correctness", "Proven causal explanation from descriptive observables", "Success from posthoc projection", "Relative-atom RMSF measures torsion alone; it also includes rigid rotation"]
+}
