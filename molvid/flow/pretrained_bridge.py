@@ -16,6 +16,19 @@ from ..codec.bridge_history import BridgeHistoryConditioner
 from ..data.batch import ClipBatch
 
 
+class RecomputedGeometryLayer(nn.Module):
+    """Owned pretrained layer, unchanged arithmetic with activation recompute."""
+    def __init__(self, layer):
+        super().__init__()
+        self.layer = layer
+
+    def forward(self, *args, **kwargs):
+        if self.training and torch.is_grad_enabled():
+            return checkpoint(self.layer, *args, use_reentrant=False,
+                              preserve_rng_state=True, **kwargs)
+        return self.layer(*args, **kwargs)
+
+
 @dataclass(frozen=True)
 class BridgeCondition:
     observed: ClipBatch
@@ -44,6 +57,10 @@ not a claim of arbitrary padded-batch support.
         self.geometry = geometry
         self.conditioner = BridgeHistoryConditioner(geometry.hidden_dim, temporal_heads)
         self.recompute_frames = bool(recompute_frames)
+        if self.recompute_frames:
+            # Bound backward memory for full 17k-atom structures, without crops.
+            self.geometry.decoder.attention_layers = nn.ModuleList([
+                RecomputedGeometryLayer(layer) for layer in geometry.decoder.attention_layers])
 
     def contract(self):
         return dict(schema='molvid.pretrained_geometry_bridge.v1',
@@ -141,11 +158,7 @@ perturbation affects only the source encoder; history remains observed data.
         t = flow_time.index_select(0, batch.abid)[:, None]
         features = []
         for frame in range(frames):
-            if self.recompute_frames and self.training and torch.is_grad_enabled():
-                result = checkpoint(lambda x, y: self._decode_frame(x, y, t, batch),
-                    state_A[frame], source_A[frame], use_reentrant=False, preserve_rng_state=True)
-            else:
-                result = self._decode_frame(state_A[frame], source_A[frame], t, batch)
+            result = self._decode_frame(state_A[frame], source_A[frame], t, batch)
             features.append(result)
         h, v = torch.stack([a for a, _ in features]), torch.stack([b for _, b in features])
         if condition.task == 'dynamic':
