@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-07",
+  "training_source_commit": "ec8b483",
+  "status": "real_training_in_progress_no_quality_claim",
+  "actual_update_snapshot": {"atom_71": 151, "balanced_71": 155, "balanced_72": 159},
+  "actual_complex_updates_snapshot": {"atom_71": 18, "balanced_71": 20, "balanced_72": 26},
+  "gpu_assignments": {"atom_71_then_atom_72": 4, "balanced_72": 5, "balanced_71": 7},
+  "planned_updates_per_arm": 2048,
+  "planned_protein_complex_updates_per_arm": [1024, 1024],
+  "training_systems": {"protein": 192, "complex": 128},
+  "weights": {"atom": "system-equal atom-mean RF", "balanced": "system-equal RF; protein and ligand role means each0.5 in complexes"},
+  "large_systems": "Full atom sets retained; activation offload above4000 atoms. Actual complex updates with104928 atom-queries completed.",
+  "control": "Already completed seed-specific GQ2048 continuations from the same frozen coordinate2048 parents. No new control training.",
+  "inference_control_sessions": {"seed71_gpu2_after_current_inference": 74000, "seed72_gpu3_after_current_inference": 54277},
+  "evaluation": "Each fixed-final model:256 complex forecasts on16 validation systems;192 protein forecasts on48 development systems, then chemistry scoring.",
+  "interpretation": "Atom versus balanced arms share selected data and update schedule. Versus protein-only GQ control, data domain, native clocks, query recomputation and compute differ. The inherited generic chirality comparison sentence in run_identity is inapplicable; use this explicit experiment interpretation.",
+  "initial_failure": "Before any training updates: blindly retaining alternating protein batches omitted systems. Preserved initial_preparation_failure.log; repaired selection retains every protein system before filling1024 positions.",
+  "static_updates": 0,
+  "independent_test": false,
+  "equilibrium_claim": false,
+  "default_promotion": false
+}
