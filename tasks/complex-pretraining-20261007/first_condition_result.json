@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-07",
+  "scope": "First condition only; descriptive interim snapshot, not a completed comparison",
+  "sample_id": "misato_4U03_MD_dt_80ps_w000000",
+  "native_dt_ps": 80,
+  "query_frames": 12,
+  "draws": 8,
+  "metrics_order": ["ligand_bond_rmse_A", "ligand_rmsf_mae_A", "ligand_center_msd_mae_A2", "ligand_center_path_energy_score_A", "pocket_distance_path_energy_score_A"],
+  "scores": {
+    "gq2048_71": [1.4517291615, 0.8542801169, 0.7042285207, 0.3979464417, 0.5462785174],
+    "gq2048_72": [1.4944245803, 0.8763684506, 0.6945250164, 0.4063090175, 0.5644978918],
+    "atom_71": [0.3523307005, 0.1563511975, 0.5643873857, 0.3455062567, 0.4700469709],
+    "balanced_71": [0.1976619716, 0.1573617569, 0.4838463645, 0.3586530562, 0.4689827873],
+    "balanced_72": [0.2115165803, 0.1505506206, 0.4945720164, 0.3685608103, 0.4733299717],
+    "pvb_released": [0.0775436766, 0.2501772266, 0.6340655394, 0.3467601985, 0.7207308818]
+  },
+  "source_rows": {
+    "gq_controls": "/workspace/molvid-complex-mixture-20261007/runs/complex_mixture_20261007/gq2048_{seed}_native80_v1/rows.json",
+    "mixed": "runs/complex_pretraining_20261007/{arm}_{seed}/complex_native80/rows.json",
+    "pvb": "/workspace/molvid-complex-reference-20261007/runs/complex_reference_20261007/pvb_native80_v2/rows.json"
+  },
+  "interpretation": "Mixed-domain training substantially improves this condition versus matched-update protein-only controls. Role balancing further improves bond geometry versus atom-mean for seed71, but center path energy score slightly worsens. PVB remains better on bond geometry. Full-system paired effects and protein retention are pending.",
+  "limitations": ["Only one condition", "Atom72 not yet trained", "PVB H1 versus Molvid H4 and different training exposure", "Not independent family/scaffold evaluation", "No thermodynamic claim", "No static training in these arms"],
+  "default_promotion": false
+}
