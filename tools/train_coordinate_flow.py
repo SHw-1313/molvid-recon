@@ -143,7 +143,7 @@ def run(args):
             contract['candidate_selected_schedule_offset'] = 0
         if mixture:
             contract['complex_mixture'] = mixture
-            contract['schedule_offset_semantics'] = 'protein reference calendar; odd updates replaced by complexes'
+            contract['schedule_offset_semantics'] = 'protein reference calendar; explicit1024 positions replaced by complexes'
             contract['activation_offload_above_atoms'] = raw['coordinate_complex_mixture']['activation_offload_above_atoms']
         if total_updates == 8192:
             contract['selected_schedule_sha256'] = contract.pop('prefix2048_sha256')
@@ -203,7 +203,7 @@ def run(args):
                         generator=generator, step=index, config=config,
                         atom_identity=[identity for record in records for identity in record['atom_identity']])
                 if mixture:
-                    row.update(domain='complex' if index % 2 else 'protein', activation_offload=offload,
+                    row.update(domain='protein' if index in mixture['retained_protein_positions'] else 'complex', activation_offload=offload,
                         ligand_atoms=int((batch.component_id == 1).sum()), ligand_rf_fraction=config.ligand_rf_fraction)
                 row.update(step=index + 1, seconds=time.monotonic() - started,
                            schedule_index=(0 if expansion else offset)+index, execution_sha256=manifest["sha256"],

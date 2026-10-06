@@ -45,8 +45,23 @@ def complex_training_input(base, base_hash, settings, seed, reference):
         rng = np.random.default_rng(seed + 61007)
         order = rng.permutation(sorted(inventory)).tolist()
         entries = list(reference)
+        # Blindly taking every other reference batch can omit rare systems.
+        # Keep one existing batch per system first, then preferentially retain
+        # even positions to reach exactly half of the original update budget.
+        retained = set()
+        covered = set()
+        for position, entry in enumerate(reference):
+            names = {group_identity(specs[i].sample_id)[0] for i in entry.indices}
+            if names - covered:
+                retained.add(position)
+                covered.update(names)
+        for position in list(range(0, len(entries), 2)) + list(range(1, len(entries), 2)):
+            if len(retained) == len(entries)//2:
+                break
+            retained.add(position)
+        replaced = [i for i in range(len(entries)) if i not in retained]
         complex_exposure = defaultdict(int)
-        for ordinal, position in enumerate(range(1, len(entries), 2)):
+        for ordinal, position in enumerate(replaced):
             cycle, system_position = divmod(ordinal, len(order))
             system = order[system_position]
             bucket = buckets[(cycle + system_position) % len(buckets)]
@@ -60,13 +75,14 @@ def complex_training_input(base, base_hash, settings, seed, reference):
                 auxiliary=False)
             complex_exposure[system] += 1
         proteins = sorted({group_identity(specs[i].sample_id)[0]
-            for entry in entries[::2] for i in entry.indices})
+            for position in retained for i in entries[position].indices})
         if len(proteins) != 192:
             raise ValueError('retained protein updates do not cover192 systems')
         manifest = execution_manifest(entries)
         contract = dict(protein_systems=proteins, complex_systems=sorted(inventory),
             protein_updates=1024, complex_updates=1024, complex_exposure=dict(complex_exposure),
-            policy='replace odd reference updates; system-equal complex then balanced native clocks',
+            policy='retain all protein systems in1024 original positions; replace remainder by system-equal complexes',
+            retained_protein_positions=sorted(retained),
             no_crop=True, data=str(root), test_payload_opened=False,
             interpretation='different domain, clocks, atom counts and compute; same total optimizer updates')
         yield dataset, specs, tuple(entries), manifest, canonical_hash(dict(
