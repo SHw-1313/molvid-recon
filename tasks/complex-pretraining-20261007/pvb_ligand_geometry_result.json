@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-07",
+  "source": "runs/complex_pretraining_20261007/pvb_ligand_geometry_v2/summary.json",
+  "systems": 16,
+  "conditions": 32,
+  "generated_predictions_scored": 256,
+  "new_model_calls": 0,
+  "physical_threshold_source": "/workspace/molvid-recon-gm-motion-v3/runs/gm_motion_memory_v3/A/r04/resolved_auxiliary.json",
+  "pvb_system_equal_means": {
+    "ligand_internal_clashes_per_1000_ligand_atoms": 0.37430027069660526,
+    "protein_ligand_clashes_per_1000_ligand_atoms": 8.779821790971713,
+    "angle_cosine_rmse_against_MD": 0.12113473143836018,
+    "torsion_circular_error_against_MD": 0.44860140862874687
+  },
+  "MD_internal_and_protein_ligand_clashes_under_same_thresholds": 0,
+  "scientific_correction": {
+    "unqualified_metric": "observed_nonplanar_volume_sign_flip_fraction",
+    "MD_mean": 0.18954515392015395,
+    "pvb_mean": 0.3327679698773449,
+    "reason": "Generic graph degree>=3 and an observed-volume magnitude cutoff do not identify chemical stereocenters. This mixes planar fluctuations, invertible centers and genuine tetrahedral configurations.",
+    "decision": "Keep raw diagnostic visible, exclude from model-selection or loss-design evidence; no threshold tuning to force MD to pass. Full ligand R/S assessment needs chemically assigned stereocenters."
+  },
+  "limitations": [
+    "Clash values use fixed diagnostic tolerances, not a force-field energy",
+    "Torsion difference to one MD future is not itself a chemical-invalidity or distribution metric",
+    "Complete aromaticity, chemical stereochemistry and hydrogen geometry remain unassessed",
+    "Mixed-model scoring awaits completed cached forecasts; no comparative winner declared"
+  ],
+  "initial_failure": "v1 stopped before scoring because record key is atype, not atom_type; v2 corrected this and completed all32 conditions."
+}

@@ -115,6 +115,8 @@ def run(args):
     atomic_write_json(args.output/'summary.json', dict(status='completed', model_calls=0, systems=16, conditions=32,
         generated=str(args.generated), physical_recipe=str(recipe), physical=physical,
         estimates={'|'.join(k): system_estimate(v) for k, v in groups.items()},
+        decision_excluded_metrics=['observed_nonplanar_volume_sign_flip_fraction', 'observed_nonplanar_centers'],
+        volume_warning='Generic degree>=3 centers are not chemically assigned stereocenters. MD itself flips these signs frequently; do not use as a chirality error rate or training objective.',
         limitations=[
             'Angle/torsion differences to one MD future are conformation errors, not necessarily invalidity',
             'Ordered nonplanar-center sign flips are not complete R/S assignments; planar and unrecognized centers omitted',
