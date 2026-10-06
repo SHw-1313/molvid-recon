@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-07",
+  "status": "balanced both seeds and atom71 complete full-complex evaluation; atom72 and protein retention pending",
+  "scope": "16 official validation systems,32 conditions,256 forecasts per model; system paired bootstrap, seeds separate",
+  "balanced71": {"ligand_bond_rmse_A": 0.32908614413060444, "ligand_rmsf_mae_A": 0.9999220814307426, "ligand_center_path_energy_score_A": 1.0493674235519657},
+  "balanced72": {"ligand_bond_rmse_A": 0.3485007884637654, "ligand_rmsf_mae_A": 0.9730273144382544, "ligand_center_path_energy_score_A": 1.0449893311871454},
+  "pvb_released": {"ligand_bond_rmse_A": 0.07608793694534022, "ligand_rmsf_mae_A": 0.961334681256179, "ligand_center_path_energy_score_A": 1.301179736463454},
+  "matched_gq_comparison": "Both balanced seeds improve bond error, RMSF error, center MSD error and both center/pocket energy scores relative to protein-only GQ2048 controls; marginal system-bootstrap CIs exclude zero in each of these comparisons.",
+  "pvb_comparison": "Both seeds have better center/pocket energy scores, but markedly worse bond error; RMSF and center MSD differences are inconclusive. Not competitive overall.",
+  "chemistry_warning": "Balanced71 still108.139 internal clashes/1000 ligand atoms and43.222 protein-ligand clashes/1000 ligand atoms; released PVB0.3743 and8.7798 with the same diagnostic. Bond improvement does not imply chemically usable trajectories.",
+  "causal_scope": "Balanced versus GQ changes complex exposure plus role weighting. Atom71 versus GQ already improves joint metrics, supporting data-domain mismatch as a contributor. Balanced versus atom isolates weighting; seed72 atom control pending.",
+  "decision": "Keep mixture and role balance as promising development candidates; no default promotion before protein retention and complete comparisons. Shared observed/query geometry ablation already training on GPUs2/3. Remaining ligand internal geometry is a primary target, not optional polishing.",
+  "sources": ["runs/complex_pretraining_20261007/full_comparisons_v1/", "runs/complex_pretraining_20261007/pvb_ligand_geometry_v2/summary.json"],
+  "limitations": ["Reused development systems and unknown parent/static exposure", "No ligand-scaffold independence claim", "Native PVB H1 versus Molvid H4 and unequal training budgets", "Short-horizon predictive scores, not thermodynamics", "Generic volume-sign metric is not chemically assigned chirality and is excluded from decisions"]
+}
