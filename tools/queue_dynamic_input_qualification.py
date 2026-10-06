@@ -42,11 +42,11 @@ def completed_lane(path):
         raise ValueError('full long training cursor required')
 
 
-def resumed_pair(left, right, mode, history):
+def resumed_pair(left, right, mode, history, *, atoms=17002):
     for row,updates in ((left,2),(right,1)):
         if (row.get('status') != 'completed' or row.get('actual_updates') != updates
                 or row.get('cursor_end') != 2 or row.get('optimizer_steps') != [2]
-                or row.get('atoms') != 17002 or row.get('history_frames') != history
+                or row.get('atoms') != atoms or row.get('history_frames') != history
                 or row.get('query_frames') != 16-history or row.get('model_mode') != mode
                 or row.get('finite_model_optimizer_and_gradients') is not True):
             raise ValueError('actual unshortened maximum-input updates required')

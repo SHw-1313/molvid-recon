@@ -1,6 +1,6 @@
 """Real largest-TRAIN input updates; a memory/resume gate, never efficacy.
 
-Model and training-step implementations are imported unchanged from GQf8f4ce2.
+The optional frame recomputation changes execution, not RF or input semantics.
 No crop, temporal shortening, precision change or CPU model fallback is allowed.
 """
 import argparse
@@ -79,7 +79,7 @@ def finite_state(value):
         raise FloatingPointError('nonfinite optimizer scalar')
 
 
-def input_record(preflight=PREFLIGHT):
+def input_record(preflight=PREFLIGHT, input_size='maximum'):
     summary = read(preflight/'summary.json')
     census = read(preflight/'topology_census.json')
     train = read(BASE/'train512_reserved/manifest.json')
@@ -96,7 +96,15 @@ def input_record(preflight=PREFLIGHT):
         raise ValueError('registered new17002-atom maximum changed')
     for name, key in [('data.bin','store_data_sha256'),('index.txt','store_index_sha256')]:
         if sha256_file(preflight/'probe_store'/name) != summary[key]: raise ValueError('probe bytes changed')
-    sample = f'{maximum}_R1_dt_100ps_w000000'
+    if input_size not in ('maximum', 'representative'):
+        raise ValueError('registered maximum or representative input required')
+    selected = maximum if input_size == 'maximum' else 'atlas_3da8_A'
+    if selected not in train['all_training'] or selected in protected_ids:
+        raise ValueError('qualification record must be unprotected TRAIN')
+    atoms = census[selected]['selected_atoms']
+    if input_size == 'representative' and atoms != 1578:
+        raise ValueError('registered representative input changed')
+    sample = f'{selected}_R1_dt_100ps_w000000'
     store = ClipMMapDataset(preflight/'probe_store')
     try:
         matches = [i for i, row in enumerate(store._index) if row[0] == sample]
@@ -104,16 +112,16 @@ def input_record(preflight=PREFLIGHT):
         record = store[matches[0]]
     finally:
         store.close()
-    if (record['x'].shape != (16,17002,3) or record['split'] != 'train'
+    if (record['x'].shape != (16,atoms,3) or record['split'] != 'train'
             or not np.asarray(record['frame_mask'],dtype=bool).all() or not np.array_equal(np.diff(record['time_ps']), np.full(15,100.))
-            or record['topology_fingerprint'] != census[maximum]['topology_fingerprint']):
-        raise ValueError('full unmodified16-frame maximum training record required')
+            or record['topology_fingerprint'] != census[selected]['topology_fingerprint']):
+        raise ValueError('full unmodified16-frame registered training record required')
     return record, [BASE/'train512_reserved/manifest.json',BASE/'expanded_candidates/manifest.json',
         BASE/'external_overlap_v3/summary.json',preflight/'summary.json',preflight/'topology_census.json',
         preflight/'probe_store/data.bin',preflight/'probe_store/index.txt']
 
 
-def build_model(device, recipe, mode):
+def build_model(device, recipe, mode, *, recompute_geometry=False):
     initial = recipe['coordinate_initialization']; path = Path(initial['checkpoint'])
     if sha256_file(path) != initial['sha256']: raise ValueError('coordinate parent SHA mismatch')
     saved = torch.load(path, map_location='cpu', weights_only=False)
@@ -127,6 +135,7 @@ def build_model(device, recipe, mode):
         raise ValueError('coordinate-parent architecture/seed mismatch')
     model.load_state_dict(saved['model'], strict=True)
     if mode == 'trainable_query': model.enable_query_geometry()
+    model.set_query_geometry_recompute(recompute_geometry)
     return model, release
 
 
@@ -134,7 +143,8 @@ def run(args):
     if args.output.exists(): raise FileExistsError(args.output)
     if shutil.disk_usage(args.output.parent if args.output.parent.exists() else Path('.')).free < 9*2**30:
         raise RuntimeError('9GiB reserve required before disposable qualification')
-    record, inputs = input_record(args.preflight)
+    record, inputs = input_record(args.preflight, args.input_size)
+    atoms = record['x'].shape[1]
     recipe = read(args.recipe)
     config = CoordinateTrainConfig(**recipe['coordinate_training'])
     if not config.checkpoint_blocks or config.handedness_weight != 0 or config.total_updates != 2048:
@@ -148,7 +158,8 @@ def run(args):
     identity = freeze_run_identity(args.output, inputs=inputs,
         purpose='Actual maximum TRAIN input CUDA/optimizer/resume qualification, not model efficacy',
         protocol=dict(mode=args.mode,history_frames=args.history,query_frames=16-args.history,
-            sample_id=record['sample_id'],atoms=17002,frames=16,precision='float32',
+            recompute_geometry=args.recompute_geometry,
+            sample_id=record['sample_id'],atoms=atoms,frames=16,precision='float32',input_size=args.input_size,
             resume=str(args.resume),expected_updates_this_process=1 if args.resume else 2,
             test_opened=False,cropped=False,shortened=False,formal_training=False))
     started = time.monotonic()
@@ -157,7 +168,7 @@ def run(args):
         device = configure_device('cuda', deterministic=True)
         torch.cuda.set_per_process_memory_fraction(.88)
         random.seed(71); np.random.seed(71); torch.manual_seed(71)
-        model, _ = build_model(device, recipe, args.mode)
+        model, _ = build_model(device, recipe, args.mode, recompute_geometry=args.recompute_geometry)
         if any(p.is_floating_point() and p.dtype != torch.float32 for p in model.parameters()):
             raise ValueError('actual FP32 model parameters required')
         optimizer = make_coordinate_optimizer(model, config)
@@ -216,8 +227,9 @@ def run(args):
                 teacher_before_sha256=teacher_before,teacher_after_sha256=teacher_after,
                 finite_model_optimizer_and_gradients=True,updates=rows,seconds=time.monotonic()-started,
                 prefix1_sha256=sha256_file(args.output/'prefix1.pt') if cursor==0 else None,
-                sample_id=record['sample_id'],atoms=17002,history_frames=args.history,query_frames=16-args.history,
-                model_mode=args.mode,formal_updates=0,protein_forecasts=0,efficacy_tested=False)
+                sample_id=record['sample_id'],atoms=atoms,history_frames=args.history,query_frames=16-args.history,
+                model_mode=args.mode,recompute_geometry=args.recompute_geometry,
+                formal_updates=0,protein_forecasts=0,efficacy_tested=False)
             if result['optimizer_steps'] != [2]: raise ValueError('optimizer cursor differs')
             atomic_write_json(args.output/'summary.json',result)
         atomic_write_json(args.output/'status.json',dict(status='completed'))
@@ -231,6 +243,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode',choices=['frozen_query','trainable_query'],required=True)
     parser.add_argument('--history',type=int,choices=[4,8],required=True)
+    parser.add_argument('--recompute-geometry',action='store_true')
+    parser.add_argument('--input-size',choices=['maximum','representative'],default='maximum')
     parser.add_argument('--recipe',type=Path,default=RECIPE)
     parser.add_argument('--preflight',type=Path,default=PREFLIGHT)
     parser.add_argument('--resume',type=Path)

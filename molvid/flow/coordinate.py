@@ -93,9 +93,21 @@ class CoordinateFlowModel(nn.Module):
         # This is runtime metadata, not a state_dict tensor: copy it explicitly
         # to preserve arithmetic grouping and the existing activation budget.
         self.query_encoder.frame_chunk_size = self.target_teacher.frame_chunk_size
+        self.query_encoder.checkpoint_frames = self.target_teacher.checkpoint_frames
+
+    def set_query_geometry_recompute(self, enabled: bool) -> None:
+        """Recompute query frame activations; frozen observations stay no-grad.
+
+        This execution setting must be selected before a training/resume
+        contract is captured. It does not change trainable ownership.
+        """
+        if type(enabled) is not bool:
+            raise ValueError("query geometry recomputation requires an explicit boolean")
+        encoder = self.query_encoder if self.query_encoder is not None else self.target_teacher
+        encoder.checkpoint_frames = enabled
 
     def contract(self) -> dict:
-        return dict(schema="molvid.coordinate_flow.prototype.v1",
+        result = dict(schema="molvid.coordinate_flow.prototype.v1",
                     state="coordinates_angstrom_Q_N_3", source_sigma_angstrom=self.sigma_angstrom,
                     statistics_hash=self.statistics_hash, history_backend="legacy",
                     query_encoder=("trainable_query_copy_frozen_observation_current_radius_graph"
@@ -103,6 +115,10 @@ class CoordinateFlowModel(nn.Module):
                                    "frozen_weights_coordinate_grad_current_radius_graph"),
                     static="corrupted_structure_condition_shared_spatial_trunk_no_physical_time",
                     decoder="equivariant_coordinate_velocity_readout")
+        encoder = self.query_encoder if self.query_encoder is not None else self.target_teacher
+        if encoder.checkpoint_frames:
+            result["query_geometry_execution"] = "per_chunk_nonreentrant_recompute_preserve_rng_v1"
+        return result
 
     def train(self, mode: bool = True):
         super().train(mode)

@@ -8,6 +8,7 @@ from typing import Any
 
 import torch
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint
 
 from ..data.batch import ClipBatch
 from ..geometry.coordinates import center_coordinates
@@ -41,6 +42,14 @@ class FrameGeometryEncoder(nn.Module):
         super().__init__()
         self.frame_encoder = frame_encoder
         self.coordinate_stem = coordinate_stem
+        # Execution-only option: no new weights, frames or graph policy.
+        self.checkpoint_frames = False
+
+    def _encode_chunk(self, coordinates: Tensor, chunk: ClipBatch) -> tuple[Tensor, Tensor]:
+        # Pass metadata as an explicit argument, never capture a changing loop
+        # variable: backward may recompute this chunk after later chunks ran.
+        encoded = self.frame_encoder(replace(chunk, x=coordinates))
+        return encoded.h, encoded.v + self.coordinate_stem(coordinates).to(dtype=encoded.v.dtype)
 
     @classmethod
     def from_codec(cls, codec: nn.Module) -> "FrameGeometryEncoder":
@@ -87,11 +96,13 @@ class FrameGeometryEncoder(nn.Module):
                 0, chunk.abid
             ).transpose(0, 1)
             if bool(torch.any(chunk.frame_mask)):
-                encoded = self.frame_encoder(chunk)
-                scalar = encoded.h
-                vector = encoded.v + self.coordinate_stem(
-                    centered[start:stop]
-                ).to(dtype=encoded.v.dtype)
+                if self.checkpoint_frames and torch.is_grad_enabled():
+                    scalar, vector = checkpoint(
+                        self._encode_chunk, chunk.x, chunk,
+                        use_reentrant=False, preserve_rng_state=True,
+                    )
+                else:
+                    scalar, vector = self._encode_chunk(chunk.x, chunk)
                 scalar_chunks.append(scalar * chunk_atom_mask.unsqueeze(-1))
                 vector_chunks.append(
                     vector * chunk_atom_mask.unsqueeze(-1).unsqueeze(-1)
