@@ -26,7 +26,7 @@ def topology(record, physical):
     bonds = torch.as_tensor(record['bond_index'], dtype=torch.long)
     excluded, one_four = _topological_distances(SimpleNamespace(
         num_atoms=len(roles), covalent_bond_index=bonds))
-    radii = np.asarray([physical['vdw_radii_A'][str(int(t))] for t in record['atom_type']])
+    radii = np.asarray([physical['vdw_radii_A'][str(int(t))] for t in record['atype']])
     def thresholds(target, internal):
         table = radii[ligand, None] + radii[None, target] - physical['allowed_overlap_A']
         for i, atom in enumerate(ligand):
