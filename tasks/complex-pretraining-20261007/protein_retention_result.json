@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-07",
+  "status": "completed atom71 and balanced71/72; atom72 pending",
+  "source": "runs/complex_pretraining_20261007/protein_retention/{arm}_{seed}/summary.json",
+  "comparison": "mixed model minus same-seed protein-only GQ2048; same48 protein development systems and192 paired forecasts",
+  "delta_mean_and_system_bootstrap95CI": {
+    "atom71": {
+      "bond_rmse_A": [0.004108488118128372, 0.0037404482975900762, 0.0044768457397616045],
+      "clashes_per1000_atoms": [0.5491475278067611, -0.11916711754253953, 1.3340457389378928],
+      "msd_mae_A2": [-0.1518251911814635, -0.18941988971006746, -0.11911861702586372],
+      "rmsf_profile_mae_A": [-0.007383227037886779, -0.010823546868050472, -0.0036130736795409275]
+    },
+    "balanced71": {
+      "bond_rmse_A": [0.01842946644474946, 0.017530542991322277, 0.01935332848771984],
+      "clashes_per1000_atoms": [4.996372554512146, 3.6439373822732266, 6.443831867114971],
+      "msd_mae_A2": [-0.13437061282133478, -0.1927830218654385, -0.0844160988399786],
+      "rmsf_profile_mae_A": [-0.013054298625017205, -0.017136504504984867, -0.009128507638039692]
+    },
+    "balanced72": {
+      "bond_rmse_A": [0.01371608187015412, 0.012561892949909358, 0.015068090231620312],
+      "clashes_per1000_atoms": [1.9348085521688227, 0.09471573727888788, 4.2268964412479075],
+      "msd_mae_A2": [-0.08979733596141963, -0.177638763735821, -0.017871086663540755],
+      "rmsf_profile_mae_A": [0.01400294026825577, 0.00771935484081041, 0.01923405818233732]
+    }
+  },
+  "decision": "Do not merge balanced mixture as a general-purpose improvement. Joint gains on complex validation do not transfer without cost: protein bond/angle geometry and clashes regress in both seeds, and seed72 RMSF also worsens. Atom71 incurs smaller geometric regression while improving primary motion errors; await atom72 before choosing a compromise.",
+  "ongoing_experiments": "Shared-observation geometry and main-static curriculum use fixed balanced parents/settings and remain prospective repair tests; their parent is no longer described as a globally improved model. They must recover protein retention as well as ligand geometry and motion.",
+  "interpretation_limit": "Balanced versus GQ changes data exposure and role weights. The larger regression versus atom71 is suggestive, not yet the complete two-seed isolated role-weight comparison. Do not infer a mechanism from aggregate scores alone.",
+  "limitations": ["Reused development48, not independent confirmation", "Marginal bootstrap intervals without multiplicity correction", "RMSF amplitude-ratio changes have no universal lower-is-better direction", "No equilibrium or long-time kinetic claim"]
+}
