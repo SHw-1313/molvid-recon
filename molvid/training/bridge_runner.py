@@ -125,7 +125,7 @@ def train(settings, *, output, seed, resume=None):
                         torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all(),
                         generator_rng=generator.get_state(), python_rng=random.getstate(), numpy_rng=np.random.get_state())
                     path = output/('bridge_final.pt' if step+1 == settings['updates'] else 'checkpoint_latest.pt')
-                    atomic_torch_save(payload, path)
+                    atomic_torch_save(path, payload)
                     del payload
                     atomic_write_json(output/'status.json', dict(status='completed' if step+1 == settings['updates'] else 'training',
                         step=step+1, elapsed_seconds=time.monotonic()-started, counts=dict(mixture.counts),
