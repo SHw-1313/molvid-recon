@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-07",
+  "evidence": "Read original released MISATO checkpoint on CPU using its unmodified original source and existing NumPy1.26 overlay; no inference, training, reference edits or new environment install.",
+  "pvb": {
+    "checkpoint": "/data1/repo/PVB/model_ckpt/ckpt/pvb_misato.ckpt",
+    "source": "/workspace/PVB_origin/module/model.py",
+    "class": "module.model.dyVAE",
+    "parameters": 9965317,
+    "encoder_parameters": 1824384,
+    "decoder_parameters": 6827136,
+    "velocity_head_parameters": 656385,
+    "drift_head_parameters": 656385,
+    "hidden_width": 256,
+    "encoder_geometry_layers": 2,
+    "decoder_geometry_layers": 8,
+    "cutoff_A": 10.0,
+    "neighbors": 32,
+    "using_ode": false,
+    "loss_observation": "Original _train adds a separate ligand MSE on top of masked all-atom MSE, for both velocity and drift. Static and MD use the same encoder/decoder; target switches from clean input to next frame. Not numerically identical to Molvid's half-protein/half-ligand loss."
+  },
+  "molvid_balanced": {
+    "source": "runs/complex_pretraining_20261007/balanced_71/train/model_inspection.json",
+    "total_parameters": 19174177,
+    "trainable_parameters": 18481753,
+    "component_parameters": {"target_teacher": 560712, "history_encoder": 560288, "motion_encoder": 248577, "dit": 17227248, "readout": 16640, "query_encoder": 560712},
+    "dit_local_geometry_parameters_included_in_dit_total": 938544,
+    "query_geometry_width": 128,
+    "query_geometry_layers": 2,
+    "query_geometry_cutoff_A": 5.0,
+    "dit_depth": 4,
+    "dit_local_geometry_blocks": [2, 4]
+  },
+  "conclusions": [
+    "Current Molvid is not smaller than released MISATO PVB by total parameter count. This does not establish adequate effective capacity.",
+    "Capacity allocation and geometric computation differ materially: PVB repeats current-coordinate equivariant edge messages8 times in its decoder; Molvid's expensive DiT includes time/history and pooled-block attention, plus two observed-geometry local message blocks.",
+    "Do not compare the query encoder parameter count alone against the entire PVB: Molvid DiT and readout also process geometric information.",
+    "Existing4-to8 DiT expansion held geometry message block count fixed, so its negative result does not refute a deeper atom-geometric backbone.",
+    "The concrete gain from complex data/role balancing and the untested main-static curriculum take priority over another unconditioned increase in total parameters. Geometric depth is a distinct subsequent capacity hypothesis, not a proven fix."
+  ],
+  "status": "architecture evidence only; no new efficacy claim or default merge"
+}
