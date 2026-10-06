@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-07",
+  "evidence": "runs/complex_pretraining_20261007/ligand_motion_snapshot_v1.json",
+  "scope": "First six commonly completed systems, twelve conditions, eight predictions each; descriptive interim only",
+  "models": "Original released PVB MISATO versus protein-only query4_71/72 8192-update continuations; not the new mixture weights",
+  "observations": {
+    "center_rmsf_A_MD_PVB_query71_query72": [0.59087539, 0.64480309, 0.32029329, 0.34013084],
+    "bond_temporal_std_A_MD_PVB_query71_query72": [0.03182693, 0.04698135, 0.89324444, 0.94826082],
+    "mean_bond_length_A_MD_PVB_query71_query72": [1.46955040, 1.44615059, 2.37380301, 2.49816357],
+    "train128_ligand_atom_fraction_min_median_max": [0.00137237, 0.01068458, 0.06396256]
+  },
+  "interpretation": "Current protein-only Molvid underproduces coherent ligand translation while producing extreme bond distortion and fluctuation. Small center error alone cannot establish correct dynamics. Residual independent coordinate noise is a plausible mechanism, not a demonstrated causal attribution.",
+  "next_intervention_already_running": "Atom-mean versus role-balanced RF on identical mixed protein/complex schedules. Ligands are typically only about one percent of complex atoms; role balancing directly tests loss dilution, with protein retention evaluated separately.",
+  "not_established": ["full16 result", "mixed-model benefit", "equilibrium distribution", "family/scaffold-independent generalization"],
+  "evaluation_repair": "Old runs fail scoring on condition32 because observed ligand has no protein atom within8A. Separate recovery worktree retains all conditions, marks only pocket-specific metrics null, reuses31 cached condition forecasts, and regenerates only the unsaved final condition. Old failure evidence preserved."
+}
