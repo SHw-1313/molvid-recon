@@ -26,16 +26,32 @@ def process(pid):
         return None
 
 
+def qualified_locations(qualified,state,concat_audit=None):
+    if state.get('status')!='completed':raise ValueError('completed qualifier required')
+    if concat_audit:
+        for folder in (qualified,concat_audit):
+            summary=read(folder/'summary.json')
+            if summary.get('status')!='completed' or summary.get('full512_inventory') is not True:
+                raise ValueError('repaired calendar and prior concat must both cover512')
+        return concat_audit,qualified
+    if state.get('full512_cpu_qualified') is not True:
+        raise ValueError('full512 concat AND calendar qualification required')
+    return qualified/'concat',qualified/'calendar'
+
+
 def run(args):
     if args.output.exists():raise FileExistsError(args.output)
     if os.environ.get('CUDA_VISIBLE_DEVICES')!='':raise ValueError('CPU audit requires hidden CUDA')
     tracked=process(args.owner_pid)
     state=read(args.qualified/'status.json')
-    if state['status']!='completed' and (tracked is None or 'tools.wait_full_data_qualification' not in tracked[1]):
+    expected_owner='tools.qualify_matched_data_schedule' if args.concat_audit else 'tools.wait_full_data_qualification'
+    if state['status']!='completed' and (tracked is None or expected_owner not in tracked[1]):
         raise ValueError('identified live full512 qualifier required while waiting')
     root=Path(__file__).resolve().parents[1]
-    identity=freeze_run_identity(args.output,inputs=[args.qualified/'run_identity.json',
-        args.recipes/'query4_71.json',args.recipes/'query4_72.json'],
+    inputs=[args.qualified/'run_identity.json',args.recipes/'query4_71.json',args.recipes/'query4_72.json']
+    if args.concat_audit:
+        inputs += [args.concat_audit/name for name in ('summary.json','run_identity.json','closed_shards_snapshot.json')]
+    identity=freeze_run_identity(args.output,inputs=inputs,
         purpose='Real TRAIN512 trainer-input audit without model/CUDA calls',
         protocol=dict(owner_pid=args.owner_pid,process_identity=tracked,model_calls=0,
             training_updates=0,formal_training_submitted=False,protected_payloads_read=0))
@@ -53,9 +69,8 @@ def run(args):
             if time.monotonic()-started>86400:raise TimeoutError('24h prerequisite deadline')
             atomic_write_json(args.output/'status.json',dict(status='waiting',prerequisite=state))
             time.sleep(30);state=read(args.qualified/'status.json')
-        if state.get('full512_cpu_qualified') is not True:
-            raise ValueError('full512 concat AND calendar qualification required')
-        audit=args.qualified/'concat';calendar=args.qualified/'calendar'
+        # Preserve failed v1; reuse only its independently completed concat.
+        audit,calendar=qualified_locations(args.qualified,state,args.concat_audit)
         settings=dict(audit=str(audit),calendar=str(calendar))
         for path,key in [(audit/'summary.json','audit_summary_sha256'),
             (audit/'run_identity.json','audit_identity_sha256'),
@@ -112,6 +127,8 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser()
     for name in ('qualified','recipes','output'):parser.add_argument('--'+name,type=Path,required=True)
     parser.add_argument('--owner-pid',type=int,required=True)
+    parser.add_argument('--concat-audit',type=Path,
+        help='Reuse independently completed concat with a separately qualified repaired calendar')
     args=parser.parse_args()
     for name,value in vars(args).items():
         if isinstance(value,Path):setattr(args,name,value.resolve())

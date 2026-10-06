@@ -91,3 +91,15 @@ def test_changed_calendar_indices_inventory_fail_closed(change):
     manifest=execution_manifest(rows);summary['matched_sha256']=manifest['sha256']
     with pytest.raises(ValueError):
         resolve_entries(manifest,reference,specs,summary)
+
+
+def test_repaired_calendar_reuses_only_completed_full_concat(tmp_path):
+    from tools.audit_data_scale_training_input import qualified_locations
+    concat=tmp_path/'old_concat';calendar=tmp_path/'new_calendar'
+    for folder in (concat,calendar):
+        folder.mkdir();(folder/'summary.json').write_text(json.dumps(dict(status='completed',full512_inventory=True)))
+    assert qualified_locations(calendar,dict(status='completed'),concat)==(concat,calendar)
+    with pytest.raises(ValueError):qualified_locations(calendar,dict(status='waiting'),concat)
+    (concat/'summary.json').write_text(json.dumps(dict(status='completed',full512_inventory=False)))
+    with pytest.raises(ValueError):qualified_locations(calendar,dict(status='completed'),concat)
+    assert qualified_locations(tmp_path,dict(status='completed',full512_cpu_qualified=True))==(tmp_path/'concat',tmp_path/'calendar')
