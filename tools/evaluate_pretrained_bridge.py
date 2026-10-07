@@ -34,6 +34,8 @@ def forecast(model, observed_cpu, query_time_ps, device, seed):
 
 
 def run(args):
+    if args.expected_step is not None and args.checkpoint is None:
+        raise ValueError('An explicit checkpoint step requires a trained checkpoint')
     if args.reuse and (args.domain != 'complex' or args.complex_systems != 64):
         raise ValueError('Reuse is for the complex16 to complex64 extension only')
     args.output.mkdir(parents=True, exist_ok=False)
@@ -42,12 +44,15 @@ def run(args):
     torch.manual_seed(71)
     if args.checkpoint:
         saved = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
-        if saved['step'] != saved['settings']['updates']:
-            raise ValueError('Fixed-final model required for this comparison')
         settings = saved['settings']
+        expected_step = settings['updates'] if args.expected_step is None else args.expected_step
+        if not 0 < expected_step <= settings['updates'] or saved['step'] != expected_step:
+            raise ValueError('Use the explicitly declared checkpoint step; default remains fixed-final')
+        checkpoint_step = saved['step']
     else:
         settings = json.loads(args.initial_config.read_text())
         saved = None
+        checkpoint_step = 0
     model = PretrainedGeometryBridge(load_geometry(settings, device), recompute_frames=True).to(device)
     if saved is not None:
         model.load_state_dict(saved['model'], strict=True)
@@ -57,6 +62,9 @@ def run(args):
     protocol = dict(variant=args.variant, domain=args.domain, history_frames=4, query_frames=12,
         training_query_frames=settings['data']['query_frames'], solver_steps=10, seeds=seeds,
         checkpoint=str(args.checkpoint), initial_config=str(args.initial_config),
+        training_checkpoint_step=checkpoint_step, planned_training_updates=settings['updates'],
+        checkpoint_is_final=checkpoint_step == settings['updates'],
+        intermediate_learning_curve=args.expected_step is not None and checkpoint_step != settings['updates'],
         model=model.contract(), original_pvb_modified=False, inference_refinement=False,
         development=True, independent_test=False, test_payload_opened=False,
         limitations=['Inherited released static pretraining; not training from scratch',
@@ -198,6 +206,8 @@ if __name__ == '__main__':
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument('--checkpoint', type=Path)
     source.add_argument('--initial-config', type=Path)
+    parser.add_argument('--expected-step', type=int,
+        help='Explicitly declared learning-curve checkpoint; omission still requires fixed-final weights')
     parser.add_argument('--domain', choices=['complex', 'protein'], required=True)
     for key in ('data', 'output'):
         parser.add_argument('--'+key, type=Path, required=True)
