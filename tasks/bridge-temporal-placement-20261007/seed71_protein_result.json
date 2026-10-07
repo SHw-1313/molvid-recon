@@ -1,0 +1,30 @@
+{
+  "status": "completed native100ps protein generation and point-metric comparison; full-path, clock and second-seed results pending",
+  "seed": 71,
+  "training_updates": 16384,
+  "systems": 48,
+  "forecast_draws": 192,
+  "generation_seconds": 1279.216255337,
+  "candidate_minus_matched_interleaved_control": {
+    "bond_rmse_A": {"mean": -0.015156500662554187, "ci95": [-0.01888895869357368, -0.012093423737541045], "systems_lower": 48},
+    "angle_cosine_rmse": {"mean": -0.012185806524939835, "ci95": [-0.014929643823415972, -0.009954892186215149], "systems_lower": 48},
+    "clashes_per_1000_atoms": {"mean": -3.149466960156266, "ci95": [-5.87838578315876, -0.7209245869068834]},
+    "msd_curve_mae_A2": {"mean": -0.19893609478862753, "ci95": [-0.2646115339629534, -0.1418732848606952], "systems_lower": 47},
+    "rmsf_profile_mae_A": {"mean": -0.010502695532826086, "ci95": [-0.01633897473899803, -0.005163554037183834], "systems_lower": 37},
+    "torsion_increment_circular_error": {"mean": -0.002954815747216344, "ci95": [-0.005404867181399216, -0.0009784064275057396]}
+  },
+  "candidate_minus_released_PVB": {
+    "bond_rmse_A": {"mean": 0.009884183179806981, "ci95": [0.00732174842877086, 0.01342040115976309], "systems_lower": 0},
+    "angle_cosine_rmse": {"mean": 0.009214251845454177, "ci95": [0.006167628183417643, 0.013414152828045185], "systems_lower": 0},
+    "clashes_per_1000_atoms": {"mean": 5.0319575141744455, "ci95": [1.5070238155457276, 11.106744429212588]},
+    "msd_curve_mae_A2": {"mean": 1.0256277497004096, "ci95": [0.7332034174175027, 1.3682782075658904]},
+    "rmsf_profile_mae_A": {"mean": 0.119954473261411, "ci95": [0.08078226483194158, 0.1609891744640966]},
+    "torsion_increment_circular_error": {"mean": -0.0024121338113521538, "ci95": [-0.006036982486451355, 0.002825521902802088]}
+  },
+  "interpretation": "First-seed protein geometry and point-motion metrics improve together against the matched control, unlike the already-observed lack of joint complex benefit. Protein bond and angle errors improve on every system against the control but remain worse than released PVB on every system. This supports finishing the predeclared replication, not a competitive-model or thermodynamic claim.",
+  "decision": "Keep seed72 and the predeclared complex64 extension running. Do not promote from protein-only single-seed point metrics; assess full paths, clock response and both domains.",
+  "limitations": ["Reused development48, one seed", "Marginal system bootstrap does not include training-seed variation or multiple-comparison correction", "Placement also changes normalization order", "PVB usesH1 rather thanH4 and different training exposure", "No equilibrium, free-energy or kinetic-rate conclusion"],
+  "sources": ["runs/bridge_temporal_placement_20261007/seed71/expanded48/summary.json", "runs/bridge_temporal_placement_20261007/seed71/protein_vs_matched_placement_immediate.json", "runs/bridge_temporal_placement_20261007/seed71/protein_vs_pvb_immediate.json"],
+  "new_model_calls_for_analysis": 0,
+  "default_promotion": false
+}
