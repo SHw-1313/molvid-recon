@@ -1,6 +1,7 @@
 {
   "name": "same_parameter_temporal_placement",
-  "status": "both seeds in actual CUDA training:seed71 GPU7, seed72 moved from waitingGPU0 to freedGPU6; no generation or efficacy result yet",
+  "status": "seed71 completed16384 CUDA updates and all original16 complex forecasts; its protein forecasts are running. Seed72 remains in CUDA training. First-seed complex comparison does not support joint improvement; second seed and expanded64 outcomes remain required",
+  "seed71_completed_execution": {"training_steps": 16384, "training_seconds": 21791.287258771248, "complex_systems": 16, "complex_conditions": 32, "complex_forecasts": 256, "complex_generation_seconds": 2502.0346379587427, "result": "tasks/bridge-temporal-placement-20261007/seed71_complex_result.json"},
   "observed_seed72_execution": {"training_container_pid": 1094056, "completed_updates": 32, "elapsed_seconds": 30.91797731257975, "gpu": 6, "source": "runs/bridge_temporal_placement_20261007/seed72/train.log", "meaning": "Real optimizer updates, not an efficacy result"},
   "seed72_rescheduling": {"terminated_waiting_controller": 1087845, "new_controller": 1094052, "reason": "GPU6 freed after base72 native1ns evaluation, while GPU0 predecessor remains active", "running_training_interrupted": false, "data_weights_recipe_changed": false},
   "observed_seed71_execution": {"training_host_pid": 3448634, "completed_updates": 37, "elapsed_seconds": 47.592715309001505, "gpu_memory_MiB_observed": 29806, "source": "runs/bridge_temporal_placement_20261007/seed71/train/updates.jsonl", "meaning": "Real updates observed, not numerical-equivalence or efficacy proof"},

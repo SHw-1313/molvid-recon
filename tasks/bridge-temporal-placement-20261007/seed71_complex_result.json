@@ -1,0 +1,33 @@
+{
+  "status": "completed first-seed full original16 complex generation and cached paired analysis; not a two-seed or expanded64 conclusion",
+  "seed": 71,
+  "training_updates": 16384,
+  "training_seconds": 21791.287258771248,
+  "generation_seconds": 2502.0346379587427,
+  "systems": 16,
+  "conditions": 32,
+  "forecast_draws": 256,
+  "candidate_minus_matched_interleaved_control": {
+    "ligand_bond_rmse_A": {"mean": 0.026213946422350996, "ci95": [-0.041079310106864476, 0.13851908841156693]},
+    "ligand_rmsf_mae_A": {"mean": 0.058274715425937214, "ci95": [-0.003727433599273424, 0.12540448365197496]},
+    "ligand_center_msd_mae_A2": {"mean": -0.7247887838979654, "ci95": [-2.4242281300764645, 0.2477047591282594]},
+    "ligand_center_path_energy_score_A": {"mean": 0.12218488231970759, "ci95": [-0.042388361763232275, 0.35937477271247276]},
+    "pocket_distance_path_energy_score_A": {"mean": 0.06576595361871879, "ci95": [-0.06382651324667137, 0.2691436343314245]},
+    "pocket_contact_brier": {"mean": 0.0050242461654687615, "ci95": [-0.011656499626721028, 0.03146016265679498]},
+    "all_residue_contact_occupancy_mae": {"mean": -0.0020382080935832103, "ci95": [-0.0035823194213250166, -0.0007139885996552713]}
+  },
+  "candidate_minus_released_PVB": {
+    "ligand_bond_rmse_A": {"mean": 0.06969478424676594, "ci95": [-0.001342683990583781, 0.19624292717622518]},
+    "ligand_rmsf_mae_A": {"mean": 0.22544391978562536, "ci95": [0.02067221738786134, 0.4772009554858445]},
+    "ligand_center_msd_mae_A2": {"mean": 1.5719576390107652, "ci95": [-1.0207163925881626, 6.076943538801938]},
+    "ligand_center_path_energy_score_A": {"mean": 0.002857054347370637, "ci95": [-0.0862782408347812, 0.11750913918581718]},
+    "pocket_distance_path_energy_score_A": {"mean": -0.04079096068690652, "ci95": [-0.11250534305094305, 0.05050182783692384]},
+    "all_residue_contact_occupancy_mae": {"mean": -0.0046266240287414885, "ci95": [-0.007021260962515582, -0.0026415928694358223]}
+  },
+  "interpretation": "No first-seed joint benefit. Contact occupancy improves, but bond/RMSF/center-path/pocket-path mean differences against the matched control are unfavorable and their marginal intervals include zero. Against PVB, RMSF error is worse with a positive interval; inconclusive bond and path differences do not establish parity. Do not equate all-residue contact occupancy with correct geometry, motion or thermodynamics.",
+  "decision": "No promotion. Preserve seed72 and the already-declared64-system extension irrespective of this first result. Complete protein, clock and internal-path outcomes before judging the placement bundle. No new corrective module or parameter sweep submitted from this partial study.",
+  "limitations": ["One training seed, original16 reused development complexes", "Moving the conditioner also changes normalization order; not isolated remaining spatial messages", "System-bootstrap intervals conditional on fixed seeds; multiple metrics not multiplicity-corrected", "PVB H1 versus bridge H4 and different inherited training exposure", "No independent test, equilibrium or kinetic-rate conclusion"],
+  "sources": ["runs/bridge_temporal_placement_20261007/seed71/complex_native80/summary.json", "runs/bridge_temporal_placement_20261007/seed71/complex_vs_matched_placement_immediate.json", "runs/bridge_temporal_placement_20261007/seed71/complex_vs_pvb_immediate.json"],
+  "new_model_calls_for_analysis": 0,
+  "default_promotion": false
+}
