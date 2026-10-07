@@ -1,0 +1,22 @@
+{
+  "status": "implemented; not yet submitted or trained",
+  "parent_commit": "c3350d6",
+  "question": "Does interleaving physical clocks across systems improve learned geometry and motion relative to synchronized clock phases?",
+  "motivation": {
+    "evidence": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/seed72/updates.jsonl",
+    "observed_dynamic_complex": [
+      {"dt_ps": 80, "first_step": 2, "last_step": 5461, "updates": 2048},
+      {"dt_ps": 160, "first_step": 5464, "last_step": 10921, "updates": 2048},
+      {"dt_ps": 320, "first_step": 10924, "last_step_at_inspection": 11214, "updates_at_inspection": 109}
+    ],
+    "interpretation": "Clock, learning-rate phase and training age are confounded. Catastrophic forgetting is a hypothesis, not an established diagnosis."
+  },
+  "intervention": "A seed-specific balanced assignment of per-system clock phase offsets; rotate through all clocks twice per six dynamic visits, preserving H4/H8 order. Static sampling unchanged.",
+  "controls": "Same base bridge architecture (no direct-time FiLM), original released static PVB warmstart, optimizer, 16384 updates, TRAIN512 protein, TRAIN1024 complex, 2569 static proteins, task ratio, four training queries, same seeds71/72. No new data or objective.",
+  "rng": "Independent offset RNG does not consume task/system/record selection RNG. Different clock records are expected; sample identities and gradients need not match.",
+  "exposure": "Complex has six complete dynamic visits per system; protein has twelve. Thus final per-system clock x history counts match original. Early clock coverage changes by design. No exact per-minibatch clock balance claim.",
+  "evaluation": "Fixed final16384, original16 complex systems/256 forecasts and48 protein systems/192 forecasts, same native80ps and100ps protocols; protein80ps clock response as well. Compare same-seed synchronized baseline and released PVB, with system-paired intervals and full CA/pair-distance path scores. No best-checkpoint selection.",
+  "resource_plan": "Seed71 uses GPU5 only after dynamic-control owner967684 exits; seed72 uses GPU1 only after owner967982 exits. Existing four bridge trainings and GPU4/7 reference/evaluation jobs unchanged.",
+  "not_included": ["New mixed-history1ns data", "Mamba or new neural module", "Changed history scheduling", "Changed query cardinality", "Default-branch merge"],
+  "success": "Require a joint geometry/motion benefit across both seeds, not merely larger clock response, improved RMSF alone, or inherited PVB geometry. Reused development data does not establish independent competition."
+}

@@ -26,6 +26,9 @@ class BridgeMixture:
         self.counts = defaultdict(int)
         self.pending = []
         self.settings = settings
+        self.clock_sampling = settings.get('clock_sampling', 'synchronized_cycles')
+        if self.clock_sampling not in ('synchronized_cycles', 'staggered_system_cycles'):
+            raise ValueError(f'Unknown clock sampling: {self.clock_sampling}')
         protein_paths = [settings['protein_base']]
         shards = json.loads(Path(settings['protein_shards']).read_text())
         protein_paths += [r['directory'] for r in shards]
@@ -40,6 +43,18 @@ class BridgeMixture:
                               else spec.sample_id.split('_')[1])
                     grouped[system][spec.time_bucket_id].append((store, spec.index))
             self.groups[domain] = dict(grouped)
+        # Independent RNG leaves task/system/record selection RNG consumption
+        # unchanged. Stagger ONLY the clock phase, not the H4/H8 history phase.
+        # Every system still sees each clock with both histories per six visits.
+        self.clock_offsets = {}
+        for domain_index, (domain, systems) in enumerate(self.groups.items()):
+            order = sorted(systems)
+            random.Random(seed + 91007 + domain_index).shuffle(order)
+            self.clock_offsets[domain] = {
+                system: (index % len(systems[system])
+                         if self.clock_sampling == 'staggered_system_cycles' else 0)
+                for index, system in enumerate(order)
+            }
         registration = Path(settings['static_registration'])
         rows = json.loads((registration/'registered_sources.json').read_text())
         identity = json.loads((registration/'run_identity.json').read_text())
@@ -85,7 +100,8 @@ class BridgeMixture:
             system, visit = self.next_system(key, systems)
             buckets = sorted(systems[system], key=lambda x: float(x.split('_')[1][:-2]))
             # Six dynamic visits cover all 3 clocks x 2 history lengths.
-            bucket = buckets[(visit // 2) % len(buckets)]
+            offset = (self.clock_offsets[domain][system] if task == 'dynamic' else 0)
+            bucket = buckets[(visit // 2 + offset) % len(buckets)]
             store, index = self.rng.choice(systems[system][bucket])
             history = (4, 8)[visit % 2]
         record = store[index]
@@ -98,7 +114,8 @@ class BridgeMixture:
         queries = ([] if task == 'static' else sorted(self.rng.sample(
             range(history, batch.frames), self.settings['query_frames'])))
         self.counts[key] += 1
-        return batch, task, history, queries, dict(system=system, visit=visit, domain=domain)
+        return batch, task, history, queries, dict(system=system, visit=visit, domain=domain,
+            clock_sampling=self.clock_sampling, time_bucket_id=record.get('time_bucket_id'))
 
     def state_dict(self):
         return dict(rng=self.rng.getstate(), orders=self.orders, visits=dict(self.visits),
