@@ -1,0 +1,16 @@
+{
+  "status": "continuous16-system96-frame validation data materialized; recursive bridge evaluator implemented; PVB reference queued, no rollout efficacy results",
+  "observed_frames": 4,
+  "generated_frames": 92,
+  "native_dt_ps": 80,
+  "prediction_horizon_ps": 7360,
+  "draws_per_system": 4,
+  "systems": 16,
+  "future_conditioning": "None: initial observed prefix only; each later bridge block uses generated history",
+  "data_construction": "Read raw MD for exactly the16 already-opened validation IDs. Align all96 frames to frame0 once. Do not concatenate independently aligned16-frame windows. First16 coordinates and atom topology agree with prior data.",
+  "new_dataset_or_test_ids_opened": false,
+  "reference": "Unmodified PVB_origin c08e5e3, released pvb_misato.ckpt, nativeH1 autoregression and10-step SDE, no training or refinement",
+  "candidate": "Fixed-final bridge, rollingH4, blocks of12 queries and a final8-query block, same10-step SDE; only launch candidate rollout after its short-forecast results are available",
+  "observables": ["Whole-path ligand geometry and motion", "Early/middle/late12-frame errors", "Ligand COM increments at and away from12-frame chunk boundaries"],
+  "limits": ["7.36ns is not equilibrium thermodynamics or long-time kinetics", "Reused validation16; not independent64-system confirmation", "One MD future per system does not identify its conditional distribution", "H1 versusH4 and inherited training exposures differ", "A working recursive sampler does not prove a semigroup property"]
+}
