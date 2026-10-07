@@ -50,12 +50,21 @@ between minibatches; molecular roles and topology use the existing ClipBatch
 interface for proteins and complexes. This is an explicit prototype limit,
 not a claim of arbitrary padded-batch support.
     """
-    def __init__(self, geometry, *, recompute_frames=True, temporal_heads=4):
+    def __init__(self, geometry, *, recompute_frames=True, temporal_heads=4,
+                 temporal_insertion_layer=None):
         super().__init__()
         if geometry.using_ode or geometry.backbone != 'torchmdnet':
             raise ValueError('Released TorchMD stochastic bridge is required')
         self.geometry = geometry
         self.conditioner = BridgeHistoryConditioner(geometry.hidden_dim, temporal_heads)
+        if temporal_insertion_layer not in (None, 6):
+            raise ValueError('This experiment compares original placement with after layer6 only')
+        if temporal_insertion_layer is not None:
+            decoder = geometry.decoder
+            if (len(decoder.attention_layers) != 8 or not decoder.cross_attn
+                    or decoder.extra_channels != 1 or decoder.neighbor_embedding is None):
+                raise ValueError('Placement experiment requires the released eight-layer decoder')
+        self.temporal_insertion_layer = temporal_insertion_layer
         self.recompute_frames = bool(recompute_frames)
         if self.recompute_frames:
             # Bound backward memory for full 17k-atom structures, without crops.
@@ -63,13 +72,19 @@ not a claim of arbitrary padded-batch support.
                 RecomputedGeometryLayer(layer) for layer in geometry.decoder.attention_layers])
 
     def contract(self):
-        return dict(schema='molvid.pretrained_geometry_bridge.v1',
+        result = dict(schema='molvid.pretrained_geometry_bridge.v1',
             geometry='released_PVB_static_pretrain_encoder_decoder_velocity_drift',
             temporal='zero_residual_observed_history_and_joint_query_attention',
             physical_time_unit='ps', coordinate_unit='Angstrom',
             flow_family='PVB_stochastic_interpolant_velocity_and_drift_not_RF',
             static='same_geometry_and_heads_temporal_bypass_corrupted_structure_input',
             padded_frames_supported=False, recompute_frames=self.recompute_frames)
+        if self.temporal_insertion_layer is not None:
+            result.update(temporal_insertion_layer=self.temporal_insertion_layer,
+                temporal='same_observed_and_joint_query_attention_between_spatial_layers6_and7',
+                spatial_layers=8, decoder_output_norm='after_remaining_spatial_layers',
+                new_parameters_for_placement=0)
+        return result
 
     def _graph(self, xyz, batch):
         # Import only when this experimental architecture is selected.
@@ -142,6 +157,59 @@ perturbation affects only the source encoder; history remains observed data.
             edge_vec_t=direction, bond_type=kind)
         return h, v
 
+    def _decode_prefix(self, state, source, flow_time_atoms, batch):
+        """Released TorchMD decoder arithmetic through layer6, using owned weights.
+
+        This is the explicit staged form of PVB_origin/module/torchmd_et.py's
+        decoder forward, not a hook or modification of the reference model.
+        All edges describe the current noisy state; source lengths are observed
+        conditioning. The dimensionless flow scalar is unrelated to physical ps.
+        """
+        decoder = self.geometry.decoder
+        edge, distance, direction, kind = self._graph(state, batch)
+        reference_distance = torch.linalg.vector_norm(source[edge[0]] - source[edge[1]], dim=-1)
+        atom_features = decoder.atom_embedding(batch.atype) + decoder.block_embedding(batch.btype)
+        bond_features = decoder.bond_embedding(kind)
+        source_h = torch.cat([atom_features, torch.zeros_like(flow_time_atoms)], dim=1)
+        source_edges = torch.cat([decoder.distance_expansion(reference_distance), bond_features], dim=1)
+        source_h = decoder.neighbor_embedding(batch.atype, source_h, edge, reference_distance, source_edges)
+        h = torch.cat([atom_features, flow_time_atoms], dim=1)
+        state_edges = torch.cat([decoder.distance_expansion(distance), bond_features], dim=1)
+        direction = direction.clone()
+        nonself = edge[0] != edge[1]
+        direction[nonself] = direction[nonself] / torch.norm(direction[nonself], dim=1).unsqueeze(1)
+        h = decoder.neighbor_embedding(batch.atype, h, edge, distance, state_edges)
+        h = decoder.crs_ffn(torch.cat([source_h, h], dim=-1))
+        v = torch.zeros(h.size(0), 3, h.size(1), device=h.device, dtype=h.dtype)
+        graph = (edge, distance, state_edges, direction)
+        for index in range(self.temporal_insertion_layer):
+            dh, dv = decoder.attention_layers[index](h, v, *graph, dim_size=h.shape[0])
+            h, v = h + dh, v + dv
+        return h, v, graph
+
+    def _decode_with_internal_time(self, state_A, source_A, flow_time_atoms, condition, lag):
+        """Joint time mixing after layer6; layers7/8 then exchange atom messages.
+
+        Same conditioner, geometric layers, output norm and heads as the control;
+        no additional trainable tensor, geometry loss, or inference projection.
+        Static examples use the untouched full decoder path instead.
+        """
+        prefix = [self._decode_prefix(state, source, flow_time_atoms, condition.observed)
+                  for state, source in zip(state_A, source_A)]
+        h = torch.stack([x[0] for x in prefix])
+        v = torch.stack([x[1] for x in prefix])
+        h, v = self.conditioner(h, v, condition.history_h, condition.history_v,
+            condition.history_displacement_A, lag, condition.history_lag_ps)
+        decoder = self.geometry.decoder
+        features = []
+        for frame, (_, _, graph) in enumerate(prefix):
+            frame_h, frame_v = h[frame], v[frame]
+            for index in range(self.temporal_insertion_layer, len(decoder.attention_layers)):
+                dh, dv = decoder.attention_layers[index](frame_h, frame_v, *graph, dim_size=frame_h.shape[0])
+                frame_h, frame_v = frame_h + dh, frame_v + dv
+            features.append((decoder.out_norm(frame_h), frame_v))
+        return torch.stack([x[0] for x in features]), torch.stack([x[1] for x in features])
+
     def forward(self, state_A, source_A, *, condition, query_time_ps, flow_time):
         """Return velocity/drift [Q,N,3], retaining the original bridge heads."""
         batch = condition.observed
@@ -156,14 +224,17 @@ perturbation affects only the source encoder; history remains observed data.
         if condition.task == 'dynamic' and not bool((lag > 0).all()):
             raise ValueError('Dynamic queries must follow observed history')
         t = flow_time.index_select(0, batch.abid)[:, None]
-        features = []
-        for frame in range(frames):
-            result = self._decode_frame(state_A[frame], source_A[frame], t, batch)
-            features.append(result)
-        h, v = torch.stack([a for a, _ in features]), torch.stack([b for _, b in features])
-        if condition.task == 'dynamic':
-            h, v = self.conditioner(h, v, condition.history_h, condition.history_v,
-                condition.history_displacement_A, lag, condition.history_lag_ps)
+        if condition.task == 'dynamic' and self.temporal_insertion_layer is not None:
+            h, v = self._decode_with_internal_time(state_A, source_A, t, condition, lag)
+        else:
+            features = []
+            for frame in range(frames):
+                result = self._decode_frame(state_A[frame], source_A[frame], t, batch)
+                features.append(result)
+            h, v = torch.stack([a for a, _ in features]), torch.stack([b for _, b in features])
+            if condition.task == 'dynamic':
+                h, v = self.conditioner(h, v, condition.history_h, condition.history_v,
+                    condition.history_displacement_A, lag, condition.history_lag_ps)
         width = h.shape[-1]
         h, v = h.reshape(frames * atoms, width), v.reshape(frames * atoms, 3, width)
         _, velocity = self.geometry.vel_ffn(h, v)

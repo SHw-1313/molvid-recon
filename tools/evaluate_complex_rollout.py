@@ -53,7 +53,8 @@ def run(args):
         saved = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
         if saved['step'] != saved['settings']['updates']:
             raise ValueError('Fixed-final candidate required')
-        model = PretrainedGeometryBridge(load_geometry(saved['settings'], device), recompute_frames=True).to(device)
+        model = PretrainedGeometryBridge(load_geometry(saved['settings'], device), recompute_frames=True,
+            temporal_insertion_layer=saved['settings'].get('temporal_insertion_layer')).to(device)
         model.load_state_dict(saved['model'], strict=True)
         model.eval().requires_grad_(False)
         model_kind = model.contract()

@@ -53,7 +53,8 @@ def run(args):
         settings = json.loads(args.initial_config.read_text())
         saved = None
         checkpoint_step = 0
-    model = PretrainedGeometryBridge(load_geometry(settings, device), recompute_frames=True).to(device)
+    model = PretrainedGeometryBridge(load_geometry(settings, device), recompute_frames=True,
+        temporal_insertion_layer=settings.get('temporal_insertion_layer')).to(device)
     if saved is not None:
         model.load_state_dict(saved['model'], strict=True)
         del saved

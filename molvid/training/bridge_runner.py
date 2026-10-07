@@ -64,7 +64,8 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None):
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
     geometry = load_geometry(settings, device)
     inherited = sum(p.numel() for p in geometry.parameters())
-    model = PretrainedGeometryBridge(geometry, recompute_frames=True).to(device).train()
+    model = PretrainedGeometryBridge(geometry, recompute_frames=True,
+        temporal_insertion_layer=settings.get('temporal_insertion_layer')).to(device).train()
     optimizer = torch.optim.AdamW([
         dict(params=model.geometry.parameters(), lr=settings['geometry_lr'], name='geometry'),
         dict(params=model.conditioner.parameters(), lr=settings['temporal_lr'], name='temporal')],
