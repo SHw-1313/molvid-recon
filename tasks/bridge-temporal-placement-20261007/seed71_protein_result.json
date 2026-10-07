@@ -1,5 +1,5 @@
 {
-  "status": "completed native100ps protein generation, point-metric and full-path comparisons; second seed still training at observation",
+  "status": "completed native100ps protein point/full-path comparisons and native80/100ps clock response; second seed still training at observation",
   "seed": 71,
   "training_updates": 16384,
   "systems": 48,
@@ -34,6 +34,21 @@
     "ca_position_A": {"mean": 0.02227128677539432, "ci95": [-0.00013395543643502573, 0.04949253319261493]}
   },
   "full_path_source": "runs/bridge_temporal_placement_20261007/seed71/protein_paths/summary.json",
+  "clock80_100_minus_matched_control": {
+    "absolute_displacement_response_error_A2": {"mean": -0.000583080625421281, "ci95": [-0.0009848918900332779, -0.00012657011494240905]},
+    "absolute_fluctuation_response_error_A": {"mean": -0.0006548862485787019, "ci95": [-0.0009937447287086075, -0.00033080147879229485]},
+    "prediction_clock_response_rms_A": {"mean": 0.005516193034786245, "ci95": [0.005081060811024319, 0.006122735509960185]}
+  },
+  "clock_response_context": {
+    "placement_displacement_response_error_A2": 0.021236163604226737,
+    "control_displacement_response_error_A2": 0.02181924422964802,
+    "placement_fluctuation_response_error_A": 0.010920640848206447,
+    "control_fluctuation_response_error_A": 0.011575527096785151,
+    "placement_clock_to_seed_response_ratio": 0.02144658906331152,
+    "interpretation": "Both response errors improve modestly (about2.7percent and5.7percent) in this seed, not merely larger clock sensitivity. This is still weak evidence for generally correct physical-time behavior, not a solved time-conditioning problem.",
+    "limitations": ["One seed, two forecast draws per condition", "12x80ps and12x100ps differ in total horizon", "Noise coupled by query index, not a common physical-time path", "Clock-to-seed ratio is descriptive, not a universal correctness criterion"],
+    "source": "runs/bridge_temporal_placement_20261007/seed71/clock_vs_matched_placement.json"
+  },
   "interpretation": "First-seed protein geometry, point motion and all four full-path energy scores improve together against the matched control, unlike the lack of joint complex benefit. Two increment path scores beat PVB, but geometry still loses and inconclusive position/distance scores are not parity. This supports finishing the replication, not a competitive-model or thermodynamic claim.",
   "decision": "Keep seed72 and the predeclared complex64 extension running. Do not promote from protein-only single-seed point metrics; assess full paths, clock response and both domains.",
   "limitations": ["Reused development48, one seed", "Marginal system bootstrap does not include training-seed variation or multiple-comparison correction", "Placement also changes normalization order", "PVB usesH1 rather thanH4 and different training exposure", "No equilibrium, free-energy or kinetic-rate conclusion"],
