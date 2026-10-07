@@ -1,6 +1,7 @@
 {
   "name": "same_parameter_temporal_placement",
-  "status": "implemented and two continuation owners submitted; waiting for existing GPU owners, not yet CUDA-trained or numerically verified",
+  "status": "seed71 actual CUDA training started onGPU7 after learning-curve evaluator completed; seed72 remains queued; no generation or efficacy result yet",
+  "observed_seed71_execution": {"training_host_pid": 3448634, "completed_updates": 37, "elapsed_seconds": 47.592715309001505, "gpu_memory_MiB_observed": 29806, "source": "runs/bridge_temporal_placement_20261007/seed71/train/updates.jsonl", "meaning": "Real updates observed, not numerical-equivalence or efficacy proof"},
   "implementation_commit": "5476c48",
   "submitted_container_pids": {"71": 1087844, "72": 1087845},
   "parent": "interleaved-clock branch5814aaf",
