@@ -102,10 +102,11 @@ def run(args):
             dataset.close()
     else:
         manifest = json.loads((args.data/'complete.json').read_text())
-        entries = [e for e in manifest['files'] if e['lag_ps'] == 100]
+        entries = [e for e in manifest['files'] if e['lag_ps'] == args.lag_ps]
         if len(entries) != 96 or len({e['system'] for e in entries}) != 48:
             raise ValueError('Expected existing48-system96-condition development inventory')
         protocol['records'] = entries
+        protocol['query_dt_ps'] = args.lag_ps
         atomic_write_json(args.output/'protocol.json', protocol)
         release = json.loads(RELEASE.read_text())
         recipe = Path('/workspace/molvid-recon-gm-motion-v3')/release['auxiliary_recipe']['path']
@@ -145,4 +146,5 @@ if __name__ == '__main__':
     for key in ('data', 'output'):
         parser.add_argument('--'+key, type=Path, required=True)
     parser.add_argument('--variant', required=True)
+    parser.add_argument('--lag-ps', type=int, choices=[80, 100], default=100)
     run(parser.parse_args())
