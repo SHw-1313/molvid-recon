@@ -1,5 +1,5 @@
 {
-  "status": "real CUDA training active for seeds71 and72 on GPUs0 and6; initial untrained geometry control completed256 complex forecasts and entered192 protein forecasts; trained-candidate efficacy not yet evaluated",
+  "status": "real CUDA training active for seeds71 and72 on GPUs0 and6; initial untrained geometry control completed all256 complex and192 protein forecasts plus chemistry; trained-candidate efficacy not yet evaluated",
   "initial_control_result": "initial_geometry_complex_result.json: bond RMSE0.09941A versus releasedPVB0.07609A, but RMSF error1.31658A versus0.96133A. Stronger inherited geometry is not learned dynamics; final candidates must improve motion without losing this geometry.",
   "training_commit": "4f14e5c",
   "automatic_followups": {"fixed_final": "Each seed:256 complex forecasts,192 protein100ps forecasts, then192 matched-history protein80ps forecasts; cached paired PVB/balanced/initial-geometry and clock-response comparisons", "initial_geometry_control": "Same released static geometry and zero-output temporal residuals without training; H4/Q12 joint independent source draws and10-step SDE. This is NOT the unchanged autoregressive PVB reference. One448-forecast baseline queued after the existing GPU2 shared-observation owner.", "inference_projection": false, "new_test_or_smoke_campaign": false},

@@ -1,5 +1,7 @@
 {
-  "status": "completed256 actual CUDA complex forecasts; protein192 generation active",
+  "status": "completed256 actual CUDA complex forecasts,192 protein forecasts, and cached ligand geometry",
+  "protein48_initial_minus_released_PVB": {"bond_rmse_A": [-0.002824564770582833, -0.0035642615974054645, -0.0021990780911676066], "angle_cosine_rmse": [-0.009006767359096557, -0.009676366793185783, -0.008469760877778754], "clashes_per1000_atoms": [0.25003896310368334, 0.09598960154234405, 0.4311177890620218], "msd_mae_A2": [1.8050509828220431, 1.390509585711051, 2.259223638873502], "rmsf_profile_mae_A": [0.28166662172103923, 0.22306835534206282, 0.3431153004503964], "array_convention": "mean delta, lower95CI, upper95CI; system-paired192 forecasts"},
+  "ligand_clashes_mean": {"internal_per1000_ligand_atoms": 4.247099052226755, "protein_ligand_per1000_ligand_atoms": 12.186270906009332},
   "date": "2026-10-07",
   "variant": "inherited_geometry_joint",
   "weights": "Original released PVB static-pretraining checkpoint, no new training; temporal residual outputs remain zero",
@@ -28,6 +30,6 @@
     "Ongoing16384-update bridge models must improve motion over this explicit initial control while retaining local geometry. Their trained generated efficacy remains unknown."
   ],
   "sources": ["runs/pretrained_geometry_bridge_20261007/initial_geometry/complex_native80/summary.json", "runs/pretrained_geometry_bridge_20261007/initial_geometry/early_completed_vs_pvb.json", "runs/pretrained_geometry_bridge_20261007/initial_geometry/internal_paths/summary.json"],
-  "limitations": ["Reused development16, no independent test opened", "System-clustered2000-bootstrap marginal95percent intervals, no multiplicity correction", "Single MD future per condition; no equilibrium inference", "Protein retention, clashes, and trained-model comparisons pending"],
+  "limitations": ["Reused development16 complexes and48 proteins, no independent test opened", "System-clustered2000-bootstrap marginal95percent intervals, no multiplicity correction", "Single MD future per condition; no equilibrium inference", "Trained-model comparisons pending; strong inherited protein bond/angle geometry coexists with much worse MSD/RMSF than releasedPVB"],
   "default_promotion": false
 }
