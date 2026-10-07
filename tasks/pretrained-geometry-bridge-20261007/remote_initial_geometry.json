@@ -1,0 +1,8 @@
+{
+  "purpose": "Inference-only loading of the inherited geometric prior on neibu; not a training recipe",
+  "pvb_root": "/workspace/PVB_origin",
+  "checkpoint": "/data/molvid_released_pvb_20261007/pvb_pretrain.ckpt",
+  "data": {"query_frames": 4},
+  "remote_complex_development_store": "/data/molvid_complex1024_20261007",
+  "status": "Prepared paths; no remote GPU inference submitted and no dependency readiness claimed"
+}
