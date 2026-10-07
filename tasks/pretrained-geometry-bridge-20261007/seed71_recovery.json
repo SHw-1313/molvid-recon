@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-07",
+  "status": "actual CUDA training resumed and advanced beyond failed update; numerical root cause unresolved",
+  "original_host_pid": 2005857,
+  "original_last_completed_step": 4796,
+  "original_attempted_failed_step": 4797,
+  "original_error": "clip_grad_norm_ reported nonfinite total gradient norm; process terminated before optimizer.step",
+  "recovery_host_pid": 2325899,
+  "recovery_GPU": 0,
+  "restored_step": 4608,
+  "restored_state": ["model", "optimizer", "sampler", "CPU and CUDA RNG", "explicit CUDA generator", "Python and NumPy RNG"],
+  "numerical_recipe_changed": false,
+  "samples_skipped": false,
+  "nonfinite_error_disabled": false,
+  "diagnostic_code_commit": "2246475",
+  "diagnostic_scope": "Added exception identity recording, pre-update state save and anomaly tracking only for attempted step4797; no unit/smoke campaign",
+  "source_identity_note": "Recovery started with the diagnostic working-tree changes before commit2246475, so recipe.json records predecessorHEAD3f7074c. Numeric model and objective remained unchanged.",
+  "replayed_updates": {
+    "count": 188,
+    "range": [4609, 4796],
+    "same_sample_and_query_indices": true,
+    "maximum_absolute_loss_difference": 0.22364044189453125,
+    "first_replayed_loss_difference": 0.0007808208465576172,
+    "bitwise_reproduction": false,
+    "log_note": "updates.jsonl retains original and replay rows. Replayed abandoned updates are not extra optimization on top of the original trajectory; final checkpoint step is authoritative. Do not count duplicate rows as added training."
+  },
+  "replayed_step4797": {
+    "sample": "atlas_2ad6_D_R3_dt_200ps_w000014",
+    "task": "dynamic",
+    "history_frames": 8,
+    "query_indices": [8, 10, 12, 13],
+    "loss": 61.64521789550781,
+    "gradient_norm_before_clipping": 2901.39697265625,
+    "finite": true,
+    "failure_reproduced": false
+  },
+  "recovery_evidence": "Observed successful updates through at least4811; process remained live. Other training and inference processes were left running.",
+  "retained_checkpoint": "runs/pretrained_geometry_bridge_20261007/seed71/checkpoint_pre_failure.pt",
+  "log": "runs/pretrained_geometry_bridge_20261007/seed71_resume4608.log",
+  "interpretation": "Restored training, not a proven numerical fix. Identical RNG states did not produce a bitwise-identical CUDA optimization replay. No specific operator or mixed-precision cause has been established.",
+  "next_action": "Continue actual training without altering this experiment; if nonfinite gradients recur, inspect the recorded failed sample and gradients before changing precision, loss or learning rate. Native1ns data preparation was deferred to recover the live experiment."
+}
