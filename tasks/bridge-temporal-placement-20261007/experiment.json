@@ -1,6 +1,8 @@
 {
   "name": "same_parameter_temporal_placement",
-  "status": "implemented; CUDA training not yet started, no numerical or efficacy claim",
+  "status": "implemented and two continuation owners submitted; waiting for existing GPU owners, not yet CUDA-trained or numerically verified",
+  "implementation_commit": "5476c48",
+  "submitted_container_pids": {"71": 1087844, "72": 1087845},
   "parent": "interleaved-clock branch5814aaf",
   "evidence": "Two learned bridge seeds damage geometry; first endpoint-geometry continuation reaches ligand bond RMSE0.07518A versus PVB0.07609A but worsens RMSF and COM/pocket paths versus its parent. Its matched loss control remains required; this independent structural experiment does not replace it.",
   "hypothesis": "Time-conditioned per-atom features currently go straight to atomwise heads after all spatial message passing. Two remaining spatial layers may coordinate those features without adding model capacity or local-geometry penalties. This mechanism is plausible, not established by the current failures.",
