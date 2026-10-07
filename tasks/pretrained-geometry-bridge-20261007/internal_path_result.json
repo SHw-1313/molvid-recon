@@ -1,0 +1,47 @@
+{
+  "status": "completed cached-coordinate scientific analysis",
+  "date": "2026-10-07",
+  "source": "runs/pretrained_geometry_bridge_20261007/internal_path_comparison/summary.json",
+  "method": "score_internal_paths.py;16 development systems,32 conditions,8 draws per model;1280 completed forecasts reused across5 models; no additional model calls",
+  "descriptive_means_rounded_6_decimals": {
+    "MD": {"bond_time_std_A": 0.030976, "nonbonded_distance_time_std_A": 0.208132},
+    "PVB_released": {"bond_time_std_A": 0.049103, "nonbonded_distance_time_std_A": 0.324030, "bond_path_energy_score_A": 0.036210, "bond_increment_path_energy_score_A": 0.035099, "nonbonded_distance_path_energy_score_A": 0.343580, "nonbonded_distance_increment_path_energy_score_A": 0.246562},
+    "balanced71": {"bond_time_std_A": 0.229952, "nonbonded_distance_time_std_A": 0.489041, "bond_path_energy_score_A": 0.124205, "bond_increment_path_energy_score_A": 0.109469, "nonbonded_distance_path_energy_score_A": 0.339757, "nonbonded_distance_increment_path_energy_score_A": 0.299189},
+    "balanced72": {"bond_time_std_A": 0.256193, "nonbonded_distance_time_std_A": 0.499255, "bond_path_energy_score_A": 0.123375, "bond_increment_path_energy_score_A": 0.119752, "nonbonded_distance_path_energy_score_A": 0.316248, "nonbonded_distance_increment_path_energy_score_A": 0.302063},
+    "static_curriculum71": {"bond_time_std_A": 0.169720, "nonbonded_distance_time_std_A": 0.413983, "bond_path_energy_score_A": 0.101839, "bond_increment_path_energy_score_A": 0.085594, "nonbonded_distance_path_energy_score_A": 0.313080, "nonbonded_distance_increment_path_energy_score_A": 0.278959},
+    "static_curriculum72": {"bond_time_std_A": 0.196032, "nonbonded_distance_time_std_A": 0.441211, "bond_path_energy_score_A": 0.094966, "bond_increment_path_energy_score_A": 0.095286, "nonbonded_distance_path_energy_score_A": 0.296504, "nonbonded_distance_increment_path_energy_score_A": 0.285631}
+  },
+  "static_curriculum_minus_PVB_system_paired_deltas": {
+    "71": {
+      "bond_path_energy_score_A": {"mean": 0.0656285773594491, "ci95": [0.041654489797463376, 0.09392643206132038]},
+      "bond_increment_path_energy_score_A": {"mean": 0.05049494517118916, "ci95": [0.0329753236018578, 0.06982999736488388]},
+      "nonbonded_distance_path_energy_score_A": {"mean": -0.030499532591629554, "ci95": [-0.09213750409058652, 0.04724225916791506]},
+      "nonbonded_distance_increment_path_energy_score_A": {"mean": 0.03239671056871245, "ci95": [0.015967704053484515, 0.05192455472910779]}
+    },
+    "72": {
+      "bond_path_energy_score_A": {"mean": 0.058755718964207476, "ci95": [0.04125122468126517, 0.07770827993008926]},
+      "bond_increment_path_energy_score_A": {"mean": 0.06018630063204351, "ci95": [0.04017212634127336, 0.08255766030002358]},
+      "nonbonded_distance_path_energy_score_A": {"mean": -0.047076136896401125, "ci95": [-0.09062171382096855, 0.0034663833763876315]},
+      "nonbonded_distance_increment_path_energy_score_A": {"mean": 0.0390685948532187, "ci95": [0.021018582407303803, 0.06153665846849208]}
+    }
+  },
+  "interpretation": [
+    "Static curriculum reduces excessive bond fluctuations and improves internal increment-path scores versus its balanced parent in both seeds; additional training remains a confound until equal8192 dynamic controls finish.",
+    "Bond fluctuations remain approximately5.5-6.3 times reference MD, versus1.6 times for released PVB. Scalar RMSF alone can conceal excessive internal distortion.",
+    "Nonbonded-distance path-score point estimates beat PVB but paired intervals cross zero. Increment-path scores are worse than PVB in both seeds, with positive paired intervals.",
+    "The immediate scientific target is to preserve local chemistry while learning coherent internal and rigid-body dynamics. Increasing motion amplitude without this separation is not a solution.",
+    "Pretrained geometry bridge and direct-physical-time training remain ongoing; their efficacy has not been measured. No new model variant was launched from this exploratory analysis."
+  ],
+  "descriptive_failure_concentration": {
+    "systems": ["4GWK", "5ZGG"],
+    "fraction_of_total_center_MSD_error": {"PVB": 0.8566, "balanced71": 0.9042, "balanced72": 0.9086, "static71": 0.9076, "static72": 0.9038},
+    "note": "Post-hoc descriptive concentration, not an exclusion rule. All16 systems remain in all reported results. Bond RMSE remains worse than PVB in all16 systems for both static-curriculum seeds."
+  },
+  "limitations": [
+    "Exploratory reused-development analysis; no new independent test opened",
+    "No equilibrium, force-field validity, ligand chirality, or long-time kinetics claim",
+    "Energy scores use normalized Euclidean whole-path distances and unbiased ensemble pair terms; increment-path score is a proper score for that transformed observable, not a standalone physical kinetics test",
+    "System-level2000-bootstrap marginal intervals, no multiplicity correction; seeds not pooled",
+    "No candidate promotion or change to running numerical training code"
+  ]
+}
