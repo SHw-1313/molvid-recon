@@ -1,5 +1,5 @@
 {
-  "status": "completed native100ps protein generation and point-metric comparison; full-path, clock and second-seed results pending",
+  "status": "completed native100ps protein generation, point-metric and full-path comparisons; second seed still training at observation",
   "seed": 71,
   "training_updates": 16384,
   "systems": 48,
@@ -21,7 +21,20 @@
     "rmsf_profile_mae_A": {"mean": 0.119954473261411, "ci95": [0.08078226483194158, 0.1609891744640966]},
     "torsion_increment_circular_error": {"mean": -0.0024121338113521538, "ci95": [-0.006036982486451355, 0.002825521902802088]}
   },
-  "interpretation": "First-seed protein geometry and point-motion metrics improve together against the matched control, unlike the already-observed lack of joint complex benefit. Protein bond and angle errors improve on every system against the control but remain worse than released PVB on every system. This supports finishing the predeclared replication, not a competitive-model or thermodynamic claim.",
+  "full_paths_minus_matched_control": {
+    "ca_increment_A": {"mean": -0.0029393015374351832, "ci95": [-0.0048419661217698525, -0.0010699630703976408]},
+    "ca_distance_increment_A": {"mean": -0.00469990619716563, "ci95": [-0.007310806407640483, -0.0021332530444744878]},
+    "ca_distance_A": {"mean": -0.05539197873511507, "ci95": [-0.07047106495441756, -0.040790944168757004]},
+    "ca_position_A": {"mean": -0.041763524220075454, "ci95": [-0.05177219971773234, -0.03263839067041152]}
+  },
+  "full_paths_minus_released_PVB": {
+    "ca_increment_A": {"mean": -0.009620218296371908, "ci95": [-0.013419031668335394, -0.00536491652997948]},
+    "ca_distance_increment_A": {"mean": -0.010929454502268288, "ci95": [-0.015317919196249405, -0.00652724646511548]},
+    "ca_distance_A": {"mean": 0.0007146257683915084, "ci95": [-0.032241808182806135, 0.03637042491195681]},
+    "ca_position_A": {"mean": 0.02227128677539432, "ci95": [-0.00013395543643502573, 0.04949253319261493]}
+  },
+  "full_path_source": "runs/bridge_temporal_placement_20261007/seed71/protein_paths/summary.json",
+  "interpretation": "First-seed protein geometry, point motion and all four full-path energy scores improve together against the matched control, unlike the lack of joint complex benefit. Two increment path scores beat PVB, but geometry still loses and inconclusive position/distance scores are not parity. This supports finishing the replication, not a competitive-model or thermodynamic claim.",
   "decision": "Keep seed72 and the predeclared complex64 extension running. Do not promote from protein-only single-seed point metrics; assess full paths, clock response and both domains.",
   "limitations": ["Reused development48, one seed", "Marginal system bootstrap does not include training-seed variation or multiple-comparison correction", "Placement also changes normalization order", "PVB usesH1 rather thanH4 and different training exposure", "No equilibrium, free-energy or kinetic-rate conclusion"],
   "sources": ["runs/bridge_temporal_placement_20261007/seed71/expanded48/summary.json", "runs/bridge_temporal_placement_20261007/seed71/protein_vs_matched_placement_immediate.json", "runs/bridge_temporal_placement_20261007/seed71/protein_vs_pvb_immediate.json"],
