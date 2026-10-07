@@ -1,5 +1,23 @@
 {
-  "status": "real CUDA training active for seeds71 and72 on GPUs0 and6; initial untrained geometry control completed all256 complex and192 protein forecasts plus chemistry; trained-candidate efficacy not yet evaluated",
+  "status": "Seed72 completed all16384 CUDA updates and final-checkpoint complex inference has started on GPU6; seed71 training continues. Fixed11264 complex forecasts completed in both seeds: partial motion gains versus initialization with bond-geometry damage; no promotion.",
+  "seed72_training_completed": {
+    "updates": 16384,
+    "seconds": 21723.596893412992,
+    "counts": {"dynamic_complex": 6144, "dynamic_protein": 6144, "static_complex": 1024, "static_protein": 3072},
+    "source": "runs/pretrained_geometry_bridge_20261007/seed72/status.json",
+    "final_inference_container_pid": 1083603,
+    "final_inference_host_pid": 3036942,
+    "efficacy": "Unknown until fixed-final forecasts complete; training completion is not improvement"
+  },
+  "fixed11264_evidence": {
+    "complex_forecasts_per_seed": 256,
+    "seed71_bond_rmse_A": 0.13919742840623286,
+    "seed72_bond_rmse_A": 0.116901265,
+    "initial_bond_rmse_A": 0.09941070440311221,
+    "released_pvb_bond_rmse_A": 0.07608793694534022,
+    "interpretation": "Both seeds improve ligand RMSF and COM-MSD errors versus inherited geometry initialization; both remain worse than released PVB in bonds. Geometry/motion joint improvement is unproven, and seed72 full-atom clashes are severe. Keep final16384 and the separately running matched endpoint-geometry repair; do not select best intermediate weights.",
+    "sources": ["../molvid-complex-validation64-20261007/tasks/bridge-learning-curve-20261007/bridge71_step11264_complex_result.json", "../molvid-complex-validation64-20261007/tasks/bridge-learning-curve-20261007/bridge72_step11264_joint_result.json"]
+  },
   "initial_control_result": "initial_geometry_complex_result.json: bond RMSE0.09941A versus releasedPVB0.07609A, but RMSF error1.31658A versus0.96133A. Stronger inherited geometry is not learned dynamics; final candidates must improve motion without losing this geometry.",
   "training_commit": "4f14e5c",
   "automatic_followups": {"fixed_final": "Each seed:256 complex forecasts,192 protein100ps forecasts, then192 matched-history protein80ps forecasts; cached paired PVB/balanced/initial-geometry and clock-response comparisons", "initial_geometry_control": "Same released static geometry and zero-output temporal residuals without training; H4/Q12 joint independent source draws and10-step SDE. This is NOT the unchanged autoregressive PVB reference. One448-forecast baseline queued after the existing GPU2 shared-observation owner.", "inference_projection": false, "new_test_or_smoke_campaign": false},
@@ -17,7 +35,7 @@
   "query": "Joint generated-state interaction at each bridge evaluation, physical ps distinct from flow progress; no hidden future conditioning",
   "static": "Corrupted singleton input, same geometric encoder/decoder/heads, temporal adapters bypassed; clean structure only enters loss",
   "objective": "Preserve released stochastic-interpolant velocity/drift targets and KL. Do not transplant weights into the incompatible coordinate-RF source/target objective.",
-  "current_missing_work": ["Complete16384 real updates in each seed", "Full geometry/motion/protein-retention comparisons", "Independent confirmation and thermodynamics"],
+  "current_missing_work": ["Complete seed71 training; seed72 training complete", "Fixed-final geometry/motion/protein-retention and clock comparisons", "Expanded64 same-system released-PVB comparisons", "Independent confirmation and thermodynamics"],
   "submitted_training_design": "See train.json and each run recipe.json/loading report. Preserve one rolling recovery checkpoint and fixed final. Evaluate unchanged32 complex conditions/256 forecasts and96 protein conditions/192 forecasts; compare cached released PVB and prior Molvid. Twelve evaluation queries versus four training queries is explicit extrapolation in joint query count. No new validation-based truncation or best-of-N sampling.",
   "environment": "Local enter-container/torch-ito; when loading released objects use the already-working PVB numpy126 overlay and original source path, not dependency upgrades.",
   "current_limits": ["Uniform unpadded H/Q per packed batch; H may vary between batches", "No Mamba replacement in this experiment", "No new scientific effectiveness claim", "Published static-pretraining exposure may overlap future evaluation families"],
