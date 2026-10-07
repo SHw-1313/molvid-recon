@@ -202,7 +202,7 @@ if __name__ == '__main__':
     for key in ('data', 'output'):
         parser.add_argument('--'+key, type=Path, required=True)
     parser.add_argument('--variant', required=True)
-    parser.add_argument('--lag-ps', type=int, choices=[80, 100], default=100)
+    parser.add_argument('--lag-ps', type=int, choices=[80, 100, 1000], default=100)
     parser.add_argument('--complex-systems', type=int, choices=[16, 64], default=16)
     parser.add_argument('--reuse', type=Path, help='Completed same-model original16 forecast directory')
     run(parser.parse_args())
