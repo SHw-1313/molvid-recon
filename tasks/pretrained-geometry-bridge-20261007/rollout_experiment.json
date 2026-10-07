@@ -1,5 +1,6 @@
 {
-  "status": "PVB92-frame reference CUDA inference active on GPU7; no completed rollout efficacy results yet",
+  "status": "originalPVB92-frame reference completed all16 systems and64 forecasts; GPU7 released; candidate rollouts pending",
+  "reference_completed": {"systems": 16, "forecasts": 64, "future_frames": 92, "seconds": 4868.663825787604, "thermodynamic_claim": false},
   "launch_recovery": "First launcher exited before model execution due to missing pvb_complex_observation import. Added the same native complex adapter already used for completed short PVB forecasts in commit52fde39; original model/source unchanged.",
   "reference_host_pid": 2393791,
   "reference_container_owner_pid": 1052844,

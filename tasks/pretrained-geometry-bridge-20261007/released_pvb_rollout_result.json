@@ -1,0 +1,26 @@
+{
+  "status": "completed original-model CUDA forecasts, not a Molvid improvement",
+  "source": "runs/pretrained_geometry_bridge_20261007/released_pvb_rollout92/summary.json",
+  "systems": 16,
+  "forecasts": 64,
+  "future_frames": 92,
+  "dt_ps": 80,
+  "horizon_ps": 7360,
+  "seconds": 4868.663825787604,
+  "whole_path_means": {"ligand_bond_rmse_A": 0.08043117813089148, "ligand_center_msd_mae_A2": 67.63593237273572, "ligand_center_path_energy_score_A": 2.3457636607864174, "pocket_contact_brier": 0.14811081325997472},
+  "early12_means": {"ligand_bond_rmse_A": 0.0750368565775969, "ligand_center_msd_mae_A2": 10.59124999526319, "ligand_center_path_energy_score_A": 1.2202364840887987, "pocket_contact_brier": 0.09515640292087693},
+  "late12_means": {"ligand_bond_rmse_A": 0.08346851993220265, "ligand_center_msd_mae_A2": 113.32894129935121, "ligand_center_path_energy_score_A": 2.484473546198622, "pocket_contact_brier": 0.16773988357407754},
+  "paired_late_minus_early_mean_ci95": {
+    "ligand_bond_rmse_A": [0.008431663354605759, 0.004580374155298442, 0.012903575170706536],
+    "ligand_center_path_energy_score_A": [1.2642370621098227, 0.851287118435029, 1.7368970361602964],
+    "ligand_center_msd_mae_A2": [102.737691304088, 20.847159005595753, 252.8909367328859],
+    "pocket_contact_brier": [0.07258348065320061, 0.026463521624943122, 0.1125120670038188]
+  },
+  "interpretation": "OriginalPVB retains substantially better bond geometry than completed oldMolvid complex arms, with modest late bond degradation. Conditional motion/contact errors grow with horizon; that alone does not identify unstable dynamics because future uncertainty also grows. This is the same-horizon baseline for forthcoming free-running candidates.",
+  "reference_source_modified": false,
+  "teacher_forcing": false,
+  "projection": false,
+  "independent_test": false,
+  "thermodynamic_claim": false,
+  "limits": ["Reused development16, one observed start and one MD future per system", "Four forecast draws, marginal system-bootstrap intervals", "7.36ns does not establish equilibrium or long-time kinetics", "No candidate long-rollout result yet"]
+}
