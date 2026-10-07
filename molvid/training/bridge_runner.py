@@ -1,5 +1,6 @@
 """Actual mixed-pretraining loop; checkpoints are recovery and fixed-final only."""
 from dataclasses import replace
+from contextlib import nullcontext
 import json
 import math
 from pathlib import Path
@@ -51,7 +52,7 @@ def training_example(model, clean, task, history, queries, settings, generator):
     return bridge_objective(model, condition, target, times, generator=generator)
 
 
-def train(settings, *, output, seed, resume=None):
+def train(settings, *, output, seed, resume=None, diagnose_step=None):
     output = Path(output)
     if output.exists() and resume is None:
         raise FileExistsError(output)
@@ -95,6 +96,14 @@ def train(settings, *, output, seed, resume=None):
     try:
         with (output/'updates.jsonl').open('a', buffering=1) as log:
             for step in range(start, settings['updates']):
+                if step + 1 == diagnose_step:
+                    # Exact pre-update state for one failed optimizer update;
+                    # no sample skipping, altered precision, or loss changes.
+                    atomic_torch_save(output/'checkpoint_pre_failure.pt', dict(
+                        model=model.state_dict(), optimizer=optimizer.state_dict(), settings=settings,
+                        contract=model.contract(), step=step, seed=seed, mixture=mixture.state_dict(),
+                        torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all(),
+                        generator_rng=generator.get_state(), python_rng=random.getstate(), numpy_rng=np.random.get_state()))
                 batch, task, history, queries, identity = mixture.next()
                 batch = batch.to(device)
                 warmup = settings['warmup_updates']
@@ -103,10 +112,20 @@ def train(settings, *, output, seed, resume=None):
                 for group in optimizer.param_groups:
                     group['lr'] = settings[group['name']+'_lr'] * factor
                 optimizer.zero_grad(set_to_none=True)
-                with torch.autocast('cuda', dtype=torch.bfloat16, enabled=settings['bf16']):
-                    loss, metrics = training_example(model, batch, task, history, queries, settings, generator)
-                loss.backward()
-                norm = torch.nn.utils.clip_grad_norm_(model.parameters(), settings['clip_grad'], error_if_nonfinite=True)
+                try:
+                    context = torch.autograd.detect_anomaly(check_nan=True) if step + 1 == diagnose_step else nullcontext()
+                    with context:
+                        with torch.autocast('cuda', dtype=torch.bfloat16, enabled=settings['bf16']):
+                            loss, metrics = training_example(model, batch, task, history, queries, settings, generator)
+                        loss.backward()
+                    norm = torch.nn.utils.clip_grad_norm_(model.parameters(), settings['clip_grad'], error_if_nonfinite=True)
+                except (RuntimeError, FloatingPointError) as error:
+                    atomic_write_json(output/'failure.json', dict(status='failed', attempted_step=step+1,
+                        completed_step=step, task=task, sample=batch.sample_id[0], history=history,
+                        query_indices=queries, identity=identity, error=str(error),
+                        nonfinite_gradient_parameters=[name for name, p in model.named_parameters()
+                            if p.grad is not None and not bool(torch.isfinite(p.grad).all())]))
+                    raise
                 if not bool(torch.isfinite(loss)):
                     raise FloatingPointError('Nonfinite bridge objective')
                 optimizer.step()
