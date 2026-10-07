@@ -70,6 +70,33 @@ def pvb_observation(pdb, observed_cpu, atom_source_index, device):
     return {k:v.to(device) for k,v in batch.items()}, origin.to(device)
 
 
+def pvb_complex_observation(pdb, observed_cpu, atom_source_index, device):
+    """Original MISATO topology builder, native H1 at the shared last observation.
+
+    Reused from the completed complex-scoring-recovery reference experiment.
+    PVB's ligand-centered frame is preserved; only observed coordinates replace
+    the PDB coordinates. No future frame or learned adapter is introduced.
+    """
+    from data.data_init import make_batch_complex_mix
+    batch, (indices,) = make_batch_complex_mix(str(pdb), 1)
+    if not torch.equal(torch.as_tensor(indices).long(), torch.as_tensor(atom_source_index).long()):
+        raise ValueError('PVB/complex atom order differs')
+    for key in ('atype', 'btype'):
+        if not torch.equal(batch[key], getattr(observed_cpu, key)):
+            raise ValueError(f'PVB/complex {key} differs')
+    if not torch.equal(batch['edge_mask'], observed_cpu.component_id):
+        raise ValueError('PVB/complex protein-ligand roles differ')
+    def edges(value):
+        return {tuple(sorted(pair)) for pair in value.T.tolist()}
+    if edges(batch['bond_index']) != edges(observed_cpu.bond_index):
+        raise ValueError('PVB/complex supplied covalent graph differs')
+    last = observed_cpu.x[-1].float()
+    origin = last[batch['edge_mask'] == 1].mean(0)
+    batch['x0'] = last-origin
+    batch['b0'] = observed_cpu.bpos[-1].float()-origin
+    return {k:v.to(device) for k,v in batch.items()}, origin.to(device)
+
+
 @torch.no_grad()
 def pvb_forecast(model, batch, origin, *, seed, frames=12):
     from utils.random_seed import setup_seed
