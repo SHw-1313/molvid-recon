@@ -1,5 +1,8 @@
 {
-  "status": "implemented; not yet submitted or trained",
+  "status": "submitted two continuation owners; waiting for existing GPU1/5 jobs, training not started",
+  "implementation_commit": "ab788bc",
+  "controllers": {"seed71_container_pid": 1070095, "seed72_container_pid": 1070096},
+  "coordinate_archive_session": 43912,
   "parent_commit": "c3350d6",
   "question": "Does interleaving physical clocks across systems improve learned geometry and motion relative to synchronized clock phases?",
   "motivation": {
