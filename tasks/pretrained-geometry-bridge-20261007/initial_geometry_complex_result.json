@@ -1,0 +1,33 @@
+{
+  "status": "completed256 actual CUDA complex forecasts; protein192 generation active",
+  "date": "2026-10-07",
+  "variant": "inherited_geometry_joint",
+  "weights": "Original released PVB static-pretraining checkpoint, no new training; temporal residual outputs remain zero",
+  "not_the_reference_model": "H4/Q12 joint bridge interface with independent query source draws. Original released MISATO PVB uses nativeH1 autoregressive dynamics. Do not label this control unaltered PVB or isolate architecture causally from differing weights/protocols.",
+  "systems": 16,
+  "conditions": 32,
+  "draws_per_condition": 8,
+  "generation_seconds": 2501.779468039982,
+  "metrics": {
+    "ligand_bond_rmse_A": {"initial": 0.09941070440311221, "released_PVB": 0.07608793694534022, "initial_minus_PVB": 0.023322767457772, "delta_ci95": [0.012981295427584666, 0.03490610312139852]},
+    "ligand_rmsf_mae_A": {"initial": 1.3165755328167532, "released_PVB": 0.961334681256179, "initial_minus_PVB": 0.3552408515605743, "delta_ci95": [0.05392695447613454, 0.7254980381331294]},
+    "ligand_center_msd_mae_A2": {"initial": 15.935034037901119, "released_PVB": 12.886924474372686, "initial_minus_PVB": 3.0481095635284348, "delta_ci95": [-0.3883991278700771, 9.145324108236668]},
+    "ligand_center_path_energy_score_A": {"initial": 1.2384017597090162, "released_PVB": 1.301179736463454, "initial_minus_PVB": -0.06277797675443808, "delta_ci95": [-0.26399698893600865, 0.10644153596814632]}
+  },
+  "internal_motion_descriptive_rounded": {"bond_time_std_A": 0.068525, "MD_bond_time_std_A": 0.030976, "released_PVB_bond_time_std_A": 0.049103, "nonbonded_distance_time_std_A": 0.318022, "MD_nonbonded_distance_time_std_A": 0.208132},
+  "internal_path_initial_minus_PVB": {
+    "bond_path_energy_score_A": {"mean": 0.007928947712838443, "ci95": [0.0022796817708701555, 0.014190518381791077]},
+    "bond_increment_path_energy_score_A": {"mean": 0.007234393435327209, "ci95": [0.004608533839634223, 0.010375650189719084]},
+    "nonbonded_distance_path_energy_score_A": {"mean": -0.04635324534059782, "ci95": [-0.0868488747234166, -0.0005024137012014757]},
+    "nonbonded_distance_increment_path_energy_score_A": {"mean": 0.010609121974522639, "ci95": [0.0025591274520842325, 0.01891358662026791]}
+  },
+  "interpretation": [
+    "The inherited geometric prior already has far smaller bond errors than previous static-main curricula0.26049/0.27276A. This is not improvement learned by our newly initialized temporal modules.",
+    "Geometry alone does not recover correct motion: RMSF error is clearly worse than released PVB, and internal increment-path scores are also worse.",
+    "Lower nonbonded-distance path score without corresponding increment-path improvement is not evidence of correct dynamics or thermodynamic equilibrium.",
+    "Ongoing16384-update bridge models must improve motion over this explicit initial control while retaining local geometry. Their trained generated efficacy remains unknown."
+  ],
+  "sources": ["runs/pretrained_geometry_bridge_20261007/initial_geometry/complex_native80/summary.json", "runs/pretrained_geometry_bridge_20261007/initial_geometry/early_completed_vs_pvb.json", "runs/pretrained_geometry_bridge_20261007/initial_geometry/internal_paths/summary.json"],
+  "limitations": ["Reused development16, no independent test opened", "System-clustered2000-bootstrap marginal95percent intervals, no multiplicity correction", "Single MD future per condition; no equilibrium inference", "Protein retention, clashes, and trained-model comparisons pending"],
+  "default_promotion": false
+}
