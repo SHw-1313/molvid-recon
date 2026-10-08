@@ -1,5 +1,5 @@
 {
-  "status": "A static training actually running; B static training queued under matched settings; real static-to-MD CUDA transition remains pending",
+  "status": "A completed2048 static updates and actually executed the weights-only transition into MD CUDA training; B remains queued",
   "entry": "tools.train_coordinate_state --warm-start <owned fixed-final coordinate checkpoint>",
   "recipe_requirement": "initialization=coordinate_state_weights_only; new data and optimizer budget explicitly declared",
   "compatibility": "Same recipe schema, flow/EDM scheme, coordinate scales/preconditioning, width, spatial layers, heads, RBF and geometry-neighbor policy; strict state dict loading",
@@ -9,7 +9,8 @@
   "current_MD_only_changed": false,
   "static_training_submitted": true,
   "CUDA_transition_verified": false,
-  "next": "Follow actual static shared-module gradients, complete the fixed2048 static stages, then perform the explicit owned-checkpoint weights-only MD transition. No separate disposable smoke-training run; actual transition remains unverified until executed. See static_pretrain_followup.json for additional budget and initial CUDA evidence.",
+  "CUDA_transition_verified_for_schemes": ["flow"],
+  "next": "Continue the unchanged paired runs; verify B's actual transition when it executes and compare complete MD exposures/forecasts. Both-arm CUDA transition verification remains false until B also executes. See static_pretrain_followup.json for actual A parent provenance and first12 matching MD updates.",
   "scientific_constraints": [
     "Paired static source and exposure for A/B; static restoration supervises current geometry, shared interaction and coordinate output",
     "No clean structure in static condition, no static physical-future label or duplicated zero-motion windows",

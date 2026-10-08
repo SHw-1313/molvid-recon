@@ -1,7 +1,7 @@
 {
   "name": "Coordinate-state denoising v1: paired A rectified flow / B displacement EDM",
   "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
-  "static_followup": "After complete first-seed MD-only A/B protein/path/order/amplitude results, submitted the separately budgeted paired static2048->MD2048 seed71 followup. A static training is actually running; B waits existing GPU2 work. See static_pretrain_followup.json for resources, actual first-update geometry/token/head gradients and unchanged MD-only queues. No static-to-MD or pretrained-generation success is claimed yet.",
+  "static_followup": "After complete first-seed MD-only A/B protein/path/order/amplitude results, submitted the separately budgeted paired static2048->MD2048 seed71 followup. A completed static training and actually entered MD; first12 MD data/progress rows exactly match its MD-only baseline. B waits existing GPU2 work. See static_pretrain_followup.json; no pretrained-generation success is claimed.",
   "branch": "exp/coordinate-state-denoising-v1",
   "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
   "status": "Both seed71 native100ps protein panels are complete:192 full-source forecasts each. A has lower geometry/RMSF/torsion-increment errors than B; B has lower MSD error. A improves several geometry and motion endpoints over h/v, but neither approaches PVB geometry. See paired_seed71_protein100_result.json; no promotion from one seed/domain/grid. Both seed72 models still train on GPU1/4; A/B complex64 inference runs as1141082/1140130 on GPU6/7. Full path/time/amplitude/complex/rollout followups continue unchanged.",
