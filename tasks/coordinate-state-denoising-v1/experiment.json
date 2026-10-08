@@ -23,6 +23,15 @@
     "source":"runs/coordinate_state_denoising_v1/seed71/edm/train/status.json",
     "next":"Existing controller continues the predeclared second seed and then complete fixed-final sampling panels; no extension of the paired budget or intermediate checkpoint selection"
   },
+  "parallel_time_evaluation": {
+    "implementation_commit": "caeadf3",
+    "flow_controller": 1139217, "flow_GPU": 3,
+    "EDM_controller": 1139218, "EDM_GPU": 5,
+    "eligibility": "RF2 controllers1118673/1120507 exited normally; both GPUs verified without compute applications before launch and rechecked before each panel",
+    "scope": "Advance the existing native80 and native1000 panels for both seeds using immutable fixed-final checkpoints; identical arguments, per-output lock and exact-request completed reuse. Original queues and other jobs remain intact.",
+    "additional_training_updates": 0, "additional_forecasts": 0,
+    "time_semantics": "80/100ps fixed-history response is an interpolation diagnostic;1ns query spacing exceeds TRAIN100/200/400ps protein spacings and remains explicitly extrapolative"
+  },
   "launch": {"implementation_commit": "b7810b2", "final_launcher_commit": "a8c7c2f", "edm_controller_container_pid": 1128478, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1128479, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false, "launcher_refresh": "Replaced only our new waiting shells1127741/1127742 after confirming each had only a sleep child and no model process. This loads the completed rollout and final GPU-idle recheck; no training or forecasts were cancelled. Initial logs retained; current logs lane_edm_v2.log/lane_flow_v2.log."},
   "paired_budget": {
     "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
@@ -86,7 +95,7 @@
     "protocol": "Same cached full atom sets, observed H4 and12query windows; protein48 two anchors/two draws at100/80/1000ps; complex64 two anchors/eight draws at80ps; fixed-final models only. Preserve PVB/BioKinema native-input differences and training-overlap disclosures.",
     "unseen_system_check": "Selected128protein and128complex TRAIN IDs have empty intersection with development48protein and64complex IDs; metadata-only check. Not a new independent family/scaffold or pretraining-clean test claim.",
     "metrics": ["all-atom bond and clashes", "RMSF and fixed-history MSD", "full-path fair energy scores", "temporal correlations/order", "80/100ps time response", "ligand relative displacement/contact continuity", "true-motion-amplitude bins", "generated-history short rollout"],
-    "still_required": ["finish h/v whole-complex geometry scoring and complete A/B comparisons against its completed1024-forecast panel", "complete paired CUDA training and source-sampled forecasts", "amplitude-stratified aggregation", "short rollout runs", "static-pretraining paired stage after MD-only evidence", "independent confirmation and longer-time distribution evidence before goal completion"],
+    "still_required": ["complete A/B comparisons against the fully scored h/v1024-forecast complex panel", "complete paired CUDA training and source-sampled forecasts", "amplitude-stratified aggregation", "short rollout runs", "static-pretraining paired stage after MD-only evidence", "independent confirmation and longer-time distribution evidence before goal completion"],
     "references_untouched": true, "sealed_test_opened": false
   },
   "files": ["molvid/flow/coordinate_state.py", "molvid/training/coordinate_state.py", "molvid/data/bridge_mixture.py", "tools/train_coordinate_state.py", "tools/evaluate_pretrained_bridge.py", "tools/evaluate_complex_rollout.py", "tasks/coordinate-state-denoising-v1/prepare_training_scales.py", "tasks/coordinate-state-denoising-v1/check_cuda_dataflow.py", "tasks/coordinate-state-denoising-v1/run_lane.sh"],
@@ -100,7 +109,7 @@
     "hv_complex_cpu_controller": 1129539,
     "scope": "Paired80/100ps MD-response errors, proper ensemble MSD/RMSF/increment-path scores, and full92-frame generated-history rollout against each other and released PVB. No extra neural calls for these scorers.",
     "hv_complex": "Common evaluator supports frozen original A1 h/v sampler via --hv-baseline; identical64-system128-condition full-atom inventory and eight seeds. No checkpoint changes, source retuning or fine-tuning. Its initial serial queue was superseded by the explicitly recorded released-GPU rescheduling.",
-    "hv_complex_status": "Completed all128 conditions/1024 full12-frame forecasts in4342.638s. Direct paired PVB comparisons complete on all/old16/new48: severe ligand bond and RMSF deficits coexist with better center-path scores. See hv_complex64_result.json; generic transfer and resource confounds preclude a state-only causal conclusion. Cached whole-complex geometry scoring now running as process1135882.",
+    "hv_complex_status": "Completed all128 conditions/1024 full12-frame forecasts in4342.638s. All/old16/new48 primary and whole-complex geometry comparisons, proper motion scores and rigid/internal decomposition are complete. Severe protein/ligand bond, clash and internal-motion deficits coexist with better center-path scores. See hv_complex64_result.json; generic transfer and resource confounds preclude a state-only causal conclusion.",
     "statistical_pairing": "Subtract matched per-system estimates then bootstrap systems, not marginal CI endpoints. Raw displacement/amplitude differences are not automatically improvement."
   },
   "first_real_CUDA_execution": {

@@ -1,5 +1,5 @@
 {
-  "status": "complete original h/v complex64 source sampling, paired primary comparison and proper motion-observable scores with released PVB; whole-complex geometry pending",
+  "status": "Complete original h/v complex64 source sampling and paired primary, proper motion, rigid/internal and whole-complex geometry comparisons with released PVB",
   "source": "runs/coordinate_state_denoising_v1/hv_a1_complex64",
   "coverage": {"systems": 64, "conditions": 128, "draws_per_condition": 8, "future_frames": 12, "new_forecasts": 1024, "reused_forecasts": 0},
   "generation_seconds": 4342.638022856787,
@@ -87,7 +87,24 @@
     "A/B must improve geometry and motion together. Beating this un-finetuned transfer baseline alone does not prove that h/v stochastic state is intrinsically inferior: architecture, training exposure, pretraining and NFE remain confounded.",
     "No coordinate A/B trained-generation result is yet available; do not interpret these baseline results as evidence for either A or B."
   ],
-  "whole_complex_geometry": {"status": "running cached-coordinate CPU scoring", "container_process": 1135882, "new_model_calls": 0},
+  "whole_complex_geometry": {
+    "status": "completed all128 conditions; paired all/old16/new48 comparisons completed",
+    "source": "runs/coordinate_state_denoising_v1/complex_geometry/hv/summary.json",
+    "paired_sources": "runs/coordinate_state_denoising_v1/complex_geometry/hv_vs_pvb_{all,old16,new48}.json",
+    "new_model_calls": 0,
+    "all64_means_hv": {"all_bond_rmse_A": 0.2807780473958701, "protein_bond_rmse_A": 0.2581531305331737, "clashes_per_1000_atoms": 76.97129177790518, "cross_component_clashes_per_1000_total_atoms": 3.4699757154064086},
+    "all64_hv_minus_PVB": {
+      "all_bond_rmse_A": [0.227771423116792, 0.21950229208669042, 0.23672722412011352],
+      "protein_bond_rmse_A": [0.20543175862985663, 0.20017423962126485, 0.21008960954204667],
+      "clashes_per_1000_atoms": [74.66990491638114, 67.18462551840557, 82.53640940750573]
+    },
+    "new48_hv_minus_PVB": {
+      "all_bond_rmse_A": [0.22272035180746266, 0.21358851215530497, 0.23358016406806803],
+      "protein_bond_rmse_A": [0.2025072635151446, 0.19760936607975357, 0.20732113183767067],
+      "clashes_per_1000_atoms": [68.01212489107839, 62.00027532949065, 74.80494452830683]
+    },
+    "interpretation": "The geometry deficit is not confined to ligand bonds: protein bonds and whole-complex clashes are also worse. Scores use the unchanged legacy clash rule on all atoms without projection or relaxation. MD zero clashes under this rule is not proof of perfect force-field geometry. Native inputs and training resources remain confounded."
+  },
   "limitations": ["Reused development64, not sealed confirmation", "One MD future and eight generated draws per condition", "Exploratory marginal paired-system intervals; no multiplicity correction", "No equilibrium, free-energy or kinetic-rate claim"],
   "default_promotion": false
 }
