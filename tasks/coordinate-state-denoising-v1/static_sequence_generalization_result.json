@@ -1,0 +1,28 @@
+{
+  "status": "completed_actual_static_exposure_sequence_search",
+  "sources": ["runs/coordinate_static_pretrain_v1/sequence_overlap_cov0/summary.json", "runs/coordinate_static_pretrain_v1/sequence_overlap_cov2/summary.json"],
+  "exposure": "Both complete 2048-update static logs have identical domain/system/sample sequences:1024 registered protein structures and1024 singleton examples from128 MD TRAIN complexes. Search includes these actual static proteins plus128 MD proteins and128 MD complexes; not all2569 eligible static sources.",
+  "validation": {"protein_systems": 48, "complex_systems": 64, "members_removed": 0, "sealed_test_read": false},
+  "sequence_definition": "Reuse registered full polymer sequences for precisely the exposed selected chains, including unresolved residues. MD/development sequences use existing PDB CA residues and MISATO molecular-component boundaries. This is source-relatedness, not proof that every aligned residue was a supervised coordinate.",
+  "search": {"minimum_identity_percent": 30, "minimum_coverage": 0.5, "evalue_max": 0.001, "sensitivity": 7.5, "threads": 4, "coverage_modes": [0, 2], "total_fragments": 1696, "fragments_below_20_residues_omitted": 32},
+  "bidirectional_coverage_systems_with_hits": ["1EIX", "1UEF", "3FQA", "4GWK", "4TPT", "6CCX", "atlas_1fcz_A", "atlas_1o4k_A"],
+  "query_coverage_systems_with_hits": ["1EIX", "1NHW", "1UEF", "3FQA", "3VX3", "4GWK", "4TPT", "6CCX", "atlas_1fcz_A", "atlas_1o4k_A"],
+  "static_related_hits": [
+    {"validation": "1EIX", "static_source": "1dbt_B", "identity_percent": 41.6, "aligned_residues": 228, "coverage_modes": [0, 2]},
+    {"validation": "1UEF", "static_source": "2dlw_A", "identity_percent": 55.8, "aligned_residues": 100, "coverage_modes": [0, 2]},
+    {"validation": "4GWK", "static_source": "8c79_A", "identity_percent": 41.6, "aligned_residues": 297, "coverage_modes": [0, 2]},
+    {"validation": "4TPT", "static_source": "7zvs_B", "identity_percent": 30.0, "aligned_residues": 294, "coverage_modes": [0, 2]},
+    {"validation": "6CCX", "static_source": "2g3y_A", "identity_percent": 34.9, "aligned_residues": 167, "coverage_modes": [0, 2]},
+    {"validation": "1NHW", "static_source": "1vl8_B", "identity_percent": 40.9, "aligned_residues": 44, "query_coverage": 0.733, "target_coverage": 0.165, "coverage_modes": [2]},
+    {"validation": "3VX3", "static_source": "4rz3_B", "identity_percent": 48.9, "aligned_residues": 49, "query_coverage": 0.516, "target_coverage": 0.166, "coverage_modes": [2]}
+  ],
+  "systems_above_50_percent": ["1UEF", "3FQA"],
+  "systems_above_80_or_95_percent": [],
+  "interpretation": [
+    "MD-only had3 related validation systems. Actual static exposure adds5 under bidirectional coverage, or7 when allowing a short query fragment to match part of a longer target. These criteria describe different similarity scopes, not alternative favorable filters.",
+    "Both A/B received these same static sources, so relatedness does not uniquely favor one recipe. It still limits claims about sequence-independent static-pretraining generalization.",
+    "Exact held-out system identities are not held-out protein families. No-hit systems are not established fold/scaffold-independent; released-baseline and historical h/v pretraining exposures are not covered.",
+    "All fixed evaluation members and unfavorable outcomes remain included. No training, future trajectory access, extra forecasts or dataset edits were performed for this audit."
+  ],
+  "model_or_sampler_changed": false
+}

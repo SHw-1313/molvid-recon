@@ -1,10 +1,12 @@
-"""Known-current-training sequence overlap of the already-used validation16.
+"""Known-current-training sequence overlap of existing development panels.
 
-Only PDB residue identifiers and HDF molecule boundaries are read. No trajectory
-coordinates, sealed test structures or reserved confirmation systems are read.
+Read PDB residue identifiers, HDF molecule boundaries and optionally registered
+static polymer sequences. No trajectory coordinates, sealed test structures or
+reserved confirmation systems are read.
 """
 import argparse
 from collections import defaultdict
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -86,11 +88,61 @@ def coordinate_entries(config_path, protein_valid, complex_valid):
     return entries
 
 
-def run(output, cov_mode, coordinate_config=None, protein_valid=None, complex_valid=None):
+def add_static_exposure(entries, recipe_path, update_paths):
+    """Add only actually exposed registered chains, not the eligible corpus.
+
+    Full deposited polymer sequences include unresolved residues. This is a
+    conservative source-relatedness audit, not proof of atom-level exposure.
+    """
+    recipe = json.loads(recipe_path.read_text())
+    logs = [[json.loads(line) for line in path.read_text().splitlines()] for path in update_paths]
+    identities = []
+    for rows in logs:
+        if [r['step'] for r in rows] != list(range(1, recipe['updates'] + 1)) or any(
+                r['task'] != 'static' for r in rows):
+            raise ValueError('Static exposure requires the complete ordered training log')
+        identities.append([(r['domain'], r['system'], r['sample']) for r in rows])
+    if any(rows != identities[0] for rows in identities[1:]):
+        raise ValueError('Paired static exposures differ; audit the arms separately')
+    registration = Path(recipe['data']['static_registration'])
+    registered = {r['source_sample_id']: r for r in json.loads(
+        (registration/'registered_sources.json').read_text())}
+    identity = json.loads((registration/'run_identity.json').read_text())
+    paths = [Path(p) for p in identity['input_sha256'] if Path(p).name == 'sequences.json']
+    if len(paths) != 1:
+        raise ValueError('Expected one registered polymer-sequence inventory')
+    sequences_by_digest = {hashlib.sha256(r['sequence'].encode()).hexdigest(): r['sequence']
+                           for r in json.loads(paths[0].read_text()).values()}
+    exposed = sorted({r['sample'] for r in logs[0] if r['domain'] == 'protein'})
+    for sample in exposed:
+        row = registered[sample]
+        for chain in row['selected_chains']:
+            sequence = sequences_by_digest[chain['sequence_sha256']]
+            if len(sequence) != chain['sequence_length']:
+                raise ValueError('Registered chain length differs from sequence inventory')
+            label = chain['label_asym_id']
+            entries[f'train_static_{row["system_id"]}_{label}'] = dict(
+                system=f'static_{row["system_id"]}', split='train', domain='protein',
+                chain=label, sequence=sequence, source_kind='actual_static_exposure',
+                sample=sample, includes_unresolved_polymer_residues=True)
+    # Complex singletons come from the already enumerated MD TRAIN systems.
+    complexes = {r['system'] for r in logs[0] if r['domain'] == 'complex'}
+    if not complexes <= {r['system'] for r in entries.values()
+                         if r['split'] == 'train' and r['domain'] == 'complex'}:
+        raise ValueError('Static complex exposure outside enumerated MD TRAIN')
+    return dict(recipe=str(recipe_path), updates=[str(p) for p in update_paths],
+                static_protein_sources=len(exposed), static_complex_systems=len(complexes),
+                paired_exposure_identical=True, sequence_inventory=str(paths[0]),
+                definition='MD TRAIN plus actual static exposure; full registered polymer sequences, including unresolved residues')
+
+
+def run(output, cov_mode, coordinate_config=None, protein_valid=None, complex_valid=None,
+        static_recipe=None, static_updates=None):
     output.mkdir(parents=True, exist_ok=False)
     if coordinate_config is not None:
         entries = coordinate_entries(coordinate_config, protein_valid, complex_valid)
-        search(output, cov_mode, entries)
+        exposure = add_static_exposure(entries, static_recipe, static_updates) if static_recipe else None
+        search(output, cov_mode, entries, exposure)
         return
     data = Path('/workspace/molvid-complex-mixture-20261007/runs/complex_mixture_20261007/misato128_v2')
     systems = json.loads((data/'systems.json').read_text())
@@ -112,7 +164,7 @@ def run(output, cov_mode, coordinate_config=None, protein_valid=None, complex_va
     search(output, cov_mode, entries)
 
 
-def search(output, cov_mode, entries):
+def search(output, cov_mode, entries, static_exposure=None):
     for split, filename in (('train', 'train.fasta'), ('valid', 'valid.fasta')):
         with (output/filename).open('x') as handle:
             for key, row in sorted(entries.items()):
@@ -145,7 +197,9 @@ def search(output, cov_mode, entries):
             if any(r['identity_percent'] >= threshold for r in rows)] for threshold in (30, 50, 80, 95)},
         short_chains_excluded={key: len(row['sequence']) for key, row in entries.items() if len(row['sequence']) < 20},
         entries=entries,
-        limitations=['Known current training only, not complete parent/static/released-baseline exposure',
+        static_exposure=static_exposure,
+        limitations=['Enumerated current training only, not unenumerated parent/static/released-baseline exposure',
+            'Static full polymer sequences include unresolved residues not necessarily present in model inputs',
             'Sequence similarity is not fold or ligand-scaffold independence',
             'MISATO molecular components can be fragments, not complete biological chains',
             'Coverage mode0 requires both sequences; mode2 requires query coverage only and can expose partial-domain similarity',
@@ -162,8 +216,14 @@ if __name__ == '__main__':
     parser.add_argument('--coordinate-config', type=Path)
     parser.add_argument('--protein-valid', type=Path)
     parser.add_argument('--complex-valid', type=Path)
+    parser.add_argument('--static-recipe', type=Path)
+    parser.add_argument('--static-updates', type=Path, nargs='+')
     args = parser.parse_args()
     if any(x is not None for x in (args.coordinate_config, args.protein_valid, args.complex_valid)) and not all(
             x is not None for x in (args.coordinate_config, args.protein_valid, args.complex_valid)):
         parser.error('Current-coordinate audit requires all three explicit inventory paths')
-    run(args.output, args.cov_mode, args.coordinate_config, args.protein_valid, args.complex_valid)
+    if bool(args.static_recipe) != bool(args.static_updates) or (
+            args.static_recipe and not args.coordinate_config):
+        parser.error('Static exposure requires its recipe, complete update logs and explicit coordinate inventories')
+    run(args.output, args.cov_mode, args.coordinate_config, args.protein_valid, args.complex_valid,
+        args.static_recipe, args.static_updates)
