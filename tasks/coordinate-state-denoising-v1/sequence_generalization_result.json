@@ -1,0 +1,23 @@
+{
+  "status": "Completed current MD-only TRAIN versus development sequence search; not independent-test qualification",
+  "training": {"protein_systems": 128, "complex_systems": 128, "searched_fragments": 405, "excluded_fragments_below20_residues": 22},
+  "development": {"protein_systems": 48, "complex_systems": 64, "searched_fragments": 222, "excluded_fragments_below20_residues": 10},
+  "method": "Existing PDB residue-name/CA and MISATO HDF molecule-boundary parser; MMseqs2 easy-search,4 CPU threads,sensitivity7.5,min identity0.3,min coverage0.5,evalue0.001,alignment-mode3,max-seqs10000. Both cov-mode0 and query-only cov-mode2 completed.",
+  "sources": ["runs/coordinate_state_denoising_v1/sequence_overlap_cov0_v2/summary.json", "runs/coordinate_state_denoising_v1/sequence_overlap_cov2_v2/summary.json"],
+  "same_systems_with_hits_both_modes": {"at_least30_percent": ["3FQA","atlas_1fcz_A","atlas_1o4k_A"], "at_least50_percent": ["3FQA"], "at_least80_percent": [], "at_least95_percent": []},
+  "representative_hits": [
+    {"development_system": "3FQA", "training_system": "atlas_2e7u_A", "identity_percent": 54.4, "aligned_residues": 416, "query_length": 426, "target_length": 424, "query_coverage": 0.977, "target_coverage": 0.981, "evalue": 3.607e-145},
+    {"development_system": "atlas_1fcz_A", "training_system": "1Q4X", "identity_percent": 37.3, "aligned_residues": 198, "query_length": 235, "target_length": 200, "query_coverage": 0.838, "target_coverage": 0.99, "evalue": 2.18e-39},
+    {"development_system": "atlas_1o4k_A", "training_system": "5EEL", "identity_percent": 34.4, "aligned_residues": 83, "query_length": 108, "target_length": 104, "query_coverage": 0.769, "target_coverage": 0.788, "evalue": 5.711e-09}
+  ],
+  "interpretation": "Exact-ID heldout is not sequence-independent. Cross-domain protein/complex comparisons matter: all three representative matches cross the domain labels. No>=80percent hits detected under these settings, but no-hit systems are not automatically biologically independent. These findings neither explain the widespread geometry failure nor invalidate every heldout-system observation.",
+  "decision": "Keep all48 protein/all64 complex systems and original aggregate results. Label current results as exact-ID-heldout development with the identified homology caveat. Do not silently drop related systems, retrain on development trajectories, or claim family/scaffold confirmation. Future confirmation requires separate explicit sequence/fold/scaffold and static/external-exposure accounting.",
+  "not_covered": ["Static followup2569-source exposure", "Historical h/v and released PVB/BioKinema pretraining exposure", "Fold or ligand-scaffold identity", "Fragments shorter than20 residues", "All remote homology or domain relationships"],
+  "legacy_audit": "The older sequence_generalization_result.json under complex-pretraining covered192+128 TRAIN and only16 development complexes; it was not treated as evidence for this changed inventory.",
+  "parser_correction": "Initial current-inventory search completed but result parsing failed on a blank PDB chain ID because FASTA whitespace truncated its identifier. Normalize blank chain identifiers to explicit blank in FASTA keys, preserve original chain metadata. First failed directory/log retained; v2 results authoritative. No system excluded to avoid the failure.",
+  "trajectory_coordinates_read": 0,
+  "model_calls": 0,
+  "sealed_test_opened": false,
+  "evaluation_membership_changed": false,
+  "promotion": false
+}
