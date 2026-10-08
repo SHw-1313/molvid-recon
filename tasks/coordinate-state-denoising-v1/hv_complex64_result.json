@@ -46,6 +46,40 @@
     "interpretation": "RMSF-distribution errors remain worse under proper ensemble scoring; MSD-curve scores are worse on all64 but unresolved on new48. Preserve the favorable new48 center-increment path score: the center-path benefit cannot simply be dismissed as absent in temporal increments. The all64 increment interval crosses zero. None repairs the ligand bond deficit or establishes full-joint dynamics.",
     "limitations": "Supplementary analysis after primary comparison; finite-window RMSF is not equilibrium RMSF; one MD future per condition, eight draws, marginal paired-system intervals and differing native input/training exposure"
   },
+  "rigid_internal_motion_followup": {
+    "source": "runs/coordinate_state_denoising_v1/hv_pvb_rigid_internal64.json",
+    "scorer": "/workspace/molvid-bridge-collective-feedback-20261008/tasks/bridge-collective-feedback-20261008/score_rigid_internal_motion.py",
+    "coverage": "All128 conditions and1024 cached forecasts per model; zero new neural calls, no coordinate changes or exclusions",
+    "definition": "Protein-reference alignment followed by a diagnostic best proper rigid rotation between consecutive ligand frames, fixed atom identities; includes observed-to-first-future step. Internal residual also includes legitimate torsions and deformations, not exclusively bond jitter. Translation is heavy-atom centroid, not mass-weighted COM.",
+    "mean_amplitudes_A_order": ["MD", "hv", "PVB"],
+    "all64_mean_amplitudes_A": {
+      "total_step_rms": [1.3985046736729316, 1.8439980105963318, 0.8556217949399039],
+      "translation_step_rms": [1.0393975887209839, 0.8862010755276684, 0.5259259059069931],
+      "rotation_fit_step_rms": [0.6910220418492281, 0.6077126114691874, 0.3761456507056776],
+      "internal_residual_step_rms": [0.5243750035346528, 1.4781606030274754, 0.5392884854789277]
+    },
+    "new48_mean_amplitudes_A": {
+      "total_step_rms": [1.2029353658362358, 1.805796348596429, 0.8045088078571366],
+      "translation_step_rms": [0.8772359846810285, 0.8505697824682166, 0.4793134661650044],
+      "rotation_fit_step_rms": [0.5665245541304934, 0.5898372653585396, 0.34721205121500326],
+      "internal_residual_step_rms": [0.5134933861706168, 1.4601531648804944, 0.5261115948872562]
+    },
+    "paired_error_definition": "For each system, first average its two condition amplitudes; then compute abs(hv-MD)-abs(PVB-MD). Apply existing system_estimate to these paired system differences. Arrays are mean,95percent bootstrap lower,upper. This is a descriptive amplitude error, not a proper predictive score or a kinetic observable.",
+    "all64_paired_absolute_amplitude_error_A": {
+      "total": [0.3152129124100077, 0.14744183284371523, 0.4683191320194383],
+      "translation": [-0.0034732133706708856, -0.07134664861262352, 0.06773443065913147],
+      "rotation_fit": [-0.016873599480563387, -0.0672260013194536, 0.03414431144983129],
+      "internal_residual": [0.7894856198550994, 0.705848117132053, 0.866711224875136]
+    },
+    "new48_paired_absolute_amplitude_error_A": {
+      "total": [0.38214182014099257, 0.19878468812167352, 0.5452044141944241],
+      "translation": [-0.011088432284208192, -0.09194898115586078, 0.0748609398809803],
+      "rotation_fit": [0.0015573561990988802, -0.052348967313386896, 0.056449562664086454],
+      "internal_residual": [0.7783380436367121, 0.6691408150006829, 0.8713335980438052]
+    },
+    "interpretation": "Strong excess internal-shape motion coexists with the h/v bond deficit and favorable center-path/increment scores. This supports investigating internally coordinated geometry, not merely increasing global motion amplitude or freezing all atoms. Translation/rotation amplitude-error differences remain unresolved. It does not isolate latent-state causality or demonstrate that coordinate A/B resolves the problem.",
+    "limitations": "Posthoc reused-development diagnostic; rotation/residual squared norms have a nonzero cross term and are not additive energy fractions. No ligand symmetry remapping; near-collinear rotation ambiguity is reported in the raw result. One MD future is not an equilibrium reference distribution."
+  },
   "interpretation": [
     "The original generic-atom h/v transfer baseline has a large ligand covalent-geometry deficit and larger RMSF error than released PVB on both all64 and new48.",
     "Retain the counterevidence: ligand center-path energy score is better for h/v on both strata, and new48 residue-contact occupancy error improves. These do not compensate for distorted internal geometry or establish correct full dynamics.",
