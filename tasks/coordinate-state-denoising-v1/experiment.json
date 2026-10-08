@@ -100,6 +100,16 @@
       "rollout_ownership": "Advanced controller is now sole EDM rollout owner for both seeds. Existing primary/time workers remain unchanged and use exact-request completed-panel reuse."
     }
   },
+  "one_ns_supplement": {
+    "script": "tasks/coordinate-state-denoising-v1/analyze_1ns_supplement.sh",
+    "controller_container_pid": 1144948,
+    "scope": "Both seeds, complete existing48-system1ns panels: paired A/B primary errors, temporal-order-versus-permutation diagnostic against h/v and native BioKinema, and TRAIN-frozen motion-amplitude bins with absolute per-arm values. Main analysis retains full-path scores and external primary comparisons.",
+    "motivation": "Completed Bseed71 1ns panel has much worse geometry/RMSF than h/v, unlike100ps; do not mistake excess fluctuation from distorted structures for appropriate motion. See seed71_first_completed_1ns_result.json.",
+    "status": "CPU controller launched, waiting for complete Aseed71 1ns panel; no supplemental efficacy result yet",
+    "additional_model_calls": 0,
+    "additional_optimizer_updates": 0,
+    "restriction": "No incomplete-panel ranking, true-motion-bin conditioning, altered physical times, output projection or changed sampling recipe"
+  },
   "launch": {"implementation_commit": "b7810b2", "final_launcher_commit": "a8c7c2f", "edm_controller_container_pid": 1128478, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1128479, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false, "launcher_refresh": "Replaced only our new waiting shells1127741/1127742 after confirming each had only a sleep child and no model process. This loads the completed rollout and final GPU-idle recheck; no training or forecasts were cancelled. Initial logs retained; current logs lane_edm_v2.log/lane_flow_v2.log."},
   "paired_budget": {
     "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
