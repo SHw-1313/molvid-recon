@@ -1,0 +1,32 @@
+{
+  "status": "Complete second-seed B native100ps protein panel analyzed against h/v and released PVB; Aseed72 pending",
+  "coverage": {"systems": 48, "conditions": 96, "forecasts": 192, "future_frames": 12, "field_calls": 6720, "seconds": 3235.33079107292, "peak_cuda_bytes": 9756509184, "failures": []},
+  "source": "runs/coordinate_state_denoising_v1/seed72/edm/expanded48",
+  "comparison_sources": "runs/coordinate_state_denoising_v1/seed72/edm/protein100_vs_{hv,pvb}.json",
+  "absolute_means": {
+    "bond_RMSE_A": 0.2660826891783664,
+    "clashes_per_1000_atoms": 105.56438327099193,
+    "residue_RMSF_MAE_A": 0.3339729562091331,
+    "MSD_curve_MAE_A2": 2.1545894032137265,
+    "mean_RMSF_ratio": 0.872369976098791,
+    "torsion_increment_circular_error": 0.18710590495417515
+  },
+  "paired_arrays": "Mean,95percent system-bootstrap lower,upper of B-minus-reference; exploratory marginal intervals",
+  "B_minus_hv": {
+    "bond_RMSE_A": [-0.0051727649901759844,-0.01268085395159945,0.003067916141990611],
+    "clashes_per_1000_atoms": [-14.20357202606578,-28.17352409761698,-2.0922905148590014],
+    "residue_RMSF_MAE_A": [0.030699336746086676,0.01795254399185069,0.04490485988596144],
+    "MSD_curve_MAE_A2": [-0.31857004872937167,-0.5279094221833576,-0.14595653688302265],
+    "torsion_increment_circular_error": [0.0356041295065855,0.0294130326830782,0.04217005265527404]
+  },
+  "B_minus_PVB": {
+    "bond_RMSE_A": [0.22592830625401228,0.21258260256624717,0.2406195233402118],
+    "clashes_per_1000_atoms": [104.19292070285917,87.25591930902941,127.67788944806985],
+    "residue_RMSF_MAE_A": [0.010298238989586631,0.002142508974066004,0.0201293427865797],
+    "MSD_curve_MAE_A2": [0.061877823628795674,-0.08876516871225448,0.2259599878158446]
+  },
+  "replication": "Both B seeds reduce clash counts and MSD error versus h/v but worsen residue RMSF and torsion-increment error. Seed71 bond improvement does not become a clear seed72 improvement; its interval crosses zero. Both remain far worse than released PVB geometry. No joint improvement or equivalence established.",
+  "execution": "Existing CPU scorer advanced on full panel; zero additional forecasts. GPU4 automatically moved to seed71 B free-running rollout, containerPID1146671/hostPID3630148, verified alive on CUDA.16systems/four draws/92future frames remain planned, not yet complete.",
+  "limitations": ["Aseed72 panel not yet complete; no two-seed A/B ranking", "h/v architecture/pretraining and PVB native inputs/resources differ", "Development48, not family/scaffold-independent or thermodynamic evidence"],
+  "promotion": false
+}

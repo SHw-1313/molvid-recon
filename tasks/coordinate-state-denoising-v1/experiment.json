@@ -107,7 +107,7 @@
       "advanced_controller_container_pid": 1144425,
       "seed72_protein_evaluator_container_pid": 1144428,
       "seed72_protein_evaluator_host_pid": 3578932,
-      "CUDA_launch_evidence": "New evaluator alive with correct fixed-final seed72 checkpoint and output; nvidia-smi reports hostPID3578932 on GPU4. Complete forecast panel not yet available, no new efficacy claim.",
+      "CUDA_launch_evidence": "Seed72 protein panel now completed all192 forecasts in3235.33079107292s. GPU4 advanced automatically to seed71 B generated-history rollout, containerPID1146671/hostPID3630148 verified alive on CUDA; rollout is not yet complete. See seed72_completed_edm_protein100_result.json for replicated clash/MSD gains but RMSF/torsion costs and unresolved bond improvement versus h/v.",
       "log": "runs/coordinate_state_denoising_v1/seed72/edm/expanded48_advanced.log",
       "rollout_ownership": "Advanced controller is now sole EDM rollout owner for both seeds. Existing primary/time workers remain unchanged and use exact-request completed-panel reuse."
     }
