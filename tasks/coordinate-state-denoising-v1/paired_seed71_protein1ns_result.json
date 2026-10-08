@@ -1,5 +1,5 @@
 {
-  "status": "Both complete first-seed1ns panels and primary, temporal-order, amplitude-bin and bond-horizon diagnostics completed; full-path scoring advanced separately",
+  "status": "Both complete first-seed1ns panels and primary, full-path, temporal-order, amplitude-bin and bond-horizon diagnostics completed",
   "coverage_each": {"systems": 48, "conditions": 96, "forecasts": 192, "future_frames": 12, "NFE_per_window": 35},
   "A_sampling_resources": {"seconds": 3624.010668744333, "peak_cuda_bytes": 9751825408, "field_calls": 6720, "failures": []},
   "B_resources_and_primary_comparisons": "seed71_first_completed_1ns_result.json",
@@ -54,7 +54,25 @@
     "high_B_minus_A_RMSF_MAE_A": [0.16549996458567107,0.05411455728686773,0.26531843271536326],
     "interpretation": "B has worse bond and RMSF errors in all bins and excess fluctuation in low/medium-motion conditions. Its high-motion MSD difference from A is unresolved, not evidence B wins large-motion tasks. A still underfluctuates in the high bin. Systems may occur in multiple bins through different anchors."
   },
-  "full_path_analysis": {"container_process": 1145503, "output": "runs/coordinate_state_denoising_v1/seed71/edm/protein_paths1ns_advanced", "status_at_submission": "CPU scoring of all complete cached forecasts; zero extra neural calls; original serial analysis retains its separate output"},
+  "full_path_analysis": {
+    "container_process": 1145503,
+    "output": "runs/coordinate_state_denoising_v1/seed71/edm/protein_paths1ns_advanced",
+    "status": "completed, all96 conditions/192 forecasts per model, zero extra neural calls; original serial analysis retains its separate output",
+    "metric": "Fair finite-ensemble energy scores of full12-frame CA paths; lower-is-better; two draws per condition, not equilibrium or force-field energies",
+    "A_minus_hv": {
+      "CA_position_path_A": [-0.1393404818003445,-0.1765900150050814,-0.10673465554317682],
+      "CA_increment_path_A": [-0.03333823795482791,-0.04380086042999395,-0.022595157008197045],
+      "CA_pair_distance_path_A": [-0.17562399763932565,-0.23178218686737315,-0.12373488749922243],
+      "CA_pair_distance_increment_path_A": [-0.02332050109032301,-0.043213391368967,-0.003887014410908738]
+    },
+    "A_minus_BioKinema_CA_position_path_A": [0.0845969514043079,0.03472516457343814,0.14155355090965077],
+    "A_minus_BioKinema_CA_pair_distance_increment_path_A": [-0.058865289305051756,-0.0918771536979864,-0.028769498695153908],
+    "B_minus_hv_CA_position_path_A": [-0.17852358538370286,-0.2610578935104627,-0.10420597893899682],
+    "B_minus_hv_CA_pair_distance_path_A": [-0.1288456370736963,-0.23951675186349727,-0.02335534682259517],
+    "B_minus_hv_CA_pair_distance_increment_path_A": [0.043663391115440785,0.01550197317810477,0.07050005567612512],
+    "B_minus_A_CA_pair_distance_increment_path_A": [0.0669838922057638,0.049279984576297266,0.083592830762617],
+    "interpretation": "A improves all four full-path scores versus h/v, reinforcing rather than erasing its RMSF/MSD benefits despite worse all-atom geometry. Versus BioKinema, A improves distance-increment paths but worsens position paths; other two differences are unresolved. B improves position/distance paths versus h/v but worsens distance-increment paths. Only the distance-increment score clearly favors A over B among these four A/B scores. CA distribution scores do not certify all-atom geometry, thermodynamics or kinetics."
+  },
   "decision": "Retain both unchanged second seeds and matched static-to-MD stages. A performs better than B on listed1ns errors but is not a joint geometry/motion improvement over h/v, and neither is geometrically competitive with native BioKinema. No promotion or inference-time clipping. Future interventions must distinguish temporal-conditioning extrapolation from denoising/geometry capacity rather than attribute the failure by model name.",
   "limitations": ["First seed and development systems only", "Protein TRAIN spacings100/200/400ps;1ns extrapolates, not within-support interpolation", "h/v architecture/pretraining and BioKinema nativeH1/MSA/training-overlap differences remain", "No clean family/scaffold independence, equilibrium or kinetics claim"],
   "promotion": false
