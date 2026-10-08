@@ -28,12 +28,20 @@ def main():
     rows=json.loads((args.recipes/'rows.json').read_text())
     mixture=BridgeMixture(configs['flow']['data'],71)
     selected=[]
-    for domain in ('protein','complex'):
-        row=min((x for x in rows if x['domain']==domain),key=lambda x:x['atoms'])
-        candidates=mixture.groups[domain][row['system']][row['time_bucket_id']]
+    # Packed records must share a native sampling bucket. Two distinct full
+    # complexes exercise protein/ligand identities AND cross-sample isolation
+    # without relabeling physical clocks or weakening the collator contract.
+    systems=set()
+    for row in sorted((x for x in rows if x['domain']=='complex' and x['time_bucket_id']=='dt_80ps'),
+                      key=lambda x:x['atoms']):
+        if row['system'] in systems:
+            continue
+        candidates=mixture.groups['complex'][row['system']][row['time_bucket_id']]
         for store,index in candidates:
             if store._clip_index_fields[index][0]==row['sample']:
-                selected.append(store[index]);break
+                selected.append(store[index]);systems.add(row['system']);break
+        if len(selected)==2:
+            break
     if len(selected)!=2:raise RuntimeError('Two complete TRAIN systems required')
     batch=collate_clip_records(selected).to('cuda')
     observed=slice_clip_frames(batch,0,4)
