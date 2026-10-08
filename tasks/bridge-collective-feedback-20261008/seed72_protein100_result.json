@@ -1,0 +1,41 @@
+{
+  "status": "Completed second-seed full protein100 matched-control analysis; no replicated joint-quality benefit",
+  "recorded_at": "2026-10-08 16:51 CST",
+  "coverage": {"systems": 48, "conditions": 96, "paths_per_arm": 192},
+  "sources": "runs/bridge_collective_feedback_20261008/seed72/collective/{protein_vs_control.json,protein_vs_pvb.json,protein_paths/summary.json,temporal_order100/summary.json,spatial_cooperation100/summary.json}",
+  "convention": "Candidate minus reference, errors lower is better; arrays contain mean and paired95percent system-bootstrap interval endpoints. Exploratory marginal intervals without multiplicity correction.",
+  "versus_same_seed_matched_control": {
+    "bond_rmse_A": [-0.00011511921419593996, -0.0001831867991858955, -0.000031873174816548916],
+    "angle_cosine_rmse": [-0.00014874393430848917, -0.00020625954978944114, -0.00008944394066929821],
+    "torsion_increment_circular_error": [-0.0002097554582481583, -0.0002711133032183473, -0.00015465129593697692],
+    "msd_mae_A2": [0.002209779754694921, -0.002972070988875675, 0.007117580600768368],
+    "rmsf_profile_mae_A": [0.00016977323684841394, -0.0002355551153110961, 0.000480611702854124],
+    "CA_increment_fair_path_ES_A": [0.0001707909869268793, 0.000050313267111462104, 0.00032241819637660203],
+    "CA_distance_increment_fair_path_ES_A": [0.00026111326759508877, 0.0000381525315534139, 0.0005264516511701616],
+    "CA_distance_fair_path_ES_A": [0.0005114348737826797, -0.00016036040078541328, 0.0011718316492043493],
+    "CA_position_fair_path_ES_A": [0.00042465364495281564, 0.00006703928611279966, 0.0008693979477559748],
+    "far_ge16A_increment_correlation_MAE_MD": [-0.00011609541965347236, -0.00023940830920565818, -0.0000269160372784923],
+    "far_ge16A_joint_pair_fair_path_ES_A": [0.0004713810131931143, 0.00011704020949760601, 0.000930724167492792],
+    "CA_lag1_order_gain_absolute_MD_error": [-0.0008069695650567739, -0.0013092808864474887, -0.0004196060829486092],
+    "distance_lag1_order_gain_absolute_MD_error": [-0.0010404584652228047, -0.0015012423480545629, -0.0006646266033629991]
+  },
+  "versus_released_PVB": {
+    "bond_rmse_A": [0.00899714817597495, 0.006530601512216969, 0.012807204140778926],
+    "msd_mae_A2": [1.0375375040134207, 0.7489812180322284, 1.3747688740136155],
+    "rmsf_profile_mae_A": [0.1256478390811632, 0.08605779437251233, 0.16797671282450513],
+    "CA_increment_fair_path_ES_A": [-0.008093573346529409, -0.012069289089042824, -0.0034810277620078217],
+    "CA_distance_increment_fair_path_ES_A": [-0.008724776081960114, -0.013680232158142425, -0.0036823608694837168],
+    "CA_position_fair_path_ES_A": [0.02628155503618974, 0.002532265762746341, 0.0557971184115825]
+  },
+  "descriptive_CA_lag1_order_gain": {"MD": 0.2854844779073124, "CF1": 0.07920613379833699, "matched_control": 0.07834245679327588, "PVB": 0.6542579650703395},
+  "interpretation": [
+    "Small bond/angle/torsion improvements, but MSD/RMSF differences cross zero and three whole-path scores worsen. The seed71 motion benefit did not replicate.",
+    "Far-pair correlation and temporal-order error improve in both seeds, but the far-pair joint-path distribution worsens in seed72. Correlation alone is insufficient evidence of correct cooperative dynamics.",
+    "Protein bond/MSD/RMSF remain worse than released PVB; some increment scores are better. Do not equate either subset with overall superiority.",
+    "Full complex64 and native80 panels remain in progress. No selection of a favorable seed, checkpoint or metric; no CF1 promotion."
+  ],
+  "numerical_history": "Collective72 resumed saved pre-update2058 state after an exceptional output LayerNorm float64 fallback repair; completed4096. See numerical_recovery72.json and raw training status/log. Changed numerical policy, not bitwise-identical resume.",
+  "independent_generalization": false,
+  "thermodynamic_or_kinetic_claim": false,
+  "default_promotion": false
+}

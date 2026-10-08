@@ -1,6 +1,7 @@
 {
   "name": "CF1: chemical-unit collective feedback",
-  "status": "2026-10-08 15:58 CST: first seed has complete matched-control protein100 generation and full-path/order/cooperation scores: small motion gains with small geometric costs, no promotion. Both controls completed4096 training updates; collective72 continues precision-repaired training. Complex64 and native80 evaluations remain in progress or scheduled. RF2 is a separate rotational-feature experiment, not a CF1 merge.",
+  "status": "2026-10-08 16:51 CST: all four arms completed4096 training updates; both protein100 panels fully scored. Seed71 motion gain does not replicate in72, whose three path scores worsen despite small geometry gains. Far-pair correlation/order gains alone do not establish correct joint dynamics. Complex64/native80 continue; no promotion. RF2 andBC3 remain separate interventions.",
+  "second_matched_protein_result": "tasks/bridge-collective-feedback-20261008/seed72_protein100_result.json",
   "first_matched_protein_result": "tasks/bridge-collective-feedback-20261008/seed71_protein100_result.json",
   "numerical_recovery": "tasks/bridge-collective-feedback-20261008/numerical_recovery72.json",
   "first_completed_training": {"seed": 71, "arm": "collective", "updates": 4096, "elapsed_seconds": 5838.308750017546, "peak_cuda_bytes": 37135730176, "counts": {"dynamic_complex": 1536, "dynamic_protein": 1536, "static_complex": 256, "static_protein": 768}, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/train/status.json"},
