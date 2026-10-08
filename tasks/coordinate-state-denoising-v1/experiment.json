@@ -102,5 +102,15 @@
     "EDM_seed71_training_process":1130209,
     "flow_controller_unchanged":1128479,
     "interpretation": "Actual CUDA execution and initial implementation evidence only; no trained model effect, superiority or main goal success demonstrated. Not a largest-system memory result."
+  },
+  "full_complex_geometry_followup": {
+    "implementation_commit":"02f6659",
+    "reason":"Existing complex main table reports ligand bond geometry but omits whole-complex clashes/protein covalent geometry. Do not infer whole-complex quality from ligand-only scores.",
+    "metrics":"All-atom, protein and ligand covalent bond RMSE; existing frozen-rule clash count, affected fraction and severity, plus protein/protein, ligand/ligand and cross-component categories; MD geometry reported as context.",
+    "comparators":"Both coordinate recipes and seeds, original frozen A1 h/v and released PVB, same64-system128-condition eight-draw atom protocol; all/old16/new48 paired system estimates.",
+    "execution":"CPU cached-coordinate scoring only, controller1131060; original PVB scoring process1131064 started and wrote first condition. No new neural forecasts or GPU reservation.",
+    "correctness_evidence":"runs/coordinate_state_denoising_v1/clash_metric_parity.json: real541-atom5ZGG frame,0.8A corruption and total collapse; clash counts identical to original FP32 sampled_clash_metrics, affected fraction max error6.61e-10, severity max absolute error4.62e-5A2/atom on these cases.",
+    "implementation":"Exact eps0 KD-tree candidate search with conservative radius and128-atom query chunks; same graph-distance<=2 exclusion and1-4 allowance, no neighbor cap. No coordinate modification, reference alignment or model guidance.",
+    "promotion":false
   }
 }
