@@ -23,6 +23,22 @@
     "source":"runs/coordinate_state_denoising_v1/seed71/edm/train/status.json",
     "next":"Existing controller continues the predeclared second seed and then complete fixed-final sampling panels; no extension of the paired budget or intermediate checkpoint selection"
   },
+  "seed71_online_noise_fit": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/training_noise_fit.json",
+    "script": "tasks/coordinate-state-denoising-v1/summarize_training_noise.py",
+    "new_model_calls": 0,
+    "flow_s_bins": [0, 0.25, 0.5, 0.75, 1],
+    "edm_sigma_bins_A": [0.011397942064485229, 0.09314483939496426, 0.7611866297291559, 6.220474360598399, 50.834184100987414],
+    "first512_examples_per_bin_each_arm": [138, 134, 123, 117],
+    "last512_examples_per_bin_each_arm": [124, 118, 133, 137],
+    "flow_native_loss_medians_first512": [0.8218900263309479, 0.7054398953914642, 0.8407994508743286, 1.0661948919296265],
+    "flow_native_loss_medians_last512": [0.4524850696325302, 0.40197916328907013, 0.43567153811454773, 0.6035553216934204],
+    "edm_native_loss_medians_first512": [0.991506427526474, 0.6692915260791779, 0.5397626161575317, 0.5644627809524536],
+    "edm_native_loss_medians_last512": [0.7146575152873993, 0.3515992909669876, 0.2577749192714691, 0.4495123028755188],
+    "interpretation": "Both recipes have lower within-task online median losses in all four native progress bins late in training, with genuine low/high-sigma examples for EDM. This is fitting evidence, not validation or full-source generation quality. Flow and EDM bins are not equal physical noise states and their loss magnitudes cannot rank models.",
+    "optimization_note": "Late gradient clipping remains frequent: flow97.8-99.2percent and EDM87.1-97.0percent by bin. Norms are finite and generally reduced, but this alone establishes neither optimizer failure nor convergence. No clipping or learning-rate change is made mid-comparison.",
+    "limitations": "Changing weights, noise, physical clocks, histories and training windows confound early/late comparisons. Final-weight fixed-input noise-resolved diagnostics remain a separate followup; no claim about unseen denoising or trajectory quality."
+  },
   "parallel_time_evaluation": {
     "implementation_commit": "caeadf3",
     "flow_controller": 1139217, "flow_GPU": 3,
