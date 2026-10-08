@@ -45,7 +45,15 @@ def joint_pair_path_es(predictions, target, left, right):
     for a in p:
         for b in p:
             second += np.sqrt(np.square(a-b).mean(axis=(0, 2)))
-    return first - .5 * second / len(p)**2
+    if len(p) < 2:
+        raise ValueError('Fair ensemble scoring needs at least two independent draws')
+    # Keep the original finite-empirical-ensemble score for traceability.
+    # For iid draws from an underlying predictive distribution, use the
+    # off-diagonal U-statistic denominator S*(S-1), as in the existing
+    # molvid.evaluation.complex_motion.energy_score. Diagonal distances are0.
+    empirical = first - .5 * second / len(p)**2
+    fair = first - .5 * second / (len(p) * (len(p)-1))
+    return empirical, fair
 
 
 def run(args):
@@ -101,7 +109,9 @@ def run(args):
                     metrics[f'{stratum}.{key}.MAE_MD'] = float(np.abs(mean-y).mean())
                     metrics[f'{stratum}.{key}.generated_mean'] = float(mean.mean())
                     metrics[f'{stratum}.{key}.MD_mean'] = float(y.mean())
-                metrics[f'{stratum}.joint_pair_full_path_ES_A'] = float(joint_pair_path_es(paths, target, i, j).mean())
+                empirical, fair = joint_pair_path_es(paths, target, i, j)
+                metrics[f'{stratum}.joint_pair_full_path_ES_A'] = float(empirical.mean())
+                metrics[f'{stratum}.joint_pair_full_path_fair_ES_A'] = float(fair.mean())
             rows.append(dict(system=entry['system'], sample_id=entry['sample_id'], variant=variant, metrics=metrics))
         print(json.dumps(dict(conditions=index+1, models=len(models), model_calls=0)), flush=True)
     grouped = defaultdict(list)
@@ -121,10 +131,14 @@ def run(args):
     atomic_write_json(args.output/'summary.json', dict(status='completed', conditions=len(reference['records']),
         sources={k:str(v) for k,v in models.items()}, model_calls=0, query_dt_ps=reference['query_dt_ps'],
         estimates={k:system_estimate(v) for k,v in grouped.items()}, paired=paired,
+        estimators={'joint_pair_full_path_ES_A': 'Historical empirical-ensemble V-statistic; denominator S^2',
+            'joint_pair_full_path_fair_ES_A': 'Primary predictive-distribution estimate; denominator S*(S-1); iid draws conditional on observations assumed'},
+        estimator_reference='https://empslocal.ex.ac.uk/people/staff/ferro/Publications/ferro2013.pdf',
         limitations=['CA-based protein coupling, not all-atom or ligand stereochemistry',
             'One short MD future and two forecast draws; not equilibrium or stable DCCM estimation',
             'Correlation MAE is diagnostic and is not a proper distributional score',
-            'Pair-path ES is empirical with only two draws; training-seed variability requires separate replication',
+            'Historical empirical pair-path ES can favor underdispersion for small draw counts; use fair ES for predictive-distribution comparisons',
+            'Fair pair-path ES still has sampling noise with two draws; training-seed variability requires separate replication',
             'Common rigid alignment can induce correlations; identical alignment is applied to all models and MD',
             'Pair selection depends on observed geometry only; at most4096 pairs per distance stratum',
             'Do not maximize positive correlation: genuine opposing motions must also be reproduced'] ))
