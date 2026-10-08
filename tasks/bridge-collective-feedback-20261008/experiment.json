@@ -47,6 +47,7 @@
       "Development evidence, not held-out family/scaffold generalization",
       "Short trajectories do not prove equilibrium or kinetic rates",
       "One block-feedback insertion does not guarantee learned long-range dynamics",
+      "This isolated placement-parent fork uses attention-only time conditioning, not the separate direct-lag FiLM branch; it does not repair the known H1/Q1 clock degeneracy. A successful collective module must still be evaluated together with direct physical-time conditioning before general-model promotion",
       "Pooling may erase multimodal intrablock motion; atom stream and local geometry remain intact",
       "No explicit component-wide rigid-body or shared stochastic mode is implemented in CF1"
     ]
