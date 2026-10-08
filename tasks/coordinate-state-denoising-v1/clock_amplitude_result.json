@@ -1,5 +1,5 @@
 {
-  "status": "Both MD-only seeds complete; staticA-vs-MD complete; staticB comparisons await its existing native80 evaluation and clock analysis",
+  "status": "Both MD-only seeds and paired staticA/B comparisons complete.See paired_static_clock_result.json for completed staticB evidence.Earlier continuation state below is historical;controller1153669 completed normally.",
   "outputs": ["runs/coordinate_state_denoising_v1/seed71/edm/clock_amplitude_vs_flow.json", "runs/coordinate_state_denoising_v1/seed72/edm/clock_amplitude_vs_flow.json", "runs/coordinate_static_pretrain_v1/seed71/flow/clock_amplitude_vs_md.json"],
   "protocol": "Complete96 matched conditions/48 proteins,192 raw source draws per clock, fixed80/100ps grids. Evaluation-only100ps true-motion labels and TRAIN-derived thresholds shared across arms/seeds/clocks. No new model calls, optimizer updates, exclusions or coordinate postprocessing.",
   "TRAIN_boundaries_A": [1.5064689185142268,2.136611611473248],

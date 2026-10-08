@@ -1,0 +1,49 @@
+{
+  "status": "completed",
+  "sources": ["runs/coordinate_static_pretrain_v1/seed71/edm/native80/summary.json", "runs/coordinate_static_pretrain_v1/seed71/edm/clock80_100/summary.json", "runs/coordinate_static_pretrain_v1/seed71/edm/clock_vs_md.json", "runs/coordinate_static_pretrain_v1/seed71/edm/clock_vs_flow.json", "runs/coordinate_static_pretrain_v1/seed71/edm/clock_amplitude_vs_md.json", "runs/coordinate_static_pretrain_v1/seed71/edm/clock_amplitude_vs_flow.json"],
+  "A_record": "static_flow_clock_result.json",
+  "protocol": "Both static-to-MD arms:48 development proteins,96 matched observations,192 raw complete source draws at each80/100ps grid,12 future frames,35 NFE/window.Same observed-contact distance clock metric,paired system bootstrap and TRAIN-frozen amplitude bins.No forecast selection or postprocessing.",
+  "B_native80_execution": {"forecasts": 192, "failures": 0, "seconds": 3247.5980706010014, "peak_cuda_bytes": 9758173696, "model_calls": 6720, "optimizer_updates": 0, "sealed_test_opened": false},
+  "B_native80_means": {"bond_RMSE_A": 0.12012926491913402, "clashes_per_1000": 54.79528607958482, "residue_RMSF_MAE_A": 0.3166240092056493, "MSD_curve_MAE_A2": 2.214648082955844, "RMSF_mean_amplitude_ratio": 0.8268231951613269},
+  "estimate_format": ["mean", "marginal95percent_system_bootstrap_lower", "upper"],
+  "B_clock": {
+    "absolute_displacement_response_error_A2": [0.0212442006951164,0.014916441324470509,0.028041618262539807],
+    "absolute_fluctuation_response_error_A": [0.010278760379736369,0.008558989537497121,0.012235142293780856],
+    "candidate_minus_zero_displacement_error_A2": [-0.0009563777178131439,-0.003959354082605625,0.0024751772402664156],
+    "candidate_minus_zero_fluctuation_error_A": [-0.001595310097249376,-0.0026231296291171417,-0.0005792992243448997],
+    "clock_to_seed_response_ratio": [0.012957024140794077,0.01203280114940242,0.013915619851854813],
+    "prediction_clock_response_rms_A": [0.009560048549344271,0.008145199168734863,0.011105884961802138],
+    "prediction_seed_spread_rms_A": [0.6987094969358347,0.6532400874012904,0.7493997064930613]
+  },
+  "static_B_minus_MD_only_B": {
+    "absolute_displacement_response_error_A2": [-0.00003816238781484087,-0.0014144079521104939,0.001361457872297767],
+    "absolute_fluctuation_response_error_A": [0.00016066967585534551,-0.00023634393850153687,0.000590093493904288],
+    "clock_to_seed_response_ratio": [-0.002265860032677182,-0.002924410571080126,-0.0016822951928578053],
+    "prediction_clock_response_rms_A": [-0.0033072226646950974,-0.004110046887325927,-0.0025395321080199846],
+    "prediction_seed_spread_rms_A": [-0.11220416029003781,-0.12922662783059316,-0.09291002914211335]
+  },
+  "static_B_minus_static_A": {
+    "absolute_displacement_response_error_A2": [0.0006682442938291464,-0.00029861712420565796,0.001898912182237358],
+    "absolute_fluctuation_response_error_A": [0.00039896856710998986,0.000054116176808098315,0.0007549878817909072],
+    "clock_to_seed_response_ratio": [-0.0017529210320071228,-0.002420305890614526,-0.0010238098694312088],
+    "prediction_clock_response_rms_A": [-0.0009022684624573793,-0.0014779221259060766,-0.00017891052751969208],
+    "prediction_seed_spread_rms_A": [-0.001865993946507341,-0.02138618333846064,0.016316871694959215]
+  },
+  "amplitude_bins": {
+    "TRAIN_thresholds_A": [1.5064689185142268,2.136611611473248],
+    "conditions_low_medium_high": [44,26,26],
+    "B_high_motion_minus_zero_displacement_error_A2": [-0.0009285927670453112,-0.009103061356696227,0.00796875036503435],
+    "B_high_motion_minus_zero_fluctuation_error_A": [-0.00248289525431428,-0.005239370080045565,0.0007295835788488579],
+    "B_minus_MD_and_B_minus_A": "All displacement/fluctuation response-error difference intervals include zero within each low/medium/high bin. Overall B-vs-A fluctuation error difference is small and resolved only after pooling the full panel.",
+    "zero_response": "StaticB displacement-error advantage unresolved in every bin;fluctuation-error advantage resolved only in low-motion bin.As for staticA,high-motion correct timing remains unproven."
+  },
+  "interpretation": [
+    "Unlike staticA's small error improvements,B static pretraining has no resolved clock-response error benefit over MD-only B,while clock response,seed spread and their ratio all decrease.",
+    "StaticA has slightly lower overall fluctuation-response error than staticB;displacement-response difference remains unresolved.This is not a universal flow-over-diffusion ranking.",
+    "Both static recipes remain unresolved against zero displacement response.Despite overall fluctuation-response benefit over zero,neither establishes correct large-motion timing.",
+    "StaticB geometry/local-coupling improvements at100ps coexist with worse MSD/path scores and weaker time sensitivity;static restoration alone has not solved temporal generation."
+  ],
+  "limitations": ["Single static training seed,reused development systems,marginal exploratory intervals", "Extra static exposure/compute not separated from content benefit;documented sequence overlap retained", "Bins defined by100ps truth,systems can appear in multiple bins;not causal amplitude groups", "Two model draws and one MD future/condition;matched query-index noise not common-physical-time coupling", "Protein80ps below minimum proteinTRAIN100ps although complexTRAIN80ps exists;no1ns or thermodynamic claim"],
+  "continuation": {"B_complex64_container_pid": 1154263, "GPU": 2, "existing_controller": 1142137, "CPU_clock_amplitude_controller": 1153669, "CPU_clock_amplitude_status": "completed normally", "extra_forecasts_or_updates": 0, "cancelled_jobs": 0},
+  "promotion": false
+}
