@@ -1,5 +1,6 @@
 {
-  "status": "Both arms completed2048 static plus2048 MD updates and entered actual CUDA full-source generation on GPU0/2.Complete paired static/MD exposure matched.No pretrained forecast effect claimed.",
+  "status": "Both arms completed2048 static plus2048 MD updates.Static A protein100 completed192 full-source draws:strong geometry gains,smaller path/order gains and further high-motion amplitude suppression.B protein100 and A native80 are still running.See static_flow_protein100_result.json;no paired staticA/B winner or default promotion.",
+  "first_completed_static_generation": {"record": "static_flow_protein100_result.json", "A_native80_process": 1150869, "B_native100_process": 1150421, "additional_forecasts": 0, "interpretation": "All registered protein100 forecasts retained;extra CPU analyses reuse saved outputs.Corrects earlier no-forecast-effect-yet statements below,which describe historical stage transitions."},
   "implementation_commit": "e8e7f91",
   "reason": "Complete first-seed MD-only A/B protein sampling shows persistent all-atom geometry deficits and weak temporal ordering. Test added static recovery exposure in both recipes, without assuming static training fixes dynamics or choosing A prematurely.",
   "root": "runs/coordinate_static_pretrain_v1",

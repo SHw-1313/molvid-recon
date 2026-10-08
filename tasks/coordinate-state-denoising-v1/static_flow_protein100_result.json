@@ -1,0 +1,59 @@
+{
+  "status": "completed_static_then_MD_A_seed71_full_source_protein100",
+  "recorded_local": "2026-10-09T03:29+08:00",
+  "source_root": "runs/coordinate_static_pretrain_v1/seed71/flow",
+  "sources": ["expanded48/summary.json", "protein100_vs_md.json", "protein100_vs_hv.json", "protein100_vs_pvb.json", "protein_paths100_advanced/summary.json", "temporal_order100_advanced/summary.json", "amplitude100_vs_md_advanced.json", "spatial_coherence100_advanced/summary.json"],
+  "coverage": {"development_systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "query_spacing_ps": 100, "NFE_each": 35, "failed_draws": 0, "postprocessing": false, "sealed_test_opened": false},
+  "resources": {"training_updates": {"static": 2048, "MD": 2048}, "static_GPU_hours": 0.2047667816759915, "MD_GPU_hours": 2.6981856699137845, "sampling_seconds": 3645.1868168897927, "sampling_model_calls": 6720, "sampling_peak_cuda_bytes": 9753496576, "additional_calls_for_cached_analyses": 0},
+  "raw_means": {"bond_RMSE_A": 0.09968774848933115, "clashes_per1000": 47.408227871054976, "RMSF_MAE_A": 0.2905787927253793, "MSD_MAE_A2": 2.309728789013914, "RMSF_amplitude_ratio": 0.8813123184862572, "angle_cosine_RMSE": 0.16120409414482614, "torsion_increment_circular_error": 0.13686883387466273},
+  "paired_array_definition": "Candidate minus reference:mean,lower,upper95percent paired system-bootstrap interval.Marginal exploratory intervals,not multiplicity-adjusted;amplitude ratios are not universally lower-is-better.",
+  "minus_MD_only_A": {
+    "bond_RMSE_A": [-0.06388022868706456,-0.06814261969258718,-0.0598681246884048],
+    "clashes_per1000": [-27.442098586262528,-35.76535666865923,-20.300749420521022],
+    "RMSF_MAE_A": [-0.009621188510209322,-0.01897398746708253,-0.00006234615478509546],
+    "MSD_MAE_A2": [-0.036195325277124844,-0.06485720640759815,-0.0013545828205275012],
+    "torsion_increment_circular_error": [-0.0011838534846901894,-0.003460096372873522,0.0008083310977478198],
+    "CA_position_path_fair_ES_A": [-0.008443187684464434,-0.014764626634329672,-0.002776379913245382],
+    "CA_pair_distance_path_fair_ES_A": [-0.016980733837074737,-0.031347313653043475,-0.005399323886042124],
+    "CA_increment_path_fair_ES_A": [0.00019763013013180132,-0.0016207844637936267,0.0019673910656744227],
+    "CA_pair_distance_increment_path_fair_ES_A": [-0.0035372287648552394,-0.009535350147749326,0.0016855684948092753]
+  },
+  "versus_hv": "Bond,clash,MSD,angle and torsion-increment errors improve.RMSF-MAE interval includes zero.CA position and pair-distance path fair scores improve;both increment-path score intervals include zero.",
+  "versus_PVB": "Bond,clash,MSD and angle remain worse.RMSF-MAE and all four CA path fair scores improve;torsion-increment difference unresolved.Native input/training/resource differences remain,so neither reference-wide superiority nor strict state-only causal effect is established.",
+  "temporal_order": {
+    "lag1_gain_MD_MDonlyA_staticA": [0.2854844779073124,0.01911101544338203,0.041269909882109844],
+    "CA_increment_lag1_cosine_MD_MDonlyA_staticA": [-0.37709431031861884,-0.4995697517131359,-0.49661296414454464],
+    "static_minus_MDonly_CA_order_absolute_MD_error_by_lag": {
+      "1": [-0.021554989939138625,-0.02485219994522252,-0.018217945697024174],
+      "2": [-0.01326833734012374,-0.017666973035312408,-0.009033697673329453],
+      "4": [-0.0018224235067248983,-0.0053631142493131435,0.0018057365153403388],
+      "8": [-0.019013187282088014,-0.02509635084323591,-0.012811220999058447]
+    },
+    "paired_method": "Same molvid.evaluation.ca_detail.system_estimate applied to differences of matched per_system entries in temporal_order100_advanced/summary.json;no subtraction of marginal CI endpoints.",
+    "interpretation": "Static exposure improves temporal order at several lags,but the absolute lag1 gain remains far below MD and increment anticorrelation remains near independent-frame behavior.It is incorrect both to say no temporal benefit and to claim temporal dynamics solved."
+  },
+  "motion_bins": {
+    "definition": "Original TRAIN-frozen displacement cutoffs1.5064689185/2.1366116115A;all96conditions retained.Low44,medium26,high26;systems overlap between bins.",
+    "high_RMSF_amplitude_ratio_MDonlyA_staticA": [0.7637442219754484,0.7264729436996732],
+    "high_static_minus_MDonly_RMSF_ratio": [-0.03727127827577532,-0.06578862592080828,-0.012375962999078926],
+    "high_static_minus_MDonly_RMSF_MAE_A": [0.013837903531061279,-0.006766191735449764,0.0411171869167851],
+    "high_static_minus_MDonly_MSD_MAE_A2": [-0.0387279726564885,-0.14556022098425903,0.09356518862079123],
+    "interpretation": "Bond and clash improve in every bin.Low-motion RMSF/MSD improve;medium RMSF improves but MSD interval includes zero.High-motion RMSF/MSD improvements are unresolved and already-low amplitude is further suppressed.Torsion-increment improves in high bin but worsens in low bin.No large-motion success claim."
+  },
+  "spatial_cooperation": {
+    "staticA_covalent_CAcontact_increment_cosine": [0.917150223600157,0.4319360989127228],
+    "staticA_covalent_CAcontact_relative_step_RMS_A": [0.5553578746574231,1.0116772219780275],
+    "static_minus_MDonly_CAcontact_relative_increment_fair_ES_A": [-0.002520624487426545,-0.0043347571506337276,-0.001105575943787476],
+    "interpretation": "Within-step spatial coupling remains substantial.Covalent/contact cosine-error changes versus MD-only A are unresolved,while contact relative-increment fair score improves.Contact fair score and both cosine-error observables improve versus h/v/PVB;covalent fair-score differences remain unresolved.No equilibrium covariance claim."
+  },
+  "limitations": [
+    "One followup training seed,48 reused development systems,two draws per condition;not independent confirmation.",
+    "RMSF/MSD aggregate differences versus MD-only A are small and their marginal intervals nearly touch zero.Geometry gains are much larger.",
+    "Extra2048 static examples and0.20477GPUh are not isolated from static-data content without equal-resource longer-MD control.",
+    "Static exposure includes sequence-related development systems documented in static_sequence_generalization_result.json;all members retained.No family-independent claim.",
+    "Static B protein100,time-response,complex and rollout evidence is not replaced by this A-only result.No staticA/B ranking yet.",
+    "Short conditional paths and finite-window increment scores do not establish thermodynamic equilibrium or long-time kinetics."
+  ],
+  "decision": "Retain positive geometry/path/order evidence and unfavorable high-motion amplitude evidence together.Continue already-running matched B,time,complex and generated-history evaluations before selecting architecture changes.No promotion,no extra source/network/loss search.",
+  "default_promotion": false
+}
