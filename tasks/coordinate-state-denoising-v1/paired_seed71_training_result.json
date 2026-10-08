@@ -1,0 +1,21 @@
+{
+  "status":"both seed71 fixed-budget CUDA training runs completed; both final models are actually source-sampling; full efficacy panels pending",
+  "updates_each":2048,
+  "parameters_each":6701836,
+  "exposure_each":{"dynamic_examples":2048,"static_examples":0,"target_frames":20480,"atom_query_pairs":52958960},
+  "actual_data_pairing":{"rows_each":2048,"mismatches":0,"fields":["step","sample","system","visit","domain","time_bucket_id","history","queries","valid_atoms","query_frames"]},
+  "flow":{"GPU":1,"device":"NVIDIA A100-SXM4-80GB","elapsed_seconds":9681.41527843941,"GPU_hours":2.689282021788725,"peak_cuda_bytes":66516038656,"source_commit":"02f665906989d7df2a487cc96eb61b9d2cb1ea7f"},
+  "edm":{"GPU":4,"device":"NVIDIA A100-SXM4-80GB","elapsed_seconds":9081.470536213368,"GPU_hours":2.5226307045037135,"peak_cuda_bytes":66538677248,"source_commit":"c13f23a023ee6e2662db0d3370244bd868a33264"},
+  "source_difference":"No changes between those two startup commits in molvid/flow/coordinate_state.py, molvid/training/coordinate_state.py, molvid/data/bridge_mixture.py or tools/train_coordinate_state.py; intervening work added CPU evaluation/reporting, not a different training implementation.",
+  "sources":"runs/coordinate_state_denoising_v1/seed71/{flow,edm}/train/{status.json,recipe.json,updates.jsonl}",
+  "continued_execution":{
+    "flow_seed72_training_process":1138182,"flow_GPU":1,
+    "edm_seed72_training_process":1137397,"edm_GPU":4,
+    "flow_seed71_primary_sampling_process":1138173,"flow_sampling_GPU":6,
+    "edm_seed71_primary_sampling_process":1137800,"edm_sampling_GPU":7,
+    "first_observed_flow_sampling":"Four conditions/eight complete12-frame source samples saved in75.982s; not an efficacy result"
+  },
+  "interpretation":"The paired MD-only training budget and actual sample/query sequence were delivered. This establishes execution and resource accounting, not geometry/motion improvement. Raw A/B training loss values are not compared as performance. Runtime differences alone do not isolate graph density or establish an efficiency advantage.",
+  "next":"Finish the predeclared two-seed primary panels and common geometric/dynamic/distribution metrics; preserve all systems and immutable final checkpoints.",
+  "default_promotion":false
+}
