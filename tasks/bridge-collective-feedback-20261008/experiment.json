@@ -1,6 +1,7 @@
 {
   "name": "CF1: chemical-unit collective feedback",
-  "status": "2026-10-08 14:46 CST: collective seed71 completed4096 actual CUDA updates and is generating protein trajectories onGPU4. Control71, collective72 and control72 are training concurrently. No completed CF1 generated-quality panel or efficacy result yet.",
+  "status": "2026-10-08 15:15 CST: collective71 completed protein100 generation (48 systems,192 paths); complex64 generation underway. Control71/control72 train. Collective72 failed at2059 from decoder LayerNorm variance overflow, reproduced onCUDA, then resumed from complete pre-update2058 state with high-precision exceptional normalization; actual updates beyond2070 observed. Single-seed parent comparison is not the matched continuation result; no efficacy claim.",
+  "numerical_recovery": "tasks/bridge-collective-feedback-20261008/numerical_recovery72.json",
   "first_completed_training": {"seed": 71, "arm": "collective", "updates": 4096, "elapsed_seconds": 5838.308750017546, "peak_cuda_bytes": 37135730176, "counts": {"dynamic_complex": 1536, "dynamic_protein": 1536, "static_complex": 256, "static_protein": 768}, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/train/status.json"},
   "base_commit": "e8b5ded809acba80ce9059b96d9dfb80d4310fec",
   "question": "Does intra-denoising-step communication between chemical units improve joint atomic geometry and collective motion beyond equal-budget continuation of the internal-time baseline?",
