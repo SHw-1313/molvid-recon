@@ -34,6 +34,21 @@
     "Protein80ps is below the minimum protein TRAIN spacing100ps, although complex80ps is present in mixed training. Matched query-index noise is not a common-physical-time stochastic coupling."
   ],
   "next_existing_work": {"A_complex64_container_pid": 1153093, "GPU": 0, "started_by_existing_controller": 1142136, "B_native80_container_pid_at_recording": 1152026, "B_GPU": 2, "extra_forecasts_or_updates": 0, "existing_jobs_cancelled": 0},
+  "amplitude_stratified_clock": {
+    "output": "runs/coordinate_static_pretrain_v1/seed71/flow/clock_amplitude_vs_md.json",
+    "script": "tasks/coordinate-state-denoising-v1/score_clock_amplitude.py",
+    "TRAIN_boundaries_A": [1.5064689185142268,2.136611611473248],
+    "label": "Existing100ps true-future RMS displacement label shared across both clocks and models; evaluation only",
+    "conditions_low_medium_high": [44,26,26],
+    "systems_low_medium_high": [25,21,18],
+    "high_motion_static_minus_MD_displacement_response_error_A2": [-0.0011214614428425955,-0.0020279887833948382,-0.00014099635103987726],
+    "high_motion_static_minus_MD_fluctuation_response_error_A": [-0.0006035972046380184,-0.0012429474050616026,0.00009201261505275645],
+    "high_motion_static_minus_zero_displacement_error_A2": [-0.002762696160297525,-0.009630759297941743,0.00410063517903134],
+    "high_motion_static_minus_zero_fluctuation_error_A": [-0.0030662953813229174,-0.006109650954051615,0.0005338366143055478],
+    "interpretation": "High-motion displacement response error improves slightly over MD-only A,but neither high-motion response error beats zero-response conclusively.Low/medium static-vs-MD response error differences all include zero.Clock-to-seed ratios rise in all bins,but this is not sufficient evidence of correct physical timing.",
+    "limitations": "Exploratory marginal within-bin bootstrap; repeated systems can occur in multiple bins.100ps future-based labels may select MD clock differences,so bins do not identify a causal amplitude effect.No new forecasts or filtering.",
+    "execution_note": "First invocation lacked repository PYTHONPATH and stopped at import before data processing; rerun with PYTHONPATH=. completed the real cached-data analysis. No GPU execution claimed."
+  },
   "CPU_analysis_model_calls": 0,
   "promotion": false
 }
