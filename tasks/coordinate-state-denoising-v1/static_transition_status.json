@@ -1,5 +1,5 @@
 {
-  "status": "A completed2048 static updates and actually executed the weights-only transition into MD CUDA training; B remains queued",
+  "status": "A completed2048 static updates and actually executed the weights-only transition into MD CUDA training; B static CUDA training is live, its MD transition remains pending",
   "entry": "tools.train_coordinate_state --warm-start <owned fixed-final coordinate checkpoint>",
   "recipe_requirement": "initialization=coordinate_state_weights_only; new data and optimizer budget explicitly declared",
   "compatibility": "Same recipe schema, flow/EDM scheme, coordinate scales/preconditioning, width, spatial layers, heads, RBF and geometry-neighbor policy; strict state dict loading",

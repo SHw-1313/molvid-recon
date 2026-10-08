@@ -1,0 +1,36 @@
+{
+  "status": "B complete first-seed 1ns source-sampled protein panel; A panel still running, no A/B ranking at1ns",
+  "source": "runs/coordinate_state_denoising_v1/seed71/edm/native1000",
+  "coverage": {"systems": 48, "conditions": 96, "forecasts": 192, "query_frames": 12, "history_frames": 4, "query_spacing_ps": 1000, "field_calls": 6720, "seconds": 3238.525146911852, "peak_cuda_bytes": 9654631936, "failures": []},
+  "recipe": "Immutable MD-only seed71 fixed-final2048 checkpoint; original18-interval35-call EDM sampling, original atom set, no geometry projection or output clipping",
+  "B_absolute_means": {
+    "bond_RMSE_A": 0.7348814185512452,
+    "clashes_per_1000_atoms": 388.7099668275391,
+    "residue_RMSF_MAE_A": 0.9015596024692059,
+    "MSD_curve_MAE_A2": 8.787475190746287,
+    "mean_RMSF_amplitude_ratio": 1.5624402240031017,
+    "torsion_increment_circular_error": 0.36914033023640513
+  },
+  "paired_array": "mean candidate-minus-reference,95percent system-bootstrap lower,upper; exploratory marginal intervals, not multiplicity corrected",
+  "B_minus_hv": {
+    "bond_RMSE_A": [0.4856360674995354,0.4677974641001042,0.5042752422864395],
+    "clashes_per_1000_atoms": [311.80278484634897,291.7987452920575,331.01644614023036],
+    "residue_RMSF_MAE_A": [0.2653225345226626,0.14375708362592074,0.38279932943793626],
+    "MSD_curve_MAE_A2": [0.014033047210735653,-1.2005317850575214,1.1845810443660916],
+    "torsion_increment_circular_error": [0.20405814583258083,0.19620293012024678,0.21310040781972928]
+  },
+  "B_minus_BioKinema": {
+    "bond_RMSE_A": [0.6989176236260631,0.6767530271808092,0.7234249176653986],
+    "clashes_per_1000_atoms": [384.87257593074463,367.56611505607117,403.92626832338016],
+    "residue_RMSF_MAE_A": [0.41549341574621695,0.3236976244428661,0.4958021653544467],
+    "MSD_curve_MAE_A2": [3.342662146470199,2.634560786486448,4.075770772943118],
+    "torsion_increment_circular_error": [0.2130815127554039,0.2031433857405015,0.22353602728787034]
+  },
+  "comparison_files": ["runs/coordinate_state_denoising_v1/seed71/edm/protein1ns_vs_expanded_a1_1ns_v5.json", "runs/coordinate_state_denoising_v1/seed71/edm/protein1ns_vs_expanded_biokinema_1ns_v5.json"],
+  "analysis_execution": "Existing CPU compare_proteins.py applied immediately to complete panel instead of waiting behind complex generation. Zero additional model calls. The original analysis queue may deterministically regenerate these comparisons later.",
+  "interpretation": "Current B recipe loses its100ps geometry advantage over h/v at1ns; geometry, RMSF and torsion-increment errors worsen substantially, while MSD difference from h/v is unresolved. It is also worse than native released BioKinema on these listed errors. Higher RMSF amplitude is accompanied by invalid geometry, not evidence of correct large-amplitude motion. This contradicts a blanket coordinate-generation success claim; it does not prove diffusion intrinsically fails on large motion or that coordinate states are the root problem.",
+  "time_input_inspection": "physical_features uses raw lag/1000, signed log terms and four bounded rational terms. Time enters both current spatial encoding and temporal attention.1ns spacing is outside protein TRAIN100/200/400ps and complex80/160/320ps. Learned time-feature extrapolation is a candidate contributor, not a demonstrated cause; no clipping, sigma/time coupling or sampling change was applied.",
+  "next": "Finish unchanged A1ns and second-seed panels, then inspect full-path/order/amplitude behavior. Keep static-followup distinct. Any time-input intervention must be a separately labelled diagnostic, not replacing this failed raw panel or silently changing the requested physical times.",
+  "limitations": ["Development48, not sealed independent confirmation", "BioKinema uses nativeH1 andMSA and has known training overlap with this development inventory; not equal-input or pretraining-clean causal comparison", "Historical h/v differs in architecture, pretraining and exposure", "100ps versus1ns panels have different physical target windows; raw error increases alone are not a controlled time-input intervention", "No thermodynamic or long-time kinetic success established"],
+  "promotion": false
+}
