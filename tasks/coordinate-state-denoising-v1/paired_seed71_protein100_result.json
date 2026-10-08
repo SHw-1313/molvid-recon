@@ -1,0 +1,55 @@
+{
+  "status": "Both first-seed complete native100ps protein panels scored; full-path/temporal-order/amplitude analyses still running",
+  "coverage_each_arm": {"systems": 48, "conditions": 96, "draws": 192, "future_frames_per_draw": 12, "NFE_per_window": 35},
+  "training": "Same architecture, initialization RNG, exact2048-example sequence,52,958,960 atom-query exposure and optimizer recipe; all weights random then trained. No static pretraining yet.",
+  "sources": "runs/coordinate_state_denoising_v1/seed71/{flow,edm}/expanded48 and {flow,edm}/protein100_vs_*.json",
+  "raw_means_order": ["A_flow", "B_EDM"],
+  "raw_means": {
+    "bond_rmse_A": [0.1635679771763957, 0.24374117943079843],
+    "clashes_per_1000_atoms": [74.8503264573175, 103.13407985524672],
+    "residue_RMSF_MAE_A": [0.3001999812355886, 0.32691435570207733],
+    "MSD_curve_MAE_A2": [2.3459241142910385, 2.0503389670824013],
+    "mean_RMSF_amplitude_ratio": [0.8970114048822918, 0.8991180284578145],
+    "angle_cosine_rmse": [0.21607765120764574, 0.25638018005217117],
+    "torsion_increment_circular_error": [0.13805268735935292, 0.190258207032457]
+  },
+  "paired_array_definition": "Mean,95percent paired system-bootstrap lower,upper; marginal exploratory intervals without multiplicity correction. All listed errors lower-is-better; raw amplitude ratios above instead have ideal value1.",
+  "B_minus_A": {
+    "bond_rmse_A": [0.0801732022544027, 0.07349113284147633, 0.0868890851193878],
+    "clashes_per_1000_atoms": [28.283753397929235, 20.958846700527324, 35.28822958255438],
+    "residue_RMSF_MAE_A": [0.02671437446648876, 0.007202560074316958, 0.048774711865310794],
+    "MSD_curve_MAE_A2": [-0.29558514720863766, -0.4800821687929177, -0.12231647033024476],
+    "angle_cosine_rmse": [0.04030252884452542, 0.03545723065035418, 0.04479561269011659],
+    "torsion_increment_circular_error": [0.052205519673104085, 0.047753464773025674, 0.05654070656261562]
+  },
+  "A_minus_hv": {
+    "bond_rmse_A": [-0.10768747699214669, -0.11115503126221671, -0.10444829439745006],
+    "clashes_per_1000_atoms": [-44.91762883974021, -55.65464210501628, -35.43424882771772],
+    "residue_RMSF_MAE_A": [-0.0030736382274578014, -0.027314058525371367, 0.018572153352821853],
+    "MSD_curve_MAE_A2": [-0.12723533765205908, -0.20725013217047997, -0.04587658611449618],
+    "angle_cosine_rmse": [-0.03606080147437751, -0.038929475805101296, -0.032542191876564174],
+    "torsion_increment_circular_error": [-0.01344908808823675, -0.017933006082118178, -0.007575281049745779]
+  },
+  "A_minus_PVB": {
+    "bond_rmse_A": [0.12341359425204157, 0.11479120747988802, 0.1328120030101822],
+    "clashes_per_1000_atoms": [73.47886388918472, 53.80849653181219, 100.71117183737422],
+    "residue_RMSF_MAE_A": [-0.023474735983957846, -0.04305194020465326, -0.00544264964992181],
+    "MSD_curve_MAE_A2": [0.25321253470610827, 0.07049064366470302, 0.46726599266144647],
+    "torsion_increment_circular_error": [0.006256379342327516, -0.0028853072396789986, 0.017001849235384715]
+  },
+  "resources": {
+    "A_evaluation_seconds": 3640.872600289993, "B_evaluation_seconds": 3249.0028753355145,
+    "A_peak_cuda_bytes": 9753546240, "B_peak_cuda_bytes": 9747973120,
+    "model_calls_each": 6720,
+    "interpretation": "Evaluation wallclock includes scoring/IO; same A100 model and per-panel NFE, not measured equal FLOPs. Actual inference ran on distinct GPUs while other authorized work ran concurrently."
+  },
+  "answers_so_far": [
+    "A improves several geometry metrics and MSD/torsion-increment errors over historical h/v on this panel, with unresolved RMSF difference. This is positive joint evidence on some endpoints, not yet full trajectory quality or the whole goal.",
+    "B improves geometry/MSD over h/v but worsens residue RMSF/torsion increments. A is better than B on geometry/RMSF/torsion increments here, while B is better on MSD. Similar mean amplitudes cannot establish matching motion distributions.",
+    "Neither reaches released PVB geometry. A has lower residue RMSF error than PVB but worse MSD; unresolved scores do not establish equivalence.",
+    "These A/B differences occur without static pretraining or extra optimizer exposure. Comparisons with h/v remain confounded by architecture/pretraining/resources and do not isolate the sampled-state hypothesis.",
+    "One seed, one time grid and protein-only results do not settle noise-regime, large-motion, complex or long-time performance. Keep both unchanged arms, second seeds, fixed-noise diagnostic and planned complete evaluations."
+  ],
+  "default_promotion": false,
+  "static_pretraining_submitted": false
+}
