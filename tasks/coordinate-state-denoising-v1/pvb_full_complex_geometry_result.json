@@ -1,0 +1,30 @@
+{
+  "status": "completed full released-PVB complex64 cached-coordinate geometry scoring",
+  "source": "runs/coordinate_state_denoising_v1/complex_geometry/pvb/summary.json",
+  "coverage": {"systems": 64, "conditions": 128, "draws_per_condition": 8, "query_frames_per_draw": 12},
+  "weights": "/data1/repo/PVB/model_ckpt/ckpt/pvb_misato.ckpt",
+  "extra_projection": false,
+  "new_model_calls": 0,
+  "CPU_scoring_seconds": 4618.444035850465,
+  "aggregation": "Equal-system averages after within-condition draw/frame scoring; arrays give mean and marginal95percent system-bootstrap endpoints",
+  "all64": {
+    "all_bond_rmse_A": [0.053006624279078096, 0.049683254341653084, 0.058783277876500485],
+    "protein_bond_rmse_A": [0.05272137190331705, 0.04935685762102367, 0.05873642404840211],
+    "ligand_bond_rmse_A": [0.07377303668181412, 0.07001312367065111, 0.07785939782042987],
+    "clashes_per_1000_atoms": [2.3013868615240294, 2.2222549248043983, 2.380506800178232],
+    "cross_component_clashes_per_1000_total_atoms": [0.09417754818349236, 0.07296486841374662, 0.11723750704750265],
+    "MD_clashes_per_1000_atoms": [0.0, 0.0, 0.0]
+  },
+  "new48": {
+    "all_bond_rmse_A": [0.050955960721087955, 0.04955708379469191, 0.05287421891116537],
+    "protein_bond_rmse_A": [0.050658978366603456, 0.04926608284586109, 0.05257330523842635],
+    "ligand_bond_rmse_A": [0.07300140316753338, 0.06877161107355884, 0.07750690105506995],
+    "clashes_per_1000_atoms": [2.339651589443863, 2.249000393268573, 2.4358420770580316]
+  },
+  "metric_scope": "Bond-length RMSE versus real future lengths on all valid undirected bonds. Clashes use the existing frozen radius/overlap and graph-distance exclusions, not an independent force-field or standard clashscore implementation. Component clash categories share the total complex atom denominator.",
+  "aggregation_repair": "The live scorer had loaded the earlier aggregation using metadata objects instead of plain system IDs. Its complete128 original rows were preserved and reaggregated with the corrected plain-ID strata. The empty pre-fix summary is retained as summary_before_plain_ID_fix.json; final all/old16/new48 tables are nonempty with27 metrics. No coordinates, per-condition scores or model calls changed.",
+  "interpretation": "This establishes the whole-complex geometry reference that was absent from ligand-only tables. Nonzero generated clashes remain despite comparatively small bond error. It does not establish physical accuracy, equilibrium populations or PVB superiority over unfinished A/B panels. Do not optimize toward static coordinates solely to match these numbers.",
+  "next": "Use the same scorer and paired per-system contrasts for both coordinate recipes/seeds and the original h/v baseline; interpret together with the already-specified motion/distribution/clock/rollout metrics.",
+  "limitations": ["Reused development64, not sealed confirmation", "Published-PVB native input and training exposure differ from A/B", "Geometry by itself cannot establish correct dynamics or thermodynamics"],
+  "default_promotion": false
+}
