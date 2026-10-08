@@ -1,0 +1,59 @@
+{
+  "status": "completed_A_seed71; paired_B_and_second_seed_rollouts_pending",
+  "sources": ["runs/coordinate_state_denoising_v1/seed71/flow/rollout/summary.json", "runs/coordinate_state_denoising_v1/seed71/flow/rollout/protocol.json", "runs/coordinate_state_denoising_v1/seed71/flow/rollout_vs_pvb_advanced.json"],
+  "reference": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/released_pvb_rollout92",
+  "protocol": "All16 registered development complexes;one observed starting condition/system;four draws/system;92 generated future frames at80ps,7.36ns total. Candidate receives initialH4 and thereafter only its generated history. Released PVB retains nativeH1. No projection,crop,teacher forcing,trajectory shortening or favorable-system filtering.",
+  "execution": {"systems": 16, "forecasts": 64, "seconds": 13485.382942290977, "completed_normally": true, "former_container_pid": 1147999, "GPU": 1, "field_evaluations_per_forecast_derived_from_protocol": 280, "total_field_evaluations_derived": 17920, "NFE_definition": "8 generated windows of at most12frames,35 field evaluations/window;last window8frames", "peak_cuda_bytes": null, "peak_memory_note": "Not recorded by this rollout evaluator;do not infer from instantaneous nvidia-smi", "additional_training_updates": 0},
+  "means_format": ["coordinate_flow_71", "released_PVB"],
+  "means": {
+    "ligand_bond_rmse_A": [0.4488813152324296,0.08043117813089148],
+    "ligand_rmsf_mae_A": [2.1673363863831145,1.8751523213279189],
+    "ligand_center_msd_mae_A2": [60.20487900709626,67.63593237273572],
+    "ligand_center_path_energy_score_A": [2.183954637864792,2.3457636607864174],
+    "pocket_distance_path_energy_score_A": [2.411214825937755,2.2493940770837995],
+    "pocket_contact_brier": [0.10820572209714283,0.14811081325997472],
+    "all_residue_contact_occupancy_mae": [0.02208826409391524,0.032242668226110924],
+    "ligand_center_increment_mae_A": [0.863883118700459,0.9051012972219344]
+  },
+  "difference_format": ["A_minus_PVB_mean", "marginal95percent_system_bootstrap_lower", "upper"],
+  "paired_differences": {
+    "ligand_bond_rmse_A": [0.368450137101538,0.21266794748304124,0.5568830572393636],
+    "ligand_rmsf_mae_A": [0.292184065055196,-0.4203150474825674,1.2027364909525124],
+    "ligand_center_msd_mae_A2": [-7.431053365639468,-16.710500738466727,-0.9602766272135577],
+    "ligand_center_path_energy_score_A": [-0.16180902292162544,-0.6372183200231185,0.2799603613643599],
+    "pocket_distance_path_energy_score_A": [0.16182074885395548,-0.38677503968106375,1.038770152664103],
+    "pocket_contact_brier": [-0.039905091162831884,-0.07012599330165593,-0.010238441166218366],
+    "all_residue_contact_occupancy_mae": [-0.010154404132195677,-0.01726526052112053,-0.00428080074002798],
+    "ligand_center_increment_mae_A": [-0.04121817852147544,-0.22111021220579855,0.11866173595680908]
+  },
+  "early_middle_late": {
+    "future_frame_slices": [[0,12],[36,48],[80,92]],
+    "A_ligand_bond_RMSE_A": [0.29119329495331214,0.42319902887137834,0.5669903725452226],
+    "PVB_ligand_bond_RMSE_A": [0.0750368565775969,0.07963350322663916,0.08346851993220265],
+    "interpretation": "Candidate bond errors worsen through generated-history rollout and exceed PVB in every segment.Early center/pocket path scores improve;middle RMSF worsens;late MSD and pocket path improve but center-path/contact-Brier differences are unresolved.Retain the mixed segment results;do not replace whole-path scores with favorable segments."
+  },
+  "temporal_steps": {
+    "A_boundary_nonboundary_increment_A": [1.0614669382970336,1.1618737913402009],
+    "PVB_boundary_nonboundary_increment_A": [0.546773845035924,0.5723545673574496],
+    "MD_boundary_nonboundary_increment_A": [1.2702480138741774,1.3980542518956673],
+    "interpretation": "A has larger average increments than PVB,closer to MD means,but per-system center-increment error advantage is unresolved.Larger motion and lack of a mean boundary spike do not establish accurate dynamics."
+  },
+  "judgment": "Partial center-MSD/contact advantages coexist with severe and increasing ligand geometry error.Whole-path distribution and RMSF differences are unresolved.This is not simultaneous geometry/motion improvement or competitive success;do not promote the branch on this rollout.",
+  "limitations": ["Single completed training seed and reused16-system development panel;second seed/B pending", "Four draws and one MD future/system;wide marginal exploratory intervals", "PVB nativeH1 versus candidateH4,different training sources/resources;not strict state-only or recipe-only causal comparison", "Reported rollout bond metric is ligand-specific,not whole-complex all-atom/clash validation", "No h/v rollout or static-pretrained rollout comparison completed under this protocol", "7.36ns stability and short-window distribution metrics do not establish equilibrium or long-time kinetics"],
+  "advanced_second_seed": {
+    "reason": "A71 completed normally;GPU1 empty. Original controller then waited on A72complex already running on GPU3. Move only the already-planned A72rollout ahead of that redundant wait.",
+    "retired_nonmodel_waiters": [1146092,1155708],
+    "retirement_evidence": "Controller in do_wait;sole child in locks_lock_inode_wait with seed72/flow/complex_validation64.lock open;GPU1 had no applications. After TERM controller exited and child became zombie. No active sampling or training terminated;logs retained.",
+    "untouched_A72_complex_pid": 1150010,
+    "new_rollout_container_pid": 1155893,
+    "new_rollout_host_pid": 3955931,
+    "GPU": 1,
+    "CUDA_evidence": "New process alive;hostPID3955931 present on GPU1. Original seed72 final checkpoint completed2048updates;rollout output absent before launch.",
+    "output": "runs/coordinate_state_denoising_v1/seed72/flow/rollout",
+    "log": "runs/coordinate_state_denoising_v1/seed72/flow/rollout_direct_gpu1.log",
+    "ownership": "Direct process is sole A72 rollout owner;original advanced controller retired. Rollout has no output lock,so do not submit another owner.",
+    "additional_forecasts_or_optimizer_updates": 0,
+    "active_jobs_cancelled": 0
+  },
+  "promotion": false
+}
