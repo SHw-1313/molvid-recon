@@ -3,7 +3,7 @@
   "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
   "branch": "exp/coordinate-state-denoising-v1",
   "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
-  "status": "Both recipes, shared network, objectives, full samplers and trainer implemented. TRAIN scale statistics complete. Both CUDA lanes and paired analysis controllers submitted; waiting for existing owners. CUDA checks/training not yet run. No efficacy or superiority claim.",
+  "status": "Both recipes completed real CUDA backward and full source sampling on two packed native80 TRAIN complexes. EDM seed71 training started on GPU4 with actual optimizer updates; flow lane still waits for existing GPU1 owner. No trained-generation efficacy or superiority claim.",
   "launch": {"implementation_commit": "b7810b2", "final_launcher_commit": "a8c7c2f", "edm_controller_container_pid": 1128478, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1128479, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false, "launcher_refresh": "Replaced only our new waiting shells1127741/1127742 after confirming each had only a sleep child and no model process. This loads the completed rollout and final GPU-idle recheck; no training or forecasts were cancelled. Initial logs retained; current logs lane_edm_v2.log/lane_flow_v2.log."},
   "paired_budget": {
     "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
@@ -74,9 +74,33 @@
   "default_promotion": false
   ,"supplemental_evaluation": {
     "clock_motion_rollout_cpu_controllers": [1129212,1129213],
+    "hv_complex_gpu_controller": 1129538,
+    "hv_complex_cpu_controller": 1129539,
     "scope": "Paired80/100ps MD-response errors, proper ensemble MSD/RMSF/increment-path scores, and full92-frame generated-history rollout against each other and released PVB. No extra neural calls for these scorers.",
     "hv_complex": "Common evaluator now supports frozen original A1 h/v sampler via --hv-baseline; identical64-system128-condition full-atom inventory and eight seeds. No checkpoint changes, source retuning or fine-tuning. Queued only after flow lane completes, not a third GPU reservation.",
     "hv_complex_status": "Interface implemented; actual CUDA inference and compatibility with full complex panels remain to be demonstrated.",
     "statistical_pairing": "Subtract matched per-system estimates then bootstrap systems, not marginal CI endpoints. Raw displacement/amplitude differences are not automatically improvement."
+  },
+  "first_real_CUDA_execution": {
+    "implementation_at_execution": "c13f23a",
+    "report": "runs/coordinate_state_denoising_v1/cuda_dataflow.json",
+    "TRAIN_complexes": ["3I6C", "4Z6H"],
+    "sample_shape_each_arm": [12,1856,3],
+    "parameters_each_arm": 6701836,
+    "gradient_paths": "Current geometry, temporal interaction, token hierarchy and coordinate head all finite and nonzero in both arms",
+    "complete_source_sampling_each_arm": {"NFE":35, "current_geometry_rebuilds":420, "observed_coordinates_unchanged":true},
+    "flow_equivariance_max_A": 0.00008869171142578125,
+    "edm_equivariance_max_A": 0.0000629425048828125,
+    "elapsed_seconds":45.02672941610217,
+    "exercise_optimizer_updates":0,
+    "peak_cuda_bytes":6311090176,
+    "initial_failures_preserved": [
+      "First check script selected protein100 and complex80 in one packed batch, rejected by existing collator before forward. Fixed by selecting two distinct complete complex80 systems; no clock relabeling or weakened collator.",
+      "Initial FP32 isolation tolerance1e-5 was below identical-input CUDA repeat variation4.0e-5. Recorded isolate5.3e-5, repeated4.0e-5; now record repeat error and use2e-4 absolute tolerance, same as joint equivariance. Both arms passed with isolate3.7e-5/5.6e-5 and repeat4.1e-5/4.2e-5."
+    ],
+    "current_EDM_controller":1130077,
+    "EDM_seed71_training_process":1130209,
+    "flow_controller_unchanged":1128479,
+    "interpretation": "Actual CUDA execution and initial implementation evidence only; no trained model effect, superiority or main goal success demonstrated. Not a largest-system memory result."
   }
 }
