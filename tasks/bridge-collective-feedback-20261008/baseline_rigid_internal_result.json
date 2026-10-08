@@ -1,0 +1,50 @@
+{
+  "status": "completed cached scientific diagnostic; not CF1 efficacy",
+  "recorded_at": "2026-10-08 13:45 CST",
+  "source": "runs/bridge_collective_feedback_20261008/baseline_rigid_internal64.json",
+  "implementation_commit": "cfc05ea",
+  "coverage": {"systems": 64, "conditions": 128, "models": 5, "draws_per_model_condition": 8, "generated_paths_reused": 5120, "model_calls": 0},
+  "method": "Align to last-observed protein; heavy-atom ligand centroid translation, best proper Kabsch rotation of successive centered ligand shapes, and remaining internal shape residual. Include observed-to-first-future step. Compute per-path step RMS then average draws, anchors and systems. Rotation and residual squared norms have a cross term; not additive fractions.",
+  "new48_mean_step_rms_A": {
+    "metric_order": ["translation", "rotation_fit", "internal_residual"],
+    "MD": [0.877236, 0.566525, 0.513493],
+    "placement71": [0.493910, 0.391910, 0.553036],
+    "placement72": [0.472737, 0.399190, 0.561221],
+    "pvb": [0.479313, 0.347212, 0.526112]
+  },
+  "new48_model_minus_MD": {
+    "convention": "Arrays [mean, paired95percent system-bootstrap lower, upper]; signed amplitude bias, not lower-is-better score.48 system clusters,96 conditions. Exploratory marginal intervals without multiplicity correction.",
+    "placement71": {
+      "translation_step_rms_A": [-0.38332629646544897, -0.6038766612795271, -0.25040566742181913],
+      "rotation_fit_step_rms_A": [-0.17461457204507128, -0.24114344026478604, -0.11645068098932877],
+      "internal_residual_step_rms_A": [0.03954246191817468, -0.03169692703819466, 0.10384485657170907]
+    },
+    "placement72": {
+      "translation_step_rms_A": [-0.4044986405063964, -0.6554795992782563, -0.25636102921051424],
+      "rotation_fit_step_rms_A": [-0.16733428829107622, -0.2312483080966053, -0.11131564165814863],
+      "internal_residual_step_rms_A": [0.04772780141675632, -0.017027356550143324, 0.10410697916181429]
+    },
+    "pvb": {
+      "translation_step_rms_A": [-0.3979225185160242, -0.6261697802339224, -0.2605375504161099],
+      "rotation_fit_step_rms_A": [-0.2193125029154901, -0.2896999102147746, -0.15881614455043394],
+      "internal_residual_step_rms_A": [0.012618208716639443, -0.055838180382505376, 0.06956243392375888]
+    }
+  },
+  "new48_joint_pattern": {
+    "definition": "Within one condition: model draw-mean translation and rotation RMS below its MD path, internal residual RMS above MD. Descriptive occurrence, not a significance test or distributional defect probability.",
+    "conditions": 96,
+    "placement71": 44,
+    "placement72": 45,
+    "pvb": 51
+  },
+  "interpretation": [
+    "Both placement-parent seeds have supported collective translation and rotation amplitude deficits on new48. PVB also has these deficits; reference imitation is not the scientific endpoint.",
+    "Average internal residual is higher but its paired interval crosses zero for all three models. Do not call this a significant overall internal-deformation excess. Earlier bond-fluctuation findings concern a different observable.",
+    "Rigid-fit residual includes legitimate torsion/shape changes, not just unphysical bond jitter. Low residual is not intrinsically good.",
+    "Mechanistic motivation for rotation-aware cooperative representations, not proof that mean pooling causes the observed failures. A pure centered rigid rotational vector field averages to zero, but other atom/scalar features can still encode rotation.",
+    "Potential follow-up: retain position-feature moments or geometric pair information and test shared translation/rotation plus unconstrained internal residual. Bridge velocity/drift are generative flow/SDE quantities, not directly MD physical velocity/angular velocity.",
+    "Do not alter ongoing CF1 or queue an untested alternative before its matched final results. Use this same cached diagnostic on completed CF1/control panels.",
+    "One short MD future per condition, reused development systems and fixed atom mapping do not prove equilibrium, kinetics or independent generalization. All near-rank1 fractions were zero in this analyzed panel."
+  ],
+  "default_promotion": false
+}
