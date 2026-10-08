@@ -78,6 +78,16 @@
     "additional_training_updates": 0, "additional_forecasts": 0,
     "time_semantics": "80/100ps fixed-history response diagnostic: protein80ps lies below protein TRAIN100/200/400ps spacings, although80ps occurs in complex TRAIN. It is not pure within-domain interpolation.1ns query spacing exceeds all TRAIN spacings and remains explicitly extrapolative."
   },
+  "second_seed_evaluation_advancement": {
+    "status": "implemented, not launched; both original second-seed training processes remain live",
+    "script": "tasks/coordinate-state-denoising-v1/run_second_seed_advanced.sh",
+    "implementation_commit": "1e8e42f",
+    "reason": "Original GPU1/4 queues next wait on seed71 complex output locks owned by busy GPU6/7; avoid idle training GPUs when seed72 fixed-final weights are already available",
+    "execution_order": "seed72 protein100, seed71 short rollout, seed72 complex64, seed72 short rollout. Existing primary/time workers retain seed71 primary panels and both80/1000ps panels; exact-request lock/reuse prevents duplicate primary forecasts.",
+    "required_before_launch": "Verify both fixed-final training checkpoints complete, training process exited, GPU idle, and original lane/evaluator are only waiting before model construction. Retire only those owned non-model waiters, not training or active generation. Original lane must relinquish rollout ownership; rollout has no duplicate-execution lock.",
+    "additional_optimizer_updates": 0, "additional_forecasts": 0,
+    "existing_training_interrupted": false
+  },
   "launch": {"implementation_commit": "b7810b2", "final_launcher_commit": "a8c7c2f", "edm_controller_container_pid": 1128478, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1128479, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false, "launcher_refresh": "Replaced only our new waiting shells1127741/1127742 after confirming each had only a sleep child and no model process. This loads the completed rollout and final GPU-idle recheck; no training or forecasts were cancelled. Initial logs retained; current logs lane_edm_v2.log/lane_flow_v2.log."},
   "paired_budget": {
     "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
