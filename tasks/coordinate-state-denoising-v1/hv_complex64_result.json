@@ -1,0 +1,40 @@
+{
+  "status": "complete original h/v complex64 source sampling and paired primary comparison with released PVB; whole-complex geometry pending",
+  "source": "runs/coordinate_state_denoising_v1/hv_a1_complex64",
+  "coverage": {"systems": 64, "conditions": 128, "draws_per_condition": 8, "future_frames": 12, "new_forecasts": 1024, "reused_forecasts": 0},
+  "generation_seconds": 4342.638022856787,
+  "training_updates": 0,
+  "variant": "Frozen original A1 h/v generator, source and decoder; no complex fine-tuning, source retuning, projection or additional sampling guidance",
+  "comparison": "Same complete atom inventories, windows, future times and evaluation definitions. PVB nativeH1 versus h/v H4, different training/pretraining and NFE; not an equal-budget state-only causal ablation.",
+  "all64_means": {
+    "ligand_bond_rmse_A": {"hv": 1.123551452791058, "PVB": 0.07377303668105586},
+    "ligand_rmsf_mae_A": {"hv": 0.8111267142434027, "PVB": 0.5133911466300518},
+    "ligand_center_path_energy_score_A": {"hv": 0.7508293567365498, "PVB": 0.8097150456481439}
+  },
+  "delta_convention": "h/v minus PVB; arrays give mean and paired95percent system-bootstrap endpoints; listed errors/scores lower is better",
+  "all64_deltas": {
+    "ligand_bond_rmse_A": [1.0497784161100019, 0.9960068841048343, 1.1330874143211382],
+    "ligand_rmsf_mae_A": [0.2977355676133509, 0.19786897024896563, 0.4296321596516102],
+    "ligand_center_path_energy_score_A": [-0.058885688911593945, -0.1256492512663206, -0.008705185318001239],
+    "pocket_contact_brier": [-0.008544060562934367, -0.016208783201246326, -0.00011741587965500404]
+  },
+  "new48_deltas": {
+    "ligand_bond_rmse_A": [1.0386863419184114, 0.9795362063892882, 1.1377092481569988],
+    "ligand_rmsf_mae_A": [0.2870859880536429, 0.18672450176309835, 0.43237690820249947],
+    "ligand_center_msd_mae_A2": [0.1648264933473671, -0.4744379228881119, 1.2745022283646823],
+    "ligand_center_path_energy_score_A": [-0.04367395059290821, -0.07882489740906505, -0.011765666542830639],
+    "pocket_distance_path_energy_score_A": [0.11367753652109608, -0.027887245354695063, 0.3645284563058002],
+    "pocket_contact_brier": [-0.00899520364729773, -0.018357065202793316, 0.0009679750979314384],
+    "all_residue_contact_occupancy_mae": [-0.0013011955057243398, -0.001987093912141613, -0.000641785725922023]
+  },
+  "interpretation": [
+    "The original generic-atom h/v transfer baseline has a large ligand covalent-geometry deficit and larger RMSF error than released PVB on both all64 and new48.",
+    "Retain the counterevidence: ligand center-path energy score is better for h/v on both strata, and new48 residue-contact occupancy error improves. These do not compensate for distorted internal geometry or establish correct full dynamics.",
+    "MSD and pocket-distance path differences remain unresolved on new48; do not summarize every motion observable as worse.",
+    "A/B must improve geometry and motion together. Beating this un-finetuned transfer baseline alone does not prove that h/v stochastic state is intrinsically inferior: architecture, training exposure, pretraining and NFE remain confounded.",
+    "No coordinate A/B trained-generation result is yet available; do not interpret these baseline results as evidence for either A or B."
+  ],
+  "whole_complex_geometry": {"status": "running cached-coordinate CPU scoring", "container_process": 1135882, "new_model_calls": 0},
+  "limitations": ["Reused development64, not sealed confirmation", "One MD future and eight generated draws per condition", "Exploratory marginal paired-system intervals; no multiplicity correction", "No equilibrium, free-energy or kinetic-rate claim"],
+  "default_promotion": false
+}
