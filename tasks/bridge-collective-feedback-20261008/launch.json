@@ -1,7 +1,8 @@
 {
   "date_local": "2026-10-08",
   "implementation_commit": "a431df3",
-  "status": "queued; no CF1 GPU update has run yet",
+  "status": "2026-10-08 12:51 CST: collective seed71 has started actual GPU training; other arms remain scheduled",
+  "observed_first_training": {"seed": 71, "arm": "collective", "GPU": 7, "container_pid": 1110788, "host_pid": 1086538, "completed_updates_observed": 32, "elapsed_training_seconds_at32": 47.74175217282027, "static_protein_step_observed": 4, "static_complex_step_observed": 5, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/train.log"},
   "container_environment": "torch-ito via enter-container",
   "lanes": [
     {"GPU": 7, "controller_container_pid": 1109978, "wait_for_container_pid": 1109075, "assignments": ["71:collective", "72:control"], "predecessor": "capacity72 native1ns evaluation worker"},
@@ -12,5 +13,5 @@
   "artifact_destination": "/data1/sihao/molvid-derived/bridge-collective-feedback-20261008",
   "checkpoint_selection": "fixed4096 continuation update; both original same-seed16384 placement parents preserved",
   "current_jobs": "No existing training or generation was interrupted",
-  "result_claim": "Architecture implemented and scheduled, not trained or shown effective"
+  "result_claim": "Real mixed static/dynamic CUDA updates have started for collective seed71. Training is incomplete; no generated CF1 panel or efficacy claim."
 }
