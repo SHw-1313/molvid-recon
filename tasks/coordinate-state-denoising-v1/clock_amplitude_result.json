@@ -1,0 +1,23 @@
+{
+  "status": "Both MD-only seeds complete; staticA-vs-MD complete; staticB comparisons await its existing native80 evaluation and clock analysis",
+  "outputs": ["runs/coordinate_state_denoising_v1/seed71/edm/clock_amplitude_vs_flow.json", "runs/coordinate_state_denoising_v1/seed72/edm/clock_amplitude_vs_flow.json", "runs/coordinate_static_pretrain_v1/seed71/flow/clock_amplitude_vs_md.json"],
+  "protocol": "Complete96 matched conditions/48 proteins,192 raw source draws per clock, fixed80/100ps grids. Evaluation-only100ps true-motion labels and TRAIN-derived thresholds shared across arms/seeds/clocks. No new model calls, optimizer updates, exclusions or coordinate postprocessing.",
+  "TRAIN_boundaries_A": [1.5064689185142268,2.136611611473248],
+  "conditions_low_medium_high": [44,26,26],
+  "systems_low_medium_high": [25,21,18],
+  "estimate_format": ["mean", "marginal95percent_system_bootstrap_lower", "upper"],
+  "B_minus_A_displacement_response_error_A2": {
+    "seed71": {"low": [-0.00036464063302793335,-0.0014942116227852748,0.000789549366112872], "medium": [0.0030034641497510292,0.00018262817165142555,0.005990777062990275], "high": [-0.000246784129636428,-0.005117926185238119,0.004948342653310783]},
+    "seed72": {"low": [0.000002215823054197985,-0.0010439879598257743,0.0010587868303266424], "medium": [0.0017070002717543876,-0.0004212653061696997,0.0038675458354675645], "high": [-0.00020675727807331932,-0.0035616140328240662,0.0034828266049928614]}
+  },
+  "interpretation": [
+    "A/B clock-response differences remain unresolved in low/high motion for both seeds. Medium-motion displacement response favors A only in seed71 under marginal intervals; seed72 has the same mean direction but includes zero. No robust recipe winner by amplitude.",
+    "Every A/B/seed/bin displacement-error contrast against zero-response includes zero. Fluctuation-error contrasts favor the model only in low-motion bins in both recipes/seeds; medium/high contrasts remain unresolved.",
+    "StaticA high-motion displacement response improves slightly over MD-only A,but high-motion advantage over zero-response remains unresolved. See static_flow_clock_result.json."
+  ],
+  "limitations": ["Reused development data; exploratory marginal intervals without multiplicity correction", "Only two MD training seeds and two forecast draws per condition", "Systems may contribute different anchors to multiple bins", "Selecting bins by100ps truth can select MD clock differences; not a causal amplitude effect", "Matched query-index RNG is not common-physical-time coupling; no thermodynamic or kinetic conclusion"],
+  "continuation": {"script": "tasks/coordinate-state-denoising-v1/analyze_clock_amplitude.sh", "container_pid": 1153669, "log": "runs/coordinate_static_pretrain_v1/clock_amplitude_analysis.log", "scope": "After existing staticB clock analysis completes, compute staticB-vs-staticA overall and binned responses plus staticB-vs-MD-onlyB binned responses. No duplicated generation.", "actual_state": "Both MD paired analyses completed; CPU controller alive waiting for staticB clock output"},
+  "model_calls": 0,
+  "optimizer_updates": 0,
+  "promotion": false
+}
