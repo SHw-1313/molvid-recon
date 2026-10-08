@@ -21,7 +21,7 @@ def main():
             raise ValueError(f'Unmatched panel: {key}')
     left_estimates = left['strata'][args.stratum] if args.stratum else left['estimates']
     right_estimates = right['strata'][args.stratum] if args.stratum else right['estimates']
-    if set(left_estimates) != set(right_estimates):
+    if not left_estimates or set(left_estimates) != set(right_estimates):
         raise ValueError('Metric definitions differ')
     paired = {}
     for metric in left_estimates:

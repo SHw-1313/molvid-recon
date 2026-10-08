@@ -18,6 +18,32 @@ from molvid.runtime import atomic_write_json
 from molvid.training.predictive_data import RELEASE
 
 
+def summarize(rows, inventory, variant, seconds):
+    # inventory['systems'] contains metadata objects, not plain IDs.
+    # The declared strata are the authoritative plain-ID lists.
+    strata = dict(all=inventory['old16']+inventory['new48'],
+                  old16=inventory['old16'],new48=inventory['new48'])
+    expected = set(strata['all'])
+    if len(expected)!=64 or len(rows)!=128 or {r['system'] for r in rows}!=expected:
+        raise ValueError('Complete64-system128-condition score rows required')
+    if len({r['sample_id'] for r in rows})!=128:
+        raise ValueError('Duplicate conditions')
+    estimates = {}
+    for name, systems in strata.items():
+        grouped = defaultdict(list)
+        for row in rows:
+            if row['system'] in systems:
+                for metric,value in row['metrics'].items():grouped[metric].append((row['system'],value))
+        if not grouped:
+            raise ValueError(f'Empty required geometry stratum: {name}')
+        estimates[name] = {metric:system_estimate(values) for metric,values in grouped.items()}
+    return dict(status='completed',variant=variant,systems=64,conditions=128,model_calls=0,
+        estimates=estimates['all'],strata=estimates,seconds=seconds,
+        limitations=['Reused development64, not sealed independent confirmation',
+            'Geometry scores must be read jointly with motion; static coordinates can have good geometry',
+            'Same legacy TRAIN radius table as protein scoring; not a new physical force-field evaluation'])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('generated', 'data', 'output'):
@@ -75,19 +101,7 @@ def main():
             print(json.dumps(dict(conditions=len(rows),seconds=time.monotonic()-started,model_calls=0)),flush=True)
     finally:
         store.close()
-    strata = dict(all=inventory['systems'],old16=inventory['old16'],new48=inventory['new48'])
-    estimates = {}
-    for name, systems in strata.items():
-        grouped = defaultdict(list)
-        for row in rows:
-            if row['system'] in systems:
-                for metric,value in row['metrics'].items():grouped[metric].append((row['system'],value))
-        estimates[name] = {metric:system_estimate(values) for metric,values in grouped.items()}
-    atomic_write_json(args.output/'summary.json',dict(status='completed',variant=summary['variant'],
-        systems=64,conditions=128,model_calls=0,estimates=estimates['all'],strata=estimates,
-        seconds=time.monotonic()-started,limitations=['Reused development64, not sealed independent confirmation',
-            'Geometry scores must be read jointly with motion; static coordinates can have good geometry',
-            'Same legacy TRAIN radius table as protein scoring; not a new physical force-field evaluation']))
+    atomic_write_json(args.output/'summary.json',summarize(rows,inventory,summary['variant'],time.monotonic()-started))
 
 
 if __name__=='__main__':main()
