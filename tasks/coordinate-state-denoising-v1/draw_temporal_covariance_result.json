@@ -1,0 +1,44 @@
+{
+  "status": "completed_cached_CPU_analysis",
+  "output": "runs/coordinate_state_denoising_v1/draw_temporal_covariance100/summary.json",
+  "rows": "runs/coordinate_state_denoising_v1/draw_temporal_covariance100/rows.json",
+  "coverage": {"systems": 48, "conditions": 96, "draws_per_condition_per_variant": 2, "variants": 8, "future_frames": 12, "query_dt_ps": 100},
+  "resources": {"model_calls": 0, "optimizer_updates": 0, "CPU_threads": 1, "completed_container_pid": 1157199},
+  "definition": "After established whole-protein frame alignment to last observation, W=(X_seed17-X_seed29)/sqrt(2) removes the shared conditional mean. No time centering. E[W_t dot W_u] estimates conditional stochastic covariance assuming independent source draws. Normalized finite-window ratios are descriptive, not unbiased correlation estimates. Increment cosine uses only future-to-future increments, not an inserted observed zero.",
+  "columns": ["residual_lag1_cosine", "residual_lag8_cosine", "residual_increment_lag1_cosine", "stochastic_second_moment_A2", "mean_signal_second_moment_unbiased_A2"],
+  "equal_system_means": {
+    "hv_a1": [0.204433024651592, 0.19054604341987738, -0.4975402902200612, 1.185544135292928, 0.5454410737575178],
+    "flow71": [0.2124311210091823, 0.16190956926860203, -0.4972269108900944, 1.4455886686045567, 0.5703723358479866],
+    "flow72": [0.21187342738329648, 0.15938482163485398, -0.495392476185242, 1.350471898689732, 0.5520356110713313],
+    "edm71": [0.27083853088329657, 0.2383596789405408, -0.49870043648470236, 1.5182261746419983, 0.977336021528716],
+    "edm72": [0.21723430186998607, 0.19268219010825008, -0.4990562904606941, 1.2430483231036025, 1.0018811240262835],
+    "static_flow71": [0.22354460450777888, 0.13854267771946166, -0.4930966429177552, 1.3098016098014287, 0.6916137566868735],
+    "static_edm71": [0.24899787633835743, 0.18850476901716018, -0.495987978644504, 1.2055147381508944, 0.5645313876869401],
+    "released_pvb": [0.8021083642952469, 0.2708733477981059, -0.18184684105496798, 1.9942418159680593, 0.7068044202222227]
+  },
+  "residual_increment_lag1_ci95": {
+    "hv_a1": [-0.5015176257204171, -0.4938899441506932],
+    "flow71": [-0.5032373087728541, -0.49106333472434954],
+    "flow72": [-0.500929401085808, -0.48938694392636395],
+    "edm71": [-0.503648258408836, -0.4938143688623046],
+    "edm72": [-0.5036265336661131, -0.4946626756980867],
+    "static_flow71": [-0.49776658634660187, -0.48814615445728876],
+    "static_edm71": [-0.5005824864349424, -0.4910088599512407],
+    "released_pvb": [-0.1885900043934063, -0.1737479241392921]
+  },
+  "interpretation": [
+    "A/B stochastic position residuals are NOT independent across all frames: their lag1 and lag8 moments are positive. Do not claim universally independent atoms or independent future frames.",
+    "All four MD-only A/B runs and both static-pretrained runs nevertheless have adjacent stochastic increment cosines near -0.5. This is compatible with a shared/slow random offset plus substantial framewise jitter; it does not establish that decomposition or Gaussian independent noise as a causal model.",
+    "PVB has substantially stronger short-lag stochastic position persistence and less negative adjacent stochastic increments under the same transformed observable. Higher persistence is not itself correctness, and PVB still loses some previously reported path/motion scores.",
+    "Static pretraining improves geometry but has not removed the characteristic weak local stochastic temporal coupling. This sharpens the reason to test dynamic temporal interaction changes rather than decoder-only clean reconstruction.",
+    "The prepared temporal-order candidate remains untrained and unvalidated. These observations do not prove that swapping token/temporal order will fix the issue. Keep source and losses fixed for its proposed controlled comparison; do not add inference-only correlated source noise."
+  ],
+  "limitations": [
+    "Only two generated draws per condition; mean-signal estimator can be negative and is not clipped",
+    "Only one true MD future per condition, so no real conditional stochastic covariance target or covariance error is identifiable here",
+    "Reusable development48, not sealed confirmation; native PVB H1 and training/input resource differences remain",
+    "Alignment changes the observable; use same established whole-protein convention, not component-specific fitting",
+    "No equilibrium, thermodynamic, mechanistic, or correct conditional-mean claim"
+  ],
+  "promotion": false
+}
