@@ -1,7 +1,6 @@
-"""Actual joint-coordinate forecasts on unchanged development inventories.
+"""Common raw-coordinate evaluation of bridges, coordinate A/B and frozen h/v.
 
-No projection/refinement or target conditioning. This experimental bridge
-inherits released static PVB geometry; it is not the untouched PVB baseline.
+Generation contracts remain distinct; no projection or target conditioning.
 """
 import argparse
 from collections import defaultdict
@@ -17,17 +16,20 @@ from molvid.data.batch import collate_clip_records
 from molvid.data.store import ClipMMapDataset
 from molvid.evaluation.ca_detail import score, system_estimate
 from molvid.evaluation.complex_motion import score_complex
+from molvid.evaluation.native_forecast import molvid_forecast
 from molvid.flow.pretrained_bridge import PretrainedGeometryBridge
 from molvid.flow.coordinate_state import CoordinateStateDenoiser
 from molvid.geometry.ca_detail import condition_from_record
 from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
 from molvid.runtime import atomic_write_json
 from molvid.training.bridge_runner import load_geometry
-from molvid.training.predictive_data import RELEASE, atomic_torch_save
+from molvid.training.predictive_data import RELEASE, atomic_torch_save, load_parent
 
 
 @torch.no_grad()
 def forecast(model, observed_cpu, query_time_ps, device, seed):
+    if not isinstance(model, (CoordinateStateDenoiser, PretrainedGeometryBridge)):
+        return molvid_forecast(model, observed_cpu, query_time_ps, device=device, seed=seed)
     observed = observed_cpu.to(device)
     condition = model.prepare_condition(observed)
     generator = torch.Generator(device=device).manual_seed(seed)
@@ -44,7 +46,13 @@ def run(args):
     device = torch.device('cuda:0')
     torch.set_num_threads(8)
     torch.manual_seed(71)
-    if args.checkpoint:
+    if args.hv_baseline:
+        model, raw, release = load_parent(device)
+        settings = dict(data=dict(query_frames=raw.get('data', {}).get('query_frames', 'historical_release')),
+                        updates=None)
+        saved = None
+        checkpoint_step = None
+    elif args.checkpoint:
         saved = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
         settings = saved['settings']
         expected_step = settings['updates'] if args.expected_step is None else args.expected_step
@@ -56,7 +64,9 @@ def run(args):
         saved = None
         checkpoint_step = 0
     coordinate_state = settings.get('schema') == 'molvid.coordinate_state.recipe.v1'
-    if coordinate_state:
+    if args.hv_baseline:
+        output_norm = None
+    elif coordinate_state:
         if saved is not None and saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
             raise ValueError('Coordinate-state checkpoint schema required')
         model = CoordinateStateDenoiser(settings).to(device)
@@ -73,15 +83,21 @@ def run(args):
     seeds = [17, 29, 43, 59, 71, 83, 97, 101] if args.domain == 'complex' else [17, 29]
     protocol = dict(variant=args.variant, domain=args.domain, history_frames=4, query_frames=12,
         training_query_frames=settings['data']['query_frames'],
-        solver_steps=settings['sampler_intervals'] if coordinate_state else 10,
-        vector_field_evaluations_per_draw=2*settings['sampler_intervals']-1 if coordinate_state else 10, seeds=seeds,
-        checkpoint=str(args.checkpoint), initial_config=str(args.initial_config),
+        solver_steps=16 if args.hv_baseline else settings['sampler_intervals'] if coordinate_state else 10,
+        vector_field_evaluations_per_draw=16 if args.hv_baseline else 2*settings['sampler_intervals']-1 if coordinate_state else 10, seeds=seeds,
+        checkpoint=release['selected_checkpoint']['path'] if args.hv_baseline else str(args.checkpoint), initial_config=str(args.initial_config),
         training_checkpoint_step=checkpoint_step, planned_training_updates=settings['updates'],
-        checkpoint_is_final=checkpoint_step == settings['updates'],
+        checkpoint_is_final=None if args.hv_baseline else checkpoint_step == settings['updates'],
         intermediate_learning_curve=args.expected_step is not None and checkpoint_step != settings['updates'],
-        model=model.contract(), original_pvb_modified=False, inference_refinement=False,
+        model=(dict(state='historical_h_v_latent', source=model.source_config.contract(),
+                    parameters=sum(p.numel() for p in model.parameters()),
+                    release=str(RELEASE), codec=raw['codec']) if args.hv_baseline else model.contract()),
+        original_pvb_modified=False, inference_refinement=False,
         development=True, independent_test=False, test_payload_opened=False,
-        limitations=(['Random MD-only initialization; h/v baseline has different pretraining/resources',
+        limitations=(['Unmodified frozen A1 h/v generator and decoder; 16 Euler steps',
+            'Historical training exposure differs from coordinate A/B; not a matched-budget causal control',
+            'Complex inference is generic-atom transfer; no complex fine-tuning or source retuning'] if args.hv_baseline else
+            ['Random MD-only initialization; h/v baseline has different pretraining/resources',
             'All remaining training futures; H4/Q12 or H8/Q8'] if coordinate_state else
             ['Inherited released static pretraining; not training from scratch',
             'Four training queries versus twelve joint evaluation queries'])+[
@@ -178,8 +194,8 @@ def run(args):
                 new_forecasts=new_forecasts, reused_forecasts=reused_forecasts, strata=strata,
                 seconds=time.monotonic()-started, training_updates=0,
                 peak_cuda_bytes=torch.cuda.max_memory_allocated(),
-                model_forward_calls=model.forward_calls if coordinate_state else new_forecasts*10,
-                output_norm_float64_calls=output_norm.high_precision_calls,
+                model_forward_calls=model.forward_calls if coordinate_state else new_forecasts*(16 if args.hv_baseline else 10),
+                output_norm_float64_calls=output_norm.high_precision_calls if output_norm is not None else None,
                 independent_test=False, test_payload_opened=False))
         finally:
             dataset.close()
@@ -218,8 +234,8 @@ def run(args):
         atomic_write_json(args.output/'summary.json', dict(status='completed', systems=48, rows=len(rows),
             failures=[], seconds=time.monotonic()-started, neural_training_updates=0, test_opened=False,
             peak_cuda_bytes=torch.cuda.max_memory_allocated(),
-            model_forward_calls=model.forward_calls if coordinate_state else len(rows)*10,
-            output_norm_float64_calls=output_norm.high_precision_calls,
+            model_forward_calls=model.forward_calls if coordinate_state else len(rows)*(16 if args.hv_baseline else 10),
+            output_norm_float64_calls=output_norm.high_precision_calls if output_norm is not None else None,
             arms={args.variant+'|'+key:system_estimate(value) for key,value in aggregates.items()}))
 
 
@@ -228,6 +244,7 @@ if __name__ == '__main__':
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument('--checkpoint', type=Path)
     source.add_argument('--initial-config', type=Path)
+    source.add_argument('--hv-baseline', action='store_true', help='Frozen original A1 h/v generation; no fine-tuning')
     parser.add_argument('--expected-step', type=int,
         help='Explicitly declared learning-curve checkpoint; omission still requires fixed-final weights')
     parser.add_argument('--domain', choices=['complex', 'protein'], required=True)

@@ -72,4 +72,11 @@
   },
   "files": ["molvid/flow/coordinate_state.py", "molvid/training/coordinate_state.py", "molvid/data/bridge_mixture.py", "tools/train_coordinate_state.py", "tools/evaluate_pretrained_bridge.py", "tools/evaluate_complex_rollout.py", "tasks/coordinate-state-denoising-v1/prepare_training_scales.py", "tasks/coordinate-state-denoising-v1/check_cuda_dataflow.py", "tasks/coordinate-state-denoising-v1/run_lane.sh"],
   "default_promotion": false
+  ,"supplemental_evaluation": {
+    "clock_motion_rollout_cpu_controllers": [1129212,1129213],
+    "scope": "Paired80/100ps MD-response errors, proper ensemble MSD/RMSF/increment-path scores, and full92-frame generated-history rollout against each other and released PVB. No extra neural calls for these scorers.",
+    "hv_complex": "Common evaluator now supports frozen original A1 h/v sampler via --hv-baseline; identical64-system128-condition full-atom inventory and eight seeds. No checkpoint changes, source retuning or fine-tuning. Queued only after flow lane completes, not a third GPU reservation.",
+    "hv_complex_status": "Interface implemented; actual CUDA inference and compatibility with full complex panels remain to be demonstrated.",
+    "statistical_pairing": "Subtract matched per-system estimates then bootstrap systems, not marginal CI endpoints. Raw displacement/amplitude differences are not automatically improvement."
+  }
 }
