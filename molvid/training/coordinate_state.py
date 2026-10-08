@@ -130,6 +130,16 @@ def train(settings, output, seed, resume=None, warm_start=None):
                     loss,metrics=coordinate_state_objective(model,condition,target,query_times,generator=generator)
                 loss.backward()
                 norm=torch.nn.utils.clip_grad_norm_(model.parameters(),settings['clip_grad'],error_if_nonfinite=True)
+                # Report real first-update supervision of the static path;
+                # no separate probe model, synthetic optimization or extra run.
+                if step==start and task=='static':
+                    metrics['static_shared_gradient_norms_after_clip']={
+                        name:sum(float(p.grad.float().square().sum()) for p in module.parameters()
+                                 if p.grad is not None)**.5
+                        for name,module in [('current_geometry',model.spatial),
+                                            ('shared_tokens',model.tokens),('coordinate_head',model.head)]}
+                    if any(value==0 or not math.isfinite(value) for value in metrics['static_shared_gradient_norms_after_clip'].values()):
+                        raise RuntimeError('Static supervision did not reach every shared geometry path')
                 optimizer.step()
                 exposure['updates']+=1
                 exposure['dynamic_examples' if task=='dynamic' else 'static_examples']+=batch.batch_size
