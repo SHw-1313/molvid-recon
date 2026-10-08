@@ -1,0 +1,26 @@
+{
+  "status": "CPU_analysis_running_not_a_result",
+  "reason": "Completed A71 rollout has worsening covalent geometry; existing rollout tables lack whole-complex clash coverage. Supplement all cached frames without additional generation or changing the model.",
+  "script": "tasks/coordinate-state-denoising-v1/score_rollout_clashes.py",
+  "data": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/development16_rollout96",
+  "launched": [
+    {
+      "variant": "coordinate_flow_71",
+      "container_pid": 1156691,
+      "output": "runs/coordinate_state_denoising_v1/seed71/flow/rollout_clashes",
+      "log": "runs/coordinate_state_denoising_v1/seed71/flow/rollout_clashes.log"
+    },
+    {
+      "variant": "released_PVB_native_rollout",
+      "container_pid": 1156692,
+      "output": "runs/coordinate_state_denoising_v1/pvb_rollout_clashes",
+      "log": "runs/coordinate_state_denoising_v1/pvb_rollout_clashes.log"
+    }
+  ],
+  "coverage_per_variant": {"systems": 16, "draws_per_system": 4, "future_frames_per_draw": 92},
+  "resources": {"new_model_calls": 0, "new_optimizer_updates": 0, "CPU_threads_per_process": 1, "GPU_use": false},
+  "definition": "Reuse CachedClashScorer and same frozen PhysicalAuxiliaryConfig as complete complex64 scoring. All valid raw atoms and frames, uncapped undirected pairs; topology-distance<=2 excluded and separate1-4 overlap allowance. Protein/ligand/cross-component categories all normalized by total valid complex atom count. Equal-system final estimates and 12-frame blocks with final8-frame block.",
+  "next": "Inspect actual completed summaries, compare paired systems with existing compare_summary_pairs.py, and apply same cached scoring to other rollout arms only after their complete generation. Do not rank partial rows.",
+  "limitations": ["Development16 not sealed independent confirmation", "Native PVB H1 versus candidate H4 and unequal training sources/resources", "Collision geometry is not force-field energy, chirality, or thermodynamic correctness"],
+  "promotion": false
+}
