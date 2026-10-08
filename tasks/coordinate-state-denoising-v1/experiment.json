@@ -39,6 +39,24 @@
     "optimization_note": "Late gradient clipping remains frequent: flow97.8-99.2percent and EDM87.1-97.0percent by bin. Norms are finite and generally reduced, but this alone establishes neither optimizer failure nor convergence. No clipping or learning-rate change is made mid-comparison.",
     "limitations": "Changing weights, noise, physical clocks, histories and training windows confound early/late comparisons. Final-weight fixed-input noise-resolved diagnostics remain a separate followup; no claim about unseen denoising or trajectory quality."
   },
+  "fixed_final_noise_diagnostic": {
+    "implementation_commit": "6509af4",
+    "status": "queued, not yet CUDA-executed; no diagnostic result claimed",
+    "controller_container_pid": 1139805,
+    "GPU": 0,
+    "waits_for": "Existing BC3 seed71 controller1122396 to exit, both coordinate seed71 protein100 primary panels to complete, and GPU0 to be idle",
+    "source": "runs/coordinate_state_denoising_v1/seed71/fixed_noise_diagnostic",
+    "selection": "Eight evenly spaced sorted protein development48 IDs plus eight evenly spaced complex new48 IDs; lexical first native100/native80 anchor; no selection by results",
+    "weights": "Both corresponding immutable seed71 fixed-final coordinate checkpoints",
+    "noise_seeds": [17,29],
+    "flow_s": [0.05,0.275,0.5,0.725,0.95],
+    "edm_sigma": "Five log-spaced points including frozen TRAIN sigma_min and sigma_max",
+    "bounded_additional_neural_calls": 320,
+    "additional_optimizer_updates": 0,
+    "additional_source_forecasts": 0,
+    "resource_accounting": "Auxiliary inference is additional measured compute, not free or part of primary forecast NFE. Record actual wallclock, candidate-geometry frames and peak memory. Original8192 training updates and6656 primary/rollout forecasts remain unchanged; no new architecture/source variants or GPU sharing.",
+    "interpretation": "Fixed-weight supervised diagnostic only. Current states legitimately contain the real future through RF interpolation or EDM noising. Endpoint clean estimates are not source-generated trajectories, and native progress bins/losses are not cross-recipe matched-noise comparisons. It cannot establish main-goal success."
+  },
   "parallel_time_evaluation": {
     "implementation_commit": "caeadf3",
     "flow_controller": 1139217, "flow_GPU": 3,
