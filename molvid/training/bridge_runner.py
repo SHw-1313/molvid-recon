@@ -101,6 +101,7 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None, warmstart=
     generator = torch.Generator(device=device).manual_seed(seed + 81007)
     mixture = BridgeMixture(settings['data'], seed)
     start = 0
+    resume_arithmetic_unchanged = None
     if resume is not None:
         saved = torch.load(resume, map_location='cpu', weights_only=False)
         if saved['settings'] != settings or saved['seed'] != seed:
@@ -113,12 +114,16 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None, warmstart=
         generator.set_state(saved['generator_rng'])
         random.setstate(saved['python_rng']); np.random.set_state(saved['numpy_rng'])
         start = saved['step']
+        resume_arithmetic_unchanged = (saved['contract'].get('scalar_output_normalization') ==
+                                      model.contract().get('scalar_output_normalization'))
         initialization = saved.get('initialization', initialization)
         del saved
     atomic_write_json(output/'recipe.json', dict(settings=settings, seed=seed, contract=model.contract(),
         source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         inheritance=initialization,
-        device=torch.cuda.get_device_name(0), resume=None if resume is None else str(resume)))
+        device=torch.cuda.get_device_name(0), resume=None if resume is None else str(resume),
+        resume_arithmetic_unchanged=resume_arithmetic_unchanged,
+        resume_state_policy='restore model optimizer sampler and all RNG; numerical-kernel repair is not a bitwise-identical continuation'))
     started = time.monotonic()
     try:
         with (output/'updates.jsonl').open('a', buffering=1) as log:
@@ -159,6 +164,7 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None, warmstart=
                 row = dict(step=step+1, loss=float(loss.detach()), grad_norm=float(norm), task=task,
                     sample=batch.sample_id[0], atoms=batch.atom_count, history=history, query_indices=queries,
                     query_time_ps=batch.time_ps[:, queries].tolist(), elapsed_seconds=time.monotonic()-started,
+                    output_norm_float64_calls_since_process_start=model.geometry.decoder.out_norm.high_precision_calls,
                     **identity, **{k:float(v) for k,v in metrics.items()})
                 log.write(json.dumps(row)+'\n')
                 if step < 5 or (step+1) % 16 == 0:

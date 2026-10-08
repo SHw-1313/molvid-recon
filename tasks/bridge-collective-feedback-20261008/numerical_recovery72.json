@@ -1,0 +1,29 @@
+{
+  "status": "failed batch reproduced; precision repair completed forward and backward on actual CUDA; production continuation pending",
+  "seed": 72,
+  "arm": "collective",
+  "attempted_step": 2059,
+  "original_failure": "runs/bridge_collective_feedback_20261008/seed72/collective/train/failure.json",
+  "replay_log": "runs/bridge_collective_feedback_20261008/seed72/collective/diagnose2059.log",
+  "pre_update_checkpoint": "runs/bridge_collective_feedback_20261008/seed72/collective/train_diagnose2059/checkpoint_pre_failure.pt",
+  "pre_update_step": 2058,
+  "sample": "atlas_2wpq_C_R1_dt_400ps_w000005",
+  "history": 8,
+  "queries": [11, 12, 14, 15],
+  "observations": {
+    "input_coordinates_finite": true,
+    "atoms": 807,
+    "nonself_zero_length_observed_edges_across_8_frames": 0,
+    "first_nonfinite_forward_module": "geometry.decoder.out_norm",
+    "finite_max_abs_input_at_original_failure_replay": 7.372747248476157e20,
+    "trace": "A further layer trace found large bilinear scalar/vector growth already in decoder layers1-6, before temporal/collective insertion. Query4 prefix scalar max exceeded1e16 and vector max8e8; decoder final scalar max exceeded7e20. The downstream float32 LayerNorm variance overflowed. This does not prove CF1 caused the underlying amplification.",
+    "repaired_loss": 37.13690185546875,
+    "repaired_gradient_norm_before_clipping": 871.6035766601562,
+    "repaired_all_gradients_finite": true,
+    "same_step_control72_loss": 34.14677047729492,
+    "same_step_control72_gradient_norm": 1619.860595703125
+  },
+  "repair": "Owned decoder output LayerNorm uses identical original kernel normally; for inputs exceeding sqrt(float32_max/(4*normalized_width)), evaluate the same affine normalization and epsilon in float64 then cast back. No clipping, sample skipping, NaN replacement, LR change, source change or objective change.",
+  "fairness": "Apply the same numerical rule to subsequent processes for both arms. Previously running jobs are not hot-patched. Record fallback counts for all subsequent training/evaluation. Existing non-exceptional original-kernel calls remain unchanged, but this is a numerical-kernel-repaired continuation, not a bitwise-identical resume. Full pre-update optimizer/sampler/RNG state is retained.",
+  "scientific_limit": "Finite training is not evidence of correct geometry or collective dynamics. The very large intermediate vectors remain an architectural stability concern; evaluate final generated geometry and motion against both original seeds and matched controls. Reference PVB/BioKinema code and weights remain untouched."
+}

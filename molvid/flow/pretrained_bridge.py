@@ -14,6 +14,7 @@ from torch.utils.checkpoint import checkpoint
 
 from ..codec.bridge_history import BridgeHistoryConditioner
 from ..codec.collective_feedback import CollectiveFeedback
+from ..codec.stable_norm import OverflowSafeLayerNorm
 from ..data.batch import ClipBatch
 
 
@@ -57,6 +58,8 @@ not a claim of arbitrary padded-batch support.
         if geometry.using_ode or geometry.backbone != 'torchmdnet':
             raise ValueError('Released TorchMD stochastic bridge is required')
         self.geometry = geometry
+        self.geometry.decoder.out_norm = OverflowSafeLayerNorm.from_layer(
+            self.geometry.decoder.out_norm)
         self.conditioner = BridgeHistoryConditioner(geometry.hidden_dim, temporal_heads)
         if temporal_insertion_layer not in (None, 6):
             raise ValueError('This experiment compares original placement with after layer6 only')
@@ -82,7 +85,8 @@ not a claim of arbitrary padded-batch support.
             physical_time_unit='ps', coordinate_unit='Angstrom',
             flow_family='PVB_stochastic_interpolant_velocity_and_drift_not_RF',
             static='same_geometry_and_heads_temporal_bypass_corrupted_structure_input',
-            padded_frames_supported=False, recompute_frames=self.recompute_frames)
+            padded_frames_supported=False, recompute_frames=self.recompute_frames,
+            scalar_output_normalization='same_LayerNorm_formula_float64_only_above_float32_variance_safe_range')
         if self.temporal_insertion_layer is not None:
             result.update(temporal_insertion_layer=self.temporal_insertion_layer,
                 temporal='same_observed_and_joint_query_attention_between_spatial_layers6_and7',

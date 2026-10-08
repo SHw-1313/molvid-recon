@@ -163,6 +163,7 @@ def run(args):
                 conditions=len(rows), forecasts=len(rows)*len(seeds), variant=args.variant, mean_metrics=means,
                 new_forecasts=new_forecasts, reused_forecasts=reused_forecasts, strata=strata,
                 seconds=time.monotonic()-started, training_updates=0,
+                output_norm_float64_calls=model.geometry.decoder.out_norm.high_precision_calls,
                 independent_test=False, test_payload_opened=False))
         finally:
             dataset.close()
@@ -200,6 +201,7 @@ def run(args):
                 aggregates[key].append((row['system'], value))
         atomic_write_json(args.output/'summary.json', dict(status='completed', systems=48, rows=len(rows),
             failures=[], seconds=time.monotonic()-started, neural_training_updates=0, test_opened=False,
+            output_norm_float64_calls=model.geometry.decoder.out_norm.high_precision_calls,
             arms={args.variant+'|'+key:system_estimate(value) for key,value in aggregates.items()}))
 
 
