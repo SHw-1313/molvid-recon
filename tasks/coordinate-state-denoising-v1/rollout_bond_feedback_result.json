@@ -28,6 +28,13 @@
     "confirmed": "Clean-history training versus generated-history recursion is an actual distribution difference,not yet a proven cause of the measured drift."
   },
   "decision": "Do not explain failure solely by history exposure or prioritize history augmentation as a sufficient fix. The first full source-sampled block is already geometrically poor despite real history,and the deficit affects protein as well as ligand. Evaluate source-generated local geometry alongside temporal/history coupling;use completed static-complex and paired rollout evidence to choose the next controlled intervention. Do not return to clean-latent decoder-only claims.",
+  "rejected_structural_hypothesis": {
+    "hypothesis": "At high noise,vanishing radial basis features structurally force all covalent messages to zero despite retaining graph edges",
+    "finding": "Not supported by actual code.CoordinateStateDenoiser._graph concatenates actual-distance RBF with independent binary bond_embedding;bonded envelope distance is0.NeighborEmbedding projects the full concatenation before its exempt envelope,and attention dk/dv also project the concatenation.ExpNormalSmearing has its own actual-distance cutoff,so its radial channel can be0,but the bond-identity channel is not multiplied by that radial cutoff.",
+    "sources": ["molvid/flow/coordinate_state.py:_graph/_begin_geometry", "molvid/spatial/torchmd.py:TorchMDEncoder/EquivariantMultiHeadAttention", "molvid/spatial/ops.py:NeighborEmbedding/ExpNormalSmearing"],
+    "consequence": "Do not add a redundant covalent-message branch merely to repair this nonexistent forced-zero pathway.Adequate learned usage,high-noise distance information and chemical expressivity remain separate unproven questions.",
+    "evidence_type": "Source inspection only;no new CUDA or learned-weight ablation was executed"
+  },
   "limitations": ["One completed candidate seed,reused development16;B/second seed pending", "PVB nativeH1 versus candidateH4 and different training resources", "For PVB precedingH4 scores are descriptive,not its actual conditioning tensor", "No clean-history replay intervention was performed;history-quality causality unresolved", "Bond metrics alone omit clashes,angles,chirality and equilibrium behavior", "Exploratory marginal bootstrap across systems;no multiplicity correction"],
   "promotion": false
 }
