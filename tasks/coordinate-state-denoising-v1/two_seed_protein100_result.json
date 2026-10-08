@@ -1,5 +1,5 @@
 {
-  "status": "both_seeds_complete_primary_protein100_metrics;seed72_path_and_temporal_analyses_running",
+  "status": "both_seeds_complete_protein100_primary_path_order_amplitude_and80_100_clock_analyses",
   "seeds": [71, 72],
   "coverage_each_seed_each_arm": {"systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "NFE_per_window": 35, "sampling_failures": 0},
   "sources": ["paired_seed71_protein100_result.json", "seed72_completed_edm_protein100_result.json", "runs/coordinate_state_denoising_v1/seed72/flow/expanded48/summary.json", "runs/coordinate_state_denoising_v1/seed72/{flow,edm}/protein100_vs_*.json"],
@@ -41,8 +41,51 @@
     "B improves clash and MSD errors over h/v in both seeds but worsens RMSF/torsion-increment errors. Its bond advantage excludes zero only in seed71.",
     "A improves RMSF error over released PVB in both seeds, but remains worse on bond/clash/MSD in both. Retain both favorable and unfavorable outcomes. PVB native inputs and released pretraining differ, so not an equal-resource causal comparison.",
     "All models evaluated on the same fixed48 development systems, including the2 protein systems with known cross-domain TRAIN sequence similarities. No retrospective member removal; no sealed test accessed.",
-    "Neither all-atom trajectory quality nor the persistent goal is achieved. Seed72 path, time-response, amplitude and complex/rollout analyses must finish; no architecture promotion or new parameter search based on these primary metrics alone."
+    "Neither all-atom trajectory quality nor the persistent goal is achieved. Complete path/time-response/amplitude findings below reinforce remaining temporal limitations; complex/rollout and second-seed1ns evaluations continue. No architecture promotion or new parameter search based on the primary metrics alone."
   ],
+  "seed72_complete_path_followup": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/protein_paths100/summary.json",
+    "coverage": "All48 systems,96 conditions,192 source-sampled draws per model; reused complete raw outputs;0 additional model calls",
+    "B_minus_A_CA_increment_path_fair_ES_A": [0.004614408324967309, 0.0014786956598706136, 0.008013508710155139],
+    "B_minus_hv_pair_distance_path_fair_ES_A": [-0.018079088034492718, -0.03478838709316206, -0.0017559141493752374],
+    "A_minus_PVB_CA_position_path_fair_ES_A": [-0.03166156272306745, -0.04946005443407213, -0.011626499327109411],
+    "B_minus_PVB_CA_position_path_fair_ES_A": [-0.03157276619436166, -0.0542890698526584, -0.0067406012387401975],
+    "replication": "Both A/B improve all four CA path fair-energy scores over PVB in both seeds. A versus h/v remains unresolved on all four in both seeds; B improves pair-distance paths over h/v in both, other three unresolved. A beats B on CA-increment paths in both; other three A/B differences unresolved. These positive distributional results coexist with poor all-atom geometry and weak frame ordering. Two draws do not establish a correct joint or equilibrium distribution."
+  },
+  "seed72_temporal_order": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/temporal_order100/summary.json",
+    "definition": "One minus chronological lagged squared distance divided by exact frame-permutation expectation; compare to MD, not simply maximize",
+    "model_order": ["MD", "hv", "PVB", "A_flow", "B_EDM"],
+    "CA_lag1_order_gain": [0.2854844779073124, 0.005461665645241299, 0.6542579650703395, 0.02213812629563056, 0.008547910653079053],
+    "CA_pair_distance_lag1_order_gain": [0.272614257515747, 0.004456959655183202, 0.6471781919696421, 0.01919564220840958, 0.0072815170131903745],
+    "CA_increment_lag1_cosine": [-0.37709431031861884, -0.4981341974967817, -0.1440829119969291, -0.4977653545455462, -0.4978692673592989],
+    "interpretation": "The near-zero adjacency advantage of both coordinate recipes repeats across training seeds. PVB instead overstates adjacency relative to MD and is not dynamical ground truth. Coordinate increment anticorrelation near-0.5 is descriptive, compatible with framewise jitter but not proof of conditional independence or of the architecture being the unique cause. Static pretraining is not assumed to fix the temporal deficit."
+  },
+  "seed72_amplitude_bins": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/amplitude100_vs_flow.json",
+    "TRAIN_boundaries_A": [1.5064689185142268, 2.136611611473248],
+    "bin_order": ["low", "medium", "high"],
+    "conditions": [44, 26, 26],
+    "systems_not_disjoint_between_bins": [25, 21, 18],
+    "A_mean_RMSF_ratios": [0.9420723913765093, 0.8380223262491702, 0.7403381670247334],
+    "B_mean_RMSF_ratios": [1.0112465144519436, 0.8105609848860934, 0.6960583717886769],
+    "high_B_minus_A_bond_RMSE_A": [0.12025585622626443, 0.10804900833763918, 0.13375804801759578],
+    "high_B_minus_A_MSD_MAE_A2": [-0.45289070379954816, -0.8994168787401313, -0.05238345298847153],
+    "high_B_minus_A_RMSF_MAE_A": [0.09740941661099593, 0.041777774329400726, 0.16412143040344945],
+    "replication": "Both seeds suppress high-motion finite-window RMSF; B's better high-bin MSD coexists with worse RMSF profile and geometry than A. This does not support labeling B a superior large-motion generator or imposing a displacement cap on either arm."
+  },
+  "seed72_clock80_100": {
+    "sources": "runs/coordinate_state_denoising_v1/seed72/{flow,edm}/clock80_100/summary.json and edm/clock80_100_vs_flow.json",
+    "coverage": "48 systems,96 fixed observed histories,2 draws per grid/model;0 new neural calls",
+    "absolute_displacement_response_error_A2_order_A_B": [0.02083510183820055, 0.021016341574520907],
+    "absolute_fluctuation_response_error_A_order_A_B": [0.009865654874220914, 0.010073220141891675],
+    "A_minus_zero_displacement_error_A2": [-0.0013654765747289964, -0.004671208664158955, 0.002049650978441623],
+    "A_minus_zero_fluctuation_error_A": [-0.00200841560276483, -0.0033348884757198006, -0.0006602138316343794],
+    "B_minus_A_displacement_error_A2": [0.00018123973632035596, -0.0011009754188879399, 0.0015657175154378056],
+    "B_minus_A_fluctuation_error_A": [0.00020756526767076155, -0.00023859278809112543, 0.000677198642223788],
+    "replication": "Both seeds/recipes show no resolved displacement-response benefit over zero-response and only a small fluctuation-response benefit. A/B clock-error differences are unresolved in both seeds. Reduced error versus the historical h/v path does not mean correct physical time sensitivity. Protein80ps is below protein TRAIN minimum although complex TRAIN includes80ps."
+  },
+  "next_action": "Finish already-running static->MD paired generation and complex/1ns/rollout panels without changing recipe. If weak temporal order persists after static pretraining, prioritize a separately labeled spatial-token/temporal-feedback ablation; evidence currently identifies a repeated failure mode, not its unique cause. No new GPU budget or matrix submitted by this record.",
   "static_pretraining_in_this_comparison": false,
   "default_promotion": false
 }
