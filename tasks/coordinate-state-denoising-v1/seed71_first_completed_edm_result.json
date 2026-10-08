@@ -1,0 +1,45 @@
+{
+  "status": "B seed71 protein100 full-source panel complete; A matching panel still running, so no A/B ranking",
+  "source": "runs/coordinate_state_denoising_v1/seed71/edm/expanded48",
+  "coverage": {"systems": 48, "conditions": 96, "draws_per_condition": 2, "future_frames": 12, "forecasts": 192, "failures": 0},
+  "sampling": "Immutable final2048 checkpoint; reference-displacement EDM source at TRAIN sigma_max;35 joint-window calls/draw; no postprocessing or target-containing inference inputs",
+  "resources": {"seconds": 3249.0028753355145, "model_forward_calls": 6720, "peak_cuda_bytes": 9747973120, "neural_training_updates": 0},
+  "all48_means": {
+    "bond_rmse_A": 0.24374117943079843,
+    "clashes_per_1000_atoms": 103.13407985524672,
+    "angle_cosine_rmse": 0.25638018005217117,
+    "MSD_curve_MAE_A2": 2.0503389670824013,
+    "residue_RMSF_profile_MAE_A": 0.32691435570207733,
+    "mean_RMSF_amplitude_ratio": 0.8991180284578145,
+    "torsion_increment_circular_error": 0.190258207032457
+  },
+  "paired_difference_definition": "EDM minus reference; mean,95percent system-bootstrap lower,upper; all192 matched draws retained. Listed errors are lower-is-better; amplitude ratio instead has ideal value1.",
+  "vs_hv": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/early_completed_protein100_vs_hv.json",
+    "bond_rmse_A": [-0.027514274737743982, -0.03462034857511499, -0.0202200300458836],
+    "clashes_per_1000_atoms": [-16.633875441810975, -31.39216611470161, -3.6175193894859183],
+    "MSD_curve_MAE_A2": [-0.4228204848606967, -0.647760734800896, -0.2210100211300112],
+    "residue_RMSF_profile_MAE_A": [0.023640736239030957, 0.007034355606689738, 0.04025938880028357],
+    "angle_cosine_rmse": [0.0042417273701479035, -0.000757869550337394, 0.00891141382938561],
+    "torsion_increment_circular_error": [0.038756431584867336, 0.031793315725129404, 0.046324301862235476]
+  },
+  "vs_PVB": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/early_completed_protein100_vs_pvb.json",
+    "bond_rmse_A": [0.20358679650644426, 0.191010768899762, 0.2171168180578875],
+    "clashes_per_1000_atoms": [101.76261728711397, 85.19451967786986, 124.03474227243578],
+    "MSD_curve_MAE_A2": [-0.04237261250252935, -0.1840524549195025, 0.11074496698113041],
+    "residue_RMSF_profile_MAE_A": [0.003239638482530912, -0.006237477184428523, 0.01368990679620765],
+    "angle_cosine_rmse": [0.18751145336621752, 0.18075261274061633, 0.1945988727316338],
+    "torsion_increment_circular_error": [0.058461899015431605, 0.04916858700162266, 0.06937322340672836]
+  },
+  "interpretation": [
+    "Some geometry and MSD gains over h/v coexist with worse residue RMSF and torsion-increment errors. This is not joint geometry/motion success.",
+    "Mean RMSF amplitude is not nearly zero, but a near-MD amplitude ratio alone is insufficient: the profile and temporal structure matter.",
+    "Large bond/clash/angle deficits versus released PVB remain. Unresolved MSD/RMSF differences do not establish equivalence or competitive joint quality.",
+    "Do not reject or select coordinate A/B from one completed recipe/seed/panel. A protein panel, seed72, complexes, path/distribution metrics, amplitude bins, time response and rollout remain pending.",
+    "MD-only random initialization differs from historical h/v and PVB pretraining, architecture, history and resources. These comparisons cannot isolate stochastic-state causality or disprove the need for paired static pretraining."
+  ],
+  "next_action": "Complete the unchanged paired experiment and noise diagnostic; preserve both positive and negative endpoints. No promotion, additional hyperparameter sweep or route selection based on this first panel.",
+  "limitations": ["Reused development48, not sealed independent confirmation", "Single training seed completed so far", "Two forecast draws/condition; marginal paired intervals without multiplicity correction", "Proper path-distribution and time-response followups pending; no equilibrium or kinetics claim"],
+  "default_promotion": false
+}

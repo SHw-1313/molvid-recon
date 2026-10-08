@@ -3,7 +3,7 @@
   "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
   "branch": "exp/coordinate-state-denoising-v1",
   "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
-  "status": "Both seed71 runs completed2048 updates with identical actual2048-example/query sequences and equal52,958,960 atom-query exposures. Both seed72 models are training on GPU1/4, while both immutable seed71 final models are now actually source-sampling primary panels on released GPU6/7. See paired_seed71_training_result.json. Full primary panels remain pending; no efficacy claim from initial conditions.",
+  "status": "Both seed71 runs completed2048 matched updates; both seed72 models still train on GPU1/4. B seed71 completed all192 protein100 source forecasts: bond/clash/MSD gains versus h/v coexist with worse residue RMSF and torsion increments; large geometry deficits versus PVB remain. See seed71_first_completed_edm_result.json. A protein panel is still running; B moved to complex64 as process1140130 on GPU7. No A/B ranking or promotion; remaining full paired panels continue unchanged.",
   "parallel_primary_evaluation": {
     "implementation_commit":"0c30ef2",
     "reason":"Do not leave released goal GPUs idle while first-seed fixed-final models wait behind second-seed training. Advance existing primary evaluation, not new experimental variants.",
