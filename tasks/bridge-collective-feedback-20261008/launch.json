@@ -1,7 +1,8 @@
 {
   "date_local": "2026-10-08",
   "implementation_commit": "a431df3",
-  "status": "2026-10-08 14:28 CST: collective71 completed4096 updates in5838.308750017546 seconds. Control72 has started onGPU7; control71 and collective72 continue onGPU1/6. Completed collective71 generation is assignedGPU4 after dense-query71 exits, rather than waiting for control72 training.",
+  "status": "2026-10-08 14:46 CST: collective71 is doing actual protein100 trajectory generation onGPU4 (14 forecast rows observed); control71, collective72 and control72 continue training onGPU1/6/7. No completed CF1 quality panel yet.",
+  "first_generation": {"seed": 71, "arm": "collective", "GPU": 4, "container_pid": 1116149, "host_pid": 1552403, "forecast_rows_observed": 14, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/expanded48/rows.json", "started_after": "dense-query71 completed its full generation and analysis pipeline"},
   "observed_first_training": {"seed": 71, "arm": "collective", "GPU": 7, "container_pid": 1110788, "host_pid": 1086538, "completed_updates_observed": 32, "elapsed_training_seconds_at32": 47.74175217282027, "static_protein_step_observed": 4, "static_complex_step_observed": 5, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/train.log"},
   "container_environment": "torch-ito via enter-container",
   "lanes": [
@@ -19,5 +20,5 @@
   "artifact_destination": "/data1/sihao/molvid-derived/bridge-collective-feedback-20261008",
   "checkpoint_selection": "fixed4096 continuation update; both original same-seed16384 placement parents preserved",
   "current_jobs": "No existing training or generation was interrupted",
-  "result_claim": "Collective seed71 completed actual mixed static/dynamic CUDA training. Other three arms are training. No generated CF1 panel or efficacy claim yet."
+  "result_claim": "Collective seed71 completed training and started actual GPU generation. Other three arms are training. No complete generated CF1 panel or efficacy claim yet."
 }
