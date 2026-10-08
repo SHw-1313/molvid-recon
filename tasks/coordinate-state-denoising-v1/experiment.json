@@ -41,7 +41,7 @@
   },
   "fixed_final_noise_diagnostic": {
     "implementation_commit": "6509af4",
-    "status": "queued, not yet CUDA-executed; no diagnostic result claimed",
+    "status": "completed actual CUDA diagnostic:320 calls, zero source forecasts or optimizer updates",
     "controller_container_pid": 1139805,
     "GPU": 0,
     "waits_for": "Existing BC3 seed71 controller1122396 to exit, both coordinate seed71 protein100 primary panels to complete, and GPU0 to be idle",
@@ -55,6 +55,17 @@
     "additional_optimizer_updates": 0,
     "additional_source_forecasts": 0,
     "resource_accounting": "Auxiliary inference is additional measured compute, not free or part of primary forecast NFE. Record actual wallclock, candidate-geometry frames and peak memory. Original8192 training updates and6656 primary/rollout forecasts remain unchanged; no new architecture/source variants or GPU sharing.",
+    "actual_resources": {"total_seconds": 183.27369104977697, "flow_seconds": 97.19170896336436, "EDM_seconds": 85.1949618216604, "calls_each": 160, "candidate_geometry_frames_each": 1920, "flow_peak_cuda_bytes": 7338641920, "EDM_peak_cuda_bytes": 7334598656},
+    "observations": {
+      "means_over_eight_systems_and_two_noise_draws_each_domain": true,
+      "EDM_protein_low_sigma_input_and_clean_component_RMSE_A": [0.011405678665287064, 0.01097052053587523],
+      "EDM_protein_sigma_0p761_clean_component_RMSE_and_bond_RMSE_A": [0.351963068482395, 0.23562672920525074],
+      "EDM_protein_sigma_max_clean_and_persistence_component_RMSE_A": [1.248302063639483, 1.3720182424646183],
+      "EDM_complex_sigma_max_clean_and_persistence_component_RMSE_A": [0.6878003517072704, 0.7808674588983207],
+      "flow_protein_s0p05_clean_and_persistence_component_RMSE_A": [1.1605705805749513, 1.3720182424646183],
+      "flow_complex_s0p05_clean_and_persistence_component_RMSE_A": [0.6754796317747609, 0.7808674588983207],
+      "interpretation": "Both trained models improve their corrupted/interpolated inputs on this small fixed subset. EDM sigma_min input is already almost clean, so its tiny absolute output error is not strong recovery evidence; mid-noise protein bond RMSE remains0.236A. High-noise conditional estimates beat persistence in this coordinate-error diagnostic but do not establish source-sampled geometry, diversity or temporal correlations."
+    },
     "interpretation": "Fixed-weight supervised diagnostic only. Current states legitimately contain the real future through RF interpolation or EDM noising. Endpoint clean estimates are not source-generated trajectories, and native progress bins/losses are not cross-recipe matched-noise comparisons. It cannot establish main-goal success."
   },
   "parallel_time_evaluation": {
