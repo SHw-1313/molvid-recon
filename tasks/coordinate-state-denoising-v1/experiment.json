@@ -13,7 +13,7 @@
     "history": "H4/H8 alternate by system visits; Q12/Q8 are all remaining futures, not one-frame training",
     "future_frame_exposure": "A/B identical within each seed; log actual target_frames and atom_query_pairs",
     "sampling": "18 intervals,35 network calls per complete joint window in both arms; Heun except final Euler endpoint",
-    "resource_scope": "Use two already-authorized local GPU lanes only when their current owners and queued predecessor work finish; no cancellation or sharing of busy GPUs",
+    "resource_scope": "A/B train and sample on the two already-authorized GPU1/4 lanes, no cancellation or sharing of busy GPUs. Already-budgeted frozen h/v inference was subsequently advanced onto released existing-goal GPU7 after CF1 control72 completed; unchanged total training updates and forecast count.",
     "fairness": "Matched A/B architecture, data sequence, random initialization, optimizer schedule, updates and NFE. Actual wallclock/FLOPs may differ because noise changes neighbor graphs. Historical h/v and external references are not matched-training-budget causal controls."
   },
   "TRAIN_statistics": {
@@ -74,11 +74,14 @@
   "default_promotion": false
   ,"supplemental_evaluation": {
     "clock_motion_rollout_cpu_controllers": [1129212,1129213],
-    "hv_complex_gpu_controller": 1129538,
+    "hv_complex_gpu_controller": 1133363,
+    "hv_complex_GPU": 7,
+    "hv_complex_inference_process": 1133368,
+    "hv_complex_rescheduling": "After CF1 controller1115169 completed and GPU7 had no applications, replaced only our waiting h/v shell1129538 (verified only sleep child, no model process). Previously queued behind all flow work on GPU1; now runs in parallel on a released lane within the existing eight-GPU goal scope. No extra forecasts, optimizer updates or repeated baseline. A/B and other running jobs untouched.",
     "hv_complex_cpu_controller": 1129539,
     "scope": "Paired80/100ps MD-response errors, proper ensemble MSD/RMSF/increment-path scores, and full92-frame generated-history rollout against each other and released PVB. No extra neural calls for these scorers.",
-    "hv_complex": "Common evaluator now supports frozen original A1 h/v sampler via --hv-baseline; identical64-system128-condition full-atom inventory and eight seeds. No checkpoint changes, source retuning or fine-tuning. Queued only after flow lane completes, not a third GPU reservation.",
-    "hv_complex_status": "Interface implemented; actual CUDA inference and compatibility with full complex panels remain to be demonstrated.",
+    "hv_complex": "Common evaluator supports frozen original A1 h/v sampler via --hv-baseline; identical64-system128-condition full-atom inventory and eight seeds. No checkpoint changes, source retuning or fine-tuning. Its initial serial queue was superseded by the explicitly recorded released-GPU rescheduling.",
+    "hv_complex_status": "Actual GPU7 inference process1133368 completed the first condition/eight full12-frame forecasts and saved raw coordinates. Full128-condition panel pending; no efficacy conclusion from first condition.",
     "statistical_pairing": "Subtract matched per-system estimates then bootstrap systems, not marginal CI endpoints. Raw displacement/amplitude differences are not automatically improvement."
   },
   "first_real_CUDA_execution": {
