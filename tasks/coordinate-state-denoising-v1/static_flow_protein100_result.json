@@ -1,6 +1,7 @@
 {
   "status": "completed_static_then_MD_A_seed71_full_source_protein100",
   "recorded_local": "2026-10-09T03:29+08:00",
+  "RMSF_definition": "Aggregate raw_means.RMSF_MAE_A and primary paired RMSF_MAE_A are residue-profile MAE.Amplitude-bin entries explicitly labeled atom-profile use a different observable.See paired_static_protein100_result.json for both definitions and now-complete matched B results.",
   "source_root": "runs/coordinate_static_pretrain_v1/seed71/flow",
   "sources": ["expanded48/summary.json", "protein100_vs_md.json", "protein100_vs_hv.json", "protein100_vs_pvb.json", "protein_paths100_advanced/summary.json", "temporal_order100_advanced/summary.json", "amplitude100_vs_md_advanced.json", "spatial_coherence100_advanced/summary.json"],
   "coverage": {"development_systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "query_spacing_ps": 100, "NFE_each": 35, "failed_draws": 0, "postprocessing": false, "sealed_test_opened": false},

@@ -1,0 +1,75 @@
+{
+  "status": "completed_both_static_then_MD_seed71_protein100_full_source_panels",
+  "recorded_local": "2026-10-09T04:02+08:00",
+  "source_root": "runs/coordinate_static_pretrain_v1/seed71",
+  "sources": ["flow/expanded48/summary.json", "edm/expanded48/summary.json", "edm/protein100_vs_md.json", "edm/protein100_vs_flow.json", "edm/protein100_vs_hv.json", "edm/protein100_vs_pvb.json", "edm/protein_paths100/summary.json", "edm/temporal_order100/summary.json", "edm/amplitude100_vs_md_advanced.json", "edm/amplitude100_vs_flow_advanced.json", "edm/spatial_coherence100_advanced/summary.json"],
+  "coverage_each": {"development_systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "query_spacing_ps": 100, "NFE": 35, "failed_draws": 0, "postprocessing": false, "sealed_test_opened": false},
+  "resource_matching": "Each arm6,701,836parameters,2048 static plus2048 MD updates,identical complete data exposure and35NFE.MD noise-progress sequences match each recipe's own MD-only counterpart.No extra training from these analyses.Actual GPU-hours differ;matched exposure is not equal wallclock.",
+  "B_resources": {"static_GPU_hours": 0.18700176177727473, "MD_GPU_hours": 2.5176420847036773, "protein100_sampling_seconds": 3250.5437778411433, "sampling_model_calls": 6720, "sampling_peak_cuda_bytes": 9757132800, "extra_model_calls_for_analyses": 0},
+  "mean_model_order": ["staticA", "staticB"],
+  "means": {
+    "bond_RMSE_A": [0.09968774848933115,0.12257432720269046],
+    "clashes_per1000": [47.408227871054976,57.05199384680471],
+    "residue_RMSF_profile_MAE_A": [0.2905787927253793,0.3296604740899056],
+    "atom_RMSF_profile_MAE_A": [0.320913427354147,0.3586492888474216],
+    "MSD_MAE_A2": [2.309728789013914,2.5022620297709683],
+    "RMSF_amplitude_ratio": [0.8813123184862572,0.8184782453601566],
+    "angle_cosine_RMSE": [0.16120409414482614,0.18874108667174974],
+    "torsion_increment_circular_error": [0.13686883387466273,0.1611836642647783]
+  },
+  "metric_convention": "Primary compare_proteins table uses residue RMSF-profile MAE;amplitude-bin supplemental table also reports atom-profile MAE.These are distinct and must not be mixed when comparing numbers.",
+  "paired_array_definition": "Candidate minus reference:mean,lower,upper95percent paired system-bootstrap interval.Marginal exploratory intervals,not multiplicity-adjusted;ratios not universally lower-is-better.",
+  "staticB_minus_MDonlyB": {
+    "bond_RMSE_A": [-0.12116685222810795,-0.12605990979832818,-0.11673691914377167],
+    "clashes_per1000": [-46.08208600844201,-51.231492063180916,-41.025945055827385],
+    "residue_RMSF_MAE_A": [0.0027461183878282704,-0.010050987785992522,0.01573462339389758],
+    "MSD_MAE_A2": [0.4519230626885676,0.28527793293986986,0.6394596454364039],
+    "torsion_increment_circular_error": [-0.029074542767678697,-0.031325498538596244,-0.0268089338913948],
+    "CA_position_path_fair_ES_A": [0.015242783918378749,0.0012881787577230697,0.03012272735178178],
+    "CA_pair_distance_path_fair_ES_A": [0.023510907214573523,0.0028300503085044192,0.04945379948489191],
+    "CA_increment_path_fair_ES_A": [0.0016498638155640164,-0.0007821762964050603,0.003888060766300936],
+    "CA_pair_distance_increment_path_fair_ES_A": [-0.004409416550521375,-0.008764781046176123,-0.00025150084905477217]
+  },
+  "staticB_minus_staticA": {
+    "bond_RMSE_A": [0.022886578713359307,0.017466650138122857,0.02854582557690919],
+    "clashes_per1000": [9.643765975749742,7.286886294558871,11.642968570266246],
+    "residue_RMSF_MAE_A": [0.039081681364526354,0.024726978485705334,0.05393580922682304],
+    "MSD_MAE_A2": [0.1925332407570548,0.15544122630963106,0.2290290030269211],
+    "torsion_increment_circular_error": [0.024314830390115578,0.02165072974651897,0.027131299527051546],
+    "CA_position_path_fair_ES_A": [0.017914673117834016,0.010026086050964089,0.026363106405934172],
+    "CA_pair_distance_path_fair_ES_A": [0.024411009889888684,0.011814516292920437,0.03865422787054811],
+    "CA_increment_path_fair_ES_A": [0.007240401388155072,0.004438263978227166,0.010072437225421229],
+    "CA_pair_distance_increment_path_fair_ES_A": [0.004114983861647381,-0.0009218813097729548,0.008779667408228052]
+  },
+  "external_comparisons": {
+    "B_vs_hv": "Bond,clash and angle improve;residue RMSF and torsion-increment errors worsen.MSD difference and all four CA full-path fair-score differences remain unresolved.",
+    "B_vs_PVB": "Bond,clash,MSD,angle and torsion-increment errors remain worse;residue RMSF difference unresolved.All four CA full-path fair scores improve.Retain favorable distributional evidence without claiming universal reference superiority.",
+    "hv_path_pairing": "B per_system path scores from edm/protein_paths100 paired with a1 entries from flow/protein_paths100_advanced using the same system_estimate and all48 matched systems;no new forecasts or marginal-CI subtraction."
+  },
+  "high_motion": {
+    "definition": "Same TRAIN-frozen amplitude cutoffs and all96 conditions;high bin26conditions/18systems.No system filtering.",
+    "B_RMSF_ratio_MDonly_then_static": [0.7278592831802597,0.6613438668456566],
+    "B_static_minus_MDonly_ratio": [-0.06651541633460306,-0.08596350935935568,-0.043831776317756206],
+    "B_static_minus_MDonly_MSD_MAE_A2": [0.9270379009346166,0.5234950778316015,1.3369115575837585],
+    "staticB_minus_staticA_atom_RMSF_MAE_A": [0.09332841738230652,0.06356199551891122,0.1277012733276933],
+    "staticB_minus_staticA_MSD_MAE_A2": [0.34283862525114306,0.2514852171832765,0.4455765610146853],
+    "interpretation": "B static exposure improves bond/clash/torsion in every amplitude bin but worsens MSD in every bin.RMSF atom-profile error improves in low bin;medium/high changes unresolved.Already-suppressed high-motion amplitude decreases further in both A and B.StaticB has worse geometry,MSD and high-bin RMSF than staticA.This is not evidence that diffusion is inherently limited to small motion."
+  },
+  "temporal_order": {
+    "lag1_gain_MD_MDonlyB_staticB_staticA": [0.2854844779073124,0.01362061105931852,0.030322594658190746,0.041269909882109844],
+    "increment_lag1_cosine_MDonlyB_staticB_staticA": [-0.4978347572779014,-0.49862847254755954,-0.49661296414454464],
+    "B_static_minus_MDonly_lag1_absolute_MD_error": [-0.01660812053272612,-0.020880630288949008,-0.012714354170138555],
+    "staticB_minus_staticA_lag1_absolute_MD_error": [0.010457602506842049,0.006110220474708101,0.014963554609156163],
+    "interpretation": "B order error improves at lags1,2,8 but worsens slightly at4 versus MD-only.B versus staticA is worse at1,better at4 and unresolved at2/8.Neither has MD-like short-lag ordering;higher ordering is not universally better.",
+    "paired_method": "Matched per_system entries of edm/temporal_order100/summary.json through molvid.evaluation.ca_detail.system_estimate."
+  },
+  "spatial_cooperation": {
+    "B_static_covalent_CAcontact_increment_cosine": [0.8779036387781601,0.2574862841819389],
+    "B_static_covalent_CAcontact_relative_step_RMS_A": [0.6082275337085917,1.0457715761227817],
+    "interpretation": "B improves both covalent/contact cosine errors and relative-increment fair scores versus MD-only.B remains worse than staticA on all four observables.B versus h/v/PVB improves both cosine errors and contact fair score,while covalent fair-score differences are unresolved.Local cooperative motion can improve while whole-path distribution and MSD worsen;do not conflate these targets."
+  },
+  "limitations": ["Single static followup training seed;48 repeatedly explored development systems,not independent confirmation", "Additional static exposure and compute not isolated from data content without equal-resource longer-MD control", "Known sequence-related development systems retained as documented in static_sequence_generalization_result.json;not family/fold independence", "PVB native input and h/v pretraining/resources differ;state-only causal attribution unsupported", "Native80 time response,complex64 and generated-history evidence still pending;no equilibrium or long-time kinetics claim"],
+  "decision": "On this seed/native100 panel staticA is preferable to staticB on main geometry/motion metrics,but no goal-level winner or default promotion.B gains chemical geometry/local coupling at a clear MSD/full-path cost;A also suppresses high motion.Complete unchanged cross-time,complex and rollout panels before choosing the next controlled architecture/training intervention.Do not infer more static exposure alone will solve dynamics or discard B universally.",
+  "running_continuation": {"B_native80_container_process": 1152026, "A_native80_container_process": 1150869, "original_CPU_analysis_controller": 1142470, "additional_GPU_forecasts_or_training_updates": 0},
+  "default_promotion": false
+}
