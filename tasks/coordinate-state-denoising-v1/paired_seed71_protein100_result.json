@@ -74,6 +74,23 @@
     "high_B_minus_A_residue_RMSF_MAE_A": [0.08810866913861698, 0.02514799412132965, 0.16180381157125023],
     "interpretation": "Both suppress finite-window RMSF in the high-motion bin on average; B's better MSD does not mean it preserves larger fluctuation amplitudes. B has worse bonds/clashes than A in every bin and worse RMSF profile in the high bin. Do not label A intrinsically small-motion or B intrinsically large-motion. All96 conditions remain included, with TRAIN-frozen bins."
   },
+  "fixed_history_clock80_100": {
+    "sources": "runs/coordinate_state_denoising_v1/seed71/{flow,edm}/clock80_100/summary.json and clock80_100_vs_{hv,flow}.json",
+    "coverage": "48 systems,96 matched observed histories, two draws at each spacing for each model; original complete native80/native100 caches, no new neural calls for analysis",
+    "metric": "Response of observed-contact CA pair-distance displacement and fluctuation observables to80ps versus100ps query spacing. Protein80ps lies below protein TRAIN100/200/400ps spacing, although80ps occurs in complex TRAIN.",
+    "absolute_displacement_response_error_A2_order_A_B_hv_zero": [0.021089473781604393, 0.021282363082931244, 0.06405333648939097, 0.02220057841292954],
+    "absolute_fluctuation_response_error_A_order_A_B_hv_zero": [0.01018706890248106, 0.010118090703881024, 0.030988149023957617, 0.011874070476985745],
+    "A_minus_zero_displacement_error_A2": [-0.001111104631325151, -0.003788207903648368, 0.0017129530509722483],
+    "B_minus_zero_displacement_error_A2": [-0.000918215329998303, -0.004891619464500387, 0.003400113220972301],
+    "A_minus_zero_fluctuation_error_A": [-0.0016870015745046863, -0.002694403289565768, -0.000633019591472401],
+    "B_minus_zero_fluctuation_error_A": [-0.0017559797731047215, -0.003033960547403666, -0.0004258347401547059],
+    "B_minus_A_displacement_error_A2": [0.00019288930132684793, -0.0017138678944440633, 0.0021348160307289787],
+    "B_minus_A_fluctuation_error_A": [-0.00006897819860003536, -0.0004911023760808286, 0.00033701714046755073],
+    "A_minus_hv_displacement_error_A2": [-0.04296386270778657, -0.049021884095423456, -0.03725159006797366],
+    "B_minus_hv_displacement_error_A2": [-0.042770973406459724, -0.049633477669270516, -0.03654269214626212],
+    "mean_displacement_response_A2_order_MD_A_B": [-0.018268128082778504, -0.008723598072332465, -0.013858383320935905],
+    "interpretation": "Both recipes reduce errors relative to h/v and show the correct sign in the mean response. However their displacement-response advantage over a zero-response predictor remains unresolved; fluctuation-response advantage is small but its interval excludes zero. A/B error differences are unresolved. Do not label smaller clock-to-seed response ratios as automatically good or bad, demand deterministic predictions match MD fixed-index differences, or claim time sensitivity solved."
+  },
   "answers_so_far": [
     "A improves several geometry metrics and MSD/torsion-increment errors over historical h/v on this panel, with unresolved RMSF difference. This is positive joint evidence on some endpoints, not yet full trajectory quality or the whole goal.",
     "B improves geometry/MSD over h/v but worsens residue RMSF/torsion increments. A is better than B on geometry/RMSF/torsion increments here, while B is better on MSD. Similar mean amplitudes cannot establish matching motion distributions.",
