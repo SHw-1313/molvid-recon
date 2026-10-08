@@ -47,6 +47,7 @@ def run(args):
     protocol = json.loads((args.data/'summary.json').read_text())
     if protocol['status'] != 'completed' or protocol['test_payload_opened'] or protocol['future_frames'] != 92:
         raise ValueError('Use completed continuous development96 data')
+    initialization_report = None
     if args.pvb_checkpoint:
         model = load_pvb(args.pvb_checkpoint, args.pvb_root, device)
         model_kind = 'unaltered_released_PVB_MISATO_native_H1_autoregressive'
@@ -60,6 +61,7 @@ def run(args):
             if saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
                 raise ValueError('Wrong coordinate-state checkpoint schema')
             model = CoordinateStateDenoiser(saved['settings']).to(device)
+            initialization_report = saved.get('initialization_report')
             sampler_steps = saved['settings']['sampler_intervals']
         else:
             model = PretrainedGeometryBridge(load_geometry(saved['settings'], device), recompute_frames=True,
@@ -71,6 +73,7 @@ def run(args):
         del saved
     seeds = [17,29,43,59]
     atomic_write_json(args.output/'protocol.json', dict(variant=args.variant, model=model_kind,
+        coordinate_initialization_report=initialization_report,
         checkpoint=str(args.pvb_checkpoint or args.checkpoint), seeds=seeds, systems=16,
         observed_frames=1 if args.pvb_checkpoint else 4, future_frames=92, native_dt_ps=80,
         horizon_ps=7360, solver_steps=sampler_steps, learned_bridge_block_frames=12,

@@ -1,0 +1,18 @@
+{
+  "status": "weights-only stage transition implemented; real cross-stage CUDA execution pending",
+  "entry": "tools.train_coordinate_state --warm-start <owned fixed-final coordinate checkpoint>",
+  "recipe_requirement": "initialization=coordinate_state_weights_only; new data and optimizer budget explicitly declared",
+  "compatibility": "Same recipe schema, flow/EDM scheme, coordinate scales/preconditioning, width, spatial layers, heads, RBF and geometry-neighbor policy; strict state dict loading",
+  "inherited": "All compatible owned coordinate-state model weights; no external weights or frozen modules",
+  "reset": "Optimizer, schedule, data visits, RNG, stage exposure and GPU hours; this is not exact resume",
+  "accounting": "Parent checkpoint, step, seed, exposure, GPU hours, available source commit and prior initialization lineage retained separately in recipe/checkpoint/evaluation. Legacy parents without an embedded source commit remain explicitly unknown rather than inferred.",
+  "current_MD_only_changed": false,
+  "static_training_submitted": false,
+  "CUDA_transition_verified": false,
+  "next": "Use the completed MD-only A/B generation evidence to decide the paired static stage and its budget. Exercise an actual static-to-MD transition on CUDA before full-stage submission; do not describe this implementation as a successful pretraining experiment.",
+  "scientific_constraints": [
+    "Paired static source and exposure for A/B; static restoration supervises current geometry, shared interaction and coordinate output",
+    "No clean structure in static condition, no static physical-future label or duplicated zero-motion windows",
+    "Record prior and MD-stage resources separately; gains over MD-only include extra exposure unless resource-controlled separately"
+  ]
+}

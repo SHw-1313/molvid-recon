@@ -76,6 +76,7 @@ def run(args):
             temporal_insertion_layer=settings.get('temporal_insertion_layer'),
             collective_feedback=settings.get('collective_feedback', False)).to(device)
         output_norm = model.geometry.decoder.out_norm
+    initialization_report = saved.get('initialization_report') if saved is not None else None
     if saved is not None:
         model.load_state_dict(saved['model'], strict=True)
         del saved
@@ -93,11 +94,12 @@ def run(args):
                     parameters=sum(p.numel() for p in model.parameters()),
                     release=str(RELEASE), codec=raw['codec']) if args.hv_baseline else model.contract()),
         original_pvb_modified=False, inference_refinement=False,
+        coordinate_initialization_report=initialization_report if coordinate_state else None,
         development=True, independent_test=False, test_payload_opened=False,
         limitations=(['Unmodified frozen A1 h/v generator and decoder; 16 Euler steps',
             'Historical training exposure differs from coordinate A/B; not a matched-budget causal control',
             'Complex inference is generic-atom transfer; no complex fine-tuning or source retuning'] if args.hv_baseline else
-            ['Random MD-only initialization; h/v baseline has different pretraining/resources',
+            [f'Coordinate initialization: {settings["initialization"]}; inspect parent and stage exposure before comparing resources',
             'All remaining training futures; H4/Q12 or H8/Q8'] if coordinate_state else
             ['Inherited released static pretraining; not training from scratch',
             'Four training queries versus twelve joint evaluation queries'])+[

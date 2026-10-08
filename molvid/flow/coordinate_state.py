@@ -72,7 +72,9 @@ class CoordinateStateDenoiser(nn.Module):
     def contract(self):
         return dict(schema='molvid.coordinate_state.model.v1', scheme=self.scheme,
             state='XYZ_or_reversible_reference_displacement_Q_N_3_Angstrom', physical_time_unit='ps',
-            weights='random_initialization_no_AF3_Protenix_PVB_weights', frozen_modules=[],
+            weights=('owned_coordinate_state_weights_only_no_external_weights'
+                if self.settings.get('initialization')=='coordinate_state_weights_only'
+                else 'random_initialization_no_AF3_Protenix_PVB_weights'), frozen_modules=[],
             current_geometry='rebuild_current_radius_neighbors_plus_all_covalent_edges_each_call',
             hierarchy='atom_to_chemical_unit_global_attention_within_sample_then_atom_lift',
             covalent_cutoff='bonded_edges_exempt_from_cutoff_envelope_actual_distance_RBF_retained',
