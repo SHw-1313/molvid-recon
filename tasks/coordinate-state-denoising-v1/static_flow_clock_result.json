@@ -1,0 +1,39 @@
+{
+  "status": "completed_A_only; paired static B clock pending",
+  "arm": "coordinate_static_flow_71",
+  "sources": [
+    "runs/coordinate_static_pretrain_v1/seed71/flow/native80/summary.json",
+    "runs/coordinate_static_pretrain_v1/seed71/flow/clock80_100/summary.json",
+    "runs/coordinate_static_pretrain_v1/seed71/flow/clock_vs_md.json"
+  ],
+  "protocol": "48 development proteins,96 matched observed conditions,192 complete source draws at each of80/100ps,12 future frames,35 field evaluations/window. Same raw forecasts and observed CA contact-distance definition as MD-only clock analysis; paired system bootstrap, no forecast filtering or postprocessing.",
+  "native80_execution": {"status": "completed", "forecasts": 192, "failures": 0, "model_calls": 6720, "training_updates": 0, "seconds": 3646.6967340633273, "peak_cuda_bytes": 9752935424, "sealed_test_opened": false},
+  "native80_means": {"bond_RMSE_A": 0.09822092518530538, "clashes_per_1000": 44.957513752636125, "residue_RMSF_MAE_A": 0.2799743607174605, "MSD_MAE_A2": 2.0311219572193093, "RMSF_ratio": 0.8878995851848118},
+  "estimate_format": ["mean", "marginal_95_percent_system_bootstrap_lower", "upper"],
+  "clock_estimates": {
+    "absolute_displacement_response_error_A2": [0.020575956401287256,0.014582917505732406,0.027018902500455355],
+    "absolute_fluctuation_response_error_A": [0.00987979181262638,0.008155064059038127,0.011781813007479151],
+    "candidate_minus_zero_displacement_error_A2": [-0.0016246220116422903,-0.00447831579266421,0.0012416975530301418],
+    "candidate_minus_zero_fluctuation_error_A": [-0.001994278664359366,-0.0032363335895633344,-0.0006950880832322123],
+    "prediction_clock_response_rms_A": [0.01046231701180165,0.00945584836071378,0.011510990684708173],
+    "prediction_seed_spread_rms_A": [0.7005754908823421,0.6493596738826775,0.754270884038165],
+    "clock_to_seed_response_ratio": [0.014709945172801199,0.014332500713419322,0.015081826437856232]
+  },
+  "static_A_minus_MD_only_A": {
+    "absolute_displacement_response_error_A2": [-0.0005135173803171392,-0.0009666830722910301,-0.00008632063001017656],
+    "absolute_fluctuation_response_error_A": [-0.00030727708985467975,-0.0005835373648962887,-0.000049642500476077136],
+    "prediction_clock_response_rms_A": [0.0018565537973850058,0.0016896422977501816,0.0020298241993105324],
+    "prediction_seed_spread_rms_A": [-0.04265148767251117,-0.06486886567391051,-0.023939738015137064],
+    "clock_to_seed_response_ratio": [0.0032850021221926874,0.003110943286316741,0.00347329567528937]
+  },
+  "interpretation": [
+    "Both clock-response errors improve slightly versus MD-only A, but displacement error advantage versus a zero-response predictor remains unresolved. Fluctuation-response error is lower than zero-response under the marginal paired interval.",
+    "Increased clock-to-seed ratio reflects both increased clock response and decreased seed spread; it is not an independent demonstration of accurate dynamics.",
+    "This does not establish correct physical time dependence,1ns extrapolation,thermodynamic distributions or a joint goal-level improvement. Retain unfavorable high-motion and temporal-order results from the100ps panel.",
+    "One static training seed, reused development systems, two draws and one MD future per condition. Static exposure adds compute and documented sequence-related sources; no equal-resource longer-MD control.",
+    "Protein80ps is below the minimum protein TRAIN spacing100ps, although complex80ps is present in mixed training. Matched query-index noise is not a common-physical-time stochastic coupling."
+  ],
+  "next_existing_work": {"A_complex64_container_pid": 1153093, "GPU": 0, "started_by_existing_controller": 1142136, "B_native80_container_pid_at_recording": 1152026, "B_GPU": 2, "extra_forecasts_or_updates": 0, "existing_jobs_cancelled": 0},
+  "CPU_analysis_model_calls": 0,
+  "promotion": false
+}
