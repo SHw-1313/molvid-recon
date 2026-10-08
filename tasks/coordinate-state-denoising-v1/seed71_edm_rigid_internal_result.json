@@ -1,0 +1,54 @@
+{
+  "status": "completed_raw_source_sample_analysis",
+  "source_commit": "c1b85a6",
+  "scorer": "tasks/bridge-collective-feedback-20261008/score_rigid_internal_motion.py",
+  "candidate_output": "runs/coordinate_state_denoising_v1/seed71/edm/rigid_internal64.json",
+  "reference_output": "runs/coordinate_state_denoising_v1/hv_pvb_rigid_internal64.json",
+  "coverage": "Complete128conditions,64systems,8rawdraws,12futureframes,80ps.No conditions/draws excluded. Candidate and reference condition/system identities match;all per-condition MD observables agree within1e-10.",
+  "resources": {"new_model_calls": 0, "optimizer_updates": 0, "GPU_use": false},
+  "definition": "Existing last-observed protein reference alignment. For consecutive ligand shapes, fit a proper rotation with fixed atom identities and separately measure centroid translation, rotation-fit displacement and remaining shape change. Includes observed-to-first-future step. Diagnostic fitting never modifies saved forecasts or primary geometry/motion scores.",
+  "amplitude_columns": ["MD", "B71", "hv", "PVB"],
+  "all64_mean_step_RMS_A": {
+    "total": [1.3985046736729316, 1.6384409018230848, 1.8439980105963318, 0.8556217949399039],
+    "translation": [1.0393975887209839, 1.05538042323513, 0.8862010755276684, 0.5259259059069931],
+    "rotation_fit": [0.6910220418492281, 0.6521054265868489, 0.6077126114691874, 0.3761456507056776],
+    "internal_residual": [0.5243750035346528, 1.0096076214336958, 1.4781606030274754, 0.5392884854789277]
+  },
+  "new48_mean_step_RMS_A": {
+    "total": [1.2029353658362358, 1.5394702634840118, 1.805796348596429, 0.8045088078571366],
+    "translation": [0.8772359846810285, 0.9663546628014581, 0.8505697824682166, 0.4793134661650044],
+    "rotation_fit": [0.5665245541304934, 0.5947312935859465, 0.5898372653585396, 0.34721205121500326],
+    "internal_residual": [0.5134933861706168, 0.9705458263425605, 1.4601531648804944, 0.5261115948872562]
+  },
+  "paired_error_definition": "For each system, first average its two condition amplitudes; compute abs(B-MD)-abs(reference-MD), then existing system_estimate on paired system differences. Descriptive absolute amplitude error, not a proper distribution score. Bootstrap CI is on differences,not subtraction of marginal endpoints.",
+  "difference_columns": ["mean_A", "ci95_lower", "ci95_upper"],
+  "all64_B_minus_hv_amplitude_error": {
+    "total": [-0.4134433605328694, -0.6102462523071738, -0.24944389740200562],
+    "translation": [-0.24629388555840775, -0.4371413397901713, -0.10242926041403883],
+    "rotation_fit": [-0.07537998569949514, -0.14631003639986537, -0.010303581307595707],
+    "internal_residual": [-0.46332990800032375, -0.5524829176707234, -0.3766391336470447]
+  },
+  "all64_B_minus_PVB_amplitude_error": {
+    "total": [-0.09823044812286172, -0.322341783595191, 0.10692741474840115],
+    "translation": [-0.24976709892907864, -0.4435030444168279, -0.10158163115370356],
+    "rotation_fit": [-0.09225358518005855, -0.16567503052814553, -0.02017939753872801],
+    "internal_residual": [0.3261557118547756, 0.23293517517877788, 0.4168230391727272]
+  },
+  "new48_B_minus_hv_amplitude_error": {
+    "total": [-0.40320621539175705, -0.6334638725487035, -0.2302284757516118],
+    "translation": [-0.19882500560187932, -0.4050172930934018, -0.07563264439815989],
+    "rotation_fit": [-0.054310701316422766, -0.10700498081986415, -0.001766727178110889],
+    "internal_residual": [-0.4826432404133265, -0.5785043068006059, -0.3825362842303527]
+  },
+  "new48_B_minus_PVB_amplitude_error": {
+    "total": [-0.02106439525076455, -0.28305710309236665, 0.1755771768250401],
+    "translation": [-0.2099134378860875, -0.4396990674832394, -0.054919454234619934],
+    "rotation_fit": [-0.05275334511732388, -0.12060476849872113, 0.012789717065261837],
+    "internal_residual": [0.29569480322338554, 0.1824247704330067, 0.4071927508902064]
+  },
+  "old16_retained": "B improves total/translation/internal amplitude errors versus h/v;rotation difference unresolved.Versus PVB,translation/rotation errors improve,internal residual worsens,total unresolved.Full estimates and all condition rows remain in source outputs.",
+  "judgment": "B improves overall translation and rotation amplitude matching while reducing,but not resolving,the old h/v excess internal-shape motion. New48 internal residual remains about1.89times MD and1.84times PVB. These coexist with worse B bond geometry than PVB and poor rollout chemistry. Do not dismiss favorable collective-motion evidence or call all movement random;do not infer state-only causality. Increasing global amplitude is not supported as a remedy for excess internal deformation.",
+  "next": "Complete paired A/second-seed/static panels and current bounded temporal-order contrast. Its success must preserve collective movement while reducing internal distortion,not only improve temporal correlation. No extra source/loss/rigid-body constraints added from this diagnosis alone.",
+  "limitations": ["Internal residual includes legitimate torsions/deformations,not exclusively bond jitter", "Rotation/internal squared norms have a nonzero cross term;not additive energy fractions", "Translation uses ligand centroid,not mass-weighted center of mass", "Fixed atom identities,no ligand symmetry remapping;near-collinear rotations can be ambiguous", "One MD future per condition;finite-window amplitude agreement is not equilibrium,thermodynamic or kinetic correctness", "Exploratory marginal system-bootstrap intervals,unmatched native histories/training/resources,and development-set reuse", "One B training seed;no proof that coordinate state alone causes improvement"],
+  "promotion": false
+}
