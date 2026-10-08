@@ -79,14 +79,26 @@
     "time_semantics": "80/100ps fixed-history response diagnostic: protein80ps lies below protein TRAIN100/200/400ps spacings, although80ps occurs in complex TRAIN. It is not pure within-domain interpolation.1ns query spacing exceeds all TRAIN spacings and remains explicitly extrapolative."
   },
   "second_seed_evaluation_advancement": {
-    "status": "implemented, not launched; both original second-seed training processes remain live",
+    "status": "EDM launched on released GPU4 after seed72 training completed normally; flow seed72 training remains live on GPU1",
     "script": "tasks/coordinate-state-denoising-v1/run_second_seed_advanced.sh",
     "implementation_commit": "1e8e42f",
     "reason": "Original GPU1/4 queues next wait on seed71 complex output locks owned by busy GPU6/7; avoid idle training GPUs when seed72 fixed-final weights are already available",
     "execution_order": "seed72 protein100, seed71 short rollout, seed72 complex64, seed72 short rollout. Existing primary/time workers retain seed71 primary panels and both80/1000ps panels; exact-request lock/reuse prevents duplicate primary forecasts.",
     "required_before_launch": "Verify both fixed-final training checkpoints complete, training process exited, GPU idle, and original lane/evaluator are only waiting before model construction. Retire only those owned non-model waiters, not training or active generation. Original lane must relinquish rollout ownership; rollout has no duplicate-execution lock.",
     "additional_optimizer_updates": 0, "additional_forecasts": 0,
-    "existing_training_interrupted": false
+    "existing_training_interrupted": false,
+    "EDM_execution": {
+      "date_local": "2026-10-09T00:19+08:00",
+      "training": "Seed72 completed2048 updates normally in9082.486456682906s,2.5229129046341403GPUh;2048 dynamic examples,20480 target frames,52958960 atom-query pairs,peak66544066560 CUDA bytes. Both seed71/72 completed statuses and final checkpoint files confirmed; training PID1137397 exited normally.",
+      "retired_waiters": [1130077,1144375],
+      "retirement_evidence": "Controller1130077 was in do_wait; sole child1144375 was in locks_lock_inode_wait, with only the seed71 complex output lock open and no model loaded. GPU4 had no compute applications. Seed71 complex generation1140130 on GPU7 remained live and untouched. Only those two owned non-model waiting processes received TERM; original logs retained.",
+      "advanced_controller_container_pid": 1144425,
+      "seed72_protein_evaluator_container_pid": 1144428,
+      "seed72_protein_evaluator_host_pid": 3578932,
+      "CUDA_launch_evidence": "New evaluator alive with correct fixed-final seed72 checkpoint and output; nvidia-smi reports hostPID3578932 on GPU4. Complete forecast panel not yet available, no new efficacy claim.",
+      "log": "runs/coordinate_state_denoising_v1/seed72/edm/expanded48_advanced.log",
+      "rollout_ownership": "Advanced controller is now sole EDM rollout owner for both seeds. Existing primary/time workers remain unchanged and use exact-request completed-panel reuse."
+    }
   },
   "launch": {"implementation_commit": "b7810b2", "final_launcher_commit": "a8c7c2f", "edm_controller_container_pid": 1128478, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1128479, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false, "launcher_refresh": "Replaced only our new waiting shells1127741/1127742 after confirming each had only a sleep child and no model process. This loads the completed rollout and final GPU-idle recheck; no training or forecasts were cancelled. Initial logs retained; current logs lane_edm_v2.log/lane_flow_v2.log."},
   "paired_budget": {
@@ -137,7 +149,7 @@
   "shared_architecture": {
     "modules": ["trainable TorchMD current/observed geometry", "observed-history and joint-query attention", "explicit physical query-lag MLP", "global chemical-unit scalar/vector attention and atom lift", "equivariant XYZ head"],
     "geometry": "Current radius neighbors rebuilt on every evaluation, union all covalent bonds. Bonded edges retain their actual noisy distances and directions but are exempt from the distance cutoff envelope. No target-defined graph or permanent initial-contact constraint.",
-    "static_support": "Shared geometry, interactions and head; static singleton receives only corrupted coordinates as condition. No static updates have run and no static pretraining benefit is claimed.",
+    "static_support": "Shared geometry, interactions and head; static singleton receives only corrupted coordinates as condition. MD-only arms have no static updates. Separate paired followup: flow completed2048 static updates and entered MD training; EDM awaits its allocated GPU. See static_pretrain_followup.json and static_transition_status.json; no static pretraining benefit is yet claimed.",
     "weight_inheritance": "None. No frozen teacher, future h/v target, latent adapter or latent normalization statistics in the generative path.",
     "limitations": "This initial prototype has a different trunk from historical h/v generation. Gains over that baseline alone cannot isolate state representation from architecture, training exposure or pretraining."
   },
