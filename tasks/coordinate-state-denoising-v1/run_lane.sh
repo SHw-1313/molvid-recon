@@ -16,6 +16,7 @@ if test "$scheme" = edm; then
 else
  while ! test -f "$root/cuda_dataflow.json"; do sleep 30; done
 fi
+while test -n "$(nvidia-smi -i "$gpu" --query-compute-apps=pid --format=csv,noheader,nounits)"; do sleep 20; done
 # Both variants receive both seeds and identical fixed MD exposure. Complete
 # training before expensive panels; never select favorable intermediate weights.
 for seed in 71 72; do
