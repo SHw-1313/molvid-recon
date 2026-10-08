@@ -67,14 +67,21 @@ def main():
         if a[sample]['system']!=b[sample]['system']:raise ValueError('System identity mismatch')
         common=a[sample]['metrics'].keys()&b[sample]['metrics'].keys()
         rows.append(dict(sample_id=sample,system=a[sample]['system'],**labels[sample],
+            candidate={key:a[sample]['metrics'][key] for key in common},
+            reference={key:b[sample]['metrics'][key] for key in common},
             candidate_minus_reference={key:a[sample]['metrics'][key]-b[sample]['metrics'][key] for key in common}))
     estimates={}
+    absolute_estimates={}
     for label in ('low','medium','high'):
         chosen=[r for r in rows if r['bin']==label]
         estimates[label]=dict(conditions=len(chosen),systems=len({r['system'] for r in chosen}),
             metrics={key:system_estimate([(r['system'],r['candidate_minus_reference'][key]) for r in chosen
                 if key in r['candidate_minus_reference']]) for key in chosen[0]['candidate_minus_reference']} if chosen else {})
+        absolute_estimates[label]={side:{key:system_estimate([(r['system'],r[side][key]) for r in chosen
+            if key in r[side]]) for key in chosen[0][side]} if chosen else {}
+            for side in ('candidate','reference')}
     atomic_write_json(args.output,dict(status='completed',model_calls=0,TRAIN_bin_boundaries_A=boundaries.tolist(),
+        candidate=str(args.candidate),reference=str(args.reference),absolute_estimates=absolute_estimates,
         convention='Binned by real future minus fixed last observation in existing shared coordinate frame; labels are evaluation-only, never model inputs',
         rows=rows,estimates=estimates,limitations=['Exploratory system bootstrap within bins; not new independent confirmation',
             'Amplitude ratios are not universally lower-is-better','Bins do not filter failed systems or change model selection']))

@@ -1,5 +1,5 @@
 {
-  "status": "Both first-seed complete native100ps protein panels scored; full-path/temporal-order/amplitude analyses still running",
+  "status": "Both first-seed complete native100ps protein panels and full-path, temporal-order and amplitude-bin analyses completed",
   "coverage_each_arm": {"systems": 48, "conditions": 96, "draws": 192, "future_frames_per_draw": 12, "NFE_per_window": 35},
   "training": "Same architecture, initialization RNG, exact2048-example sequence,52,958,960 atom-query exposure and optimizer recipe; all weights random then trained. No static pretraining yet.",
   "sources": "runs/coordinate_state_denoising_v1/seed71/{flow,edm}/expanded48 and {flow,edm}/protein100_vs_*.json",
@@ -42,6 +42,37 @@
     "A_peak_cuda_bytes": 9753546240, "B_peak_cuda_bytes": 9747973120,
     "model_calls_each": 6720,
     "interpretation": "Evaluation wallclock includes scoring/IO; same A100 model and per-panel NFE, not measured equal FLOPs. Actual inference ran on distinct GPUs while other authorized work ran concurrently."
+  },
+  "complete_path_followup": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/protein_paths100/summary.json",
+    "B_minus_A_CA_increment_path_fair_ES_A": [0.005788167702722857, 0.0020615952623427875, 0.009745207676538678],
+    "A_minus_PVB_CA_position_path_fair_ES_A": [-0.031069841604099507, -0.049925397185758884, -0.010841052825572985],
+    "B_minus_PVB_CA_position_path_fair_ES_A": [-0.036841140089108666, -0.05925625502220204, -0.011733078327332051],
+    "interpretation": "Both A/B improve all four measured CA position, increment, pair-distance and pair-distance-increment fair path scores over released PVB in this native-input protocol. Preserve this favorable evidence despite their all-atom geometry deficits. Versus h/v, A path-score intervals all cross zero; B improves pair-distance paths but other intervals cross zero. A/B differ clearly only on CA increment paths among these four endpoints. Two-draw CA path scores do not establish correct all-atom joint dynamics."
+  },
+  "temporal_order_followup": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/temporal_order100/summary.json",
+    "definition": "One minus chronological lagged squared distance divided by exact frame-permutation expectation, after shared protein alignment. Positive means adjacency advantage; not universally larger-is-better. No new neural calls.",
+    "model_order": ["MD", "hv", "PVB", "A_flow", "B_EDM"],
+    "CA_lag1_order_gain": [0.2854844779073124, 0.005461665645241299, 0.6542579650703395, 0.01911101544338203, 0.01362061105931852],
+    "CA_pair_distance_lag1_order_gain": [0.272614257515747, 0.004456959655183202, 0.6471781919696421, 0.015264126378011741, 0.013618823768389708],
+    "B_minus_A_absolute_MD_error_lag1_CA": [0.0055107331004295435, -0.0002769402360509319, 0.011032029331923347],
+    "B_minus_A_absolute_MD_error_lag4_CA": [-0.01023730622128484, -0.01664250823561968, -0.004071172557043347],
+    "interpretation": "Both coordinate models still show very weak adjacent-frame ordering compared with MD, despite nonzero RMSF and some favorable path scores. PVB overstates this lag1 ordering relative to MD and is not ground truth. Near-zero ordering is compatible with exchangeability, not proof of independent frames. Static pretraining alone cannot be assumed to repair this temporal deficit."
+  },
+  "motion_amplitude_followup": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/amplitude100_absolute_vs_flow.json",
+    "original_difference_only_source_preserved": "runs/coordinate_state_denoising_v1/seed71/edm/amplitude100_vs_flow.json",
+    "TRAIN_thresholds_A": [1.5064689185142268, 2.136611611473248],
+    "bins": "Evaluation-only true future displacement from last observation;44 low,26 medium,26 high conditions. Systems can have anchors in different bins; bins are not disjoint system cohorts.",
+    "mean_RMSF_ratio_order": ["A_flow", "B_EDM"],
+    "low_mean_RMSF_ratio": [0.9960850610980632, 1.0350251287340877],
+    "medium_mean_RMSF_ratio": [0.8760255257275131, 0.8357295360830731],
+    "high_mean_RMSF_ratio": [0.7637442219754484, 0.7278592831802597],
+    "high_B_minus_A_bond_RMSE_A": [0.09634604905083065, 0.08409412051441284, 0.10793327679271189],
+    "high_B_minus_A_MSD_MAE_A2": [-0.622927248339962, -1.0907829169390928, -0.12808880201299455],
+    "high_B_minus_A_residue_RMSF_MAE_A": [0.08810866913861698, 0.02514799412132965, 0.16180381157125023],
+    "interpretation": "Both suppress finite-window RMSF in the high-motion bin on average; B's better MSD does not mean it preserves larger fluctuation amplitudes. B has worse bonds/clashes than A in every bin and worse RMSF profile in the high bin. Do not label A intrinsically small-motion or B intrinsically large-motion. All96 conditions remain included, with TRAIN-frozen bins."
   },
   "answers_so_far": [
     "A improves several geometry metrics and MSD/torsion-increment errors over historical h/v on this panel, with unresolved RMSF difference. This is positive joint evidence on some endpoints, not yet full trajectory quality or the whole goal.",
