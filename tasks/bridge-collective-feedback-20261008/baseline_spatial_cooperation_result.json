@@ -1,5 +1,16 @@
 {
-  "status": "completed_cached_forecast_analysis_not_CF1_result",
+  "status": "completed_cached_forecast_analysis_not_CF1_result; empirical joint-pair ES superiority versus PVB superseded by fair estimate below",
+  "fair_pair_path_followup": {
+    "analysis_implementation": "e011802",
+    "sources": ["runs/bridge_collective_feedback_20261008/baseline_spatial_cooperation71_fair/summary.json", "runs/bridge_collective_feedback_20261008/baseline_spatial_cooperation72_fair/summary.json"],
+    "definition": "Mean forecast-to-MD Euclidean path distance minus0.5 times the mean OFF-DIAGONAL forecast-to-forecast distance; denominator S*(S-1), assuming conditionally iid forecast draws. Historical empirical S^2 score retained below but not used for predictive-distribution ranking.",
+    "seed71_far16A_fair_pair_path_ES_delta_interleaved_A": {"mean": -0.04129662093460607, "ci95": [-0.05083744627261225, -0.03283299954184273]},
+    "seed72_far16A_fair_pair_path_ES_delta_interleaved_A": {"mean": -0.03789395145751076, "ci95": [-0.04766162877371878, -0.02878170401904013]},
+    "seed71_far16A_fair_pair_path_ES_delta_PVB_A": {"mean": 0.01376340842066634, "ci95": [-0.006995261699270519, 0.03954138285394005]},
+    "seed72_far16A_fair_pair_path_ES_delta_PVB_A": {"mean": 0.022083849258426696, "ci95": [-0.00022666842962001623, 0.050013794198010435]},
+    "correction": "Paired gains against the interleaved control remain. The historical empirical-score superiority over PVB does NOT survive fair estimation: both PVB comparisons cross zero. Covariance/correlation diagnostics are unchanged. Existing main whole-protein and complex path scores already used the fair denominator; they require no correction.",
+    "reference": "https://empslocal.ex.ac.uk/people/staff/ferro/Publications/ferro2013.pdf"
+  },
   "date_local": "2026-10-08",
   "analysis_implementation": "a431df3",
   "systems": 48,
@@ -143,7 +154,7 @@
   "interpretation": [
     "Internal temporal placement produces replicated but small improvement in far-pair increment correlation error relative to its interleaved control",
     "Both placement seeds remain worse than released PVB in far-pair increment correlation and covariance errors",
-    "Both placement seeds are better than PVB on position correlation/covariance error and joint pair full-path ES; no blanket inferiority claim",
+    "Both placement seeds are better than PVB on position correlation/covariance error. Historical empirical joint-pair ES looked better but the fair estimate provides no supported advantage over PVB; no blanket superiority/inferiority claim",
     "CF1 targets the remaining cross-atom communication route; these data do not prove that absent collective feedback is the unique causal bottleneck"
   ],
   "limitations": [

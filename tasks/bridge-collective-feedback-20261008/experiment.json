@@ -40,7 +40,8 @@
       "Bond/angle/torsion/clashes together with MSD/RMSF and complete-path energy scores",
       "Ligand collective translation/pocket/contact distribution together with internal bond fluctuation",
       "Protein temporal order relative to MD, not maximizing smoothness",
-      "Both training seeds; no best-checkpoint/sample selection"
+      "Both training seeds; no best-checkpoint/sample selection",
+      "Predictive-distribution comparisons use fair joint-pair path ES with S*(S-1); retain empirical S^2 results only for traceability. Existing main whole-path scores already use the fair estimator"
     ],
     "references": "Untouched released PVB; BioKinema native1ns follow-up only if joint geometry/motion remains promising",
     "limitations": [
