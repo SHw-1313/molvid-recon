@@ -1,0 +1,80 @@
+{
+  "status": "both_seeds_primary_horizon_order_amplitude_and_full_path_analyses_complete",
+  "sources": ["paired_seed71_protein1ns_result.json", "seed72_completed_edm_protein1ns_result.json", "runs/coordinate_state_denoising_v1/seed72/flow/native1000/summary.json", "runs/coordinate_state_denoising_v1/seed72/edm/protein1ns_vs_flow.json", "runs/coordinate_state_denoising_v1/seed72/flow/protein1ns_vs_{hv,biokinema}_advanced.json"],
+  "coverage_each_arm_each_seed": {"systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "spacing_ps": 1000, "field_calls_per_window": 35, "failures": 0},
+  "seed72_raw_order": ["A_flow", "B_EDM"],
+  "seed72_raw_means": {
+    "bond_rmse_A": [0.3306344716475947, 0.4447909103514653],
+    "clashes_per_1000_atoms": [173.7333367574388, 201.19837658325764],
+    "residue_RMSF_MAE_A": [0.5758423517302921, 0.5512456495780498],
+    "MSD_curve_MAE_A2": [7.47220680464266, 6.732766472837991],
+    "mean_RMSF_amplitude_ratio": [0.9288742593662738, 0.8978585051093818],
+    "torsion_increment_circular_error": [0.23657078831456602, 0.28805361144865554]
+  },
+  "paired_array_definition": "Mean,lower,upper95percent marginal paired system-bootstrap interval;not adjusted for multiplicity.Seeds are separate fits of the same48-system panel,not independent new systems.",
+  "seed72_B_minus_A": {
+    "bond_rmse_A": [0.11415643870387061,0.08923812270682224,0.1457591667944617],
+    "clashes_per_1000_atoms": [27.46503982581882,18.661241700333353,35.585884821742184],
+    "residue_RMSF_MAE_A": [-0.024596702152242262,-0.04765527052998853,0.004490503573712566],
+    "MSD_curve_MAE_A2": [-0.7394403318046696,-1.1140421433794672,-0.3473293452387835],
+    "torsion_increment_circular_error": [0.05148282313408951,0.04536440286707754,0.05759470603079534]
+  },
+  "seed72_A_minus_hv": {
+    "bond_rmse_A": [0.08138912059588492,0.07501302440452841,0.08806523602315094],
+    "clashes_per_1000_atoms": [96.8261547762487,85.10781178927964,112.06482073391304],
+    "residue_RMSF_MAE_A": [-0.060394716216251254,-0.1161886654328555,-0.009521316758279429],
+    "MSD_curve_MAE_A2": [-1.301235338892891,-1.517879964431308,-1.0931660394614382],
+    "torsion_increment_circular_error": [0.0714886039107417,0.06697259674256201,0.07718958430244431]
+  },
+  "seed72_A_minus_BioKinema": {
+    "bond_rmse_A": [0.2946706767224127,0.2824077380948342,0.30791982347661],
+    "clashes_per_1000_atoms": [169.89594586064442,151.90105630679915,192.73595766401345],
+    "residue_RMSF_MAE_A": [0.08977616500730316,-0.0007310011036073164,0.17966066796992283],
+    "MSD_curve_MAE_A2": [2.0273937603665724,0.9459682124641,3.3076833896972744],
+    "torsion_increment_circular_error": [0.0805119708335648,0.07411635864021567,0.08730517435469665]
+  },
+  "seed72_A_resources": {"seconds": 3628.316390292719, "peak_cuda_bytes": 9741366272, "model_forward_calls": 6720, "optimizer_updates_in_evaluation": 0},
+  "seed72_A_bond_horizon": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/flow/bond_horizon100_1000.json",
+    "query1_through12_mean_RMSE_A_at1ns_spacing": [0.2513513615719909,0.21141386704360268,0.19020433425128833,0.18677636595684763,0.20319982109820542,0.22595414704941227,0.2536905033932463,0.28403877542041783,0.31226279545787156,0.35118657375165485,0.4277363829406559,0.6966679202180971],
+    "query1_and12_at100ps_spacing": [0.15752282348114058,0.1710861703141984],
+    "interpretation": "Distant-query geometry degradation repeats in both A seeds.A72/B72 terminal-frame bondRMSEs are close despite better pooled-window A geometry.This is joint-window generation,not autoregressive error accumulation;not proof that the time-feature MLP alone causes failure."
+  },
+  "seed72_temporal_order": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/temporal_order1ns/summary.json",
+    "order": ["MD", "hv", "BioKinema", "A72", "B72"],
+    "CA_lag1_gain": [0.2894302290481526,0.18956282792743143,0.03194786288659559,0.32054025618235626,0.1366714337523883],
+    "CA_lag4_gain": [0.0017750115316286102,0.0789577294688677,-0.009147802115664934,0.12875231312608162,0.055109906788305185],
+    "interpretation": "A72 mean lag1 approaches MD,but lag4 is too positive;B72 under-orders lag1 whereas B71 over-orders it.Time-dependent drift/amplitude can raise ordering in damaged windows.These descriptive values do not establish correct kinetics or robust recipe superiority."
+  },
+  "seed72_amplitude_bins": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/amplitude1ns_vs_flow.json",
+    "TRAIN_boundaries_A": [1.5064689185142268,2.136611611473248],
+    "bin_order": ["low", "medium", "high"],
+    "conditions": [11,38,47],
+    "systems_not_disjoint_between_bins": [8,24,26],
+    "A_mean_RMSF_ratios": [1.1627591924508747,1.0846306989944896,0.7576451199228108],
+    "B_mean_RMSF_ratios": [1.1951682464976625,1.0332474203911801,0.7299918427299169],
+    "high_B_minus_A_MSD_error_A2": [-0.9574403159129317,-1.6341141844550393,-0.2415095419169239],
+    "high_B_minus_A_RMSF_error_A": [-0.011040501869641818,-0.05028492453006598,0.03675054727265468],
+    "interpretation": "A high-motion RMSF suppression repeats.B high-motion ratio changes from1.198(seed71) to0.730(seed72);neither stable larger-motion preservation nor inherent local-only generation is established.B72 improves MSD in all bins but worsens bonds in all;RMSF clearly improves only in medium bin."
+  },
+  "seed72_full_path_scores": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/protein_paths1ns_advanced/summary.json",
+    "coverage": "All48 systems/96 conditions/192 draws per model;0 additional model calls",
+    "A_minus_hv_CA_position_path_fair_ES_A": [-0.14927537577084649,-0.18863504470483547,-0.11389385487100546],
+    "A_minus_hv_CA_increment_path_fair_ES_A": [-0.03165233815863943,-0.04198222652511155,-0.02100676877395553],
+    "A_minus_hv_pair_distance_path_fair_ES_A": [-0.18572064282866263,-0.24549542474512878,-0.13016286871706298],
+    "A_minus_hv_pair_distance_increment_path_fair_ES_A": [-0.02244998327708279,-0.03938425363218669,-0.005585024462491874],
+    "A_minus_BioKinema_CA_position_path_fair_ES_A": [0.07466205743380591,0.027336059925580535,0.12808023393422285],
+    "A_minus_BioKinema_pair_distance_increment_path_fair_ES_A": [-0.057994771491811536,-0.08765854253665263,-0.030310177498098792],
+    "interpretation": "A improves all four CA path scores over h/v in both seeds;this positive motion-distribution evidence is retained despite worsened all-atom geometry.B72 also improves all four versus h/v,but B71 did not.A/B72 differences are unresolved on all four;do not interpret B72 MSD advantage as blanket path superiority.Versus BioKinema,A position paths are worse and pair-distance-increment paths better in both seeds;remaining two unresolved.B72 has the same pattern.Two-draw fair scores do not establish correct all-atom joint dynamics or thermodynamics."
+  },
+  "cross_seed_findings": [
+    "A improves RMSF/MSD errors versus h/v in both seeds at1ns,but worsens bond/clash/torsion-increment errors in both.No simultaneous geometry-motion victory at this extrapolated grid.",
+    "A beats B on geometry/torsion-increment errors in both seeds,while MSD ranking reverses:B worse in71,better in72.B-vs-A RMSF advantage is unresolved in72,not evidence that B wins every motion measure.",
+    "Both recipes remain worse than released BioKinema on geometry/MSD/torsion-increment errors.BioKinema H1+MSA and46/48 known training overlap remain important fairness limitations;do not claim an unbiased unseen-system ranking.",
+    "No static pretraining in these runs.No clipping,source modification,query-time remapping or postprocessing used to repair1ns results.All systems/seeds retained."
+  ],
+  "default_promotion": false
+}
