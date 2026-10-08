@@ -1,14 +1,16 @@
 {
   "date_local": "2026-10-08",
   "implementation_commit": "a431df3",
-  "status": "2026-10-08 14:05 CST: actual CF1 training runs concurrently: collective71 onGPU7, control71 onGPU1, collective72 on newly freedGPU6. Observed steps3177/284/25 respectively. Control72 remains next onGPU7.",
+  "status": "2026-10-08 14:28 CST: collective71 completed4096 updates in5838.308750017546 seconds. Control72 has started onGPU7; control71 and collective72 continue onGPU1/6. Completed collective71 generation is assignedGPU4 after dense-query71 exits, rather than waiting for control72 training.",
   "observed_first_training": {"seed": 71, "arm": "collective", "GPU": 7, "container_pid": 1110788, "host_pid": 1086538, "completed_updates_observed": 32, "elapsed_training_seconds_at32": 47.74175217282027, "static_protein_step_observed": 4, "static_complex_step_observed": 5, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/train.log"},
   "container_environment": "torch-ito via enter-container",
   "lanes": [
-    {"GPU": 7, "controller_container_pid": 1109978, "wait_for_container_pid": 1109075, "assignments": ["71:collective", "72:control"], "predecessor": "capacity72 native1ns evaluation worker"},
+    {"GPU": 7, "controller_container_pid": 1115169, "wait_for_container_pid": 1115046, "assignments": ["72:control"], "predecessor": "Existing control72 training child1115046 preserved alive underPPID1; replacement controller waits then skips completed training and evaluates control72"},
     {"GPU": 1, "controller_container_pid": 1113668, "wait_for_container_pid": 1112901, "assignments": ["71:control"], "predecessor": "Existing control71 training child1112901 preserved alive with PPID1; replacement continuation waits for this child, skips completed training and evaluates it"},
-    {"GPU": 6, "controller_container_pid": 1113669, "wait_for_container_pid": 1109074, "training_container_pid": 1113680, "assignments": ["72:collective"], "predecessor": "Capacity72 native80 complete and worker exited; GPU verified empty before launch"}
+    {"GPU": 6, "controller_container_pid": 1113669, "wait_for_container_pid": 1109074, "training_container_pid": 1113680, "assignments": ["72:collective"], "predecessor": "Capacity72 native80 complete and worker exited; GPU verified empty before launch"},
+    {"GPU": 4, "controller_container_pid": 1115170, "wait_for_container_pid": 1108050, "assignments": ["71:collective"], "predecessor": "Whole existing dense-query71 pipeline, including remaining native80 generation and analysis. Collective71 final training already complete; skip it and generate only after predecessor exits and GPU is empty"}
   ],
+  "evaluation_parallel_split": {"action": "After collective71 completed and original laneA started control72, terminated only laneA controller1109978. Verified sole training child1115046 stayed alive underPPID1. ReplacementGPU7 controller owns control72; GPU4 waiter owns collective71 evaluation. No running model was stopped or restarted.", "completed_training_updates": 4096, "new_control72_updates_observed": 14, "extra_training_budget": 0},
   "parallel_split": {"date_local": "2026-10-08 14:05 CST", "action": "Terminated controller1112893 only after verifying sole child1112901 was the active control71 training. Child preserved alive under PPID1, not restarted. New controller1113668 owns subsequent control71 evaluation; collective72 moved from its unstarted queue toGPU6 via1113669.", "training_recipe_changed": false, "new_collective72_updates_observed": 25},
   "lane_relocation": {"date_local": "2026-10-08 13:59 CST", "previous_gpu": 6, "previous_controller_container_pid": 1109979, "action": "Terminated only the still-waiting CF1 shell after verifying its only child was sleep and neither arm output existed. Capacity72 GPU6 generation/controller1109074 left running. Relaunched same assignments/configs on freeGPU1.", "new_training_container_pid": 1112901, "observed_actual_updates": 5, "new_log": "runs/bridge_collective_feedback_20261008/laneB_gpu1.log", "numerical_model_code_changed": false},
   "rigid_internal_analysis_container_pids": [1112675, 1112676],
@@ -17,5 +19,5 @@
   "artifact_destination": "/data1/sihao/molvid-derived/bridge-collective-feedback-20261008",
   "checkpoint_selection": "fixed4096 continuation update; both original same-seed16384 placement parents preserved",
   "current_jobs": "No existing training or generation was interrupted",
-  "result_claim": "Real mixed static/dynamic CUDA updates have started for collective seed71. Training is incomplete; no generated CF1 panel or efficacy claim."
+  "result_claim": "Collective seed71 completed actual mixed static/dynamic CUDA training. Other three arms are training. No generated CF1 panel or efficacy claim yet."
 }
