@@ -1,0 +1,156 @@
+{
+  "status": "completed_cached_forecast_analysis_not_CF1_result",
+  "date_local": "2026-10-08",
+  "analysis_implementation": "a431df3",
+  "systems": 48,
+  "conditions": 96,
+  "draws_per_model_condition": 2,
+  "future_frames": 12,
+  "native_query_ps": 100,
+  "new_model_calls": 0,
+  "group": "CA residue pairs separated by at least16A in last observed structure; up to4096 deterministically selected pairs per condition",
+  "runtime_sources": [
+    "/workspace/molvid-bridge-collective-feedback-20261008/runs/bridge_collective_feedback_20261008/baseline_spatial_cooperation71/summary.json",
+    "/workspace/molvid-bridge-collective-feedback-20261008/runs/bridge_collective_feedback_20261008/baseline_spatial_cooperation72/summary.json"
+  ],
+  "rounding": "Values below rounded to8 decimal places; full precision and per-system values retained at runtime_sources",
+  "seeds": {
+    "71": {
+      "placement_minus_interleaved": {
+        "increment_correlation_MAE": {
+          "mean": -0.00127319,
+          "ci95": [
+            -0.001999,
+            -0.00057654
+          ]
+        },
+        "increment_covariance_MAE_A2": {
+          "mean": -0.00050725,
+          "ci95": [
+            -0.00125692,
+            0.00022853
+          ]
+        },
+        "position_correlation_MAE": {
+          "mean": -0.00068191,
+          "ci95": [
+            -0.00152776,
+            0.0000432
+          ]
+        },
+        "joint_pair_full_path_ES_A": {
+          "mean": -0.04216308,
+          "ci95": [
+            -0.05153169,
+            -0.03373329
+          ]
+        }
+      },
+      "placement_minus_PVB": {
+        "increment_correlation_MAE": {
+          "mean": 0.01230635,
+          "ci95": [
+            0.00984299,
+            0.01505695
+          ]
+        },
+        "increment_covariance_MAE_A2": {
+          "mean": 0.00690882,
+          "ci95": [
+            0.00434978,
+            0.00996077
+          ]
+        },
+        "position_correlation_MAE": {
+          "mean": -0.0224172,
+          "ci95": [
+            -0.0272476,
+            -0.01694233
+          ]
+        },
+        "joint_pair_full_path_ES_A": {
+          "mean": -0.09616419,
+          "ci95": [
+            -0.10950324,
+            -0.08306644
+          ]
+        }
+      }
+    },
+    "72": {
+      "placement_minus_interleaved": {
+        "increment_correlation_MAE": {
+          "mean": -0.00186239,
+          "ci95": [
+            -0.00273808,
+            -0.00110703
+          ]
+        },
+        "increment_covariance_MAE_A2": {
+          "mean": -0.001374,
+          "ci95": [
+            -0.00215437,
+            -0.00070301
+          ]
+        },
+        "position_correlation_MAE": {
+          "mean": -0.00104441,
+          "ci95": [
+            -0.00201205,
+            -0.00026392
+          ]
+        },
+        "joint_pair_full_path_ES_A": {
+          "mean": -0.04064565,
+          "ci95": [
+            -0.05038225,
+            -0.03160363
+          ]
+        }
+      },
+      "placement_minus_PVB": {
+        "increment_correlation_MAE": {
+          "mean": 0.01225012,
+          "ci95": [
+            0.00977189,
+            0.01494621
+          ]
+        },
+        "increment_covariance_MAE_A2": {
+          "mean": 0.00644518,
+          "ci95": [
+            0.00385006,
+            0.00963179
+          ]
+        },
+        "position_correlation_MAE": {
+          "mean": -0.02238766,
+          "ci95": [
+            -0.02714053,
+            -0.01683759
+          ]
+        },
+        "joint_pair_full_path_ES_A": {
+          "mean": -0.0923538,
+          "ci95": [
+            -0.10645221,
+            -0.07779686
+          ]
+        }
+      }
+    }
+  },
+  "interpretation": [
+    "Internal temporal placement produces replicated but small improvement in far-pair increment correlation error relative to its interleaved control",
+    "Both placement seeds remain worse than released PVB in far-pair increment correlation and covariance errors",
+    "Both placement seeds are better than PVB on position correlation/covariance error and joint pair full-path ES; no blanket inferiority claim",
+    "CF1 targets the remaining cross-atom communication route; these data do not prove that absent collective feedback is the unique causal bottleneck"
+  ],
+  "limitations": [
+    "CA-based short-window diagnostic, not equilibrium DCCM or full-atom/ligand validation",
+    "Common alignment can induce anticorrelations; mean negative correlation alone is not proof of physical anticorrelated modes",
+    "Placement versus interleaved includes normalization-order change",
+    "Finite two-draw empirical energy score; different timescales and thermodynamics still require broader evidence",
+    "CF1 has not yet run a GPU update"
+  ]
+}

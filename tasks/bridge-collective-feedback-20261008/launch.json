@@ -1,0 +1,16 @@
+{
+  "date_local": "2026-10-08",
+  "implementation_commit": "a431df3",
+  "status": "queued; no CF1 GPU update has run yet",
+  "container_environment": "torch-ito via enter-container",
+  "lanes": [
+    {"GPU": 7, "controller_container_pid": 1109978, "wait_for_container_pid": 1109075, "assignments": ["71:collective", "72:control"], "predecessor": "capacity72 native1ns evaluation worker"},
+    {"GPU": 6, "controller_container_pid": 1109979, "wait_for_container_pid": 1109074, "assignments": ["71:control", "72:collective"], "predecessor": "capacity72 protein100 then native80 evaluation worker; wait for the whole worker, not the inter-stage GPU gap"}
+  ],
+  "analysis_container_pids": [1109980, 1109983],
+  "artifact_migration_host_exec_session": 47877,
+  "artifact_destination": "/data1/sihao/molvid-derived/bridge-collective-feedback-20261008",
+  "checkpoint_selection": "fixed4096 continuation update; both original same-seed16384 placement parents preserved",
+  "current_jobs": "No existing training or generation was interrupted",
+  "result_claim": "Architecture implemented and scheduled, not trained or shown effective"
+}

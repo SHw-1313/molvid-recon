@@ -1,6 +1,6 @@
 {
   "name": "CF1: chemical-unit collective feedback",
-  "status": "implemented_not_GPU_trained",
+  "status": "implemented_and_queued_after_live_capacity_evaluations_not_GPU_trained",
   "base_commit": "e8b5ded809acba80ce9059b96d9dfb80d4310fec",
   "question": "Does intra-denoising-step communication between chemical units improve joint atomic geometry and collective motion beyond equal-budget continuation of the internal-time baseline?",
   "seeds": [
