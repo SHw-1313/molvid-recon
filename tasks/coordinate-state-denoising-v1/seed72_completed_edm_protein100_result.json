@@ -26,6 +26,18 @@
     "MSD_curve_MAE_A2": [0.061877823628795674,-0.08876516871225448,0.2259599878158446]
   },
   "replication": "Both B seeds reduce clash counts and MSD error versus h/v but worsen residue RMSF and torsion-increment error. Seed71 bond improvement does not become a clear seed72 improvement; its interval crosses zero. Both remain far worse than released PVB geometry. No joint improvement or equivalence established.",
+  "clock80_100": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/clock80_100_advanced/summary.json",
+    "paired_hv_source": "runs/coordinate_state_denoising_v1/seed72/edm/clock80_100_advanced_vs_hv.json",
+    "coverage": "Complete48 systems,96 fixed observed histories,two draws per80/100ps grid; CPU analysis only,0 new model calls. Separate advanced output avoids colliding with original analysis queue.",
+    "absolute_displacement_response_error_A2": 0.021016341574520907,
+    "absolute_fluctuation_response_error_A": 0.010073220141891675,
+    "minus_zero_displacement_error_A2": [-0.0011842368384086404,-0.00502084207996559,0.0028489844696075717],
+    "minus_zero_fluctuation_error_A": [-0.0018008503350940685,-0.0031775104094560686,-0.00035640408547779335],
+    "minus_hv_displacement_error_A2": [-0.043036994914870064,-0.04977769020050919,-0.03674470127912091],
+    "minus_hv_fluctuation_error_A": [-0.020914928882065937,-0.024293397518841433,-0.017550305366730967],
+    "interpretation": "Replicates Bseed71: much smaller errors than h/v, unresolved displacement-response advantage over zero response, and a small fluctuation-response improvement over zero. Not proof of correct time sensitivity.80ps is below protein TRAIN spacing support, despite occurring in complex TRAIN."
+  },
   "execution": "Existing CPU scorer advanced on full panel; zero additional forecasts. GPU4 automatically moved to seed71 B free-running rollout, containerPID1146671/hostPID3630148, verified alive on CUDA.16systems/four draws/92future frames remain planned, not yet complete.",
   "limitations": ["Aseed72 panel not yet complete; no two-seed A/B ranking", "h/v architecture/pretraining and PVB native inputs/resources differ", "Development48, not family/scaffold-independent or thermodynamic evidence"],
   "promotion": false
