@@ -1,0 +1,20 @@
+{
+  "status": "Paired static-to-MD followup submitted; A static training is running on GPU0, B waits for existing GPU2 work. No pretrained forecast effect claimed.",
+  "implementation_commit": "e8e7f91",
+  "reason": "Complete first-seed MD-only A/B protein sampling shows persistent all-atom geometry deficits and weak temporal ordering. Test added static recovery exposure in both recipes, without assuming static training fixes dynamics or choosing A prematurely.",
+  "root": "runs/coordinate_static_pretrain_v1",
+  "recipe_protocol": "runs/coordinate_static_pretrain_v1/recipes/protocol.json",
+  "seed": 71,
+  "new_budget": {"static_updates_each": 2048, "MD_updates_each": 2048, "total_additional_optimizer_updates": 8192, "forecasts_each": 1408, "total_additional_forecasts": 2816, "GPU_scope": "Existing authorized local GPU0/2 after predecessors finish; no sharing, cancellation or new hardware allocation"},
+  "launch": {"flow_controller": 1142136, "flow_training_process": 1142144, "flow_GPU": 0, "EDM_controller": 1142137, "EDM_GPU": 2, "EDM_waits_for": 1122397, "archive_host_session": 92760},
+  "A_first_actual_static_update": {"sample": "misato_3M35_MD_dt_80ps_w000016::static_frame_000009", "query_frames": 1, "valid_atoms": 1666, "elapsed_seconds": 1.0694091524928808, "gradient_norms_after_clip": {"current_geometry": 0.2252678689491484, "shared_tokens": 0.0009121952034021188, "coordinate_head": 0.9742294964080793}},
+  "static_data": "Equal1024 registered protein and1024 selected TRAIN complex singleton examples per arm; registered2569 sources, maximum5973 atoms. Complex examples use one real TRAIN frame, no fake zero-motion trajectory.",
+  "initialization": "Fresh random seed71 static models, followed by corresponding owned fixed-final static weights for MD. No external weights or MD-only checkpoint inheritance; all parameters trainable. Temporal modules receive no fake physical-future supervision in static phase.",
+  "condition": "Only iid-corrupted singleton, chemistry and static task identity; corruption standard deviation is the same frozen TRAIN sigma_data1.1397942064485225A. Clean singleton is the target, not a separate condition. A/B retain their original coordinate RF/EDM objectives and scales.",
+  "data_isolation": "Existing registration geometry/coverage screened sources reused unchanged; exact development protein/complex PDB metadata intersection empty. Not proof of family/scaffold isolation; original training_qualified=false registration is preserved as historical no-neural-training status.",
+  "MD_stage": "Same256 TRAIN systems, seed71,2048 dynamic updates, original H4/Q12 and H8/Q8 schedule, optimizer and noise recipes. Reset optimizer/RNG/data visits at the explicit weights-only transition; retain parent static resources and exposure separately.",
+  "verification_strategy": "Observe gradients during the actual first static optimizer update, not a disposable smoke training run. Actual static-to-MD CUDA transition remains pending until full static completion; do not claim it already succeeded.",
+  "evaluation": "Fixed-final native100 and80 protein48 plus native80 complex64; original atom sets, history, sample counts and35 NFE. Compare each against its MD-only counterpart, both pretrained recipes against each other, and released references using shared metrics. No automatic extra seed or source/network/loss sweep.",
+  "interpretation_limits": ["Extra static exposure and compute are not separated from pretraining-content benefit without an equal-resource longer-MD control", "Single followup seed cannot establish training-seed robustness", "Geometry gains cannot stand in for temporal ordering, high-motion amplitude, time response or distribution quality", "MD-only second seeds and all queued forecasts remain untouched"],
+  "default_promotion": false
+}
