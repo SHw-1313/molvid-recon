@@ -1,13 +1,15 @@
 {
   "date_local": "2026-10-08",
   "implementation_commit": "a431df3",
-  "status": "2026-10-08 12:51 CST: collective seed71 has started actual GPU training; other arms remain scheduled",
+  "status": "2026-10-08 13:59 CST: collective seed71 continues training onGPU7; control seed71 started actual training on newly freedGPU1. Both seed72 arms remain assigned next in their lanes.",
   "observed_first_training": {"seed": 71, "arm": "collective", "GPU": 7, "container_pid": 1110788, "host_pid": 1086538, "completed_updates_observed": 32, "elapsed_training_seconds_at32": 47.74175217282027, "static_protein_step_observed": 4, "static_complex_step_observed": 5, "source": "runs/bridge_collective_feedback_20261008/seed71/collective/train.log"},
   "container_environment": "torch-ito via enter-container",
   "lanes": [
     {"GPU": 7, "controller_container_pid": 1109978, "wait_for_container_pid": 1109075, "assignments": ["71:collective", "72:control"], "predecessor": "capacity72 native1ns evaluation worker"},
-    {"GPU": 6, "controller_container_pid": 1109979, "wait_for_container_pid": 1109074, "assignments": ["71:control", "72:collective"], "predecessor": "capacity72 protein100 then native80 evaluation worker; wait for the whole worker, not the inter-stage GPU gap"}
+    {"GPU": 1, "controller_container_pid": 1112893, "wait_for_container_pid": 1108968, "assignments": ["71:control", "72:collective"], "predecessor": "Completed capacity72 complex16 generation; summary confirms32conditions256forecasts; GPU empty before launch"}
   ],
+  "lane_relocation": {"date_local": "2026-10-08 13:59 CST", "previous_gpu": 6, "previous_controller_container_pid": 1109979, "action": "Terminated only the still-waiting CF1 shell after verifying its only child was sleep and neither arm output existed. Capacity72 GPU6 generation/controller1109074 left running. Relaunched same assignments/configs on freeGPU1.", "new_training_container_pid": 1112901, "observed_actual_updates": 5, "new_log": "runs/bridge_collective_feedback_20261008/laneB_gpu1.log", "numerical_model_code_changed": false},
+  "rigid_internal_analysis_container_pids": [1112675, 1112676],
   "analysis_container_pids": [1109980, 1109983],
   "artifact_migration_host_exec_session": 47877,
   "artifact_destination": "/data1/sihao/molvid-derived/bridge-collective-feedback-20261008",
