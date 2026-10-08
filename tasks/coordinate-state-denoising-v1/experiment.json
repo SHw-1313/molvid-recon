@@ -3,7 +3,7 @@
   "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
   "branch": "exp/coordinate-state-denoising-v1",
   "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
-  "status": "Both recipes completed real CUDA backward and full source sampling on two packed native80 TRAIN complexes. EDM seed71 training started on GPU4 with actual optimizer updates; flow lane still waits for existing GPU1 owner. No trained-generation efficacy or superiority claim.",
+  "status": "Both recipes completed real CUDA backward and full source sampling on two packed native80 TRAIN complexes. Both seed71 models are now training with actual optimizer updates: EDM GPU4 process1130209, flow GPU1 process1131227. First records match by system, atoms, history and future indices. No trained-generation efficacy or superiority claim.",
   "launch": {"implementation_commit": "b7810b2", "final_launcher_commit": "a8c7c2f", "edm_controller_container_pid": 1128478, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1128479, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false, "launcher_refresh": "Replaced only our new waiting shells1127741/1127742 after confirming each had only a sleep child and no model process. This loads the completed rollout and final GPU-idle recheck; no training or forecasts were cancelled. Initial logs retained; current logs lane_edm_v2.log/lane_flow_v2.log."},
   "paired_budget": {
     "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
@@ -100,6 +100,7 @@
     ],
     "current_EDM_controller":1130077,
     "EDM_seed71_training_process":1130209,
+    "flow_seed71_training_process":1131227,
     "flow_controller_unchanged":1128479,
     "interpretation": "Actual CUDA execution and initial implementation evidence only; no trained model effect, superiority or main goal success demonstrated. Not a largest-system memory result."
   },
