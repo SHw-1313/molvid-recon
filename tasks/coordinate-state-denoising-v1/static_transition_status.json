@@ -1,5 +1,5 @@
 {
-  "status": "A completed2048 static updates and actually executed the weights-only transition into MD CUDA training; B static CUDA training is live, its MD transition remains pending",
+  "status": "Both arms completed2048 static updates and actually executed their weights-only transitions into MD CUDA training",
   "entry": "tools.train_coordinate_state --warm-start <owned fixed-final coordinate checkpoint>",
   "recipe_requirement": "initialization=coordinate_state_weights_only; new data and optimizer budget explicitly declared",
   "compatibility": "Same recipe schema, flow/EDM scheme, coordinate scales/preconditioning, width, spatial layers, heads, RBF and geometry-neighbor policy; strict state dict loading",
@@ -8,9 +8,9 @@
   "accounting": "Parent checkpoint, step, seed, exposure, GPU hours, available source commit and prior initialization lineage retained separately in recipe/checkpoint/evaluation. Legacy parents without an embedded source commit remain explicitly unknown rather than inferred.",
   "current_MD_only_changed": false,
   "static_training_submitted": true,
-  "CUDA_transition_verified": false,
-  "CUDA_transition_verified_for_schemes": ["flow"],
-  "next": "Continue the unchanged paired runs; verify B's actual transition when it executes and compare complete MD exposures/forecasts. Both-arm CUDA transition verification remains false until B also executes. See static_pretrain_followup.json for actual A parent provenance and first12 matching MD updates.",
+  "CUDA_transition_verified": true,
+  "CUDA_transition_verified_for_schemes": ["flow", "edm"],
+  "next": "Continue unchanged MD runs and compare complete MD exposures/forecasts. Both-arm transition verification describes actual execution, not generated quality. See static_pretrain_followup.json for actual parent provenance, all2048 matching static sample rows, A first12 and B first7 matching MD updates.",
   "scientific_constraints": [
     "Paired static source and exposure for A/B; static restoration supervises current geometry, shared interaction and coordinate output",
     "No clean structure in static condition, no static physical-future label or duplicated zero-motion windows",

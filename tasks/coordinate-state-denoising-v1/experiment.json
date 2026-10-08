@@ -159,7 +159,7 @@
   "shared_architecture": {
     "modules": ["trainable TorchMD current/observed geometry", "observed-history and joint-query attention", "explicit physical query-lag MLP", "global chemical-unit scalar/vector attention and atom lift", "equivariant XYZ head"],
     "geometry": "Current radius neighbors rebuilt on every evaluation, union all covalent bonds. Bonded edges retain their actual noisy distances and directions but are exempt from the distance cutoff envelope. No target-defined graph or permanent initial-contact constraint.",
-    "static_support": "Shared geometry, interactions and head; static singleton receives only corrupted coordinates as condition. MD-only arms have no static updates. Separate paired followup: flow completed2048 static updates and entered MD training; EDM static training is live on released GPU2. See static_pretrain_followup.json and static_transition_status.json; no static pretraining benefit is yet claimed.",
+    "static_support": "Shared geometry, interactions and head; static singleton receives only corrupted coordinates as condition. MD-only arms have no static updates. Both arms in separate paired followup completed2048 static updates with identical data exposure and entered actual MD CUDA training on GPU0/2. See static_pretrain_followup.json and static_transition_status.json; no static pretraining benefit is yet claimed.",
     "weight_inheritance": "None. No frozen teacher, future h/v target, latent adapter or latent normalization statistics in the generative path.",
     "limitations": "This initial prototype has a different trunk from historical h/v generation. Gains over that baseline alone cannot isolate state representation from architecture, training exposure or pretraining."
   },
