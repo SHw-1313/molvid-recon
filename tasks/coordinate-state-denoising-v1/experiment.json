@@ -79,7 +79,7 @@
     "time_semantics": "80/100ps fixed-history response diagnostic: protein80ps lies below protein TRAIN100/200/400ps spacings, although80ps occurs in complex TRAIN. It is not pure within-domain interpolation.1ns query spacing exceeds all TRAIN spacings and remains explicitly extrapolative."
   },
   "second_seed_evaluation_advancement": {
-    "status": "EDM launched on released GPU4 after seed72 training completed normally; flow seed72 training remains live on GPU1",
+    "status": "Both schemes finished both MD-only training seeds normally; advanced seed72 primary/rollout controllers now run on released GPU1/4",
     "script": "tasks/coordinate-state-denoising-v1/run_second_seed_advanced.sh",
     "implementation_commit": "1e8e42f",
     "reason": "Original GPU1/4 queues next wait on seed71 complex output locks owned by busy GPU6/7; avoid idle training GPUs when seed72 fixed-final weights are already available",
@@ -87,6 +87,18 @@
     "required_before_launch": "Verify both fixed-final training checkpoints complete, training process exited, GPU idle, and original lane/evaluator are only waiting before model construction. Retire only those owned non-model waiters, not training or active generation. Original lane must relinquish rollout ownership; rollout has no duplicate-execution lock.",
     "additional_optimizer_updates": 0, "additional_forecasts": 0,
     "existing_training_interrupted": false,
+    "flow_execution": {
+      "date_local": "2026-10-09T00:52+08:00",
+      "training": "Seed72 completed2048 updates normally in9717.846774428152s,2.699401881785598GPUh;2048 dynamic examples,20480 target frames,52958960 atom-query pairs,peak66543227904 CUDA bytes. Both final statuses/checkpoints verified; training PID1138182 exited normally.",
+      "retired_waiters": [1128479,1145956],
+      "retirement_evidence": "Controller1128479 was in do_wait; sole child1145956 was in locks_lock_inode_wait with the seed71 complex output lock open before model construction. GPU1 was empty. Seed71 complex evaluator1141082 on GPU6 remained live. Only the two owned non-model waiters received TERM; no training/sampling cancelled, logs retained.",
+      "advanced_controller_container_pid": 1146092,
+      "seed72_protein_evaluator_container_pid": 1146095,
+      "seed72_protein_evaluator_host_pid": 3609396,
+      "CUDA_launch_evidence": "New seed72 protein evaluator alive with correct fixed-final checkpoint; hostPID3609396 is present on GPU1. No complete second-seed panel or efficacy claim yet.",
+      "log": "runs/coordinate_state_denoising_v1/seed72/flow/expanded48_advanced.log",
+      "rollout_ownership": "Advanced controller now solely owns flow rollouts for both seeds; primary/time workers unchanged."
+    },
     "EDM_execution": {
       "date_local": "2026-10-09T00:19+08:00",
       "training": "Seed72 completed2048 updates normally in9082.486456682906s,2.5229129046341403GPUh;2048 dynamic examples,20480 target frames,52958960 atom-query pairs,peak66544066560 CUDA bytes. Both seed71/72 completed statuses and final checkpoint files confirmed; training PID1137397 exited normally.",

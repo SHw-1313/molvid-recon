@@ -1,0 +1,13 @@
+{
+  "status": "Both second-seed MD-only training runs completed normally at fixed2048 updates; all8192 planned MD-only optimizer updates across two recipes/two seeds are complete",
+  "seed": 72,
+  "each_arm": {"updates": 2048, "dynamic_examples": 2048, "static_examples": 0, "target_frames": 20480, "atom_query_pairs": 52958960, "parameters": 6701836, "initialization": "random_from_scratch_all_modules_trainable"},
+  "flow": {"seconds": 9717.846774428152, "GPU_hours": 2.699401881785598, "peak_cuda_bytes": 66543227904, "source_commit": "c5cc32896f4ef71d23b4a86718027b65d380bfb1"},
+  "EDM": {"seconds": 9082.486456682906, "GPU_hours": 2.5229129046341403, "peak_cuda_bytes": 66544066560, "source_commit": "753f3b5cbfa5f510ad48b205c983e90878c392ad"},
+  "data_pairing": {"rows_each": 2048, "mismatches": 0, "matched_fields": ["step","sample","system","visit","domain","time_bucket_id","history","queries","valid_atoms","query_frames"]},
+  "code_pairing": "git diff between both recorded start commits has no changes under molvid/ or tools/train_coordinate_state.py; numerical model/training code is matched. Per-scheme progress definitions/objectives intentionally differ, not compared as raw loss values.",
+  "sources": "runs/coordinate_state_denoising_v1/seed72/{flow,edm}/train/{status.json,recipe.json,updates.jsonl,coordinate_final.pt}",
+  "evaluation": "Both seed72 primary protein and time-grid evaluation lanes running or scheduled from immutable final weights; full complex and generated-history rollout remain required. No checkpoint selection or early stopping.",
+  "interpretation": "Training completion and matched exposure, not second-seed generated efficacy or goal completion. Static-pretraining followup is a distinct paired stage with additional exposure.",
+  "promotion": false
+}
