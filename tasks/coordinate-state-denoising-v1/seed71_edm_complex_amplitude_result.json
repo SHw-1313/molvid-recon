@@ -1,0 +1,41 @@
+{
+  "status": "completed_cached_coordinate_analysis",
+  "source_commit": "f3c9e79",
+  "script": "tasks/coordinate-state-denoising-v1/score_motion_amplitude.py",
+  "outputs": "runs/coordinate_state_denoising_v1/seed71/edm/amplitude_complex_vs_{pvb,hv}_advanced.json",
+  "scope": "Complete B71 complex64:128conditions,8draws each,Q12,80ps;unchanged releasedPVB and originalh/v reference outputs. Separate advanced outputs do not overwrite the queued pairedA/B amplitude analysis.",
+  "resources": {"new_model_calls": 0, "optimizer_updates": 0, "GPU_use": false, "CPU_threads": 2},
+  "bins": {
+    "definition": "TRAIN-complex fixed tertiles of sqrt(3*coordinate_second_moment_A2). Validation labels use all valid atoms' real future displacement from fixed last observation in the existing common coordinate frame. Truth is evaluation-only, never condition/source.",
+    "boundaries_A": [1.3483709881166424, 1.5576168290038759],
+    "order": ["low", "medium", "high"],
+    "conditions": [44, 40, 44],
+    "systems": [27, 26, 24],
+    "pocket_valid_conditions": [44, 40, 42],
+    "aggregation": "Average available matched conditions within each system and bin, then equal-system paired bootstrap. A system may enter multiple bins; bins are not disjoint system cohorts. Two undefined observed-pocket windows retained for other metrics, not imputed."
+  },
+  "mean_columns": ["B", "PVB", "hv"],
+  "absolute_means": {
+    "low": {"ligand_bond_rmse_A": [0.3051253202085477, 0.07343005116768493, 1.0647329542616373], "ligand_rmsf_mae_A": [0.37047482885880223, 0.31664137797659353, 0.6177319179407578], "ligand_center_msd_mae_A2": [0.8224470947918091, 1.0387177759672799, 0.6708433698171983]},
+    "medium": {"ligand_bond_rmse_A": [0.30728925102409693, 0.07027619035955245, 1.0788919874104113], "ligand_rmsf_mae_A": [0.3475724957529996, 0.2995598840116722, 0.5050601827065497], "ligand_center_msd_mae_A2": [1.087106120607614, 1.3437373395767884, 1.0753948116253615]},
+    "high": {"ligand_bond_rmse_A": [0.3797730661647783, 0.0765070159787032, 1.2007373116709612], "ligand_rmsf_mae_A": [0.8735089423002836, 0.851565939190653, 1.1926096436630338], "ligand_center_msd_mae_A2": [18.90719745310491, 18.3472602137313, 21.103459280334807]}
+  },
+  "difference_columns": ["B_minus_reference", "ci95_lower", "ci95_upper"],
+  "selected_paired_differences": {
+    "low_vs_hv_centerMSD": [0.15160372497461092, 0.05185501137258806, 0.28014714598206325],
+    "medium_vs_hv_centerMSD": [0.01171130898225235, -0.1070504693298555, 0.1117824918185132],
+    "high_vs_hv_centerMSD": [-2.1962618272298937, -4.89578362882323, -0.20610268826220973],
+    "high_vs_hv_RMSF": [-0.3191007013627501, -0.6485224217295585, -0.05683294099626871],
+    "high_vs_PVB_centerMSD": [0.559937239373613, -0.8448076645604503, 2.9535104463647786],
+    "high_vs_PVB_RMSF": [0.021943003109630602, -0.046021004273194395, 0.08939964030505058],
+    "high_vs_PVB_bond": [0.30326605018607505, 0.224743828220776, 0.3954389072239547],
+    "medium_vs_PVB_RMSF": [0.048012611741327364, 0.0000009799658845716077, 0.09598941230386072]
+  },
+  "judgment": {
+    "versus_hv": "Bond and RMSF errors improve in every amplitude bin. CenterMSD improves in high motion, worsens in low motion, and is unresolved in medium motion. Center-path improves low/medium but not resolved high; pocket-path improves all bins. Brier/occupancy improve medium/high, not resolved low. Overall improvement is not confined to low-motion examples, but is not uniform across metrics.",
+    "versus_PVB": "Ligand bond error remains worse in every bin. High-motion RMSF/centerMSD/center-path differences are unresolved; high-motion pocket-path/Brier/occupancy improve. Low/medium RMSF is worse by marginal intervals, with medium lowerCI only9.8e-7A and not robust evidence under multiplicity. CenterMSD is only marginally better in medium bin. No joint geometry-motion victory.",
+    "next_action": "Retain bounded paired temporal-order experiment and complete original A/second-seed/static complex panels. Do not choose a new source/noise recipe from these one-seed stratified errors. Direct amplitude calibration/internal-motion decomposition remains separate; lower RMSF error does not prove absence of suppressed motion."
+  },
+  "limitations": ["Exploratory marginal bootstrap without multiplicity correction", "One completed B seed, paired A complex still running", "Bins reflect all-atom motion, not ligand-specific motion or dissociation labels", "No direct amplitude ratio/distribution calibration established by these error-only metrics", "NativePVB H1 versus B H4 and unmatched historical h/v training/resources", "Development systems include documented sequence relatives;not sealed/family-clean confirmation", "Short-window benefits do not overturn complete rollout chemical failures"],
+  "promotion": false
+}
