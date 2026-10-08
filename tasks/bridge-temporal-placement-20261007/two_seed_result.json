@@ -1,0 +1,28 @@
+{
+  "status": "completed two-seed generated protein48 and complex64 comparisons",
+  "contrast": "placement minus same-parameter interleaved control; negative errors favor placement",
+  "protein48": {
+    "bond_rmse_A_seed71": {"mean": -0.015156500662554187, "ci95": [-0.01888895869357368, -0.012093423737541045]},
+    "bond_rmse_A_seed72": {"mean_rounded": -0.014821, "ci95": [-0.018280267280681158, -0.012088365576709281]},
+    "msd_error_A2_seed71": {"mean": -0.19893609478862753, "ci95": [-0.2646115339629534, -0.1418732848606952]},
+    "msd_error_A2_seed72": {"mean_rounded": -0.190113, "ci95": [-0.2569488291169465, -0.13324237652737397]},
+    "position_path_ES_A_seed71": {"mean": -0.041763524220075454, "ci95": [-0.05177219971773234, -0.03263839067041152]},
+    "position_path_ES_A_seed72": {"mean": -0.039172310557289806, "ci95": [-0.04914726279240479, -0.029399686503628945]},
+    "distance_path_ES_A_seed71": {"mean": -0.05539197873511507, "ci95": [-0.07047106495441756, -0.040790944168757004]},
+    "distance_path_ES_A_seed72": {"mean": -0.05399404941915207, "ci95": [-0.06875720045392132, -0.03944082301066954]},
+    "rmsf_error_A_seed72": {"mean_rounded": -0.002973, "ci95": [-0.009453545778524131, 0.0027648031740682096]},
+    "interpretation": "Replicated joint bond/MSD/position-distance path gains against the matched control. Seed72 RMSF and increment-path confidence intervals include zero. Both seeds still worse than released PVB on protein bonds, MSD and RMSF; do not equate partial improvements with competitive parity."
+  },
+  "complex_new48": {
+    "rmsf_error_A_seed71": {"mean": 0.013417504261030125, "ci95": [0.006215169064797745, 0.021102633723849323]},
+    "rmsf_error_A_seed72": {"mean_rounded": 0.012715, "ci95": [0.002556436917224432, 0.02605808196780676]},
+    "bond_rmse_A_seed71": {"mean": 0.054956915321774706, "ci95": [-0.012259542933444244, 0.18736101818496667]},
+    "bond_rmse_A_seed72": {"mean_rounded": -0.016359, "ci95": [-0.035801867457714284, -0.0060614318697571595]},
+    "pocket_path_ES_A_seed72": {"mean_rounded": -0.043586, "ci95": [-0.08166662973913144, -0.019868589752463098]},
+    "interpretation": "RMSF regression repeats despite seed72 bond/pocket improvements. Seed71 broad bond interval is not noninferiority. Seed72 center-path score beats PVB on new48, but this does not establish all-metric or replicated superiority."
+  },
+  "sources": ["runs/bridge_temporal_placement_20261007/seed{71,72}/protein_vs_matched_placement.json", "runs/bridge_temporal_placement_20261007/seed{71,72}/protein_vs_pvb.json", "runs/bridge_temporal_placement_20261007/seed{71,72}/protein_paths/summary.json", "runs/bridge_temporal_placement_20261007/seed{71,72}/complex64_vs_matched_new48.json", "runs/bridge_temporal_placement_20261007/seed{71,72}/complex64_vs_pvb_new48.json"],
+  "decision": "Retain evidence for protein gains, but do not merge as a universally beneficial architecture. No placement-position sweep at present.",
+  "limitations": ["Placement also changes normalization order", "Repeated development panels, not independent sealed tests", "Per-system intervals do not include training-seed uncertainty", "No equilibrium or kinetic-rate conclusion"],
+  "default_promotion": false
+}

@@ -1,6 +1,7 @@
 {
   "name": "same_parameter_temporal_placement",
-  "status": "2026-10-08 00:22 CST: both seeds completed16384 CUDA updates. Seed71 completed original16 complex, protein100/80ps and path/clock analyses and is generating complex64. Seed72 is generating original16 complexes. Seed71 protein geometry, full paths and clock improve versus control, but complex joint gains remain absent; no promotion.",
+  "status": "2026-10-08: both seeds completed training and protein/complex64 generation and comparisons. Protein bond/MSD/position-distance path improvements replicate; native80ps complex new48 RMSF regresses in both seeds. No joint-domain promotion.",
+  "two_seed_result": "tasks/bridge-temporal-placement-20261007/two_seed_result.json",
   "seed72_completed_training": {"steps": 16384, "seconds": 21703.37748160679, "peak_cuda_bytes": 37051031040, "source": "runs/bridge_temporal_placement_20261007/seed72/train/status.json", "complex_generation_pid": 1104800},
   "seed71_protein_and_clock_result": "tasks/bridge-temporal-placement-20261007/seed71_protein_result.json",
   "seed71_completed_execution": {"training_steps": 16384, "training_seconds": 21791.287258771248, "complex_systems": 16, "complex_conditions": 32, "complex_forecasts": 256, "complex_generation_seconds": 2502.0346379587427, "result": "tasks/bridge-temporal-placement-20261007/seed71_complex_result.json"},
