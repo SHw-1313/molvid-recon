@@ -1,0 +1,33 @@
+{
+  "status": "completed_A_seed71_and_released_PVB_cached_rollouts",
+  "source": "runs/coordinate_state_denoising_v1/seed71/flow/rollout_bond_feedback.json",
+  "implementation": "tasks/coordinate-state-denoising-v1/score_rollout_bond_feedback.py",
+  "coverage": "All16 registered development complexes,64 complete raw trajectories/model,92 future frames at80ps. Same-time MD bond-length targets. Protein,ligand and all covalent edges,using the existing unique-edge convention. No model calls,coordinate transformations or filtering.",
+  "execution": {"CPU_container_pid": 1156070, "status": "completed normally", "model_calls": 0, "optimizer_updates": 0},
+  "whole_RMSE_A_format": ["A_mean", "PVB_mean", "paired_A_minus_PVB", "marginal95percent_lower", "upper"],
+  "whole_RMSE_A": {
+    "all": [0.20074598064237228,0.06804829620222007,0.13269768444015223,0.11601632114603472,0.14437441978206852],
+    "protein": [0.1970262413989531,0.06786465768816463,0.12916158371078845,0.11253128094204458,0.14104756263871293],
+    "ligand": [0.4488813152324296,0.08043117813089148,0.368450137101538,0.21266794748304121,0.5568830572393636]
+  },
+  "block_definition": "Zero-based blocks0..7;first7 have12frames,last has8. History statistics use the previous4generated frames except initial observed history,error0 by definition. Per-system RMSE pools draws,selected frames and selected bonds before equal-system aggregation.",
+  "A_block_output_RMSE_A": {
+    "all": [0.15679003956929077,0.17756143330980295,0.18831241923541664,0.1978808244616858,0.2087586891134387,0.2176427854364116,0.222071734089844,0.237029315707935],
+    "protein": [0.15497643385769727,0.17521268341562024,0.18571211491537198,0.19459279351237238,0.20479923416367954,0.21306693021315684,0.21685183513794162,0.23109792690265146],
+    "ligand": [0.29119329495331214,0.35841724870174474,0.38609087697988886,0.42319902887137834,0.46539215204069817,0.508287613232733,0.5307234159582715,0.5800744383271504]
+  },
+  "PVB_block_output_RMSE_A": {
+    "all": [0.06002762492280951,0.0620666191652349,0.06235828317785203,0.06677932688708287,0.07162430447126533,0.07465836022051255,0.07138407299488198,0.07291024851383014],
+    "protein": [0.059804672431782786,0.061826170528995396,0.06205557129444193,0.06657955843725774,0.07146016401476138,0.07457716210248858,0.07120105818482902,0.07277032226856722],
+    "ligand": [0.07503685657759691,0.07681759835335758,0.0805583561456361,0.07963350322663917,0.08196399546037278,0.08134144249853723,0.08498605873200031,0.08249240526446401]
+  },
+  "feedback_observation": "A ligand output-minus-history RMSE is positive under marginal intervals in6of7 later blocks;block6 remains unresolved. Protein/all differences are positive in5of7 later blocks;blocks5/6 unresolved. These are descriptive comparisons between different time/frame windows,not an additive or causal error decomposition.",
+  "source_inspection": {
+    "training": "molvid/training/coordinate_state.py dynamic branch slices the real observed prefix unchanged;coordinate noise affects future training state,not dynamic history. Static singleton corruption uses a distinct task with temporal bypass.",
+    "rollout": "molvid/evaluation/bridge_rollout.py uses the initial realH4,then replaces x,bpos and times with generated history. CoordinateStateDenoiser.prepare_condition reencodes that history and uses its last frame as reference. No clean future is injected.",
+    "confirmed": "Clean-history training versus generated-history recursion is an actual distribution difference,not yet a proven cause of the measured drift."
+  },
+  "decision": "Do not explain failure solely by history exposure or prioritize history augmentation as a sufficient fix. The first full source-sampled block is already geometrically poor despite real history,and the deficit affects protein as well as ligand. Evaluate source-generated local geometry alongside temporal/history coupling;use completed static-complex and paired rollout evidence to choose the next controlled intervention. Do not return to clean-latent decoder-only claims.",
+  "limitations": ["One completed candidate seed,reused development16;B/second seed pending", "PVB nativeH1 versus candidateH4 and different training resources", "For PVB precedingH4 scores are descriptive,not its actual conditioning tensor", "No clean-history replay intervention was performed;history-quality causality unresolved", "Bond metrics alone omit clashes,angles,chirality and equilibrium behavior", "Exploratory marginal bootstrap across systems;no multiplicity correction"],
+  "promotion": false
+}
