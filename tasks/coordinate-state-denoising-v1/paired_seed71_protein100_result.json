@@ -58,7 +58,13 @@
     "CA_pair_distance_lag1_order_gain": [0.272614257515747, 0.004456959655183202, 0.6471781919696421, 0.015264126378011741, 0.013618823768389708],
     "B_minus_A_absolute_MD_error_lag1_CA": [0.0055107331004295435, -0.0002769402360509319, 0.011032029331923347],
     "B_minus_A_absolute_MD_error_lag4_CA": [-0.01023730622128484, -0.01664250823561968, -0.004071172557043347],
-    "interpretation": "Both coordinate models still show very weak adjacent-frame ordering compared with MD, despite nonzero RMSF and some favorable path scores. PVB overstates this lag1 ordering relative to MD and is not ground truth. Near-zero ordering is compatible with exchangeability, not proof of independent frames. Static pretraining alone cannot be assumed to repair this temporal deficit."
+    "interpretation": "Both coordinate models still show very weak adjacent-frame ordering compared with MD, despite nonzero RMSF and some favorable path scores. PVB overstates this lag1 ordering relative to MD and is not ground truth. Near-zero ordering is compatible with exchangeability, not proof of independent frames. Static pretraining alone cannot be assumed to repair this temporal deficit.",
+    "actual_architecture_inspection": "Each field evaluation runs four candidate spatial layers, one atom-wise observed/query temporal block, then per-frame chemical-token spatial interaction and two final spatial layers. Token-enriched features are not fed back through time within that evaluation. There are35 evaluations per sampled window, so this is not only one temporal exchange in the full sampling process and does not prove insufficient representational capacity.",
+    "zero_initialization_check": "Both temporal output maps start at zero but are nonzero in both final trained checkpoints. Weak ordering cannot be explained simply as these maps never updating. Weight norms do not measure functional contribution.",
+    "output_weight_Frobenius_norm_order": ["observed_out_h", "observed_out_v", "query_out_h", "query_out_v"],
+    "flow_temporal_output_weight_norms": [1.5500781536102295, 0.9651387333869934, 1.2262012958526611, 1.2689799070358276],
+    "EDM_temporal_output_weight_norms": [1.3129602670669556, 0.8733402490615845, 1.2271171808242798, 1.3790390491485596],
+    "next_architecture_hypothesis": "If the temporal deficit persists after the unchanged paired MD/static stages, separately test feedback between token-level spatial coordination and temporal interaction. Do not combine this with current static pretraining or claim the architecture inspection establishes the cause."
   },
   "motion_amplitude_followup": {
     "source": "runs/coordinate_state_denoising_v1/seed71/edm/amplitude100_absolute_vs_flow.json",
