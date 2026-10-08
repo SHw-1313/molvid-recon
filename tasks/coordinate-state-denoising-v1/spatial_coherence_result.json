@@ -1,0 +1,38 @@
+{
+  "status": "completed_both_seeds_full100ps_cached_panels",
+  "implementation": "tasks/coordinate-state-denoising-v1/score_spatial_coherence.py;commit aee109e",
+  "source": "runs/coordinate_state_denoising_v1/spatial_coherence100/summary.json",
+  "coverage": {"systems": 48, "conditions": 96, "draws_per_learned_model": 192, "learned_models": 6, "additional_model_calls": 0, "optimizer_updates": 0},
+  "definition": "Finite-window uncentered pair increment cosine:sum_t(dx_i dot dx_j)/sqrt(sum_t|dx_i|^2 sum_t|dx_j|^2),12 increments including last observation to first future.Not mean-subtracted DCCM or equilibrium covariance.Whole-protein alignment to the fixed last observation matches existing scores.",
+  "pairs": "All unique covalent edges with valid atoms;CA pairs selected only from observed distance shell4.5..8A,max4096 fixed-seed pairs per condition.Pairs never selected from true/generated future.",
+  "model_order": ["MD", "hv", "PVB", "A71", "A72", "B71", "B72"],
+  "mean_covalent_increment_cosine": [0.9177451674954478,0.8829867358809628,0.8203932331069902,0.9205822951553605,0.9120096369497869,0.8469754153976607,0.8363492953292574],
+  "mean_CA_contact_increment_cosine": [0.5078736769062119,0.030163716613081305,0.22508832864559705,0.4367731873904193,0.4482431353911716,0.17631481023081716,0.16135741155305805],
+  "mean_covalent_relative_step_RMS_A": [0.5363921485024237,0.5587119576770293,0.5231224494870763,0.5539381532564338,0.5400446995554161,0.7067529853840271,0.7168582862369112],
+  "mean_CA_contact_relative_step_RMS_A": [0.9527063000311452,1.3171533108978852,0.6772656271734822,1.072142660760438,1.010866136578761,1.2143521582447152,1.2178887357484578],
+  "cosine_error_model_order": ["hv", "PVB", "A71", "A72", "B71", "B72"],
+  "mean_pair_cosine_absolute_MD_error_covalent": [0.0864402467322088,0.10898549004582836,0.047799675696174354,0.05015778594990141,0.09467281852598113,0.10288015569603552],
+  "mean_pair_cosine_absolute_MD_error_CA_contacts": [0.49312138700538805,0.31861770419146285,0.19476256352277665,0.1908777190043347,0.3670808945668294,0.37907299389726895],
+  "paired_array_definition": "Mean,lower,upper95percent marginal paired system-bootstrap interval;errors lower-is-better.Same48 systems across training seeds,not96 independent systems.",
+  "A_minus_hv_CA_contact_cosine_error_by_seed": [[-0.2983588234826114,-0.3269769193666162,-0.26884626134154505],[-0.30224366800105334,-0.32973497060855916,-0.2731287772415277]],
+  "A_minus_PVB_CA_contact_cosine_error_by_seed": [[-0.12385514066868623,-0.14713991885786953,-0.1012409721121169],[-0.1277399851871282,-0.1503560502698689,-0.10548958903080487]],
+  "A_minus_hv_CA_contact_relative_increment_fair_ES_A_by_seed": [[-0.007039569836628995,-0.010831933063784743,-0.003016159205406413],[-0.008267865001783182,-0.011813451610501725,-0.004768321074292558]],
+  "A_minus_PVB_CA_contact_relative_increment_fair_ES_A_by_seed": [[-0.009068958821910663,-0.013382479846092714,-0.004661224613300317],[-0.010297253987064851,-0.014451915215547931,-0.006323513837452687]],
+  "findings": [
+    "A improves both covalent and observed CA-contact increment-cosine errors over h/v,B and PVB in both seeds.The mean covalent cosine is close to MD,but nonzero per-pair errors prevent claiming the full coupling pattern is correct.",
+    "A also improves CA-contact relative-increment fair path scores over h/v/PVB in both seeds;its covalent relative-increment fair score differences versus these references remain unresolved.Do not substitute favorable directional summaries for a distributional improvement on every observable.",
+    "B improves CA-contact cosine error over h/v but worsens covalent cosine error and covalent relative-increment fair score in both seeds.B versus PVB improves covalent cosine error but worsens CA-contact cosine error;directional and distributional scores have tradeoffs.",
+    "PVB has lower common-step amplitudes and weaker mean covalent coupling than MD despite much better bond/clash geometry.This is counterevidence to treating the released reference as correct on every motion observable.",
+    "Spatial cooperation and temporal continuity are distinct:both A seeds show strong within-step neighbor coordination while their previously measured CA temporal-order gains remain near0.02 versus MD0.285.A blanket claim that all atom motions are independent is unsupported.",
+    "These findings favor investigating how spatially coordinated features are propagated across query times if the temporal deficit persists after static pretraining.They do not prove a unique architecture root cause or justify adding many spatial layers without a controlled comparison."
+  ],
+  "limitations": [
+    "Single future per condition and two generated draws;finite-window pair-cosine MAE is descriptive,not a proper distribution score or equilibrium DCCM.",
+    "Alignment can induce correlations;all models/MD use the same observed-reference fit.No separate residue fits or coordinate repair.",
+    "Defined-pair fraction is1 for all learned models and MD;zero for exact persistence.Persisting coordinates receive undefined cosine,not an artificial perfect score.",
+    "Evaluation-only new exploratory observable;development reused,multiple comparisons unadjusted.No test access,no new sampling,no selected-system removal.",
+    "Protein100ps only;does not establish ligand coupling,dissociation,1ns behavior or thermodynamic distributions.Released PVB/native inputs and h/v training remain confounded."
+  ],
+  "next_action": "Retain this separation of spatial versus temporal failure in the architecture hypothesis;finish unchanged paired static and complex/rollout stages before submitting another architecture experiment.",
+  "default_promotion": false
+}
