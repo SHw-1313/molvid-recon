@@ -67,6 +67,13 @@ class BridgeMixture:
             actual = len(self.static if domain == 'static_protein' else self.groups[domain])
             if actual != expected:
                 raise ValueError(f'{domain}: expected {expected}, found {actual}')
+        # An explicitly frozen TRAIN-only subset for paired mechanism studies.
+        # Validate the complete inventory first; never silently shrink a corpus.
+        if settings.get('selected_systems'):
+            for domain, selected in settings['selected_systems'].items():
+                if not selected or len(set(selected)) != len(selected) or not set(selected) <= self.groups[domain].keys():
+                    raise ValueError(f'Invalid frozen TRAIN subset: {domain}')
+                self.groups[domain] = {key: self.groups[domain][key] for key in selected}
 
     def open(self, path):
         store = ClipMMapDataset(path)
@@ -111,8 +118,9 @@ class BridgeMixture:
             record = trajectory_record_to_static(record, frame_index=self.rng.randrange(record['x'].shape[0]))
             history = 1
         batch = collate_clip_records([record])
-        queries = ([] if task == 'static' else sorted(self.rng.sample(
-            range(history, batch.frames), self.settings['query_frames'])))
+        queries = ([] if task == 'static' else list(range(history, batch.frames))
+                   if self.settings['query_frames'] == 'all' else sorted(self.rng.sample(
+                       range(history, batch.frames), self.settings['query_frames'])))
         self.counts[key] += 1
         return batch, task, history, queries, dict(system=system, visit=visit, domain=domain,
             clock_sampling=self.clock_sampling, time_bucket_id=record.get('time_bucket_id'))

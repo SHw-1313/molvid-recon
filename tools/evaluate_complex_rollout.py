@@ -15,6 +15,7 @@ from molvid.evaluation.ca_detail import system_estimate
 from molvid.evaluation.complex_motion import score_complex, aligned_future
 from molvid.evaluation.native_forecast import load_pvb, pvb_complex_observation, pvb_forecast
 from molvid.flow.pretrained_bridge import PretrainedGeometryBridge
+from molvid.flow.coordinate_state import CoordinateStateDenoiser
 from molvid.runtime import atomic_write_json
 from molvid.training.bridge_runner import load_geometry
 from molvid.training.predictive_data import atomic_torch_save
@@ -49,12 +50,21 @@ def run(args):
     if args.pvb_checkpoint:
         model = load_pvb(args.pvb_checkpoint, args.pvb_root, device)
         model_kind = 'unaltered_released_PVB_MISATO_native_H1_autoregressive'
+        sampler_steps = 10
     else:
         saved = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
         if saved['step'] != saved['settings']['updates']:
             raise ValueError('Fixed-final candidate required')
-        model = PretrainedGeometryBridge(load_geometry(saved['settings'], device), recompute_frames=True,
-            temporal_insertion_layer=saved['settings'].get('temporal_insertion_layer')).to(device)
+        coordinate_state = saved['settings'].get('schema') == 'molvid.coordinate_state.recipe.v1'
+        if coordinate_state:
+            if saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
+                raise ValueError('Wrong coordinate-state checkpoint schema')
+            model = CoordinateStateDenoiser(saved['settings']).to(device)
+            sampler_steps = saved['settings']['sampler_intervals']
+        else:
+            model = PretrainedGeometryBridge(load_geometry(saved['settings'], device), recompute_frames=True,
+                temporal_insertion_layer=saved['settings'].get('temporal_insertion_layer')).to(device)
+            sampler_steps = 10
         model.load_state_dict(saved['model'], strict=True)
         model.eval().requires_grad_(False)
         model_kind = model.contract()
@@ -63,7 +73,8 @@ def run(args):
     atomic_write_json(args.output/'protocol.json', dict(variant=args.variant, model=model_kind,
         checkpoint=str(args.pvb_checkpoint or args.checkpoint), seeds=seeds, systems=16,
         observed_frames=1 if args.pvb_checkpoint else 4, future_frames=92, native_dt_ps=80,
-        horizon_ps=7360, solver_steps=10, learned_bridge_block_frames=12,
+        horizon_ps=7360, solver_steps=sampler_steps, learned_bridge_block_frames=12,
+        vector_field_evaluations_per_block=2*sampler_steps-1 if isinstance(model, CoordinateStateDenoiser) else sampler_steps,
         reference_source_modified=False, teacher_forcing=False, projection=False,
         independent_test=False, test_payload_opened=False,
         limitations=['Reused development16, one starting condition and one MD future per system',
@@ -85,7 +96,7 @@ def run(args):
                 with torch.no_grad():
                     prediction = (pvb_forecast(model, pvbatch, origin, seed=seed, frames=92)
                         if args.pvb_checkpoint else recursive_bridge_forecast(
-                            model, observed, batch.time_ps[:,4:], seed=seed, block_frames=12, steps=10))
+                            model, observed, batch.time_ps[:,4:], seed=seed, block_frames=12, steps=sampler_steps))
                 predictions.append(prediction.cpu())
             values = torch.stack(predictions)
             atomic_torch_save(args.output/f'coordinates_{index:04d}.pt', dict(sample_id=record['sample_id'],

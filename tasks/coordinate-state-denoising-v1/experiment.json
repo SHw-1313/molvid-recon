@@ -1,0 +1,73 @@
+{
+  "name": "Coordinate-state denoising v1: paired A rectified flow / B displacement EDM",
+  "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
+  "branch": "exp/coordinate-state-denoising-v1",
+  "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
+  "status": "Both recipes, shared network, objectives, full samplers and trainer implemented. TRAIN scale statistics complete; CUDA checks/training not yet run. No efficacy or superiority claim.",
+  "paired_budget": {
+    "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
+    "TRAIN_systems": {"protein": 128, "complex": 128},
+    "initialization": "Random initialization, no pretrained representations or generative weights; identical architecture and initialization RNG per paired seed",
+    "static_examples_first_stage": 0,
+    "history": "H4/H8 alternate by system visits; Q12/Q8 are all remaining futures, not one-frame training",
+    "future_frame_exposure": "A/B identical within each seed; log actual target_frames and atom_query_pairs",
+    "sampling": "18 intervals,35 network calls per complete joint window in both arms; Heun except final Euler endpoint",
+    "resource_scope": "Use two already-authorized local GPU lanes only when their current owners and queued predecessor work finish; no cancellation or sharing of busy GPUs",
+    "fairness": "Matched A/B architecture, data sequence, random initialization, optimizer schedule, updates and NFE. Actual wallclock/FLOPs may differ because noise changes neighbor graphs. Historical h/v and external references are not matched-training-budget causal controls."
+  },
+  "TRAIN_statistics": {
+    "source": "runs/coordinate_state_denoising_v1/train_scales_v2",
+    "systems": 256, "windows": 1536,
+    "sigma_data_A": 1.1397942064485225,
+    "A_rho_A": 1.1397942064485225,
+    "B_sigma_min_A": 0.011397942064485224,
+    "B_sigma_max_A": 50.83418410098741,
+    "definition": "Square root of equal-system mean per-coordinate second moment of future minus last observation, using six TRAIN visits/system covering histories and native clocks",
+    "high_noise_mean_coordinate_SNR": 0.0005027373775689422,
+    "high_noise_max_sampled_window_coordinate_SNR": 0.01,
+    "largest_sampled_atom_displacement_over_sigma_max": 0.8055672407504416,
+    "limitation": "Per-coordinate moment approximation only; individual atom tails are not uniformly negligible, and high-dimensional distribution closeness is unproven. No validation-derived scales.",
+    "failed_first_attempt": "AttributeError reading nonexistent ClipBatch.atoms before scoring first record; repaired to x.shape[1]. Failed directory/log retained; only v2 completed statistics define both recipes."
+  },
+  "A": {
+    "state": "X[Q,N,3] in Angstrom",
+    "training": "R=X_ref+rho*epsilon; s~Uniform(0,1); X_s=(1-s)R+sY; u_target=Y-R",
+    "network_output": "u=sigma_data*F_theta(X_s,(X_s-X_ref)/sigma_data,s,C)",
+    "loss": "Equal-system valid atom/frame coordinate MSE(u,Y-R)/sigma_data^2; the common constant normalization does not change the target or optimum",
+    "sampling": "Deterministic rectified-flow ODE from independently drawn R over s0->1, Heun with last Euler. No Brownian bridge, stochastic bridge matching, extra SDE noise, projection or displacement clipping."
+  },
+  "B": {
+    "state": "Z[Q,N,3] in Angstrom, currentXYZ=X_ref+Z",
+    "training": "deltaY=Y-X_ref; sigma log-uniform over frozen TRAIN bounds; Z=deltaY+sigma*epsilon",
+    "c_in": "1/sqrt(sigma^2+sigma_data^2), applied to the displacement stem, while geometry receives current physical XYZ",
+    "c_skip": "sigma_data^2/(sigma^2+sigma_data^2)",
+    "c_out": "sigma*sigma_data/sqrt(sigma^2+sigma_data^2)",
+    "c_noise": "log(sigma/sigma_data)/4, dimensionless",
+    "output": "D=c_skip*Z+c_out*F_theta; clean displacement, not next noisy state",
+    "loss": "Equal-system valid atom/frame MSE(D,deltaY)*(sigma^2+sigma_data^2)/(sigma*sigma_data)^2",
+    "sampling": "Z=sigma_max*epsilon; power7 EDM grid sigma_max->sigma_min->0; ODE direction(Z-D)/sigma; Heun at positive endpoints; final zero-noise endpoint assigned D directly; no sigma0 network call, churn or guidance",
+    "reference": "https://arxiv.org/abs/2206.00364",
+    "not_claimed": "This is EDM-style molecular displacement modeling, not AF3 reproduction or a claim that diffusion must outperform flow."
+  },
+  "shared_architecture": {
+    "modules": ["trainable TorchMD current/observed geometry", "observed-history and joint-query attention", "explicit physical query-lag MLP", "global chemical-unit scalar/vector attention and atom lift", "equivariant XYZ head"],
+    "geometry": "Current radius neighbors rebuilt on every evaluation, union all covalent bonds. Bonded edges retain their actual noisy distances and directions but are exempt from the distance cutoff envelope. No target-defined graph or permanent initial-contact constraint.",
+    "static_support": "Shared geometry, interactions and head; static singleton receives only corrupted coordinates as condition. No static updates have run and no static pretraining benefit is claimed.",
+    "weight_inheritance": "None. No frozen teacher, future h/v target, latent adapter or latent normalization statistics in the generative path.",
+    "limitations": "This initial prototype has a different trunk from historical h/v generation. Gains over that baseline alone cannot isolate state representation from architecture, training exposure or pretraining."
+  },
+  "baseline_and_evaluation": {
+    "hv_protein100": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_a1",
+    "hv_protein1ns": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_a1_1ns_v5",
+    "PVB_protein100": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_pvb",
+    "PVB_complex64": "/workspace/molvid-complex-validation64-20261007/runs/complex_validation64_20261007/pvb",
+    "BioKinema1ns": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_biokinema_1ns_v5",
+    "protocol": "Same cached full atom sets, observed H4 and12query windows; protein48 two anchors/two draws at100/80/1000ps; complex64 two anchors/eight draws at80ps; fixed-final models only. Preserve PVB/BioKinema native-input differences and training-overlap disclosures.",
+    "unseen_system_check": "Selected128protein and128complex TRAIN IDs have empty intersection with development48protein and64complex IDs; metadata-only check. Not a new independent family/scaffold or pretraining-clean test claim.",
+    "metrics": ["all-atom bond and clashes", "RMSF and fixed-history MSD", "full-path fair energy scores", "temporal correlations/order", "80/100ps time response", "ligand relative displacement/contact continuity", "true-motion-amplitude bins", "generated-history short rollout"],
+    "still_required": ["qualify and run the h/v baseline on the same complex atom protocol if no compatible cached result exists", "complete paired CUDA training and source-sampled forecasts", "amplitude-stratified aggregation", "short rollout runs", "static-pretraining paired stage after MD-only evidence", "independent confirmation and longer-time distribution evidence before goal completion"],
+    "references_untouched": true, "sealed_test_opened": false
+  },
+  "files": ["molvid/flow/coordinate_state.py", "molvid/training/coordinate_state.py", "molvid/data/bridge_mixture.py", "tools/train_coordinate_state.py", "tools/evaluate_pretrained_bridge.py", "tools/evaluate_complex_rollout.py", "tasks/coordinate-state-denoising-v1/prepare_training_scales.py", "tasks/coordinate-state-denoising-v1/check_cuda_dataflow.py", "tasks/coordinate-state-denoising-v1/run_lane.sh"],
+  "default_promotion": false
+}

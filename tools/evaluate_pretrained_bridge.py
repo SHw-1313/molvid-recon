@@ -18,6 +18,7 @@ from molvid.data.store import ClipMMapDataset
 from molvid.evaluation.ca_detail import score, system_estimate
 from molvid.evaluation.complex_motion import score_complex
 from molvid.flow.pretrained_bridge import PretrainedGeometryBridge
+from molvid.flow.coordinate_state import CoordinateStateDenoiser
 from molvid.geometry.ca_detail import condition_from_record
 from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
 from molvid.runtime import atomic_write_json
@@ -30,7 +31,8 @@ def forecast(model, observed_cpu, query_time_ps, device, seed):
     observed = observed_cpu.to(device)
     condition = model.prepare_condition(observed)
     generator = torch.Generator(device=device).manual_seed(seed)
-    return model.sample(condition, query_time_ps.to(device), steps=10, generator=generator).float()
+    steps = None if isinstance(model, CoordinateStateDenoiser) else 10
+    return model.sample(condition, query_time_ps.to(device), steps=steps, generator=generator).float()
 
 
 def run(args):
@@ -53,24 +55,36 @@ def run(args):
         settings = json.loads(args.initial_config.read_text())
         saved = None
         checkpoint_step = 0
-    model = PretrainedGeometryBridge(load_geometry(settings, device), recompute_frames=True,
-        temporal_insertion_layer=settings.get('temporal_insertion_layer'),
-        collective_feedback=settings.get('collective_feedback', False)).to(device)
+    coordinate_state = settings.get('schema') == 'molvid.coordinate_state.recipe.v1'
+    if coordinate_state:
+        if saved is not None and saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
+            raise ValueError('Coordinate-state checkpoint schema required')
+        model = CoordinateStateDenoiser(settings).to(device)
+        output_norm = model.spatial.out_norm
+    else:
+        model = PretrainedGeometryBridge(load_geometry(settings, device), recompute_frames=True,
+            temporal_insertion_layer=settings.get('temporal_insertion_layer'),
+            collective_feedback=settings.get('collective_feedback', False)).to(device)
+        output_norm = model.geometry.decoder.out_norm
     if saved is not None:
         model.load_state_dict(saved['model'], strict=True)
         del saved
     model.eval().requires_grad_(False)
     seeds = [17, 29, 43, 59, 71, 83, 97, 101] if args.domain == 'complex' else [17, 29]
     protocol = dict(variant=args.variant, domain=args.domain, history_frames=4, query_frames=12,
-        training_query_frames=settings['data']['query_frames'], solver_steps=10, seeds=seeds,
+        training_query_frames=settings['data']['query_frames'],
+        solver_steps=settings['sampler_intervals'] if coordinate_state else 10,
+        vector_field_evaluations_per_draw=2*settings['sampler_intervals']-1 if coordinate_state else 10, seeds=seeds,
         checkpoint=str(args.checkpoint), initial_config=str(args.initial_config),
         training_checkpoint_step=checkpoint_step, planned_training_updates=settings['updates'],
         checkpoint_is_final=checkpoint_step == settings['updates'],
         intermediate_learning_curve=args.expected_step is not None and checkpoint_step != settings['updates'],
         model=model.contract(), original_pvb_modified=False, inference_refinement=False,
         development=True, independent_test=False, test_payload_opened=False,
-        limitations=['Inherited released static pretraining; not training from scratch',
-            'Four training queries versus twelve joint evaluation queries',
+        limitations=(['Random MD-only initialization; h/v baseline has different pretraining/resources',
+            'All remaining training futures; H4/Q12 or H8/Q8'] if coordinate_state else
+            ['Inherited released static pretraining; not training from scratch',
+            'Four training queries versus twelve joint evaluation queries'])+[
             'No independent family/scaffold generalization claim', 'Short horizons do not establish thermodynamics'])
     atomic_write_json(args.output/'protocol.json', protocol)
     started = time.monotonic()
@@ -163,7 +177,7 @@ def run(args):
                 conditions=len(rows), forecasts=len(rows)*len(seeds), variant=args.variant, mean_metrics=means,
                 new_forecasts=new_forecasts, reused_forecasts=reused_forecasts, strata=strata,
                 seconds=time.monotonic()-started, training_updates=0,
-                output_norm_float64_calls=model.geometry.decoder.out_norm.high_precision_calls,
+                output_norm_float64_calls=output_norm.high_precision_calls,
                 independent_test=False, test_payload_opened=False))
         finally:
             dataset.close()
@@ -201,7 +215,7 @@ def run(args):
                 aggregates[key].append((row['system'], value))
         atomic_write_json(args.output/'summary.json', dict(status='completed', systems=48, rows=len(rows),
             failures=[], seconds=time.monotonic()-started, neural_training_updates=0, test_opened=False,
-            output_norm_float64_calls=model.geometry.decoder.out_norm.high_precision_calls,
+            output_norm_float64_calls=output_norm.high_precision_calls,
             arms={args.variant+'|'+key:system_estimate(value) for key,value in aggregates.items()}))
 
 
