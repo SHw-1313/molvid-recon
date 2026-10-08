@@ -1,5 +1,5 @@
 {
-  "status": "CPU_analysis_running_not_a_result",
+  "status": "completed_A71_and_PVB_B71_running",
   "reason": "Completed A71 rollout has worsening covalent geometry; existing rollout tables lack whole-complex clash coverage. Supplement all cached frames without additional generation or changing the model.",
   "script": "tasks/coordinate-state-denoising-v1/score_rollout_clashes.py",
   "data": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/development16_rollout96",
@@ -20,7 +20,41 @@
   "coverage_per_variant": {"systems": 16, "draws_per_system": 4, "future_frames_per_draw": 92},
   "resources": {"new_model_calls": 0, "new_optimizer_updates": 0, "CPU_threads_per_process": 1, "GPU_use": false},
   "definition": "Reuse CachedClashScorer and same frozen PhysicalAuxiliaryConfig as complete complex64 scoring. All valid raw atoms and frames, uncapped undirected pairs; topology-distance<=2 excluded and separate1-4 overlap allowance. Protein/ligand/cross-component categories all normalized by total valid complex atom count. Equal-system final estimates and 12-frame blocks with final8-frame block.",
-  "next": "Inspect actual completed summaries, compare paired systems with existing compare_summary_pairs.py, and apply same cached scoring to other rollout arms only after their complete generation. Do not rank partial rows.",
+  "completed_outputs": {
+    "A71": "runs/coordinate_state_denoising_v1/seed71/flow/rollout_clashes/summary.json",
+    "PVB": "runs/coordinate_state_denoising_v1/pvb_rollout_clashes/summary.json",
+    "paired": "runs/coordinate_state_denoising_v1/seed71/flow/rollout_clashes_vs_pvb.json"
+  },
+  "analysis_seconds": {"A71": 2064.2259601829574, "PVB": 2081.5291719520465},
+  "mean_columns": ["A71", "PVB"],
+  "whole_rollout_means": {
+    "clashes_per_1000_atoms": [179.84507916739574, 3.7139828246519397],
+    "protein.clashes_per_1000_atoms": [173.6298923158824, 3.5535351492107345],
+    "ligand.clashes_per_1000_atoms": [3.6127606481678822, 0.008287751253763373],
+    "cross_component.clashes_per_1000_atoms": [2.60242620334549, 0.15215992418744206],
+    "affected_atom_fraction": [0.2081205179799055, 0.0072928956724124935],
+    "vdw_severity_A2_per_atom": [0.05454250508871379, 0.00009323428595330588]
+  },
+  "difference_columns": ["A71_minus_PVB_mean", "ci95_lower", "ci95_upper"],
+  "paired_whole_rollout": {
+    "clashes_per_1000_atoms": [176.13109634274383, 151.16507229779927, 212.6029379398132],
+    "protein.clashes_per_1000_atoms": [170.07635716667164, 146.47816503972442, 204.53565253439524],
+    "ligand.clashes_per_1000_atoms": [3.604472896914119, 1.7902947050386806, 5.949949453031327],
+    "cross_component.clashes_per_1000_atoms": [2.4502662791580483, 1.4464679344726554, 3.5158050330446535],
+    "affected_atom_fraction": [0.200827622307493, 0.18103149294355506, 0.22957979142347934],
+    "vdw_severity_A2_per_atom": [0.05444927080276049, 0.043793462527564726, 0.07065879700848982]
+  },
+  "first_and_final_blocks": {
+    "A71_clashes_per_1000_atoms": [54.93585923922837, 322.64304453393083],
+    "PVB_clashes_per_1000_atoms": [2.1608833597900716, 4.406370904846982],
+    "first_block_A_minus_PVB": [52.7749758794383, 41.94830260051813, 69.93778012847456],
+    "final_block_A_minus_PVB": [318.23667362908384, 280.59415235817875, 368.99554920332537],
+    "frame_counts": [12, 8]
+  },
+  "MD_reference": "All MD clashes and severity zero under this frozen allowance table; this is a thresholded metric, not evidence of zero physical repulsion energy.",
+  "judgment": "A71 rollout chemical failure extends beyond ligand bond lengths: protein-internal,ligand-internal,and cross-component collisions are all worse than PVB. Collisions already elevated with true initial history and grow across rollout. Favorable centerMSD/contact-occupancy errors do not make this a geometry/motion joint success.",
+  "B71": {"status": "CPU_scoring_running", "container_pid": 1157897, "output": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_clashes", "model_calls": 0},
+  "next": "Complete B71 same-rule clashes and second-seed source rollouts. No ranking partial B clash rows and no projection/filtering of unfavorable coordinates.",
   "limitations": ["Development16 not sealed independent confirmation", "Native PVB H1 versus candidate H4 and unequal training sources/resources", "Collision geometry is not force-field energy, chirality, or thermodynamic correctness"],
   "promotion": false
 }

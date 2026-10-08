@@ -1,0 +1,89 @@
+{
+  "status": "completed_paired_seed71_source_rollout",
+  "sources": {
+    "A": "runs/coordinate_state_denoising_v1/seed71/flow/rollout/summary.json",
+    "B": "runs/coordinate_state_denoising_v1/seed71/edm/rollout/summary.json",
+    "PVB": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/released_pvb_rollout92/summary.json",
+    "B_minus_A": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_vs_flow_advanced.json",
+    "B_minus_PVB": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_vs_pvb_advanced.json",
+    "A_report": "tasks/coordinate-state-denoising-v1/seed71_flow_rollout_result.json",
+    "B_full_complex_bond": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_bond_feedback.json"
+  },
+  "protocol": {"systems": 16, "draws_per_system": 4, "future_frames": 92, "native_dt_ps": 80, "span_ns": 7.36, "candidate_history_frames": 4, "PVB_native_history_frames": 1, "generated_history_only_after_initial_context": true, "postprocessing": false},
+  "resources": {
+    "A_seconds": 13485.382942290977,
+    "B_seconds": 19615.719363966957,
+    "candidate_field_evaluations_per_window": 35,
+    "candidate_windows_per_draw": 8,
+    "candidate_total_field_evaluations_per_arm_derived_not_instrumented": 17920,
+    "peak_CUDA_memory": "Not instrumented by rollout evaluator; do not infer from snapshots",
+    "new_training_updates": 0
+  },
+  "B_primary_means": {
+    "ligand_bond_rmse_A": 0.6887379763898235,
+    "ligand_rmsf_mae_A": 2.194922120557541,
+    "ligand_center_msd_mae_A2": 58.91402457481735,
+    "ligand_center_path_energy_score_A": 2.1292358307075014,
+    "pocket_distance_path_energy_score_A": 2.478470304013213,
+    "pocket_contact_brier": 0.11828301333561929,
+    "all_residue_contact_occupancy_mae": 0.023648564893844863,
+    "ligand_center_increment_mae_A": 0.9053231827207857
+  },
+  "difference_columns": ["mean", "ci95_lower", "ci95_upper"],
+  "B_minus_A": {
+    "ligand_bond_rmse_A": [0.2398566611573939, 0.13349405154435642, 0.36605837211401293],
+    "ligand_rmsf_mae_A": [0.02758573417442617, -0.21273514016856218, 0.23020297368000292],
+    "ligand_center_msd_mae_A2": [-1.2908544322788975, -4.759059725828823, 0.8461715956831253],
+    "ligand_center_path_energy_score_A": [-0.054718807157290716, -0.18204456467553673, 0.060919752976026094],
+    "pocket_distance_path_energy_score_A": [0.0672554780754578, -0.043250782051344985, 0.19758265561418858],
+    "pocket_contact_brier": [0.01007729123847648, -0.0009257597065671195, 0.0244824522281567],
+    "all_residue_contact_occupancy_mae": [0.0015603007999296173, 0.0009268944164110052, 0.002175780303703314],
+    "ligand_center_increment_mae_A": [0.041440064020326704, -0.009903318846743777, 0.09616447501259354]
+  },
+  "B_minus_PVB": {
+    "ligand_bond_rmse_A": [0.608306798258932, 0.347609046636336, 0.9142701900623847],
+    "ligand_rmsf_mae_A": [0.3197697992296222, -0.3251577235986327, 1.0669925684526633],
+    "ligand_center_msd_mae_A2": [-8.721907797918366, -18.554079585510845, -1.2841162608412813],
+    "ligand_center_path_energy_score_A": [-0.21652783007891607, -0.680293912135716, 0.23948748612592824],
+    "pocket_distance_path_energy_score_A": [0.22907622692941332, -0.3544493341392043, 1.1379331149512042],
+    "pocket_contact_brier": [-0.029827799924355407, -0.06032295006551301, 0.003834001041499292],
+    "all_residue_contact_occupancy_mae": [-0.008594103332266059, -0.015479067962472146, -0.002939707230844839],
+    "ligand_center_increment_mae_A": [0.0002218854988512431, -0.18103989932383968, 0.16282577643460064]
+  },
+  "B_ligand_bond_early_middle_late_A": [0.34601258143161473, 0.6160583338289676, 0.9156685228231447],
+  "B_full_complex_bond_means_A": {"all": 0.35782424295771026, "protein": 0.35360773786319843, "ligand": 0.6887379763898235},
+  "B_full_complex_bond_minus_A": {
+    "all": [0.15707826231533797, 0.13735485852898588, 0.1702110617725132],
+    "protein": [0.15658149646424527, 0.13662026163989227, 0.16961116616245153]
+  },
+  "B_full_complex_bond_minus_PVB": {
+    "all": [0.28977594675549023, 0.2555334124558825, 0.31100573437367307],
+    "protein": [0.28574308017503375, 0.25160767417998875, 0.30676933243010907]
+  },
+  "B_block_output_bond_RMSE_A": {
+    "all": [0.22616757934463516, 0.2776043793151251, 0.3147495838865896, 0.3472837888492761, 0.37689003564549395, 0.4056396102614963, 0.42439748283435663, 0.46875043047462295],
+    "protein": [0.22473361630548322, 0.27552579838401337, 0.31244833303727115, 0.3441912803226636, 0.3718625790695144, 0.3997839530039419, 0.4184012395910869, 0.4622330703817048],
+    "ligand": [0.34601258143161473, 0.45150790663919205, 0.5334972099556561, 0.6160583338289676, 0.7541188311637845, 0.8322083165014122, 0.8570176811896599, 0.938239333978767]
+  },
+  "judgment": [
+    "Both A and B improve some centerMSD/contact-occupancy errors versus released PVB while having much worse chemical geometry. Neither demonstrates joint geometry/motion success.",
+    "B has worse ligand,protein,and all-atom bond geometry than A, including already the first observed-history block. B also has worse contact occupancy; other whole-rollout primary motion/path differences versus A remain unresolved. Do not rank by small mean MSD differences.",
+    "Bond drift is shared by A and B and cannot be attributed solely to generated-history exposure because the first block is already bad. Generated-history distribution mismatch remains a candidate amplifier, not an established sole cause.",
+    "Do not generalize one rollout seed to all regimes: earlier protein1ns A/B MSD ranking reversed between training seeds. Complete the second rollout seed and static complex panels before promoting an architecture.",
+    "Early/middle/late tables contain mixed path gains/regressions; retain all segments rather than highlighting only favorable early paths or late MSD."
+  ],
+  "schedule_transition": {
+    "B71_completed_container_pid": 1146671,
+    "retired_own_duplicate_controller": 1144425,
+    "retired_own_lock_waiter": 1157488,
+    "evidence": "Controller do_wait,only child locked on seed72/edm/complex_validation64.lock;real complex owner1148796 remained on GPU5. No running generation/training cancelled.",
+    "B72_rollout_sole_owner_container_pid": 1157545,
+    "B72_rollout_host_pid": 4028100,
+    "B72_log": "runs/coordinate_state_denoising_v1/seed72/edm/rollout_direct_gpu4.log",
+    "B72_launch": "Waited for no compute apps on GPU4 then exec original fixed checkpoint/data/variant/output. Actual CUDA process verified. Another user's sequential workload also re-entered GPU4 around launch; no external process signaled. Wall-time comparison is resource-contention-confounded.",
+    "B_bond_feedback_CPU": "completed PID1157896;zero model calls",
+    "B_clash_CPU": "running PID1157897;zero model calls"
+  },
+  "limitations": ["Reused development16,one completed training seed,four draws and one MD future per system", "Native PVB H1 versus candidate H4,unequal training data/resources;not state-only causal comparison", "No h/v or static-pretrained rollout result under this same protocol", "92-frame7.36ns rollout does not establish thermodynamic equilibrium or long-time kinetics", "Full clash analysis recorded separately;bond results alone do not cover all chemical geometry"],
+  "promotion": false
+}
