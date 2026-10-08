@@ -86,6 +86,8 @@ def run(args):
         training_query_frames=settings['data']['query_frames'],
         solver_steps=16 if args.hv_baseline else settings['sampler_intervals'] if coordinate_state else 10,
         vector_field_evaluations_per_draw=16 if args.hv_baseline else 2*settings['sampler_intervals']-1 if coordinate_state else 10, seeds=seeds,
+        coordinate_current_geometry_frames_per_draw=12*(2*settings['sampler_intervals']-1) if coordinate_state else None,
+        NFE_scope='Each candidate call updates the full12-query window; not directly comparable to an autoregressive one-frame call',
         checkpoint=release['selected_checkpoint']['path'] if args.hv_baseline else str(args.checkpoint), initial_config=str(args.initial_config),
         training_checkpoint_step=checkpoint_step, planned_training_updates=settings['updates'],
         checkpoint_is_final=None if args.hv_baseline else checkpoint_step == settings['updates'],

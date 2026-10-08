@@ -1,0 +1,34 @@
+{
+  "status": "implementation-derived workload accounting; not an equal-FLOPs or runtime benchmark",
+  "scope": "One complete12-future-frame draw in the shared primary protocol",
+  "coordinate_A_and_B": {
+    "joint_window_field_calls": 35,
+    "candidate_geometry_frames_per_call": 12,
+    "candidate_geometry_frame_rebuilds": 420,
+    "observed_history_geometry_encodings": 4,
+    "evidence": "molvid/flow/coordinate_state.py::sample/forward and completed cuda_dataflow.json; observed condition encoding is outside the420 candidate builds"
+  },
+  "released_PVB": {
+    "physical_autoregressive_transitions": 12,
+    "SDE_steps_per_transition": 10,
+    "single_frame_decode_field_calls": 120,
+    "current_candidate_graph_builds": 120,
+    "reference_structure_encode_calls": 12,
+    "evidence": "molvid/evaluation/native_forecast.py::pvb_forecast loops12 times; original /workspace/PVB_origin/module/model.py::inference encodes once then rebuilds current candidate edges and invokes decode once per each of10 SDE steps",
+    "reference_modified": false,
+    "count_scope": "Derived from inspected original source and executed protocol, not new hook-based CUDA instrumentation; jointly returned velocity/drift heads do not count as two decode calls"
+  },
+  "original_hv": {
+    "joint_window_latent_field_calls": 16,
+    "coordinate_decode": "After complete h/v Euler sampling; no current-coordinate re-encoding at each latent field call",
+    "evidence": "molvid/evaluation/native_forecast.py::molvid_forecast"
+  },
+  "interpretation": [
+    "A/B share35 joint-window calls, architecture, training exposures and grids with each other. Their graph-dependent compute and wallclock can still differ.",
+    "PVB10 denotes steps per physical transition, not ten evaluations for the entire12-frame window. Conversely A/B35 calls each process twelve current geometries, so a35-versus120 comparison does not establish cheaper compute.",
+    "Graph construction counts and frame counts are not FLOPs: layer counts, neighbors, temporal/token interactions, vector dimensions, condition encoders and final decoding differ.",
+    "Compare measured GPU-hours and peak memory alongside these definitions. Native PVB autoregression, H1 and released pretraining differ from A/B H4 joint generation; do not call the reference comparison a single-factor ablation."
+  ],
+  "training_or_sampling_recipe_changed": false,
+  "new_model_calls": 0
+}
