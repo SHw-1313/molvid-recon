@@ -1,0 +1,49 @@
+{
+  "status": "completed first-seed full protein100 matched-control, path, temporal-order and spatial-cooperation comparisons; no joint-quality promotion",
+  "recorded_at": "2026-10-08 15:52 CST",
+  "coverage": {"systems": 48, "conditions": 96, "paths_per_candidate_or_control": 192, "collective_generation_seconds": 1377.7260620519519, "control_generation_seconds": 1283.3566329404712},
+  "sources": "runs/bridge_collective_feedback_20261008/seed71/collective/{protein_vs_control.json,protein_vs_pvb.json,protein_paths/summary.json,temporal_order100/summary.json,spatial_cooperation100/summary.json}",
+  "convention": "Candidate minus reference; error and fair energy score lower is better. Arrays are mean and paired95percent system-bootstrap endpoints; marginal exploratory intervals, no multiplicity correction.",
+  "versus_same_seed_matched_control": {
+    "bond_rmse_A": [0.00016443571970616727, 0.00009002452165234433, 0.00024807020657814085],
+    "angle_cosine_rmse": [0.00021145896365245184, 0.00015018350483539202, 0.000283051457760545],
+    "torsion_increment_circular_error": [0.0004733688353250424, 0.00041034050324621296, 0.0005466134462039918],
+    "clashes_per1000": [0.10140308342361437, 0.030946735062310264, 0.18859778972888291],
+    "msd_mae_A2": [-0.015914613368093147, -0.022364459726830134, -0.010865093272231088],
+    "rmsf_profile_mae_A": [-0.0038086172038068375, -0.004746523872017861, -0.0030359479705415046],
+    "CA_increment_fair_path_ES_A": [-0.0008392132822393339, -0.001152006004182373, -0.0005983617905753484],
+    "CA_distance_increment_fair_path_ES_A": [-0.0006074846801920943, -0.0008741047868476081, -0.0003086827561522894],
+    "CA_distance_fair_path_ES_A": [-0.00000690052617516775, -0.0010908128700394184, 0.001105974744392879],
+    "CA_position_fair_path_ES_A": [-0.000569420636481205, -0.001146822017637033, -0.000023938757676911338],
+    "far_ge16A_increment_correlation_MAE_MD": [-0.00013718174594094944, -0.00022309633785449722, -0.000051451419974564754],
+    "far_ge16A_joint_pair_fair_path_ES_A": [-0.0004459813521301894, -0.000987963361007494, 0.00006633200002549331],
+    "CA_lag1_order_gain_absolute_MD_error": [-0.0025870135342014986, -0.003462509308623419, -0.0018897739059849396],
+    "distance_lag1_order_gain_absolute_MD_error": [-0.0019443700423101464, -0.0025456945103645456, -0.0014356939130385463]
+  },
+  "versus_released_PVB": {
+    "bond_rmse_A": [0.011045334110583047, 0.00833774516926081, 0.014716461616682922],
+    "msd_mae_A2": [0.964333481517517, 0.6836880534699756, 1.2942612331962058],
+    "rmsf_profile_mae_A": [0.10703275632113218, 0.06998209093483941, 0.14596384419128294],
+    "CA_increment_fair_path_ES_A": [-0.011817308426277998, -0.015606055853833452, -0.007522012030339359],
+    "CA_distance_increment_fair_path_ES_A": [-0.012769634421442135, -0.0173842209920482, -0.008227883025354888],
+    "CA_distance_fair_path_ES_A": [-0.004547487876570547, -0.03698805979795267, 0.030712491341310454],
+    "CA_position_fair_path_ES_A": [0.019511472589218714, -0.0025562724903628532, 0.0466296688781319],
+    "far_ge16A_increment_correlation_MAE_MD": [0.012008086500271811, 0.009565975290071724, 0.014727216602439749]
+  },
+  "descriptive_lag1_order_gain": {
+    "CA": {"MD": 0.2854844779073124, "CF1": 0.08896085295240604, "matched_control": 0.08610419156159262, "PVB": 0.6542579650703395},
+    "distance": {"MD": 0.272614257515747, "CF1": 0.07709152170512026, "matched_control": 0.07451206885689977, "PVB": 0.6471781919696421}
+  },
+  "interpretation": [
+    "Small matched-control motion, increment-path, temporal-order and far-pair-correlation gains coexist with small bond/angle/torsion/clash regressions. Plain global mean-vector feedback has not achieved joint geometry-motion improvement.",
+    "Distance whole-path and far-pair joint-path differences cross zero. Do not replace these proper distributional scores by a correlation improvement alone.",
+    "Both increment path scores beat PVB in this panel, but bond/MSD/RMSF and far-pair correlation error remain worse; absolute full-path intervals cross zero. Neither overall superiority nor overall inferiority follows from a single metric.",
+    "Most of the parent-relative MSD/RMSF improvement was reproduced by equal-budget control continuation. Do not attribute all parent-relative improvement to the new module.",
+    "Temporal order remains substantially below MD; do not maximize order blindly because PVB overshoots this statistic.",
+    "Complete seed72, native80 clock behavior and full complex64 remain required. RF2 is an independently trained rotational-feature intervention, not a selected CF1 checkpoint. No model/code merge from this result."
+  ],
+  "numerical_history": "Seed71 training and collective100 evaluation used original output LayerNorm; subsequent control100 used the exceptional precision-repair policy with zero fallbacks. Other geometry arithmetic and the original PVB reference were unchanged.",
+  "independent_generalization": false,
+  "thermodynamic_or_kinetic_claim": false,
+  "default_promotion": false
+}
