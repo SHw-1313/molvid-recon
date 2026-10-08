@@ -20,12 +20,22 @@ from tools.audit_trained_clock_response import draws, matched_records
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(__doc__)
-    for name in ('root', 'cache80', 'cache100', 'output'):
+    for name in ('cache80', 'cache100', 'output'):
         parser.add_argument('--'+name, type=Path, required=True)
+    parser.add_argument('--root', type=Path)
+    parser.add_argument('--forecast80', type=Path)
+    parser.add_argument('--forecast100', type=Path)
     parser.add_argument('--variant', required=True)
     args = parser.parse_args()
+    if args.forecast80 is not None or args.forecast100 is not None:
+        if args.root is not None or args.forecast80 is None or args.forecast100 is None:
+            parser.error('Use --root OR both explicit forecast directories')
+        directories = [args.forecast80, args.forecast100]
+    elif args.root is not None:
+        directories = [args.root/'native80', args.root/'expanded48']
+    else:
+        parser.error('Provide --root or both forecast directories')
     args.output.mkdir(parents=True, exist_ok=False)
-    directories = [args.root/'native80', args.root/'expanded48']
     inventories = []
     for directory in directories:
         summary = json.loads((directory/'summary.json').read_text())
@@ -64,6 +74,7 @@ if __name__ == '__main__':
     atomic_write_json(args.output/'rows.json', rows)
     atomic_write_json(args.output/'summary.json', dict(status='completed', systems=48, conditions=96,
         variant=args.variant, model_calls=0, promotion=False,
+        forecast_directories=[str(path) for path in directories],
         estimates={name:system_estimate(values) for name,values in grouped.items()},
         limitations=['Reused development48; marginal bootstrap CIs', 'Two model draws, one MD future per condition',
             'Matched query-index noise is not common-physical-time path coupling', 'No thermodynamic or kinetic claim']))

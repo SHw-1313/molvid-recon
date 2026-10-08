@@ -1,0 +1,29 @@
+{
+  "status": "completed same-evaluator cached-coordinate scoring; paired A/B results pending",
+  "source": "runs/coordinate_state_denoising_v1/hv_clock80_100/summary.json",
+  "systems": 48,
+  "conditions": 96,
+  "draws_per_condition_per_clock": 2,
+  "physical_query_spacing_ps": [80, 100],
+  "observations": "Matched true H4 history and atom identities checked by existing matched_records; only future query grids differ",
+  "generation": "Original frozen A1 h/v complete source samples; existing native80 and bitwise-replayed native100 caches; no postprocessing variant",
+  "new_model_calls": 0,
+  "new_training_updates": 0,
+  "metrics": {
+    "absolute_displacement_response_error_A2": {"mean": 0.06405333648939097, "ci95": [0.05446095928653731, 0.07427012627859574]},
+    "absolute_fluctuation_response_error_A": {"mean": 0.030988149023957617, "ci95": [0.027845176863662526, 0.03401100931899704]},
+    "candidate_minus_zero_displacement_error_A2": {"mean": 0.04185275807646143, "ci95": [0.03764322839506865, 0.04610550468652699]},
+    "candidate_minus_zero_fluctuation_error_A": {"mean": 0.019114078546971867, "ci95": [0.016662575647611172, 0.021435090147891578]}
+  },
+  "interpretation": "In this frozen evaluation, h/v time-response error exceeds a zero-response comparator for both observables. This is not evidence that reducing motion or ignoring time is a valid solution: A/B must improve physical response together with final geometry, motion amplitudes and path distributions. No coordinate-state efficacy result is available yet.",
+  "metric_scope": "Changes in observed-contact CA-distance displacement and fluctuation statistics between the two query grids, compared against the corresponding MD changes",
+  "limitations": [
+    "48 reused development systems; not an untouched confirmation set",
+    "Two model draws and one MD future per condition",
+    "Matched query-index RNG is not common-physical-time path coupling",
+    "Historical h/v training, parameter count and NFE differ from A/B; not a state-only causal control",
+    "No equilibrium, free-energy or kinetic-rate conclusion"
+  ],
+  "next": "compare_hv_clock.sh pairs complete A/B clock estimates against this baseline by system for each arm and training seed",
+  "default_promotion": false
+}
