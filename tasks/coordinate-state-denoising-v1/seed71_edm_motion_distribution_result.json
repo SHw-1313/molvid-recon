@@ -1,0 +1,43 @@
+{
+  "status": "completed_full_cached_ensemble_analysis",
+  "source_commit": "3d2cead",
+  "scorer": "/workspace/molvid-bridge-dynamic-prior-20261007/tasks/bridge-dynamic-prior-20261007/score_motion_distributions.py",
+  "output": "runs/coordinate_state_denoising_v1/seed71/edm/motion_distributions64_advanced/summary.json",
+  "scope": "All128 matched conditions,64systems,eight full12-frame80ps forecasts per model. Original B71,h/v A1,and releasedPVB coordinates plus deterministic observed-structure persistence. No future-conditioned sampling,coordinate alteration or sample filtering.",
+  "resources": {"new_model_calls": 0, "optimizer_updates": 0, "GPU_use": false, "CPU_threads": 2},
+  "definition": "For each condition and transformed observable, fair ensemble energy score mean_s||a_s-y|| - sum_{s!=r}||a_s-a_r||/(2*S*(S-1));Euclidean norm divided by sqrt(observable dimension),S=8. Paired condition score differences averaged within systems,then equal-system bootstrap. Original per-draw diagnostics retained separately. No clipping of negative finite-ensemble scores.",
+  "mean_columns": ["B", "hv", "PVB", "persistence"],
+  "all64_means": {
+    "ligand_RMSF_profile_fair_ES_A": [0.49827864506122965, 0.7663805071935575, 0.4143217829617012, 1.2299666059432148],
+    "ligand_mean_RMSF_fair_ES_A": [0.3989368365741624, 0.7042065106883472, 0.3560736994928852, 1.184702577109356],
+    "ligand_center_MSD_curve_fair_ES_A2": [8.463360230901806, 10.550182269614453, 8.11988182594967, 11.135923432811413],
+    "ligand_center_increment_path_fair_ES_A": [0.4332643368155445, 0.46874152621316895, 0.476160858014511, 0.6000965391406512]
+  },
+  "difference_columns": ["B_minus_reference", "ci95_lower", "ci95_upper"],
+  "all64_vs_hv": {
+    "RMSF_profile_A": [-0.26810186213232784, -0.4246250302550208, -0.1500820201409226],
+    "mean_RMSF_A": [-0.30526967411418476, -0.4676684625856201, -0.18499264876344304],
+    "center_MSD_curve_A2": [-2.0868220387126466, -5.046883922259486, -0.28510496159301424],
+    "center_increment_path_A": [-0.03547718939762446, -0.06503281645487724, -0.013091740539789622]
+  },
+  "all64_vs_PVB": {
+    "RMSF_profile_A": [0.08395686209952849, 0.04419937733915717, 0.12367242898654927],
+    "mean_RMSF_A": [0.04286313708127723, 0.004967509084709237, 0.08143849713053126],
+    "center_MSD_curve_A2": [0.34347840495213444, -0.8525279518044174, 1.9738368534593886],
+    "center_increment_path_A": [-0.04289652119896649, -0.07624506470123243, -0.01754594283281466]
+  },
+  "new48_vs_PVB": {
+    "RMSF_profile_A": [0.07631466788454822, 0.029654330821121004, 0.12437625332645177],
+    "mean_RMSF_A": [0.03226564338491273, -0.009223732869339417, 0.07608900551513992],
+    "center_MSD_curve_A2": [-0.5655237583047082, -1.4557866197033575, -0.07650235391634616],
+    "center_increment_path_A": [-0.03219438277592065, -0.06401468803709186, -0.011636841192236092]
+  },
+  "stratified_judgment": {
+    "hv_and_persistence": "All four fair scores improve on all64,old16,andnew48;all paired marginal intervals belowzero. The benefit is not merely reduced error of independent draws versus one future.",
+    "PVB": "RMSF-profile score worse and center-increment-path score better in all three strata. CenterMSD score improves only in new48;all64/old16 unresolved. MeanRMSF score worse on all64,but both component strata unresolved. Retain all contrary evidence rather than selecting favorable new48MSD alone.",
+    "goal": "B exhibits genuine favorable predictive scores for selected ligand center-motion observables but loses RMSF-profile distribution and chemical geometry versus PVB. This is not full-joint dynamics,thermodynamic agreement,or a goal-level success. State-representation causality remains confounded by training and architecture."
+  },
+  "next": "Keep original paired A/B scoring controller/output unchanged;this distinct advanced output includes h/v and persistence and does not select a new recipe. Finish A,second-seed,andstatic panels before choosing a model.",
+  "limitations": ["Supplementary reused-development analysis,not independent confirmation", "Finite12-frame RMSF,not equilibrium RMSF", "One MD future per condition does not identify the conditional distribution or its variance", "Eight predictive draws and one B training seed;MonteCarlo and training-seed uncertainty remain", "Scores are proper for the transformed observables,not proof of full trajectory joint distribution or kinetics", "Marginal system-bootstrap intervals,no multiplicity correction", "PVB nativeH1 versus B H4 and unequal training data/resources;legacy h/v not matched complex finetuning", "No geometry repair implied;retain excessive internal shape motion and rollout collision failures"],
+  "promotion": false
+}
