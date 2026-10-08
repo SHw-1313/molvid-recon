@@ -13,6 +13,7 @@ from torch import nn
 from torch.utils.checkpoint import checkpoint
 
 from ..codec.bridge_history import BridgeHistoryConditioner
+from ..codec.collective_feedback import CollectiveFeedback
 from ..data.batch import ClipBatch
 
 
@@ -51,7 +52,7 @@ interface for proteins and complexes. This is an explicit prototype limit,
 not a claim of arbitrary padded-batch support.
     """
     def __init__(self, geometry, *, recompute_frames=True, temporal_heads=4,
-                 temporal_insertion_layer=None):
+                 temporal_insertion_layer=None, collective_feedback=False):
         super().__init__()
         if geometry.using_ode or geometry.backbone != 'torchmdnet':
             raise ValueError('Released TorchMD stochastic bridge is required')
@@ -65,6 +66,9 @@ not a claim of arbitrary padded-batch support.
                     or decoder.extra_channels != 1 or decoder.neighbor_embedding is None):
                 raise ValueError('Placement experiment requires the released eight-layer decoder')
         self.temporal_insertion_layer = temporal_insertion_layer
+        if collective_feedback and temporal_insertion_layer != 6:
+            raise ValueError('Collective feedback requires the internal temporal insertion')
+        self.collective = CollectiveFeedback(geometry.hidden_dim) if collective_feedback else None
         self.recompute_frames = bool(recompute_frames)
         if self.recompute_frames:
             # Bound backward memory for full 17k-atom structures, without crops.
@@ -84,6 +88,12 @@ not a claim of arbitrary padded-batch support.
                 temporal='same_observed_and_joint_query_attention_between_spatial_layers6_and7',
                 spatial_layers=8, decoder_output_norm='after_remaining_spatial_layers',
                 new_parameters_for_placement=0)
+        if self.collective is not None:
+            result.update(collective_feedback='block_pool_global_equivariant_attention_atom_lift_after_time',
+                collective_groups='sample_component_block', collective_static=True,
+                collective_channels=128, collective_heads=4,
+                collective_parameters=sum(p.numel() for p in self.collective.parameters()),
+                static='same_spatial_and_collective_backbone_temporal_bypass_corrupted_structure_input')
         return result
 
     def _graph(self, xyz, batch):
@@ -190,20 +200,29 @@ perturbation affects only the source encoder; history remains observed data.
     def _decode_with_internal_time(self, state_A, source_A, flow_time_atoms, condition, lag):
         """Joint time mixing after layer6; layers7/8 then exchange atom messages.
 
-        Same conditioner, geometric layers, output norm and heads as the control;
-        no additional trainable tensor, geometry loss, or inference projection.
-        Static examples use the untouched full decoder path instead.
+        Without collective feedback this is the placement-control arithmetic.
+        With feedback, pooled chemical-unit messages cross atoms/components
+        before the final spatial layers. That spatial path is shared by static
+        and dynamic examples; only the temporal conditioner bypasses static.
         """
         prefix = [self._decode_prefix(state, source, flow_time_atoms, condition.observed)
                   for state, source in zip(state_A, source_A)]
         h = torch.stack([x[0] for x in prefix])
         v = torch.stack([x[1] for x in prefix])
-        h, v = self.conditioner(h, v, condition.history_h, condition.history_v,
-            condition.history_displacement_A, lag, condition.history_lag_ps)
+        if condition.task == 'dynamic':
+            h, v = self.conditioner(h, v, condition.history_h, condition.history_v,
+                condition.history_displacement_A, lag, condition.history_lag_ps)
         decoder = self.geometry.decoder
         features = []
+        groups = self.collective.grouping(condition.observed) if self.collective is not None else None
         for frame, (_, _, graph) in enumerate(prefix):
             frame_h, frame_v = h[frame], v[frame]
+            if self.collective is not None:
+                if self.recompute_frames and self.training and torch.is_grad_enabled():
+                    frame_h, frame_v = checkpoint(self.collective, frame_h, frame_v,
+                        state_A[frame], groups, use_reentrant=False, preserve_rng_state=True)
+                else:
+                    frame_h, frame_v = self.collective(frame_h, frame_v, state_A[frame], groups)
             for index in range(self.temporal_insertion_layer, len(decoder.attention_layers)):
                 dh, dv = decoder.attention_layers[index](frame_h, frame_v, *graph, dim_size=frame_h.shape[0])
                 frame_h, frame_v = frame_h + dh, frame_v + dv
@@ -224,7 +243,7 @@ perturbation affects only the source encoder; history remains observed data.
         if condition.task == 'dynamic' and not bool((lag > 0).all()):
             raise ValueError('Dynamic queries must follow observed history')
         t = flow_time.index_select(0, batch.abid)[:, None]
-        if condition.task == 'dynamic' and self.temporal_insertion_layer is not None:
+        if self.temporal_insertion_layer is not None and (condition.task == 'dynamic' or self.collective is not None):
             h, v = self._decode_with_internal_time(state_A, source_A, t, condition, lag)
         else:
             features = []

@@ -1,0 +1,70 @@
+{
+  "name": "CF1: chemical-unit collective feedback",
+  "status": "implemented_not_GPU_trained",
+  "base_commit": "e8b5ded809acba80ce9059b96d9dfb80d4310fec",
+  "question": "Does intra-denoising-step communication between chemical units improve joint atomic geometry and collective motion beyond equal-budget continuation of the internal-time baseline?",
+  "seeds": [
+    71,
+    72
+  ],
+  "arms": {
+    "control": "Same-seed final placement model +4096 updates; no collective module",
+    "collective": "Same parent +4096 updates; add globally communicating pooled chemical-unit features before final two geometry layers"
+  },
+  "architecture": [
+    "Original atom geometry layers 1–6",
+    "Existing observed-history and joint-query temporal attention (dynamic only)",
+    "Pool scalars/vectors by sample+component+block; global invariant-weight/equivariant-vector attention; gated lift to atoms (static and dynamic)",
+    "Original atom geometry layers 7–8, output normalization and velocity/drift heads"
+  ],
+  "no_changes": [
+    "released reference models",
+    "bridge source and SDE covariance",
+    "velocity/drift/KL losses",
+    "query selection or data schedule between arms",
+    "inference solver",
+    "atom topology or geometry projection"
+  ],
+  "fairness": [
+    "Same-seed warmstart; fresh optimizer in both arms, not exact resume",
+    "Same data/task/query schedule and same dedicated source/bridge-noise generator",
+    "New collective parameters and FLOPs are the intervention; not equal-parameter or equal-compute comparison",
+    "Extra module initialization consumes global torch RNG but no dropout is introduced; dedicated bridge generator remains seeded identically",
+    "Existing placement versus interleaved comparison is not this experiment's matched control"
+  ],
+  "static_policy": "25% static updates through the same collective+atom geometry path; temporal attention bypasses singleton static examples; corrupted positions only",
+  "evaluation": {
+    "protein": "48 fixed development systems, 2 observed anchors, 2 draws; native100 and80ps",
+    "complex": "64 fixed systems, old16/new48 reported separately; 2 anchors and8 draws; native80ps",
+    "criteria": [
+      "Bond/angle/torsion/clashes together with MSD/RMSF and complete-path energy scores",
+      "Ligand collective translation/pocket/contact distribution together with internal bond fluctuation",
+      "Protein temporal order relative to MD, not maximizing smoothness",
+      "Both training seeds; no best-checkpoint/sample selection"
+    ],
+    "references": "Untouched released PVB; BioKinema native1ns follow-up only if joint geometry/motion remains promising",
+    "limitations": [
+      "Development evidence, not held-out family/scaffold generalization",
+      "Short trajectories do not prove equilibrium or kinetic rates",
+      "One block-feedback insertion does not guarantee learned long-range dynamics",
+      "Pooling may erase multimodal intrablock motion; atom stream and local geometry remain intact",
+      "No explicit component-wide rigid-body or shared stochastic mode is implemented in CF1"
+    ]
+  },
+  "next_mechanisms_not_implemented": [
+    "Repeat temporal/coarse-spatial/local-spatial interaction through multiple trunk stages if CF1 learns useful communication",
+    "Joint collective translation/rotation and internal residual readout, without freezing internal deformations",
+    "Structured spatiotemporal stochastic source only with mathematically consistent interpolation target and sampler; do not merely correlate inference noise",
+    "Physical-time Mamba may operate on interacting chemical-unit states; replacing atomwise temporal modules alone does not create spatial cooperation"
+  ],
+  "sources": [
+    {
+      "url": "https://arxiv.org/html/2603.17633v1",
+      "use": "ATMOS atom-to-token encoder, single/pair recurrent state and geometry decoder; conceptual precedent, not a reproduced model"
+    },
+    {
+      "url": "https://github.com/IDEA-XL/BioKinema",
+      "use": "Released dynamics model with spatial modeling and physical-time temporal attention; untouched reference"
+    }
+  ]
+}

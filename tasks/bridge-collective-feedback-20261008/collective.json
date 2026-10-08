@@ -1,0 +1,51 @@
+{
+  "pvb_root": "/workspace/PVB_origin",
+  "checkpoint": "/data1/repo/PVB/model_ckpt/ckpt/pvb_pretrain.ckpt",
+  "temporal_insertion_layer": 6,
+  "warmstart_step": 16384,
+  "updates": 4096,
+  "warmup_updates": 128,
+  "geometry_lr": 0.000002,
+  "temporal_lr": 0.00002,
+  "collective_lr": 0.0001,
+  "weight_decay": 0.01,
+  "clip_grad": 1,
+  "static_sigma_A": 0.2,
+  "dynamic_source_sigma_A": 0.2,
+  "bf16": true,
+  "cpu_threads": 8,
+  "save_every": 256,
+  "reserve_bytes": 8589934592,
+  "data": {
+    "clock_sampling": "staggered_system_cycles",
+    "protein_base": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/clip_store/train",
+    "protein_shards": "/workspace/molvid-data-scale-schedule-20261006/runs/data_scale_schedule_20261006/full512_v1/concat/closed_shards_snapshot.json",
+    "complex_train": "/workspace/molvid-complex-scale-data-20261007/runs/complex_scale_data_20261007/misato1024_v1/train",
+    "static_registration": "/workspace/molvid-static-corpus-qualification-20261006/runs/static_corpus_qualification_20261006/full4096_v1/registration",
+    "expected_systems": {
+      "protein": 512,
+      "complex": 1024,
+      "static_protein": 2569
+    },
+    "query_frames": 4,
+    "sixteen_step_tasks": [
+      "static:protein",
+      "static:protein",
+      "static:protein",
+      "static:complex",
+      "dynamic:protein",
+      "dynamic:protein",
+      "dynamic:protein",
+      "dynamic:protein",
+      "dynamic:protein",
+      "dynamic:protein",
+      "dynamic:complex",
+      "dynamic:complex",
+      "dynamic:complex",
+      "dynamic:complex",
+      "dynamic:complex",
+      "dynamic:complex"
+    ]
+  },
+  "collective_feedback": true
+}

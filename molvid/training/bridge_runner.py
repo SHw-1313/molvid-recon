@@ -52,7 +52,11 @@ def training_example(model, clean, task, history, queries, settings, generator):
     return bridge_objective(model, condition, target, times, generator=generator)
 
 
-def train(settings, *, output, seed, resume=None, diagnose_step=None):
+def train(settings, *, output, seed, resume=None, diagnose_step=None, warmstart=None):
+    if resume is not None and warmstart is not None:
+        raise ValueError('Exact resume and changed-architecture continuation are distinct')
+    if settings.get('warmstart_step') and resume is None and warmstart is None:
+        raise ValueError('This experiment requires its same-seed trained parent')
     output = Path(output)
     if output.exists() and resume is None:
         raise FileExistsError(output)
@@ -65,10 +69,34 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None):
     geometry = load_geometry(settings, device)
     inherited = sum(p.numel() for p in geometry.parameters())
     model = PretrainedGeometryBridge(geometry, recompute_frames=True,
-        temporal_insertion_layer=settings.get('temporal_insertion_layer')).to(device).train()
-    optimizer = torch.optim.AdamW([
+        temporal_insertion_layer=settings.get('temporal_insertion_layer'),
+        collective_feedback=settings.get('collective_feedback', False)).to(device).train()
+    initialization = dict(checkpoint=settings['checkpoint'], loaded_geometry_parameters=inherited,
+        mode='released geometry with new temporal modules')
+    if warmstart is not None:
+        saved = torch.load(warmstart, map_location='cpu', weights_only=False)
+        if (saved['seed'] != seed or saved['step'] != settings['warmstart_step'] or
+                saved['step'] != saved['settings']['updates'] or
+                saved['settings'].get('temporal_insertion_layer') != settings['temporal_insertion_layer']):
+            raise ValueError('Continuation requires the same-seed final placement parent')
+        expected_new = {k for k in model.state_dict() if k.startswith('collective.')}
+        if set(model.state_dict()) - set(saved['model']) != expected_new or set(saved['model']) - set(model.state_dict()):
+            raise ValueError('Only collective feedback parameters may be new')
+        loaded = model.load_state_dict(saved['model'], strict=False)
+        if set(loaded.missing_keys) != expected_new or loaded.unexpected_keys:
+            raise ValueError('Unexpected inherited-weight mismatch')
+        initialization = dict(checkpoint=str(Path(warmstart).resolve()), parent_step=saved['step'],
+            parent_settings=saved['settings'], parent_contract=saved['contract'],
+            mode='placement continuation; inherited geometry and time weights; fresh optimizer and sampling schedule',
+            missing_keys=list(loaded.missing_keys), unexpected_keys=list(loaded.unexpected_keys),
+            new_collective_parameters=sum(p.numel() for p in model.collective.parameters()) if model.collective else 0)
+        del saved
+    parameter_groups = [
         dict(params=model.geometry.parameters(), lr=settings['geometry_lr'], name='geometry'),
-        dict(params=model.conditioner.parameters(), lr=settings['temporal_lr'], name='temporal')],
+        dict(params=model.conditioner.parameters(), lr=settings['temporal_lr'], name='temporal')]
+    if model.collective is not None:
+        parameter_groups.append(dict(params=model.collective.parameters(), lr=settings['collective_lr'], name='collective'))
+    optimizer = torch.optim.AdamW(parameter_groups,
         weight_decay=settings['weight_decay'])
     generator = torch.Generator(device=device).manual_seed(seed + 81007)
     mixture = BridgeMixture(settings['data'], seed)
@@ -85,13 +113,11 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None):
         generator.set_state(saved['generator_rng'])
         random.setstate(saved['python_rng']); np.random.set_state(saved['numpy_rng'])
         start = saved['step']
+        initialization = saved.get('initialization', initialization)
         del saved
     atomic_write_json(output/'recipe.json', dict(settings=settings, seed=seed, contract=model.contract(),
         source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
-        inheritance=dict(checkpoint=settings['checkpoint'], loaded_geometry_parameters=inherited,
-            new_temporal_parameters=sum(p.numel() for p in model.conditioner.parameters()),
-            mode='warmstart released static geometry; new optimizer, joint temporal residuals',
-            missing_geometry_keys=[], reinitialized_geometry_keys=[]),
+        inheritance=initialization,
         device=torch.cuda.get_device_name(0), resume=None if resume is None else str(resume)))
     started = time.monotonic()
     try:
@@ -101,7 +127,7 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None):
                     # Exact pre-update state for one failed optimizer update;
                     # no sample skipping, altered precision, or loss changes.
                     atomic_torch_save(output/'checkpoint_pre_failure.pt', dict(
-                        model=model.state_dict(), optimizer=optimizer.state_dict(), settings=settings,
+                        model=model.state_dict(), optimizer=optimizer.state_dict(), settings=settings, initialization=initialization,
                         contract=model.contract(), step=step, seed=seed, mixture=mixture.state_dict(),
                         torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all(),
                         generator_rng=generator.get_state(), python_rng=random.getstate(), numpy_rng=np.random.get_state()))
@@ -140,7 +166,7 @@ def train(settings, *, output, seed, resume=None, diagnose_step=None):
                 if (step+1) % settings['save_every'] == 0 or step+1 == settings['updates']:
                     if shutil.disk_usage(output).free < settings['reserve_bytes']:
                         raise OSError('Training checkpoint disk reserve exhausted')
-                    payload = dict(model=model.state_dict(), optimizer=optimizer.state_dict(), settings=settings,
+                    payload = dict(model=model.state_dict(), optimizer=optimizer.state_dict(), settings=settings, initialization=initialization,
                         contract=model.contract(), step=step+1, seed=seed, mixture=mixture.state_dict(),
                         torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all(),
                         generator_rng=generator.get_state(), python_rng=random.getstate(), numpy_rng=np.random.get_state())
