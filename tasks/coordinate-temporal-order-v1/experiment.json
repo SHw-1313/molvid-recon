@@ -1,6 +1,7 @@
 {
   "name": "coordinate_temporal_order_v1",
-  "status": "selected_execution_code_ready;not_yet_CUDA_checked_or_trained",
+  "status": "submitted_waiting_for_existing_GPU_owners;not_yet_CUDA_checked_or_trained",
+  "submitted_lanes": {"flow": {"container_pid": 1158414, "gpu": 7, "predecessor_container_pid": 1140130, "log": "runs/coordinate_temporal_order_v1/flow_lane.log"}, "edm": {"container_pid": 1158417, "gpu": 6, "predecessor_container_pid": 1141082, "log": "runs/coordinate_temporal_order_v1/edm_lane.log"}},
   "prepared_recipes": "runs/coordinate_temporal_order_v1/recipes/protocol.json;both arms cloned from the corresponding original static-to-MD recipes,changing only schema and interaction_order.Zero model calls or optimizer updates.",
   "branch": "exp/coordinate-temporal-order-v1",
   "parent_commit": "9c35753",
