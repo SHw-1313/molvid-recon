@@ -1,0 +1,33 @@
+{
+  "status": "completed TRAIN-only deterministic-path geometry experiment; no neural training or generated-quality claim",
+  "date_local": "2026-10-08",
+  "source": "runs/bridge_collective_feedback_20261008/training_interpolant_geometry64.json",
+  "coverage": "First fixed32 protein and32 complex TRAIN systems from seed71 mixture; same clips for three paths; H4/H8, immediate andlast queries, flow times0.25/0.5/0.75;2304 path states",
+  "metrics_order": ["all_bond_length_interpolation_RMSE_A", "excess_pairs_below1A_per1000_atoms", "cross_block_bond_RMSE_A", "within_block_bond_RMSE_A"],
+  "protein": {
+    "straight": [0.10350289127907085, 29.958580329754398, 0.029787790648610604, 0.10990963036811992],
+    "whole_component_rotation": [0.10347318780938246, 29.91372426044407, 0.029791896324038405, 0.10987655435617161],
+    "independent_block_rotation": [0.07936460663349487, 19.004306252133524, 0.06276232200008748, 0.08098051982874739]
+  },
+  "complex": {
+    "straight": [0.09394146795649337, 23.073367478701048, 0.02558905184153491, 0.09974730044646907],
+    "whole_component_rotation": [0.09386227257581585, 23.03222168973318, 0.025588477695267998, 0.09966229943333],
+    "independent_block_rotation": [0.0719600178630304, 13.604804647477911, 0.05682047521122797, 0.0734693735394699]
+  },
+  "interpretation": [
+    "On this fixed TRAIN subset, even clean straight coordinate interpolation creates short-distance overlaps and shortened bonds; actual learned source perturbation and bridge noise were not included.",
+    "Removing whole-component rotation has almost no average effect; global alignment alone is not a supported remedy for these path distortions.",
+    "Independent chemical-unit rotation reduces within-block distortions and close pairs, but more than doubles mean cross-block bond error in both domains. Do NOT switch the training bridge to this naive block path.",
+    "This supports keeping inter-unit covalent connectivity in the architecture/path design. RF2 transports rotational features while retaining coupled atom layers; it does not enforce independent rigid coordinate blocks.",
+    "Large intermediate neural features and LayerNorm overflow were observed on a separate exact failed batch. These aggregate path measurements do not prove path crowding is the sole cause of that failure or the model's overall quality gap."
+  ],
+  "next_design_not_implemented": {
+    "priority": "Complete matched CF1/RF2 geometry, motion, full-path and clock evaluations before combining modules",
+    "curved_interpolant": "A nonlinear endpoint-preserving Cartesian interpolant is compatible in principle with the stochastic-interpolant objective, but both training state and deterministic derivative targets must change together. In the owned PVB objective, replace target-source by dI/dflow_time in BOTH velocity and drift targets, retaining the explicitly declared stabilized gamma rule and SDE diffusion. Do not change just the noisy state or just inference noise.",
+    "required_geometry": "Couple neighboring chemical units across covalent bonds; retain internal torsions, ligand flexibility, chirality and ring closure rather than independently rotating whole residues or treating all ligands as rigid.",
+    "source_gradient": "An endpoint-dependent rotation fit or projection must have declared stable derivatives with respect to the learned source. Silently detaching that fit or substituting an inference-only sampler is not equivalent end-to-end source training.",
+    "scope": "Design only. No new interpolant training run, torsion architecture, structured SDE covariance or altered reference model has been implemented."
+  },
+  "theory_reference": "https://arxiv.org/abs/2303.08797",
+  "limitations": "Descriptive TRAIN subset, not an independent evaluation; unique pairs below1A include bonded pairs and are not a complete VDW metric; no kinetic/thermodynamic or causal generative-quality conclusion"
+}
