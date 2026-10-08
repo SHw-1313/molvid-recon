@@ -3,7 +3,8 @@
   "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
   "branch": "exp/coordinate-state-denoising-v1",
   "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
-  "status": "Both recipes, shared network, objectives, full samplers and trainer implemented. TRAIN scale statistics complete; CUDA checks/training not yet run. No efficacy or superiority claim.",
+  "status": "Both recipes, shared network, objectives, full samplers and trainer implemented. TRAIN scale statistics complete. Both CUDA lanes and paired analysis controllers submitted; waiting for existing owners. CUDA checks/training not yet run. No efficacy or superiority claim.",
+  "launch": {"implementation_commit": "b7810b2", "edm_controller_container_pid": 1127741, "edm_GPU": 4, "edm_waits_for": "capacity diagnostic controller1123262, which waits for existing CF1 GPU4 lane1115170", "flow_controller_container_pid": 1127742, "flow_GPU": 1, "flow_waits_for": "existing CF1 control71 lane1113668 and completed shared A/B CUDA exercise", "analysis_container_pids": [1128369,1128370], "archive_host_exec_session": 61715, "existing_jobs_interrupted": false},
   "paired_budget": {
     "seeds": [71,72], "updates_per_arm_seed": 2048, "total_optimizer_updates": 8192,
     "TRAIN_systems": {"protein": 128, "complex": 128},
@@ -57,7 +58,8 @@
     "limitations": "This initial prototype has a different trunk from historical h/v generation. Gains over that baseline alone cannot isolate state representation from architecture, training exposure or pretraining."
   },
   "baseline_and_evaluation": {
-    "hv_protein100": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_a1",
+    "hv_protein100": "/workspace/molvid-coordinate-state-denoising-v1/runs/coordinate_state_denoising_v1/hv_a1_raw100",
+    "hv_view": "All192 original a1 forecasts retained through original coordinate links;192 separate a1_projection rows excluded as postprocessing, not sample selection. All96 condition records match current native100 manifest exactly. No new model calls.",
     "hv_protein1ns": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_a1_1ns_v5",
     "PVB_protein100": "/workspace/molvid-geometry-scaling-20261005/runs/geometry_scaling_20261005/expanded_pvb",
     "PVB_complex64": "/workspace/molvid-complex-validation64-20261007/runs/complex_validation64_20261007/pvb",

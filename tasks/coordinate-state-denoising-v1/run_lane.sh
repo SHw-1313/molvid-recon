@@ -44,4 +44,7 @@ for seed in 71 72; do
   python -u -m tools.evaluate_pretrained_bridge --checkpoint "$checkpoint" --domain protein \
    --data "$cache" --lag-ps "$lag" --variant "$variant" --output "$run/native$lag" > "$run/native$lag.log" 2>&1
  done
+ python -u -m tools.evaluate_complex_rollout --checkpoint "$checkpoint" \
+  --data /workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/development16_rollout96 \
+  --variant "$variant" --output "$run/rollout" > "$run/rollout.log" 2>&1
 done

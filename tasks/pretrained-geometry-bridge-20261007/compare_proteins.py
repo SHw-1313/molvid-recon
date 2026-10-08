@@ -24,7 +24,7 @@ if __name__ == '__main__':
     result.update(status='completed', candidate=str(args.candidate), reference=str(args.reference),
         model_calls=0, independent_test=False, promotion=False,
         limitations=['Marginal system bootstrap, not multiplicity corrected',
-            'Released PVB H1 versus candidate H4 and different training exposure',
+            'Check protocols: historical/external references may differ in history and training exposure',
             'Mean amplitude ratio is not universally lower-is-better'])
     atomic_write_json(args.output, result)
     print(json.dumps({k: {a:b for a,b in v.items() if a != 'per_system'}
