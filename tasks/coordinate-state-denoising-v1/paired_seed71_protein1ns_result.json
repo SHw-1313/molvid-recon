@@ -1,0 +1,61 @@
+{
+  "status": "Both complete first-seed1ns panels and primary, temporal-order, amplitude-bin and bond-horizon diagnostics completed; full-path scoring advanced separately",
+  "coverage_each": {"systems": 48, "conditions": 96, "forecasts": 192, "future_frames": 12, "NFE_per_window": 35},
+  "A_sampling_resources": {"seconds": 3624.010668744333, "peak_cuda_bytes": 9751825408, "field_calls": 6720, "failures": []},
+  "B_resources_and_primary_comparisons": "seed71_first_completed_1ns_result.json",
+  "means_order": ["A_flow","B_EDM"],
+  "means": {
+    "bond_RMSE_A": [0.28185674044948,0.7348814185512452],
+    "clashes_per_1000_atoms": [191.7516566771335,388.7099668275391],
+    "residue_RMSF_MAE_A": [0.5600357113095621,0.9015596024692059],
+    "MSD_curve_MAE_A2": [7.504506507371036,8.787475190746287],
+    "mean_RMSF_ratio": [0.9570153485885822,1.5624402240031017]
+  },
+  "paired_arrays": "Mean candidate-minus-reference,95percent system-bootstrap lower,upper; exploratory marginal intervals",
+  "B_minus_A": {
+    "bond_RMSE_A": [0.45302467810176505,0.436794920771072,0.4709770628173812],
+    "clashes_per_1000_atoms": [196.95831015040554,177.90145350546914,216.00982980032313],
+    "residue_RMSF_MAE_A": [0.3415238911596437,0.2596565769791293,0.4176089522661639],
+    "MSD_curve_MAE_A2": [1.2829686833752527,0.06163432847630855,2.423438557996673]
+  },
+  "A_minus_hv": {
+    "bond_RMSE_A": [0.03261138939777023,0.02775633162342204,0.037063257645339465],
+    "clashes_per_1000_atoms": [114.8444746959434,102.71228807979226,132.32135877959442],
+    "residue_RMSF_MAE_A": [-0.07620135663698117,-0.13441080191793542,-0.020997415403447465],
+    "MSD_curve_MAE_A2": [-1.2689356361645172,-1.456682070044917,-1.091222797981593]
+  },
+  "A_minus_BioKinema": {
+    "bond_RMSE_A": [0.24589294552429805,0.23550316329417267,0.25723503541506754],
+    "clashes_per_1000_atoms": [187.91426578033915,166.2041019028146,215.2151866215686],
+    "residue_RMSF_MAE_A": [0.07396952458657324,-0.014501644930957505,0.16373309323098512],
+    "MSD_curve_MAE_A2": [2.0596934630949466,0.9329308712583346,3.381905537782908]
+  },
+  "A_query_horizon": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/flow/bond_horizon100_1000.json",
+    "query_indices": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "bond_RMSE_A_at1ns_spacing": [0.266603,0.226936,0.204197,0.193044,0.195696,0.200682,0.210416,0.228614,0.248783,0.279170,0.342958,0.561151],
+    "interpretation": "Nonmonotonic early queries, with pronounced last-query degradation. Much less severe than B, but neither recipe preserves geometry at distant queries. Joint-window generation, not autoregressive rollout accumulation. No proven time-embedding root cause."
+  },
+  "temporal_order": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/temporal_order1ns/summary.json",
+    "order": ["MD","hv","BioKinema","A","B"],
+    "CA_lag1_order_gain": [0.2894302290481526,0.18956282792743143,0.03194786288659559,0.22147157335867748,0.39804498503043667],
+    "CA_lag4_order_gain": [0.0017750115316286102,0.0789577294688677,-0.009147802115664934,0.08873607699477855,0.17901931306378646],
+    "interpretation": "Chronological-versus-exact-permutation variogram ratios are not universally higher-is-better. B overstates average lag1/lag4 order relative to MD while geometry fails; horizon-dependent drift or variance can also generate an order signal. Native BioKinema's much smaller lag1 signal is retained as contrary evidence to a blanket external-model superiority claim. No dynamics or kinetics equivalence established."
+  },
+  "motion_bins": {
+    "source": "runs/coordinate_state_denoising_v1/seed71/edm/amplitude1ns_vs_flow.json",
+    "TRAIN_frozen_thresholds_A": [1.5064689185142268,2.136611611473248],
+    "low_medium_high_condition_counts": [11,38,47],
+    "low_medium_high_system_counts": [8,24,26],
+    "A_RMSF_ratios_low_medium_high": [1.2219364932135137,1.1237679654781576,0.7658136953203916],
+    "B_RMSF_ratios_low_medium_high": [2.185847697902444,1.8615750034239202,1.198405670060812],
+    "high_B_minus_A_MSD_MAE_A2": [-1.4586856964115908,-3.067204713401121,0.0741564469674654],
+    "high_B_minus_A_RMSF_MAE_A": [0.16549996458567107,0.05411455728686773,0.26531843271536326],
+    "interpretation": "B has worse bond and RMSF errors in all bins and excess fluctuation in low/medium-motion conditions. Its high-motion MSD difference from A is unresolved, not evidence B wins large-motion tasks. A still underfluctuates in the high bin. Systems may occur in multiple bins through different anchors."
+  },
+  "full_path_analysis": {"container_process": 1145503, "output": "runs/coordinate_state_denoising_v1/seed71/edm/protein_paths1ns_advanced", "status_at_submission": "CPU scoring of all complete cached forecasts; zero extra neural calls; original serial analysis retains its separate output"},
+  "decision": "Retain both unchanged second seeds and matched static-to-MD stages. A performs better than B on listed1ns errors but is not a joint geometry/motion improvement over h/v, and neither is geometrically competitive with native BioKinema. No promotion or inference-time clipping. Future interventions must distinguish temporal-conditioning extrapolation from denoising/geometry capacity rather than attribute the failure by model name.",
+  "limitations": ["First seed and development systems only", "Protein TRAIN spacings100/200/400ps;1ns extrapolates, not within-support interpolation", "h/v architecture/pretraining and BioKinema nativeH1/MSA/training-overlap differences remain", "No clean family/scaffold independence, equilibrium or kinetics claim"],
+  "promotion": false
+}

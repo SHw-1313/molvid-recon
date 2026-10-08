@@ -105,7 +105,7 @@
     "controller_container_pid": 1144948,
     "scope": "Both seeds, complete existing48-system1ns panels: paired A/B primary errors, temporal-order-versus-permutation diagnostic against h/v and native BioKinema, and TRAIN-frozen motion-amplitude bins with absolute per-arm values. Main analysis retains full-path scores and external primary comparisons.",
     "motivation": "Completed Bseed71 1ns panel has much worse geometry/RMSF than h/v, unlike100ps; do not mistake excess fluctuation from distorted structures for appropriate motion. See seed71_first_completed_1ns_result.json.",
-    "status": "CPU controller launched, waiting for complete Aseed71 1ns panel; no supplemental efficacy result yet",
+    "status": "Seed71 complete A/B primary, temporal-order and amplitude-bin results available; controller awaits seed72. See paired_seed71_protein1ns_result.json. Both recipes lose geometry advantage over h/v at1ns; A retains better RMSF/MSD, B is worse than A on listed primary errors. No promotion.",
     "additional_model_calls": 0,
     "additional_optimizer_updates": 0,
     "restriction": "No incomplete-panel ranking, true-motion-bin conditioning, altered physical times, output projection or changed sampling recipe"
