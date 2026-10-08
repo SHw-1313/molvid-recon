@@ -1,0 +1,45 @@
+{
+  "status": "complete_B_seed72_native1ns_primary_and_horizon_evaluation;A_seed72_native1ns_still_running",
+  "source": "runs/coordinate_state_denoising_v1/seed72/edm/native1000/summary.json",
+  "coverage": {"systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "physical_query_spacing_ps": 1000, "field_calls_per_window": 35, "failures": 0},
+  "resources": {"seconds": 3285.8302376586944, "peak_cuda_bytes": 9736538624, "model_forward_calls": 6720, "neural_training_updates_in_evaluation": 0},
+  "raw_means": {
+    "bond_rmse_A": 0.4447909103514653,
+    "clashes_per_1000_atoms": 201.19837658325764,
+    "residue_RMSF_MAE_A": 0.5512456495780498,
+    "MSD_curve_MAE_A2": 6.732766472837991,
+    "mean_RMSF_amplitude_ratio": 0.8978585051093818,
+    "torsion_increment_circular_error": 0.28805361144865554
+  },
+  "paired_array_definition": "Mean,lower,upper95percent paired system-bootstrap interval, marginal exploratory comparisons without multiplicity correction; errors lower-is-better",
+  "B_minus_hv": {
+    "bond_rmse_A": [0.19554555929975556, 0.17120805244847478, 0.22744262457534273],
+    "clashes_per_1000_atoms": [124.29119460206753, 110.62673836604685, 140.90737451999368],
+    "residue_RMSF_MAE_A": [-0.08499141836849351, -0.129978713352466, -0.04144313380238601],
+    "MSD_curve_MAE_A2": [-2.0406756706975604, -2.4752000483875034, -1.6234034776121724],
+    "torsion_increment_circular_error": [0.12297142704483122, 0.11531251001385195, 0.13212717135126392]
+  },
+  "B_minus_BioKinema": {
+    "bond_rmse_A": [0.4088271154262833, 0.37578745490687965, 0.45071580995326743],
+    "clashes_per_1000_atoms": [197.36098568646324, 178.17702041434939, 221.17493460455364],
+    "residue_RMSF_MAE_A": [0.06517946285506089, -0.013328990906787415, 0.15043167689776354],
+    "MSD_curve_MAE_A2": [1.2879534285619028, 0.3476280232205882, 2.410624245884052],
+    "torsion_increment_circular_error": [0.13199479396765432, 0.1216423023462994, 0.1428211373771774]
+  },
+  "comparison_sources": ["runs/coordinate_state_denoising_v1/seed72/edm/protein1ns_vs_hv_advanced.json", "runs/coordinate_state_denoising_v1/seed72/edm/protein1ns_vs_biokinema_advanced.json"],
+  "horizon_diagnostic": {
+    "source": "runs/coordinate_state_denoising_v1/seed72/edm/bond_horizon100_1000.json",
+    "query_indices": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "mean_per_query_bond_RMSE_A_at1ns_spacing": [0.35080248674586995,0.35359151637056946,0.3562908635009143,0.35463897773603364,0.3642352408226852,0.3677715168458027,0.38737121985862405,0.40939599302502105,0.4531697076392756,0.4939170602825131,0.5655963663510364,0.7028140737552184],
+    "mean_per_query_bond_RMSE_A_at100ps_spacing": [0.2543387341023748,0.25371165734964474,0.2552061488458948,0.2571293279063636,0.26089944972716156,0.2613474538303616,0.26325958476616285,0.2684912016119172,0.2715346989369554,0.2763407907671244,0.2791775750111527,0.28145704297584345],
+    "interpretation": "Distant physical queries worsen covalent geometry in both B training seeds, though seed72 is much less extreme than seed71(terminal1ns-grid RMSE1.659A). These are jointly generated windows, not autoregressive accumulation. Per-frame means differ from pooled-window RMSE; this is not a controlled intervention on time features."
+  },
+  "cross_seed_interpretation": [
+    "B seed71 had bondRMSE0.7349,RMSFerror0.9016,MSDerror8.7875 and meanRMSFratio1.5624 at1ns. Seed72 has substantially different motion and less severe geometry damage. Do not select either seed as representative or discard unfavorable runs.",
+    "Geometry and torsion-increment degradation versus h/v repeats in both seeds. Seed71 RMSF degradation and unresolved MSD benefit do NOT repeat:seed72 improves both RMSF and MSD errors versus h/v. Preserve these positive motion results despite the geometry failure.",
+    "B remains worse than released BioKinema on geometry/MSD/torsion-increment errors in both seeds; RMSF difference is unresolved in seed72. BioKinema native H1+MSA and known46/48 training overlap prevent an equal-input or sequence-independent claim.",
+    "A seed72 native1ns is not complete; no two-seed A/B1ns ranking yet. Both B seeds used identical recipe/exposure within their paired A/B runs, but only two seeds cannot quantify broad optimization robustness.",
+    "No change to source noise, clocks, solver, clipping, data membership or checkpoints. No static pretraining in these MD-only results; not a causal verdict against EDM or coordinate-state generation."
+  ],
+  "default_promotion": false
+}
