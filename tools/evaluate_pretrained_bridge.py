@@ -4,6 +4,7 @@ Generation contracts remain distinct; no projection or target conditioning.
 """
 import argparse
 from collections import defaultdict
+import fcntl
 import json
 from pathlib import Path
 import time
@@ -35,6 +36,35 @@ def forecast(model, observed_cpu, query_time_ps, device, seed):
     generator = torch.Generator(device=device).manual_seed(seed)
     steps = None if isinstance(model, CoordinateStateDenoiser) else 10
     return model.sample(condition, query_time_ps.to(device), steps=steps, generator=generator).float()
+
+
+def evaluation_request(args):
+    """Identity of immutable inputs for sharing a completed scheduled panel."""
+    return {key: str(value.absolute()) if isinstance(value, Path) else value
+        for key, value in vars(args).items() if key != 'output'}
+
+
+def run_once(args):
+    """Serialize a panel before any model construction; never duplicate draws.
+
+    Parallel evaluation workers and the original sequential queue may request
+    the same fixed-final panel. A crashed/incomplete directory is NOT silently
+    overwritten or resumed. Legacy outputs without request identity are also
+    left untouched rather than guessed compatible.
+    """
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with args.output.with_name(args.output.name+'.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if args.output.exists():
+            summary_path, protocol_path = args.output/'summary.json', args.output/'protocol.json'
+            if summary_path.exists() and protocol_path.exists():
+                summary = json.loads(summary_path.read_text())
+                protocol = json.loads(protocol_path.read_text())
+                if summary.get('status')=='completed' and protocol.get('request_identity')==evaluation_request(args):
+                    print(json.dumps(dict(reused_complete_panel=str(args.output), new_model_calls=0)), flush=True)
+                    return
+            raise FileExistsError(f'Existing incomplete or differently specified panel: {args.output}')
+        run(args)
 
 
 def run(args):
@@ -83,6 +113,7 @@ def run(args):
     model.eval().requires_grad_(False)
     seeds = [17, 29, 43, 59, 71, 83, 97, 101] if args.domain == 'complex' else [17, 29]
     protocol = dict(variant=args.variant, domain=args.domain, history_frames=4, query_frames=12,
+        request_identity=evaluation_request(args),
         training_query_frames=settings['data']['query_frames'],
         solver_steps=16 if args.hv_baseline else settings['sampler_intervals'] if coordinate_state else 10,
         vector_field_evaluations_per_draw=16 if args.hv_baseline else 2*settings['sampler_intervals']-1 if coordinate_state else 10, seeds=seeds,
@@ -258,4 +289,4 @@ if __name__ == '__main__':
     parser.add_argument('--lag-ps', type=int, choices=[80, 100, 1000], default=100)
     parser.add_argument('--complex-systems', type=int, choices=[16, 64], default=16)
     parser.add_argument('--reuse', type=Path, help='Completed same-model original16 forecast directory')
-    run(parser.parse_args())
+    run_once(parser.parse_args())
