@@ -3,7 +3,18 @@
   "priority": "User high-priority branch; unfinished CM4 worktree is parked, not trained or merged",
   "branch": "exp/coordinate-state-denoising-v1",
   "code_parent": "7c2c0f9; reuse shallow modules and evaluators, not CF1 trained weights",
-  "status": "EDM seed71 completed all2048 real CUDA training updates and the existing GPU4 controller automatically started seed72 (at least20 actual updates observed). Flow seed71 continues on GPU1. Full h/v and released-PVB complex reference results are recorded. Coordinate trained-generation panels remain pending; no efficacy or superiority claim.",
+  "status": "EDM seed71 completed2048 updates and seed72 is training on GPU4; flow seed71 continues on GPU1. Fixed-final EDM71 primary source sampling has now actually started on released GPU7, with3 complete two-draw protein conditions saved. The same scheduled A primary panels wait for final weights on released GPU6. Full primary panels remain pending; no efficacy claim from the first conditions.",
+  "parallel_primary_evaluation": {
+    "implementation_commit":"0c30ef2",
+    "reason":"Do not leave released goal GPUs idle while first-seed fixed-final models wait behind second-seed training. Advance existing primary evaluation, not new experimental variants.",
+    "EDM_controller":1137795,"EDM_seed71_inference_process":1137800,"EDM_GPU":7,
+    "flow_controller":1137796,"flow_GPU":6,
+    "eligibility":"Both GPUs had no compute applications at launch; workers recheck before each panel. Each model must have its immutable fixed-final checkpoint.",
+    "scope":"Same protein48 native100 and complex64 primary panels for both seeds. Original GPU1/4 training and later native80/1ns/rollout queues remain intact.",
+    "duplicate_prevention":"Per-output OS exclusive lock before model construction; completed-panel reuse only for identical recorded CLI input identity. Incomplete or incompatible directories raise an error instead of being overwritten. Separate *_parallel.log preserves new sampling logs when original queues later reuse completed outputs.",
+    "first_execution":"EDM71 completed3 full protein conditions, six12-frame source samples, in49.154 seconds at first observation. Implementation execution evidence only, not a scientific result.",
+    "additional_training_updates":0,"additional_forecasts":0,"existing_training_interrupted":false
+  },
   "first_completed_training": {
     "scheme":"edm", "seed":71, "updates":2048,
     "elapsed_seconds":9081.470536213368, "GPU_hours":2.5226307045037135,
@@ -21,7 +32,7 @@
     "history": "H4/H8 alternate by system visits; Q12/Q8 are all remaining futures, not one-frame training",
     "future_frame_exposure": "A/B identical within each seed; log actual target_frames and atom_query_pairs",
     "sampling": "18 intervals,35 network calls per complete joint window in both arms; Heun except final Euler endpoint",
-    "resource_scope": "A/B train and sample on the two already-authorized GPU1/4 lanes, no cancellation or sharing of busy GPUs. Already-budgeted frozen h/v inference was subsequently advanced onto released existing-goal GPU7 after CF1 control72 completed; unchanged total training updates and forecast count.",
+    "resource_scope": "Training stays on GPU1/4. Within the existing eight-GPU goal scope, the same already-budgeted primary panels were advanced onto released GPU6/7 after CF1 and h/v finished; no cancellation or busy-GPU sharing. Per-output exclusive execution and exact-request completed-panel reuse prevent original queues from duplicating forecasts. Same8192 optimizer updates and same6656 planned forecast trajectories across four arm/seed runs, including short rollouts; only scheduling changes.",
     "fairness": "Matched A/B architecture, data sequence, random initialization, optimizer schedule, updates and NFE. Actual wallclock/FLOPs may differ because noise changes neighbor graphs. Historical h/v and external references are not matched-training-budget causal controls."
   },
   "TRAIN_statistics": {
