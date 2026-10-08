@@ -90,8 +90,15 @@ def main():
             separated_condition=model.prepare_condition(shifted_observed)
             separated=model(shifted,condition=separated_condition,query_time_ps=times,progress=progress)
             isolation=float((separated[:,~other]-prediction[:,~other]).abs().max())
-            if not torch.allclose(separated[:,~other],prediction[:,~other],atol=1e-5,rtol=1e-5):
-                raise RuntimeError('Packed system interaction')
+            repeated=model(state,condition=condition,query_time_ps=times,progress=progress)
+            repeat_error=float((repeated[:,~other]-prediction[:,~other]).abs().max())
+            # CUDA scatter reductions gave 4e-5 A repeat variation on an
+            # identical FP32 input. Use the same absolute tolerance as the
+            # joint-equivariance exercise, and preserve repeat error evidence.
+            if repeat_error>2e-4 or not torch.allclose(separated[:,~other],prediction[:,~other],atol=2e-4,rtol=2e-5):
+                raise RuntimeError(f'{scheme}: isolation max={isolation}, identical-input repeat max={repeat_error}, '
+                                   f'prediction max={float(prediction[:,~other].abs().max())}; '
+                                   'distinguish numerical reduction order from actual cross-system interaction')
             calls,graphs=model.forward_calls,model.geometry_calls
             sample=model.sample(condition,times,generator=rng)
             nfe=model.forward_calls-calls;graph_calls=model.geometry_calls-graphs
@@ -99,7 +106,8 @@ def main():
                 raise RuntimeError('Incomplete/nonfinite coordinate-only sampling or missing current geometry')
             if not torch.equal(observed.x,snapshot):raise RuntimeError('Observed coordinates modified')
         output[scheme]=dict(gradient_norms=gradients,loss_observation=metrics,equivariance_max_A=equivariance,
-            packed_isolation_max_A=isolation,complete_sampling_NFE=nfe,current_geometry_rebuilds=graph_calls,
+            packed_isolation_max_A=isolation,identical_input_repeat_max_A=repeat_error,
+            packed_isolation_atol_A=2e-4,complete_sampling_NFE=nfe,current_geometry_rebuilds=graph_calls,
             generated_shape=list(sample.shape),parameters=sum(p.numel() for p in model.parameters()),
             peak_cuda_bytes=torch.cuda.max_memory_allocated(),observed_unchanged=True)
         del model,condition,sample,prediction,rotated,rotated_condition,separated_condition
