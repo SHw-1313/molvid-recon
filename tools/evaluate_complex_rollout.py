@@ -15,7 +15,8 @@ from molvid.evaluation.ca_detail import system_estimate
 from molvid.evaluation.complex_motion import score_complex, aligned_future
 from molvid.evaluation.native_forecast import load_pvb, pvb_complex_observation, pvb_forecast
 from molvid.flow.pretrained_bridge import PretrainedGeometryBridge
-from molvid.flow.coordinate_state import CoordinateStateDenoiser
+from molvid.flow.coordinate_state import (CoordinateStateDenoiser, COORDINATE_RECIPE_SCHEMAS,
+                                          coordinate_checkpoint_schema)
 from molvid.runtime import atomic_write_json
 from molvid.training.bridge_runner import load_geometry
 from molvid.training.predictive_data import atomic_torch_save
@@ -56,9 +57,9 @@ def run(args):
         saved = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
         if saved['step'] != saved['settings']['updates']:
             raise ValueError('Fixed-final candidate required')
-        coordinate_state = saved['settings'].get('schema') == 'molvid.coordinate_state.recipe.v1'
+        coordinate_state = saved['settings'].get('schema') in COORDINATE_RECIPE_SCHEMAS
         if coordinate_state:
-            if saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
+            if saved.get('schema') != coordinate_checkpoint_schema(saved['settings']):
                 raise ValueError('Wrong coordinate-state checkpoint schema')
             model = CoordinateStateDenoiser(saved['settings']).to(device)
             initialization_report = saved.get('initialization_report')

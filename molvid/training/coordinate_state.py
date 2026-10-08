@@ -12,7 +12,8 @@ import torch
 
 from ..codec.frame import slice_clip_frames
 from ..data.bridge_mixture import BridgeMixture
-from ..flow.coordinate_state import CoordinateStateDenoiser, coordinate_state_objective
+from ..flow.coordinate_state import (CoordinateStateDenoiser, coordinate_state_objective,
+                                     coordinate_checkpoint_schema)
 from ..runtime import atomic_write_json
 from .predictive_data import atomic_torch_save
 
@@ -21,14 +22,23 @@ def load_coordinate_weights(model, path):
     """Weights-only stage transition; never restore optimizer, RNG or data visits.
 
     Coordinate units, noise preconditioning, output meaning and architecture
-    must match. Data mixtures and optimization budgets may change explicitly.
+    must match except for an explicit order ablation from a static-only parent,
+    whose temporal-bypassed path has not changed. Data/optimization budgets may
+    change explicitly; the parent recipe and exposure remain in the load report.
     Only a completed fixed-budget parent is accepted, not a selected partial fit.
     """
     saved = torch.load(path, map_location='cpu', weights_only=False)
-    if saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
+    if saved.get('schema') not in ('molvid.coordinate_state.checkpoint.v1',
+                                   'molvid.coordinate_state.checkpoint.v2'):
         raise ValueError('Warm start requires an owned coordinate-state checkpoint, not h/v or external weights')
     parent = saved['settings']
-    semantic_keys = ('schema', 'scheme', 'scales', 'width', 'spatial_layers',
+    if saved['schema'] != coordinate_checkpoint_schema(parent):
+        raise ValueError('Parent recipe/checkpoint schema mismatch')
+    parent_order = parent.get('interaction_order', 'temporal_then_tokens')
+    if parent_order != model.interaction_order and not (
+            saved['exposure']['dynamic_examples']==0 and saved['exposure']['static_examples']>0):
+        raise ValueError('Order ablation may transfer only a completed static-only parent across orders')
+    semantic_keys = ('scheme', 'scales', 'width', 'spatial_layers',
                      'temporal_heads', 'num_rbf', 'radius_A', 'max_neighbors')
     changed = [key for key in semantic_keys if parent[key] != model.settings[key]]
     if changed:
@@ -40,6 +50,10 @@ def load_coordinate_weights(model, path):
         parent_step=saved['step'], parent_seed=saved['seed'], parent_exposure=saved['exposure'],
         parent_source_commit=saved.get('source_commit'),
         parent_GPU_hours=saved['elapsed_seconds']/3600,
+        interaction_order_transfer=dict(parent=parent_order, current=model.interaction_order,
+            changed=parent_order!=model.interaction_order,
+            reason=('Unchanged interaction order' if parent_order==model.interaction_order else
+                    'Static forward bypasses temporal interaction; dynamic order is an explicit ablation')),
         parent_initialization=saved.get('initialization_report', {'kind': parent['initialization']}),
         inherited_parameters=sum(p.numel() for p in model.parameters()),
         inherited_modules=['spatial', 'temporal', 'tokens', 'progress', 'physical_time', 'displacement', 'head'],
@@ -71,7 +85,7 @@ def train(settings, output, seed, resume=None, warm_start=None):
         initialization_report = load_coordinate_weights(model, warm_start)
     if resume:
         saved = torch.load(resume, map_location='cpu', weights_only=False)
-        if saved['schema']!='molvid.coordinate_state.checkpoint.v1' or saved['settings']!=settings or saved['seed']!=seed:
+        if saved['schema']!=model.checkpoint_schema or saved['settings']!=settings or saved['seed']!=seed:
             raise ValueError('Wrong objective, scales, seed or checkpoint schema')
         model.load_state_dict(saved['model'], strict=True); optimizer.load_state_dict(saved['optimizer'])
         mixture.load_state_dict(saved['mixture']); generator.set_state(saved['generator_rng'])
@@ -90,7 +104,7 @@ def train(settings, output, seed, resume=None, warm_start=None):
     def save(step, final=False):
         elapsed=prior_seconds+time.monotonic()-began
         path=output/('coordinate_final.pt' if final else 'checkpoint_latest.pt')
-        atomic_torch_save(path, dict(schema='molvid.coordinate_state.checkpoint.v1', model=model.state_dict(),
+        atomic_torch_save(path, dict(schema=model.checkpoint_schema, model=model.state_dict(),
             optimizer=optimizer.state_dict(), settings=settings, seed=seed, step=step, contract=model.contract(),
             mixture=mixture.state_dict(), exposure=exposure, elapsed_seconds=elapsed,
             initialization_report=initialization_report, source_commit=source_commit,

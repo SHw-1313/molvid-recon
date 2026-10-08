@@ -19,7 +19,8 @@ from molvid.evaluation.ca_detail import score, system_estimate
 from molvid.evaluation.complex_motion import score_complex
 from molvid.evaluation.native_forecast import molvid_forecast
 from molvid.flow.pretrained_bridge import PretrainedGeometryBridge
-from molvid.flow.coordinate_state import CoordinateStateDenoiser
+from molvid.flow.coordinate_state import (CoordinateStateDenoiser, COORDINATE_RECIPE_SCHEMAS,
+                                          coordinate_checkpoint_schema)
 from molvid.geometry.ca_detail import condition_from_record
 from molvid.losses.sampled_physical import PhysicalAuxiliaryConfig
 from molvid.runtime import atomic_write_json
@@ -93,11 +94,11 @@ def run(args):
         settings = json.loads(args.initial_config.read_text())
         saved = None
         checkpoint_step = 0
-    coordinate_state = settings.get('schema') == 'molvid.coordinate_state.recipe.v1'
+    coordinate_state = settings.get('schema') in COORDINATE_RECIPE_SCHEMAS
     if args.hv_baseline:
         output_norm = None
     elif coordinate_state:
-        if saved is not None and saved.get('schema') != 'molvid.coordinate_state.checkpoint.v1':
+        if saved is not None and saved.get('schema') != coordinate_checkpoint_schema(settings):
             raise ValueError('Coordinate-state checkpoint schema required')
         model = CoordinateStateDenoiser(settings).to(device)
         output_norm = model.spatial.out_norm

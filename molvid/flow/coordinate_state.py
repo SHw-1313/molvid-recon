@@ -21,6 +21,26 @@ from ..geometry.neighbors import CudaRadiusNeighborList
 from ..spatial.torchmd import TorchMDEncoder
 
 
+COORDINATE_RECIPE_SCHEMAS = ('molvid.coordinate_state.recipe.v1',
+                             'molvid.coordinate_state.recipe.v2')
+
+
+def coordinate_checkpoint_schema(settings):
+    schema = settings['schema']
+    if schema not in COORDINATE_RECIPE_SCHEMAS:
+        raise ValueError('Coordinate-state recipe required; latent/bridge checkpoints are incompatible')
+    order = settings.get('interaction_order', 'temporal_then_tokens')
+    if order not in ('temporal_then_tokens', 'tokens_then_temporal'):
+        raise ValueError('Choose an explicit supported temporal/token interaction order')
+    if schema == COORDINATE_RECIPE_SCHEMAS[0]:
+        if order != 'temporal_then_tokens':
+            raise ValueError('Changed interaction order requires a v2 recipe/checkpoint')
+    elif 'interaction_order' not in settings:
+        raise ValueError('A v2 recipe must explicitly name interaction_order')
+    return ('molvid.coordinate_state.checkpoint.v1' if schema == COORDINATE_RECIPE_SCHEMAS[0]
+            else 'molvid.coordinate_state.checkpoint.v2')
+
+
 @dataclass(frozen=True)
 class CoordinateStateCondition:
     observed: ClipBatch
@@ -38,8 +58,8 @@ class CoordinateStateDenoiser(nn.Module):
     """Same trainable architecture for A/B; distinct objective/output semantics."""
     def __init__(self, settings):
         super().__init__()
-        if settings['schema'] != 'molvid.coordinate_state.recipe.v1':
-            raise ValueError('Coordinate-state recipe required; latent/bridge checkpoints are incompatible')
+        self.checkpoint_schema = coordinate_checkpoint_schema(settings)
+        self.interaction_order = settings.get('interaction_order', 'temporal_then_tokens')
         self.settings = settings
         self.scheme = settings['scheme']
         if self.scheme not in ('flow', 'edm'):
@@ -70,7 +90,10 @@ class CoordinateStateDenoiser(nn.Module):
         self.geometry_calls = 0
 
     def contract(self):
-        return dict(schema='molvid.coordinate_state.model.v1', scheme=self.scheme,
+        return dict(schema=('molvid.coordinate_state.model.v1'
+                if self.settings['schema'] == COORDINATE_RECIPE_SCHEMAS[0]
+                else 'molvid.coordinate_state.model.v2'), scheme=self.scheme,
+            interaction_order=self.interaction_order,
             state='XYZ_or_reversible_reference_displacement_Q_N_3_Angstrom', physical_time_unit='ps',
             weights=('owned_coordinate_state_weights_only_no_external_weights'
                 if self.settings.get('initialization')=='coordinate_state_weights_only'
@@ -176,12 +199,21 @@ class CoordinateStateDenoiser(nn.Module):
             h, v = self._layers(h, v, graph, 0, split)
             prefixes.append((h, v, graph))
         h, v = torch.stack([x[0] for x in prefixes]), torch.stack([x[1] for x in prefixes])
+        tokens_first = condition.task=='dynamic' and self.interaction_order=='tokens_then_temporal'
+        if tokens_first:
+            # Same one token call per candidate frame; no added parameters or
+            # extra temporal calls. Global atom messages now reach query-time
+            # mixing within this field evaluation. Static bypass is unchanged.
+            mixed = [self.tokens(h[frame], v[frame], xyz, condition.token_groups)
+                     for frame, xyz in enumerate(current_A)]
+            h, v = torch.stack([x[0] for x in mixed]), torch.stack([x[1] for x in mixed])
         if condition.task=='dynamic':
             h, v = self.temporal(h, v, condition.history_h, condition.history_v,
                 condition.history_displacement_A/self.sigma_data, lag, condition.history_lag_ps)
         outputs = []
         for frame, (_, _, graph) in enumerate(prefixes):
-            hf, vf = self.tokens(h[frame], v[frame], current_A[frame], condition.token_groups)
+            hf, vf = (h[frame], v[frame]) if tokens_first else self.tokens(
+                h[frame], v[frame], current_A[frame], condition.token_groups)
             hf, vf = self._layers(hf, vf, graph, split, len(self.spatial.attention_layers))
             outputs.append((self.spatial.out_norm(hf), vf))
         result = self.head(torch.stack([x[0] for x in outputs]), torch.stack([x[1] for x in outputs]))
