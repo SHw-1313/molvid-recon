@@ -1,0 +1,48 @@
+{
+  "status": "both_seeds_complete_primary_protein100_metrics;seed72_path_and_temporal_analyses_running",
+  "seeds": [71, 72],
+  "coverage_each_seed_each_arm": {"systems": 48, "conditions": 96, "draws": 192, "query_frames": 12, "NFE_per_window": 35, "sampling_failures": 0},
+  "sources": ["paired_seed71_protein100_result.json", "seed72_completed_edm_protein100_result.json", "runs/coordinate_state_denoising_v1/seed72/flow/expanded48/summary.json", "runs/coordinate_state_denoising_v1/seed72/{flow,edm}/protein100_vs_*.json"],
+  "seed72_raw_mean_order": ["A_flow", "B_EDM"],
+  "seed72_raw_means": {
+    "bond_rmse_A": [0.16175835203244182, 0.2660826891783664],
+    "clashes_per_1000_atoms": [61.15927811917293, 105.56438327099192],
+    "residue_RMSF_MAE_A": [0.2968259925255552, 0.3339729562091331],
+    "MSD_curve_MAE_A2": [2.407655096017859, 2.154589403213726],
+    "mean_RMSF_amplitude_ratio": [0.8555887316219395, 0.872369976098791],
+    "angle_cosine_rmse": [0.21144863303440312, 0.2745318237381677],
+    "torsion_increment_circular_error": [0.13595221463280419, 0.18710590495417515]
+  },
+  "paired_array_definition": "Mean difference,lower,upper of95percent paired system-bootstrap interval; exploratory marginal intervals. Seeds reported separately, not treated as additional independent validation systems.",
+  "seed72_B_minus_A": {
+    "bond_rmse_A": [0.10432433714592458, 0.0980099801587574, 0.11138107365796199],
+    "clashes_per_1000_atoms": [44.40510515181899, 39.915035503506985, 48.06246462082228],
+    "residue_RMSF_MAE_A": [0.03714696368357787, 0.019588018722909814, 0.056849162446451364],
+    "MSD_curve_MAE_A2": [-0.2530656928041329, -0.4264659047437211, -0.1157071191578225],
+    "torsion_increment_circular_error": [0.05115369032137096, 0.04755011207113664, 0.05420443540691242]
+  },
+  "seed72_A_minus_hv": {
+    "bond_rmse_A": [-0.10949710213610057, -0.11278427384983268, -0.10630019139619847],
+    "clashes_per_1000_atoms": [-58.60867717788478, -70.67266645228844, -47.95259088679778],
+    "residue_RMSF_MAE_A": [-0.006447626937491198, -0.02896073600568343, 0.013265604992435922],
+    "MSD_curve_MAE_A2": [-0.06550435592523877, -0.13601523833155318, 0.011888225931519088],
+    "torsion_increment_circular_error": [-0.01554956081478546, -0.020137122261803597, -0.010221181064844138]
+  },
+  "seed72_A_minus_PVB": {
+    "bond_rmse_A": [0.12160396910808768, 0.11263713837879014, 0.13146651047418606],
+    "clashes_per_1000_atoms": [59.78781555104018, 43.315455602560554, 82.661392588908],
+    "residue_RMSF_MAE_A": [-0.026848724693991244, -0.04483991436233434, -0.011143995285965519],
+    "MSD_curve_MAE_A2": [0.31494351643292856, 0.12925177165662816, 0.5235473404172803]
+  },
+  "seed72_A_resources": {"sampling_seconds": 3613.211051198654, "model_calls": 6720, "peak_cuda_bytes": 9752879104, "extra_optimizer_updates": 0},
+  "replication_findings": [
+    "A beats B on bond/clash/angle/RMSF/torsion-increment errors in both seeds; B beats A on MSD error in both. Same architecture/exposure and MD-only initialization make this a paired recipe result, not a universal superiority claim for flow or diffusion.",
+    "A improves bond/clash/angle/torsion-increment errors over historical h/v in both seeds. A RMSF differences remain unresolved in both. A MSD improvement excludes zero in seed71 but not72; do not claim replicated significant motion improvement from MSD alone.",
+    "B improves clash and MSD errors over h/v in both seeds but worsens RMSF/torsion-increment errors. Its bond advantage excludes zero only in seed71.",
+    "A improves RMSF error over released PVB in both seeds, but remains worse on bond/clash/MSD in both. Retain both favorable and unfavorable outcomes. PVB native inputs and released pretraining differ, so not an equal-resource causal comparison.",
+    "All models evaluated on the same fixed48 development systems, including the2 protein systems with known cross-domain TRAIN sequence similarities. No retrospective member removal; no sealed test accessed.",
+    "Neither all-atom trajectory quality nor the persistent goal is achieved. Seed72 path, time-response, amplitude and complex/rollout analyses must finish; no architecture promotion or new parameter search based on these primary metrics alone."
+  ],
+  "static_pretraining_in_this_comparison": false,
+  "default_promotion": false
+}
