@@ -1,0 +1,49 @@
+{
+  "status": "complete_first_EDM_seed_complex64_primary_comparisons;A_and_second_seed_panels_pending",
+  "source": "runs/coordinate_state_denoising_v1/seed71/edm/complex_validation64",
+  "checkpoint": "runs/coordinate_state_denoising_v1/seed71/edm/train/coordinate_final.pt",
+  "comparisons": "runs/coordinate_state_denoising_v1/seed71/edm/complex_{all,old16,new48}_vs_{pvb,hv}_advanced.json",
+  "coverage": {"systems": 64, "conditions": 128, "draws_per_condition": 8, "forecasts": 1024, "future_frames": 12, "native_dt_ps": 80, "candidate_H": 4, "PVB_native_H": 1, "raw_output": true},
+  "resources": {"actual_model_forward_calls": 35840, "seconds": 30106.953603349626, "peak_cuda_bytes": 18493046784, "reused_forecasts": 0, "new_training_updates": 0, "completed_container_pid": 1140130},
+  "aggregation": "Paired complete condition identities;within each system average available conditions,then equal-system mean and paired system bootstrap. Not simple window-average for metrics with undefined windows.",
+  "undefined_pocket_conditions": ["misato_4GWK_MD_dt_80ps_w000016", "misato_2DUA_MD_dt_80ps_w000016"],
+  "pocket_coverage": "All64 systems remain;126 common valid windows for pocket-distance path and pocketBrier,128 for all other metrics. Missing observed pockets are not imputed as zero. Evaluator mean_metrics is window-weighted;use the paired equal-system values below and existing strata estimates.",
+  "columns": ["B_mean", "reference_mean", "B_minus_reference", "ci95_lower", "ci95_upper"],
+  "all64_vs_PVB": {
+    "ligand_bond_rmse_A": [0.3277298226146035, 0.07377303668105586, 0.25395678593354765, 0.21221892271112833, 0.2996727572297901],
+    "ligand_rmsf_mae_A": [0.5494706419934033, 0.5133911466300518, 0.03607949536335148, 0.002174853602306012, 0.07274729198627541],
+    "ligand_center_msd_mae_A2": [7.69739964962581, 7.616399277845163, 0.08100037178064554, -0.4731554566851833, 1.062455841704798],
+    "ligand_center_path_energy_score_A": [0.6746749400635784, 0.8097150456481439, -0.13504010558456536, -0.2185230416521278, -0.06996638802940085],
+    "pocket_distance_path_energy_score_A": [0.822267985113377, 0.9615038014154841, -0.13923581630210724, -0.1684088969628234, -0.10420407657474794],
+    "pocket_contact_brier": [0.056020193922861256, 0.07443337805619837, -0.018413184133337125, -0.023785207185348597, -0.013426988803628243],
+    "all_residue_contact_occupancy_mae": [0.008064297183160408, 0.011067248381931035, -0.0030029511987706274, -0.004043940964322243, -0.0020674516988115526]
+  },
+  "all64_vs_hv": {
+    "ligand_bond_rmse_A": [0.3277298226146035, 1.123551452791058, -0.7958216301764545, -0.868410078980964, -0.731671763963343],
+    "ligand_rmsf_mae_A": [0.5494706419934033, 0.8111267142434027, -0.2616560722499994, -0.4080965304829594, -0.15042996086410068],
+    "ligand_center_msd_mae_A2": [7.69739964962581, 8.460340576653497, -0.7629409270276877, -1.830263806795754, 0.008905156383303437],
+    "ligand_center_path_energy_score_A": [0.6746749400635784, 0.7508293567365498, -0.07615441667297142, -0.13430857176035071, -0.02967384528478776],
+    "pocket_distance_path_energy_score_A": [0.822267985113377, 1.0512603656561508, -0.228992380542774, -0.39871289002628374, -0.13336709394993781],
+    "pocket_contact_brier": [0.056020193922861256, 0.06588931749326402, -0.009869123570402757, -0.016026396080747306, -0.004847888193654729],
+    "all_residue_contact_occupancy_mae": [0.008064297183160408, 0.01036962816390295, -0.0023053309807425423, -0.00428659384897082, -0.0009681113125126348]
+  },
+  "new48_vs_PVB": {
+    "ligand_bond_rmse_A": [0.3115894910286915, 0.07300140325962773, 0.23858808776906373, 0.19472346966473594, 0.28665204610096595],
+    "ligand_rmsf_mae_A": [0.4009337112353027, 0.3640766350880095, 0.0368570761472932, -0.005596839588281873, 0.08187813673206841],
+    "ligand_center_msd_mae_A2": [5.582214830645495, 5.859557545669323, -0.27734271502382735, -0.4442085959321294, -0.11160616938461383],
+    "ligand_center_path_energy_score_A": [0.5256336084972277, 0.6458934820430403, -0.12025987354581269, -0.19276980347299222, -0.05472132158927876],
+    "pocket_distance_path_energy_score_A": [0.6987673488078271, 0.8299947699539013, -0.1312274211460744, -0.16657146489199962, -0.08888883439957031],
+    "pocket_contact_brier": [0.051288101308007567, 0.07026304932193593, -0.01897494801392836, -0.025875897695180446, -0.013049247899259583],
+    "all_residue_contact_occupancy_mae": [0.007141297629582853, 0.010022446589625774, -0.0028811489600429224, -0.003957801473346056, -0.001858990763626714]
+  },
+  "stratified_judgment": {
+    "old16_vs_PVB": "Bond worse;center-path,pocket-path,Brier,occupancy better;RMSF and centerMSD unresolved",
+    "new48_vs_PVB": "Bond worse;centerMSD and both paths/Brier/occupancy better;RMSF unresolved",
+    "old16_vs_hv": "Bond,RMSF,centerMSD,pocket-path,occupancy better;center-path/Brier unresolved",
+    "new48_vs_hv": "Bond,RMSF,both paths,Brier,occupancy better;centerMSD unresolved",
+    "all64": "Coordinate B has encouraging short-window bond-and-motion improvements versus old h/v,but still loses bond geometry and slightly RMSF versus PVB.Long-rollout results remain chemically poor.No goal-level joint success or A/B ranking before A completes."
+  },
+  "full_complex_geometry": {"status": "existing_CPU_controller_automatically_started", "container_pid": 1159380, "output": "runs/coordinate_state_denoising_v1/complex_geometry/edm71", "new_model_calls": 0},
+  "limitations": ["One completed training seed;second seed and paired A complex panels pending", "Development64 with reusedold16 and expandednew48,not sealed or demonstrated family/scaffold-independent testing", "Old h/v has different historical training and no matched complex finetuning;gains are not identified as state-only causality", "PVB released MISATO checkpoint/nativeH1 unchanged;data and compute differ", "Marginal exploratory CIs without multiplicity correction;do not overinterpret near-zero limits", "Bond metric is ligand-only here;all-atom clashes/protein geometry are pending separately", "Short predictive-window scores do not demonstrate equilibrium,thermodynamic fidelity,or long-time kinetics"],
+  "promotion": false
+}

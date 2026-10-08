@@ -1,5 +1,5 @@
 {
-  "status": "completed_A71_and_PVB_B71_running",
+  "status": "completed_A71_B71_and_PVB",
   "reason": "Completed A71 rollout has worsening covalent geometry; existing rollout tables lack whole-complex clash coverage. Supplement all cached frames without additional generation or changing the model.",
   "script": "tasks/coordinate-state-denoising-v1/score_rollout_clashes.py",
   "data": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/development16_rollout96",
@@ -53,8 +53,42 @@
   },
   "MD_reference": "All MD clashes and severity zero under this frozen allowance table; this is a thresholded metric, not evidence of zero physical repulsion energy.",
   "judgment": "A71 rollout chemical failure extends beyond ligand bond lengths: protein-internal,ligand-internal,and cross-component collisions are all worse than PVB. Collisions already elevated with true initial history and grow across rollout. Favorable centerMSD/contact-occupancy errors do not make this a geometry/motion joint success.",
-  "B71": {"status": "CPU_scoring_running", "container_pid": 1157897, "output": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_clashes", "model_calls": 0},
-  "next": "Complete B71 same-rule clashes and second-seed source rollouts. No ranking partial B clash rows and no projection/filtering of unfavorable coordinates.",
+  "B71": {
+    "status": "completed_normally", "container_pid": 1157897,
+    "output": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_clashes/summary.json",
+    "paired_A": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_clashes_vs_flow.json",
+    "paired_PVB": "runs/coordinate_state_denoising_v1/seed71/edm/rollout_clashes_vs_pvb.json",
+    "analysis_seconds": 2083.468535253778, "model_calls": 0, "optimizer_updates": 0,
+    "estimate_columns": ["mean", "ci95_lower", "ci95_upper"],
+    "whole_rollout": {
+      "clashes_per_1000_atoms": [274.13654277446875, 263.3342765381124, 284.97813740867923],
+      "protein.clashes_per_1000_atoms": [266.33776478181846, 254.042394365953, 278.86271593296647],
+      "ligand.clashes_per_1000_atoms": [3.5847093449482417, 1.9470043624096018, 5.494513387228716],
+      "cross_component.clashes_per_1000_atoms": [4.214068647702007, 2.926965699216092, 5.564224474059577],
+      "affected_atom_fraction": [0.30243932246354494, 0.2937941886636051, 0.31064458158054226],
+      "vdw_severity_A2_per_atom": [0.09132614208150938, 0.08652809874717153, 0.09621677193960253]
+    },
+    "B_minus_A": {
+      "clashes_per_1000_atoms": [94.29146360707298, 52.58482123034189, 124.77473288576572],
+      "protein.clashes_per_1000_atoms": [92.7078724659361, 51.7103174697282, 123.18254033683898],
+      "ligand.clashes_per_1000_atoms": [-0.028051303219640625, -0.6449631293348372, 0.5096375561947708],
+      "cross_component.clashes_per_1000_atoms": [1.6116424443565167, 1.068465251421141, 2.177326056372368],
+      "affected_atom_fraction": [0.09431880448363944, 0.06367386200625327, 0.11796114794560278],
+      "vdw_severity_A2_per_atom": [0.036783636992795604, 0.018045011242680372, 0.050105951193782236]
+    },
+    "B_minus_PVB": {
+      "clashes_per_1000_atoms": [270.4225599498168, 259.3428217908239, 280.6345224483225],
+      "protein.clashes_per_1000_atoms": [262.7842296326078, 250.00897751116474, 274.7594554059675],
+      "ligand.clashes_per_1000_atoms": [3.5764215936944783, 1.9298097172314863, 5.585078545107977],
+      "cross_component.clashes_per_1000_atoms": [4.061908723514565, 2.806527783318853, 5.444137795961758],
+      "affected_atom_fraction": [0.29514642679113245, 0.28616038190828297, 0.3034053020683682],
+      "vdw_severity_A2_per_atom": [0.0912329077955561, 0.08632507460890021, 0.09573620504148479]
+    },
+    "first_final_block_clashes_per_1000_atoms": [88.93599454636708, 468.8221407225711],
+    "first_final_frame_counts": [12, 8],
+    "judgment": "Both coordinate recipes fail rollout chemical geometry. B has worse protein and cross-component collisions than A; ligand-internal clash difference is unresolved, despite worse B ligand bonds. Both are far worse than released PVB. Deficits already exist in the true-history first block and grow across generated-history rollout; history shift is not established as sole cause. Favorable MSD/contact metrics remain reported and do not constitute joint success."
+  },
+  "next": "Complete already-running second-seed source rollouts and full short-window complex geometry. No projection/filtering of unfavorable coordinates and no promotion.",
   "limitations": ["Development16 not sealed independent confirmation", "Native PVB H1 versus candidate H4 and unequal training sources/resources", "Collision geometry is not force-field energy, chirality, or thermodynamic correctness"],
   "promotion": false
 }
