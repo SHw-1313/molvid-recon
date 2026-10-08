@@ -1,5 +1,5 @@
 {
-  "status": "complete original h/v complex64 source sampling and paired primary comparison with released PVB; whole-complex geometry pending",
+  "status": "complete original h/v complex64 source sampling, paired primary comparison and proper motion-observable scores with released PVB; whole-complex geometry pending",
   "source": "runs/coordinate_state_denoising_v1/hv_a1_complex64",
   "coverage": {"systems": 64, "conditions": 128, "draws_per_condition": 8, "future_frames": 12, "new_forecasts": 1024, "reused_forecasts": 0},
   "generation_seconds": 4342.638022856787,
@@ -26,6 +26,25 @@
     "pocket_distance_path_energy_score_A": [0.11367753652109608, -0.027887245354695063, 0.3645284563058002],
     "pocket_contact_brier": [-0.00899520364729773, -0.018357065202793316, 0.0009679750979314384],
     "all_residue_contact_occupancy_mae": [-0.0013011955057243398, -0.001987093912141613, -0.000641785725922023]
+  },
+  "proper_motion_followup": {
+    "source": "runs/coordinate_state_denoising_v1/hv_vs_pvb_motion_distributions64/summary.json",
+    "model_calls": 0,
+    "forecasts_reused_per_model": 1024,
+    "all64_deltas": {
+      "ligand_RMSF_profile_fair_ES_A": [0.35205872423185636, 0.24301305352667987, 0.5041350970173496],
+      "ligand_mean_RMSF_fair_ES_A": [0.34813281119546197, 0.2279428552877309, 0.5058772408717439],
+      "ligand_center_MSD_curve_fair_ES_A2": [2.4303004436647813, 0.10821759893191889, 5.536797235322455],
+      "ligand_center_increment_path_fair_ES_A": [-0.007419331801342029, -0.015484019951263627, 0.0005810875138669708]
+    },
+    "new48_deltas": {
+      "ligand_RMSF_profile_fair_ES_A": [0.328536425248579, 0.2274951665459509, 0.4886121584035499],
+      "ligand_mean_RMSF_fair_ES_A": [0.3303494942180792, 0.2108792652206695, 0.5010974445095159],
+      "ligand_center_MSD_curve_fair_ES_A2": [1.2411900123642585, -0.06989721096220641, 3.7204876802482394],
+      "ligand_center_increment_path_fair_ES_A": [-0.010053081155385108, -0.018846652344740773, -0.001520666128352116]
+    },
+    "interpretation": "RMSF-distribution errors remain worse under proper ensemble scoring; MSD-curve scores are worse on all64 but unresolved on new48. Preserve the favorable new48 center-increment path score: the center-path benefit cannot simply be dismissed as absent in temporal increments. The all64 increment interval crosses zero. None repairs the ligand bond deficit or establishes full-joint dynamics.",
+    "limitations": "Supplementary analysis after primary comparison; finite-window RMSF is not equilibrium RMSF; one MD future per condition, eight draws, marginal paired-system intervals and differing native input/training exposure"
   },
   "interpretation": [
     "The original generic-atom h/v transfer baseline has a large ligand covalent-geometry deficit and larger RMSF error than released PVB on both all64 and new48.",
