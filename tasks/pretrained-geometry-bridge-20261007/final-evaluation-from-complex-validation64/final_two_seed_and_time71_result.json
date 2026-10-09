@@ -1,0 +1,57 @@
+{
+  "status": "both base-final and time71 fixed11264 complex/protein evaluations completed, including ligand chemistry and cached CA paths; no joint-success claim",
+  "completed_protein_followup": {
+    "systems": 48,
+    "forecasts_per_model": 192,
+    "time71_minus_base71_same11264": {
+      "bond_rmse_A": {"mean": -0.011403533571171258, "ci95": [-0.014064767011888338, -0.009064942933317261]},
+      "clashes_per_1000_atoms": {"mean": -9.336179881488208, "ci95": [-12.340326715819263, -6.662560728057481]},
+      "msd_curve_mae_A2": {"mean": 0.2770281278450663, "ci95": [0.2302355339246181, 0.33052467344192943]},
+      "rmsf_profile_mae_A": {"mean": 0.04088664167405417, "ci95": [0.035599891680370394, 0.04655839140468743]},
+      "ca_position_path_ES_A": {"mean": -0.0053792926268731375, "ci95": [-0.009760788827194604, -0.0013457896038839882]},
+      "ca_pair_distance_path_ES_A": {"mean": -0.03354901816482559, "ci95": [-0.04558005904768974, -0.023065793172093632]},
+      "ca_increment_path_ES_A": {"mean": 0.004729353240605754, "ci95": [0.003154418724367652, 0.006212290029356571]}
+    },
+    "base71_final_minus_mid": {
+      "bond_rmse_A": {"mean": -0.018225727224735314, "ci95": [-0.02231589432563376, -0.014544491964149536]},
+      "clashes_per_1000_atoms": {"mean": -13.752771911360673, "ci95": [-18.340831547817363, -9.65478455922301]},
+      "msd_curve_mae_A2": {"mean": 0.4133683064590312, "ci95": [0.3309557226134024, 0.508524966960734]},
+      "rmsf_profile_mae_A": {"mean": 0.05261372293656071, "ci95": [0.04444165433718202, 0.06131155372616679]},
+      "ca_paths": "Whole pair-distance paths improve, position-path interval crosses zero, and CA increment paths worsen."
+    },
+    "vs_released_pvb": "Both final base seeds and time71 retain worse protein bond, angle, clash, MSD, RMSF and whole CA position/distance-path scores with positive marginal intervals. Some increment scores improve; this does not establish overall better motion.",
+    "ligand_internal_clash_means_per1000_atoms": {"base71_final": 51.07821774840187, "base72_final": 95.91356861564961, "time71_mid": 39.8066539812495},
+    "interpretation": "The geometry/motion tradeoff is observed across both molecular domains, with seed-dependent learning curves. Direct-time modulation improves same-step protein geometry and whole CA paths but worsens MSD/RMSF and CA increments. Its capacity, conditioning and seed dependence remain unresolved; correct interval response is still unproven.",
+    "sources": ["runs/bridge_learning_curve_20261007/time71/protein_vs_base_same_step.json", "runs/bridge_learning_curve_20261007/time71/protein_paths_vs_base_same_step.json", "runs/bridge_learning_curve_20261007/time71/protein_vs_pvb.json", "runs/bridge_learning_curve_20261007/time71/protein_paths/summary.json", "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/protein_vs_step11264.json", "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/protein_vs_released_pvb.json", "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/protein_paths/summary.json", "tasks/bridge-learning-curve-20261007/bridge72_final16384_joint_result.json"]
+  },
+  "forecasts_per_candidate": 256,
+  "systems": 16,
+  "base71_final_generation_seconds": 2507.3635623417795,
+  "time71_mid_generation_seconds": 2505.732447776012,
+  "base71_final_minus_step11264": {
+    "bond_rmse_A": {"mean": -0.02885436976205966, "ci95": [-0.045343176789887855, -0.01525146020809913]},
+    "rmsf_mae_A": {"mean": 0.07172055016681533, "ci95": [0.036215561177042506, 0.11388212751452641]},
+    "com_path_ES_A": {"mean": -0.05762017471590573, "ci95": [-0.12398298123863173, -0.0005590349023400282]},
+    "pocket_distance_path_ES_A": {"mean": -0.06420430936623814, "ci95": [-0.14038283519065334, -0.005915487304864811]}
+  },
+  "base_final_bond_rmse_A": {"seed71": 0.11034305864417322, "seed72": 0.12455779639551401, "released_pvb": 0.07608793694534022},
+  "learning_curve_conclusion": "Seed71 improves bonds and some whole paths but worsens RMSF with more updates; seed72 worsens bonds/pocket paths while slightly improving RMSF. Therefore more training is neither uniformly harmful nor a stable joint improvement under this recipe. Do not generalize the earlier seed72 finding into a universal claim. Both final seeds remain worse than released PVB in bonds with positive marginal paired intervals.",
+  "time71_minus_same_seed_same11264_base": {
+    "bond_rmse_A": {"mean": -0.016930407514991665, "ci95": [-0.034112469229700765, -0.004378725877987747]},
+    "rmsf_mae_A": {"mean": 0.04078967596689286, "ci95": [0.02147576621333311, 0.06472875444315121]},
+    "com_path_ES_A": {"mean": -0.038840539911152765, "ci95": [-0.08198601459015935, -0.003287882940815188]},
+    "pocket_distance_path_ES_A": {"mean": -0.04913580036876981, "ci95": [-0.09699993041126363, -0.014426628380516325]}
+  },
+  "time71_vs_pvb": "Bond error0.122267A remains above0.076088A; paired delta0.046179A CI[0.018659,0.080011]. Pocket-distance path score improves with a negative interval, but no joint geometry/motion competitiveness is established.",
+  "time_interpretation": "Direct physical-time FiLM shows a mixed first-seed result, not a repaired clock response. Added parameters and architectural conditioning both change; this is not a parameter-count-matched time-input placebo. Training bridge noise uses its own seed+81007 generator, independent of module initialization. The base71 resumed-run nondeterminism caveat remains. Need second seed, final checkpoints and matched80/100ps response tests before attributing a robust physical-time improvement.",
+  "decision": "No promotion and no blind extra updates. Continue already-running time-interleaving and endpoint-geometry matched experiments; finish final and second-seed evidence. Preserve every declared seed and checkpoint result rather than selecting the best.",
+  "sources": [
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/complex_vs_step11264.json",
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/complex_vs_pvb_immediate.json",
+    "runs/bridge_learning_curve_20261007/time71/complex_vs_base_same_step.json",
+    "runs/bridge_learning_curve_20261007/time71/complex_vs_pvb_immediate.json",
+    "tasks/bridge-learning-curve-20261007/bridge72_final16384_complex_result.json"
+  ],
+  "limitations": ["Reused development16", "Marginal system-bootstrap intervals without multiplicity correction", "Clock exposure, LR phase and age confounded in learning curves", "No equilibrium or independent-test claim"],
+  "default_promotion": false
+}

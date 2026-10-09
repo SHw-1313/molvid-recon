@@ -1,0 +1,96 @@
+{
+  "status": "both base and physical-timeFiLM final16384 seeds completed64-system generation, PVB/persistence comparisons and metadata-stratified scoring",
+  "completed_physical_time_FiLM_result": "tasks/complex-validation64-20261007/time_two_seed_final64_result.json",
+  "completed_base_two_seed_validation64": {
+    "systems_per_seed": 64,
+    "conditions_per_seed": 128,
+    "forecasts_per_seed": 1024,
+    "new_forecasts_per_seed": 768,
+    "same_checkpoint_reused_forecasts_per_seed": 256,
+    "generation_seconds": {"71": 9378.454710143618, "72": 9376.354537659325},
+    "new48_bond_error_minus_pvb_A": {
+      "71": {"mean": 0.044266754625243904, "ci95": [0.004716549238914536, 0.1208271131390918]},
+      "72": {"mean": 0.020238386394471942, "ci95": [0.0067721187458101954, 0.04320188371361299]}
+    },
+    "new48_COM_path_ES_minus_pvb_A": {
+      "71": {"mean": -0.01850213880858243, "ci95": [-0.061241319317813264, 0.02546923814536469]},
+      "72": {"mean": -0.014246413924341025, "ci95": [-0.0513239028127309, 0.026486022016121363]}
+    },
+    "new48_pocket_path_ES_minus_pvb_A": {
+      "71": {"mean": 0.05953694969947946, "ci95": [-0.09850596680681822, 0.35064564387029795]},
+      "72": {"mean": 0.04688425728601109, "ci95": [-0.10085994796782519, 0.32047344547878953]}
+    },
+    "new48_COM_path_ES_minus_persistence_A": {
+      "71": {"mean": -0.07599924690839822, "ci95": [-0.10019155691590859, -0.0522674221688351]},
+      "72": {"mean": -0.07174352202415683, "ci95": [-0.09445429122648077, -0.04837256073363522]}
+    },
+    "new48_pocket_path_ES_minus_persistence_A": {
+      "71": {"mean": -0.14598707369022842, "ci95": [-0.17351952600278558, -0.10962877435436148]},
+      "72": {"mean": -0.1586397661036968, "ci95": [-0.17609640893244494, -0.14127033013801818]}
+    },
+    "interpretation": "Both seeds learn useful predictive motion beyond persistence, but both remain geometrically worse than releasedPVB on new48 and all64. Neither shows a stable new48 or all64 COM/pocket whole-path advantage over PVB. Contact occupancy improves in both seeds; contact Brier has a negative CI only in seed72, so this is not a uniformly replicated contact benefit. No default promotion or claim that old16 results generalized as a joint win.",
+    "sources": ["/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/complex64_vs_pvb_new48.json", "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/complex64_vs_pvb_all.json", "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/complex64_vs_persistence.json", "tasks/complex-validation64-20261007/bridge72_final64_result.json"],
+    "limitations": "Development64, two training seeds, marginal paired-system intervals; no independent or equilibrium conclusion. Base71 includes a documented step4608 resume after a nonfinite event."
+  },
+  "known_dynamic_training": {"complexes": 1024, "proteins": 512},
+  "validation_systems": 64,
+  "released_pvb_minus_observed_last_frame": {
+    "source": "runs/complex_validation64_20261007/pvb_vs_persistence.json",
+    "analysis_script": "tasks/complex-validation64-20261007/compare_persistence.py",
+    "new_model_calls": 0,
+    "candidate_followup": {"script": "tasks/complex-validation64-20261007/score_persistence_after.sh", "controller_pid_container": 1092772, "arms": ["bridge71", "bridge72", "time71", "time72"], "status": "completed all four cached64-system comparisons; controller exited successfully"},
+    "new48": {
+      "ligand_bond_rmse_A": {"mean": 0.02619987493273256, "ci95": [0.021963554256146888, 0.03075949229969228]},
+      "ligand_rmsf_mae_A": {"mean": -0.5898478859321652, "ci95": [-0.8061989395086854, -0.443736637540848]},
+      "ligand_center_msd_mae_A2": {"mean": -0.49387433004346565, "ci95": [-2.0207301609878954, 0.34093844827976433]},
+      "ligand_center_path_energy_score_A": {"mean": -0.05749710809981581, "ci95": [-0.09883695834035522, -0.019938834832881298]},
+      "pocket_distance_path_energy_score_A": {"mean": -0.20552402338970785, "ci95": [-0.47385361306912455, -0.05846914138263134]}
+    },
+    "all64": {
+      "ligand_center_path_energy_score_A": {"mean": -0.05366807067369836, "ci95": [-0.10906890725284148, 0.0039670255581544505]},
+      "pocket_distance_path_energy_score_A": {"mean": -0.1888222612994884, "ci95": [-0.3945163102879322, -0.07153340469201931]}
+    },
+    "interpretation": "On new48, releasedPVB improves RMSF and whole COM/pocket path scores versus an observed-last-frame point mass, with negative marginal CIs. Its bond error is worse, and COM-MSD CI crosses zero. All64 COM-path CI crosses zero while pocket-path benefit persists. This is evidence that the expanded development set can measure useful predictive motion, not just static geometry, but not a universal or equilibrium success. Candidate models must be compared to the same point-mass baseline using completed matching128 conditions, not different subsets."
+  },
+  "sequence_search": {
+    "method": "MMseqs2 easy-search, sensitivity7.5, min identity0.3, query coverage0.5, fragments>=20residues",
+    "searched_fragments": {"train": 2827, "valid": 174},
+    "matching_systems": ["2XSB", "3FQA", "4DCV", "6CCX"],
+    "maximum_reported_identity_percent": 93.3,
+    "high_identity_example": "6CCX fragment166 aligned residues to6D5E/6D59 fragments, query coverage0.897 and target coverage0.994",
+    "short_alignment_warning": "4DCV match is24residues of27-residue fragment; not whole-protein homology evidence",
+    "old16_matching_systems": ["4DCV"],
+    "source": "runs/complex_validation64_20261007/sequence_training1536_querycov_v2/summary.json",
+    "first_attempt": "Actual search completed but hit parser failed on blank PDB chain whitespace in FASTA ID. Explicit chainblank naming fixed parsing; no system excluded."
+  },
+  "ligand_connectivity": {
+    "exact_element_labelled_graph_matching_systems": 11,
+    "old16": 1,
+    "new48": 10,
+    "seconds": 285.55986638367176,
+    "source": "runs/complex_validation64_20261007/ligand_connectivity_overlap/summary.json",
+    "meaning": "Same heavy-atom graph independent of atom ordering; does not account for bond order, charge or stereochemistry and does not establish identical chemical species."
+  },
+  "declared_strata": "runs/complex_validation64_20261007/generalization_strata.json",
+  "scheduled_scoring": {
+    "script": "tasks/complex-validation64-20261007/score_generalization_after.sh",
+    "arms": ["bridge71", "bridge72", "time71", "time72"],
+    "checkpoints": "Already-scheduled fixed-final16384 checkpoints; no outcome-based selection",
+    "comparison": "Same-system original released PVB, eight draws per condition, two conditions per system; separate seed results and per-system differences",
+    "metrics": "Existing bond, RMSF, COM-MSD, COM-path, pocket-distance-path, contact-Brier and contact-occupancy metrics",
+    "resources": "CPU only, cached complete64 scores, zero new model calls or training",
+    "coverage": "Require all128 conditions before subsets; report failed generation owner rather than silently scoring only successful systems",
+    "efficacy": "Completed for all four fixed-final candidates; none establishes joint geometry/path superiority to PVB on new48. See the base and FiLM result records; do not reinterpret no-detected-match subsets as an independent test."
+  },
+  "decision": "Retain all64 and original16/new48 primary comparisons. Additionally compare sequence-match/no-detected-match and ligand-connectivity-match/no-detected-match subsets once model outputs complete. Do not select or delete systems based on their model errors.",
+  "limitations": [
+    "No-detected-match does not establish independent biological or chemical generalization",
+    "Full inherited static and released PVB/BioKinema pretraining exposure not covered",
+    "Different ligands sharing smaller scaffolds are not covered by exact-graph comparison",
+    "Sequence matching groups can be small; report individual systems as well as pooled results",
+    "64 systems are development validation, not untouched confirmation or proof of equilibrium thermodynamics"
+  ],
+  "model_calls": 0,
+  "sealed_test_opened": false,
+  "default_promotion": false
+}

@@ -1,0 +1,57 @@
+{
+  "status": "both fixed final16384 seeds completed matched-history80ps/100ps generation and cached scientific scoring",
+  "training_seeds": [71, 72],
+  "systems": 48,
+  "conditions_per_seed": 96,
+  "generated_draws_per_condition_per_clock": 2,
+  "actual_forecasts_per_seed_both_clocks": 384,
+  "new_model_calls_for_this_analysis": 0,
+  "protocol": "Same observed four frames and their physical times, same atom identities, same query-index noise seeds17/29; twelve query frames at80ps or100ps. Internal features are observed-contact CA pair distances. Deltas are80ps minus100ps. Distinct physical horizons960ps/1200ps are intentional; this is not equal-horizon sampling or physical path coupling.",
+  "MD_mean_response": {
+    "internal_displacement_A2": -0.018268128082778504,
+    "internal_fluctuation_rms_A": -0.00695967027233628
+  },
+  "zero_response_error": {
+    "displacement_A2": 0.02220057841292954,
+    "fluctuation_A": 0.011874070476985745
+  },
+  "seed71": {
+    "prediction_mean_displacement_delta_A2": -0.0007660631390955273,
+    "prediction_mean_fluctuation_delta_A": -0.0006124704592511803,
+    "displacement_response_error_A2": 0.021813846549427057,
+    "fluctuation_response_error_A": 0.011621315855355715,
+    "candidate_minus_zero_displacement_error_A2": {"mean": -0.0003867318635024875, "ci95_system_bootstrap": [-0.0005937323225642743, -0.00019345452739801073]},
+    "candidate_minus_zero_fluctuation_error_A": {"mean": -0.00025275462163002957, "ci95_system_bootstrap": [-0.0003784252485820795, -0.00012497804631365512]},
+    "prediction_clock_response_rms_A": 0.004701196772287447,
+    "prediction_seed_spread_rms_A": 0.4707308860754065,
+    "mean_per_system_clock_to_seed_ratio": 0.009833752894288806
+  },
+  "seed72": {
+    "prediction_mean_displacement_delta_A2": -0.0010787686622687296,
+    "prediction_mean_fluctuation_delta_A": -0.0008240051332126542,
+    "displacement_response_error_A2": 0.021648434050863214,
+    "fluctuation_response_error_A": 0.011514379728527917,
+    "candidate_minus_zero_displacement_error_A2": {"mean": -0.0005521443620663281, "ci95_system_bootstrap": [-0.0008663844019645253, -0.000264903561894228]},
+    "candidate_minus_zero_fluctuation_error_A": {"mean": -0.0003596907484578286, "ci95_system_bootstrap": [-0.0005283306968971519, -0.00018900262932966425]},
+    "prediction_clock_response_rms_A": 0.005372258050261313,
+    "prediction_seed_spread_rms_A": 0.4993809057127734,
+    "mean_per_system_clock_to_seed_ratio": 0.01054126718758184
+  },
+  "interpretation": "Both seeds respond nontrivially and improve the displacement response error over a zero-response predictor by only approximately1.7percent/2.5percent; fluctuation error improves by approximately2.1percent/3.0percent. Bootstrap intervals exclude zero but effect sizes remain small. Mean predicted changes are substantially attenuated relative to this finite MD reference. This is evidence of weak useful time response under this specific protocol, not proof of globally wrong kinetics or a universal required clock-to-noise ratio.",
+  "decision": "No promotion and no blind extension of the same base recipe. Finish already-running physical-timeFiLM and clock-interleaving comparisons, then queued dense-history100/1000ps training and same-parameter temporal-placement comparisons. Require improvement in MD response error alongside geometry and motion paths; a larger clock-induced coordinate difference alone is not success. No new experiment submitted for this analysis.",
+  "limitations": [
+    "Repeatedly reused development48; no independent generalization claim",
+    "Only two generated draws and one MD future per condition; marginal system-bootstrap intervals, not uncertainty of the true conditional MD distribution",
+    "The two clock grids have different future horizons and equal frame counts",
+    "Clock-to-seed ratio depends on stochastic coupling and is descriptive, not a kinetic accuracy threshold",
+    "No equilibrium distribution or thermodynamic evidence",
+    "Base seed71 had the previously documented exact-checkpoint resume with non-bitwise data replay"
+  ],
+  "sources": [
+    "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed71/clock_response/summary.json",
+    "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72/clock_response/summary.json",
+    "/workspace/molvid-pretrained-geometry-bridge-20261007/tasks/pretrained-geometry-bridge-20261007/score_clock.py",
+    "/workspace/molvid-native-clock-training-20261005/molvid/evaluation/time_response.py"
+  ],
+  "default_promotion": false
+}

@@ -1,12 +1,12 @@
 {
-  "status": "Both seeds completed all16384 CUDA updates and final-checkpoint complex inference is active on GPUs0/6. Fixed11264 joint complex/protein forecasts completed in both seeds: partial motion gains versus initialization with geometry damage and severe clashes; no promotion.",
+  "status": "Both seeds completed all16384 CUDA updates and fixed-final inference. Final complex/protein, clock, internal-path, and validation64 evaluations are complete; no joint competitive result and no promotion. Authoritative reports copied from the complex-validation64 worktree into final-evaluation-from-complex-validation64/.",
   "seed71_training_completed": {
     "updates": 16384,
     "reported_elapsed_seconds_after_resume": 15702.927661457099,
     "timing_qualification": "This resumed-run counter is not total walltime including the original run and abandoned steps; preserve the documented step4797 failure and resume history.",
     "source": "runs/pretrained_geometry_bridge_20261007/seed71/status.json",
     "final_inference_container_pid": 1084291,
-    "efficacy": "Final forecasts pending; no performance claim from training completion"
+    "efficacy": "Final fixed16384 evaluations completed; see final-evaluation-from-complex-validation64/final_two_seed_and_time71_result.json and generalization_result.json"
   },
   "seed72_training_completed": {
     "updates": 16384,
@@ -15,7 +15,7 @@
     "source": "runs/pretrained_geometry_bridge_20261007/seed72/status.json",
     "final_inference_container_pid": 1083603,
     "final_inference_host_pid": 3036942,
-    "efficacy": "Unknown until fixed-final forecasts complete; training completion is not improvement"
+    "efficacy": "Final fixed16384 evaluations completed; see final-evaluation-from-complex-validation64/bridge72_final16384_joint_result.json, bridge72_final64_result.json, and generalization_result.json"
   },
   "fixed11264_evidence": {
     "complex_forecasts_per_seed": 256,
@@ -43,7 +43,13 @@
   "query": "Joint generated-state interaction at each bridge evaluation, physical ps distinct from flow progress; no hidden future conditioning",
   "static": "Corrupted singleton input, same geometric encoder/decoder/heads, temporal adapters bypassed; clean structure only enters loss",
   "objective": "Preserve released stochastic-interpolant velocity/drift targets and KL. Do not transplant weights into the incompatible coordinate-RF source/target objective.",
-  "current_missing_work": ["Fixed-final geometry/motion/protein-retention and clock comparisons", "Expanded64 same-system released-PVB comparisons", "Independent confirmation and thermodynamics"],
+  "final_evaluation_reports": {
+    "archive_directory": "final-evaluation-from-complex-validation64/",
+    "source_worktree": "/data4/users/sihao/workspace/molvid-complex-validation64-20261007",
+    "reports": ["bridge72_final16384_joint_result.json", "final_two_seed_and_time71_result.json", "final_two_seed_clock_result.json", "bridge72_final64_result.json", "generalization_result.json"],
+    "interpretation": "The JSON reports are verbatim copies of completed final-checkpoint evaluations. The corresponding generated-coordinate summary files are under runs/pretrained_geometry_bridge_20261007/evaluation_seed{71,72}/ in this model worktree. The validation worktree's older experiment status fields are not authoritative over these completed result records."
+  },
+  "current_missing_work": ["Independent family/scaffold-clean confirmation", "Equilibrium thermodynamics and calibrated long-time kinetics"],
   "submitted_training_design": "See train.json and each run recipe.json/loading report. Preserve one rolling recovery checkpoint and fixed final. Evaluate unchanged32 complex conditions/256 forecasts and96 protein conditions/192 forecasts; compare cached released PVB and prior Molvid. Twelve evaluation queries versus four training queries is explicit extrapolation in joint query count. No new validation-based truncation or best-of-N sampling.",
   "environment": "Local enter-container/torch-ito; when loading released objects use the already-working PVB numpy126 overlay and original source path, not dependency upgrades.",
   "current_limits": ["Uniform unpadded H/Q per packed batch; H may vary between batches", "No Mamba replacement in this experiment", "No new scientific effectiveness claim", "Published static-pretraining exposure may overlap future evaluation families"],

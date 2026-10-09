@@ -1,0 +1,40 @@
+{
+  "status": "completed actual final complex256/protein192 forecasts, full ligand chemistry and cached internal/CA paths",
+  "candidate": "pretrained_bridge_72",
+  "updates": 16384,
+  "protein_generation_seconds": 1277.0572680300102,
+  "protein_final_minus_step11264": {
+    "bond_rmse_A": {"mean": 0.00518101330183389, "ci95": [0.004165034618107329, 0.006264708889299211]},
+    "angle_cosine_rmse": {"mean": 0.005546657834202051, "ci95": [0.00449204190808814, 0.006652806336448217]},
+    "clashes_per_1000_atoms": {"mean": 3.109528489528799, "ci95": [1.9698664595506288, 4.377679360696083]},
+    "torsion_increment_circular_error": {"mean": 0.0072112853328386945, "ci95": [0.006136431061895564, 0.008364314316228652]},
+    "msd_curve_mae_A2": {"mean": -0.19915086803181717, "ci95": [-0.25452874053605934, -0.15143054234116185]},
+    "rmsf_profile_mae_A": {"mean": -0.023656802795206506, "ci95": [-0.02671543400598845, -0.02071778801619075]},
+    "ca_paths": "Whole position and both increment path scores improve with negative marginal intervals; whole pair-distance path interval crosses zero."
+  },
+  "protein_final_minus_released_pvb": {
+    "bond_rmse_A": {"mean": 0.028429496073077532, "ci95": [0.022865428805447337, 0.03481166964858312]},
+    "clashes_per_1000_atoms": {"mean": 10.084904633667795, "ci95": [5.220896147057983, 17.023116417866476]},
+    "msd_curve_mae_A2": {"mean": 1.1251968564206942, "ci95": [0.83295847700469, 1.4658053485970912]},
+    "rmsf_profile_mae_A": {"mean": 0.1172874439895774, "ci95": [0.07828667408515079, 0.156260289401204]},
+    "ca_position_path_ES_A": {"mean": 0.06290964140379839, "ci95": [0.04124265256152375, 0.08850993710850384]},
+    "ca_pair_distance_path_ES_A": {"mean": 0.05776740234857367, "ci95": [0.0275284467418283, 0.09337789948312585]},
+    "ca_increment_scores": "Both improve with negative intervals, but neither is evidence of a whole-trajectory or full-atom win."
+  },
+  "ligand_chemistry": {
+    "internal_clashes_per_1000_ligand_atoms": 95.91356861564961,
+    "protein_ligand_clashes_per_1000_ligand_atoms": 21.61115269899587,
+    "final_minus_mid_internal_paths": "Whole nonbonded-distance and nonbonded-distance-increment energy scores worsen with positive marginal intervals; bond-path intervals cross zero.",
+    "final_minus_pvb_internal_paths": "Bond path, bond increment and nonbonded-distance increment scores worsen with positive intervals; whole nonbonded-distance path interval crosses zero."
+  },
+  "decision": "Reject joint-success/default-promotion claim. Longer training improves some protein motion measures while damaging local protein geometry and ligand internal dynamics. Retain this final result and continue the declared geometry-repair/clock experiments; do not substitute a selected intermediate checkpoint.",
+  "sources": [
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72/protein_vs_step11264.json",
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72/protein_vs_released_pvb.json",
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72/protein_paths/summary.json",
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72/internal_paths/summary.json",
+    "../molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72/ligand_geometry/summary.json"
+  ],
+  "limitations": ["Reused development48 proteins/16 complexes", "Marginal system-bootstrap intervals without multiplicity correction", "CA path ensembles have only two draws per condition", "Known static and baseline pretraining overlap not eliminated", "No equilibrium thermodynamics claim"],
+  "default_promotion": false
+}

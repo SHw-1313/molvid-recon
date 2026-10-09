@@ -1,0 +1,72 @@
+{
+  "status": "completed final16384 validation64 forecasts and paired PVB/persistence comparisons; no joint competitive result",
+  "seed": 72,
+  "systems": 64,
+  "conditions": 128,
+  "forecasts": 1024,
+  "new_forecasts": 768,
+  "same_checkpoint_reused_forecasts": 256,
+  "generation_seconds": 9376.354537659325,
+  "new48_candidate_minus_released_pvb": {
+    "ligand_bond_rmse_A": {"mean": 0.020238386394471942, "ci95": [0.0067721187458101954, 0.04320188371361299]},
+    "ligand_rmsf_mae_A": {"mean": 0.055499376457392446, "ci95": [-0.05018712927201266, 0.22745929348998764]},
+    "ligand_center_msd_mae_A2": {"mean": 0.19284084904923013, "ci95": [-0.4960249787867901, 1.4137186992243418]},
+    "ligand_center_path_energy_score_A": {"mean": -0.014246413924341025, "ci95": [-0.0513239028127309, 0.026486022016121363]},
+    "pocket_distance_path_energy_score_A": {"mean": 0.04688425728601109, "ci95": [-0.10085994796782519, 0.32047344547878953]},
+    "pocket_contact_brier": {"mean": -0.01441864160900218, "ci95": [-0.022998010798207937, -0.0053813630481868765]},
+    "all_residue_contact_occupancy_mae": {"mean": -0.0037786991393144015, "ci95": [-0.004690627556263564, -0.002897744607539693]}
+  },
+  "all64_candidate_minus_released_pvb": {
+    "ligand_bond_rmse_A": {"mean": 0.027296254658397405, "ci95": [0.012104232555911287, 0.047973107843098564]},
+    "ligand_rmsf_mae_A": {"mean": 0.08136363617312806, "ci95": [-0.02645546387288522, 0.225486641280911]},
+    "ligand_center_path_energy_score_A": {"mean": -0.037109138745371126, "ci95": [-0.1083680885882212, 0.014546998611519894]},
+    "pocket_distance_path_energy_score_A": {"mean": 0.009542466741457388, "ci95": [-0.12012147652530508, 0.23495961046288813]}
+  },
+  "new48_candidate_minus_observed_last_frame": {
+    "ligand_bond_rmse_A": {"mean": 0.0464382613272045, "ci95": [0.03136665622371529, 0.0719545952977072]},
+    "ligand_rmsf_mae_A": {"mean": -0.5343485094747727, "ci95": [-0.5895141247528038, -0.48322887210224047]},
+    "ligand_center_msd_mae_A2": {"mean": -0.3010334809942354, "ci95": [-0.6331100548928662, -0.10773600351345906]},
+    "ligand_center_path_energy_score_A": {"mean": -0.07174352202415683, "ci95": [-0.09445429122648077, -0.04837256073363522]},
+    "pocket_distance_path_energy_score_A": {"mean": -0.1586397661036968, "ci95": [-0.17609640893244494, -0.14127033013801818]}
+  },
+  "posthoc_failure_case": {
+    "input_motion_followup": {
+      "native_consecutive_COM_step_range_A": [1.464136584156859, 13.414345665119292],
+      "native_ligand_bond_length_range_A": [1.157892063233336, 1.7807115544221868],
+      "heavy_element_composition": {"C": 2, "O": 4},
+      "raw_box_metadata": "No box/unit-cell field or group attributes in inspected2DUA HDF5 group; converter explicitly avoids inferring PBC from dummy CRYST1",
+      "preprocessing": "Native80ps frames, no interpolation; each frame protein-aligned to first observed frame and centered on first-frame atoms",
+      "interpretation": "Large motion occurs across many consecutive input frames, not just one isolated displacement. Covalent distances remain molecular scale, but absent box metadata means PBC effects cannot be conclusively excluded. No trajectory was altered or excluded.",
+      "source": "runs/complex_validation64_20261007/2DUA_input_motion_observations.json"
+    },
+    "sampling_mechanism_hypothesis": {
+      "released_pvb": "NativeH1 autoregression:12 physical steps, each10-step SDE and re-encoding from the preceding generated structure",
+      "candidate": "ObservedH4 once; all12 future sources centered on the same last observed structure, independent atomwise Gaussian source draws, joint10-step SDE",
+      "shared_source_constraint": "Both inherited encoders use log variance=-abs(linear(h)), so conditional per-coordinate source standard deviation is at most1Angstrom. This is NOT a bound on final motion, since learned drift can transport samples arbitrarily.",
+      "candidate_history_limit": "Motion enters atomwise vector values through gated observed displacements. Base physical query time affects attention weights, not an explicit motion-dependent source scale or source transport. Learned nonlinear drift could still represent correct distributions; architectural facts alone do not prove failure.",
+      "next_decision": "Use already-running noise-coupled Q4/Q12 diagnosis first. If justified, a same-checkpoint block-autoregressive inference comparison can test source/history refresh without retraining, but it is not implemented or submitted here. Do not modify the original PVB reference.",
+      "sources": ["molvid/evaluation/native_forecast.py::pvb_forecast", "molvid/flow/pretrained_bridge.py::prepare_condition/draw_source/sample", "molvid/codec/bridge_history.py", "/workspace/PVB_origin/module/model.py::encode/inference"]
+    },
+    "system": "2DUA",
+    "ligand_heavy_atoms": 6,
+    "selected_by": "Worst new48 paired bond, RMSF and pocket-path errors; retained in all aggregate results",
+    "observed_pocket_residues_by_window": [3, 0],
+    "observed_history_COM_displacement_A": [12.426746780819485, 14.325606484672203],
+    "future_COM_msd_mean_A2": {
+      "MD": [446.26134384071275, 56.05263135797014],
+      "candidate": [5.8519709861321685, 8.405781945809224],
+      "released_pvb": [77.18146935412314, 115.34998685604144]
+    },
+    "candidate_bond_rmse_A_by_window": [0.22036833079714574, 0.9180129676863866],
+    "released_pvb_bond_rmse_A_by_window": [0.11294585388735741, 0.10902376888613838],
+    "interpretation": "The candidate severely underrepresents COM travel despite large observed motion, while also deforming this small ligand. This motivates investigating the observed-history representation and all-query source anchoring, not assuming failures only reflect large-molecule capacity. Preserve the counterexample: on the second window PVB overshoots and candidate COM-path ES is better despite much worse RMSF and bonds. Neither model reproduces every observable. No pocket in the second observed window remains a valid condition with undefined pocket-only scores, not an exclusion.",
+    "limitations": "Post-hoc two-window case study; protein-aligned existing trajectories, not proof of a diffusion coefficient or validated absence of periodic-boundary artifacts; physical mechanism not established",
+    "source": "runs/complex_validation64_20261007/bridge72_2DUA_motion_diagnostic.json"
+  },
+  "interpretation": "The model has learned predictive motion beyond static persistence on new48, but geometry remains worse than releasedPVB and whole-motion/path superiority is not demonstrated. Contact occupancy/Brier improve against PVB, which must not be generalized to all trajectory distributions. Old16 pocket-path gains do not give a stable new48 whole-path advantage. Expanded evaluation exposes a small fast-moving/displaced ligand failure case, so simply citing insufficient capacity is not a complete diagnosis.",
+  "decision": "No default promotion. Retain all systems, finish second-seed/FiLM64 and native1ns evaluations, and continue existing temporal-placement and query-support experiments. No new training or outcome-based checkpoint selection from this comparison.",
+  "limitations": ["One training seed reported here", "Development64, not sealed independent test", "Marginal paired-system bootstrap intervals", "No thermodynamic or correct kinetic-rate conclusion", "Training/static pretraining exposure not fully excluded"],
+  "source_root": "/workspace/molvid-pretrained-geometry-bridge-20261007/runs/pretrained_geometry_bridge_20261007/evaluation_seed72",
+  "sources_relative_to_root": ["complex_validation64/summary.json", "complex64_vs_pvb_new48_immediate.json", "complex64_vs_pvb_all_immediate.json", "complex64_vs_persistence.json"],
+  "default_promotion": false
+}
