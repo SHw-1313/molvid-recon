@@ -1,0 +1,53 @@
+{
+  "status": "complete_paired_first_seed_complex64_source_generation_primary_and_motion_scores",
+  "source_root": "runs/coordinate_state_denoising_v1/seed71",
+  "coverage_each_arm": {"systems": 64, "conditions": 128, "draws_per_condition": 8, "forecasts": 1024, "Q": 12, "dt_ps": 80, "H": 4, "raw_output": true},
+  "resources": {
+    "A": {"seconds": 33555.368112978525, "measured_model_forward_calls": 35840, "peak_cuda_bytes": 18490510848, "reused_forecasts": 0, "completed_container_pid": 1141082},
+    "B": {"seconds": 30106.953603349626, "measured_model_forward_calls": 35840, "peak_cuda_bytes": 18493046784, "reused_forecasts": 0},
+    "training": "Each fixed-final MD-only seed71 model used2048 updates and identical data exposure;training resources in existing records.No additional training for these results."
+  },
+  "aggregation": "Complete matched identities,conditions averaged within systems,then equal-system paired bootstrap2000. Pocket-path/Brier use126 common valid conditions across64systems;two observed-pocket-undefined windows not zero-imputed. All other primary metrics use128 conditions. No selected draws or postprocessing.",
+  "primary_sources": "edm/complex_{all,old16,new48}_vs_flow.json and flow/complex_{all,old16,new48}_vs_{pvb,hv}.json",
+  "mean_columns": ["A", "B", "released_PVB", "hv"],
+  "all64_means": {
+    "ligand_bond_rmse_A": [0.265163063779518, 0.3277298226146035, 0.07377303668105586, 1.123551452791058],
+    "ligand_rmsf_mae_A": [0.595705651774161, 0.5494706419934033, 0.5133911466300518, 0.8111267142434027],
+    "ligand_center_msd_mae_A2": [8.144549951330735, 7.69739964962581, 7.616399277845163, 8.460340576653497],
+    "ligand_center_path_energy_score_A": [0.6587676428073125, 0.6746749400635784, 0.8097150456481439, 0.7508293567365498],
+    "pocket_distance_path_energy_score_A": [0.8665713226830243, 0.822267985113377, 0.9615038014154841, 1.0512603656561508],
+    "pocket_contact_brier": [0.05440384120687097, 0.056020193922861256, 0.07443337805619837, 0.06588931749326402],
+    "all_residue_contact_occupancy_mae": [0.007595698046880248, 0.008064297183160408, 0.011067248381931035, 0.01036962816390295]
+  },
+  "difference_columns": ["B_minus_A", "ci95_lower", "ci95_upper"],
+  "all64_primary_differences": {
+    "ligand_bond_rmse_A": [0.06256675883508546, 0.05001179747721911, 0.07698990949933783],
+    "ligand_rmsf_mae_A": [-0.046235009780757716, -0.0983427052324122, -0.009422598881368205],
+    "ligand_center_msd_mae_A2": [-0.447150301704926, -1.1561972948616617, 0.043086351128340125],
+    "ligand_center_path_energy_score_A": [0.01590729725626601, 0.0006792417185376872, 0.034550369694064324],
+    "pocket_distance_path_energy_score_A": [-0.04430333756964738, -0.14825846086367186, 0.010168133557756004],
+    "pocket_contact_brier": [0.0016163527159902755, 0.00034346588557975703, 0.003256039725581489],
+    "all_residue_contact_occupancy_mae": [0.0004685991362801613, 0.0002399220517325372, 0.0007060543121662118]
+  },
+  "primary_judgment": {
+    "A_vs_B": "A improves ligand bonds and occupancy in all/old16/new48.B improves RMSF on all/new48,not resolvedold16.A improves Brier on all/new48,not resolvedold16.A center-path advantage only marginally resolvedall64,not either component stratum.CenterMSD and pocket-path differences unresolved in all strata.No uniformly superior recipe.",
+    "A_vs_hv": "All7 primary scores improve on all64 andold16;new48 improves all except unresolvedcenterMSD.MSD all64 CI[-0.690001,-0.014086]A2 is close tozero and exploratory.",
+    "A_vs_PVB": "Ligand bonds worse in all strata;RMSF worseall/new48,unresolvedold16.Center-path,Brier,occupancy better in all strata.CenterMSD unresolved in all strata.Pocket-path improvesold16 only,not resolvedall/new48.",
+    "goal": "Both coordinate recipes improve several short-window geometry/motion scores versus unmatched oldh/v,but neither approaches PVB jointly across geometry and motion.Complete seed71rollout already shows severe chemical collapse.No promotion or state-only causal claim."
+  },
+  "proper_motion_source": "edm/motion_distributions64/summary.json",
+  "all64_B_minus_A_fair_scores": {
+    "RMSF_profile_A": [-0.05489423958176239, -0.1096616063269549, -0.014497815434771725],
+    "center_MSD_curve_A2": [-1.2813450442350147, -3.438840169264122, -0.05092327377845071],
+    "center_increment_path_A": [0.00023536132575721256, -0.0031282123463502076, 0.0034985649468219663],
+    "mean_RMSF_A": [-0.029285103131511277, -0.08708383034165221, 0.01060282829164591]
+  },
+  "proper_motion_judgment": "B RMSF-profile advantage repeatsnew48 but notold16;B MSD-curve fair-score advantage occurs all/old16/new48 with marginal upper limits nearzero.B-vs-A meanRMSF and increment-path differences unresolved in all strata.A-vs-PVB RMSF-profile worse and centerincrement-path better in all strata;MSD-curve unresolvedall/old16/new48;meanRMSF worseall/new48,unresolvedold16.These transformed-observable scores do not establish full-joint or thermodynamic fidelity.",
+  "amplitude_source": "edm/amplitude_complex_vs_flow.json",
+  "amplitude_bins": {"TRAIN_boundaries_A": [1.3483709881166424, 1.5576168290038759], "conditions_low_medium_high": [44, 40, 44], "systems_low_medium_high": [27, 26, 24]},
+  "amplitude_judgment": "A ligand bonds better in every bin.B RMSF bettermedium/high,unresolvedlow.B centerMSD improves onlyhigh(mean-1.278285A2,CI[-3.110355,-0.005762]);low/medium unresolved.But A center-path improveshigh marginally(mean B-A0.039486A,CI[0.000577,0.085182]).A occupancy betterlow/high,unresolvedmedium;A Brier betterlow only.Pocket-path unresolvedallbins.Do not equate the high-motion MSD/RMSF gain with universally better large-motion trajectories or absence of amplitude suppression.",
+  "whole_geometry_update": "B fullgeometry complete:seed71_edm_complex_geometry_result.json.B total/protein clashes worsen versush/v onall64/new48 despite betterbonds.All listedgeometry worse thanPVB.A fullgeometry runningPID1163385.No broad geometryimprovement claim.",
+  "pending": ["A whole-complex short-window geometry;existing controllerPID1163385,do not duplicate", "Second training seed complex/rollout panels", "Matched static-pretraining complex panels", "Independent confirmation and long-time distribution evidence"],
+  "limitations": ["First pairedcomplex training seed,exploratory marginal intervals without multiplicity adjustment", "Fixed raw35NFE but differing native PVB H1 versus candidateH4 and unmatched external training resources", "Old h/v transfer baseline has different trunk/training and no matched complexfinetuning", "All/old16/new48 reused development,documented sequence relatives;not sealed family/scaffold-clean confirmation", "Single realizedMDfuture and8samples;short12-frame window not equilibrium or kinetic validation"],
+  "promotion": false
+}

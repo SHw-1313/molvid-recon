@@ -1,0 +1,45 @@
+{
+  "status": "completed_full_raw_all_atom_complex_geometry_and_paired_references",
+  "source": "runs/coordinate_state_denoising_v1/complex_geometry/edm71/summary.json",
+  "paired_sources": "runs/coordinate_state_denoising_v1/complex_geometry/edm71_vs_{pvb,hv}_{all,old16,new48}_advanced.json",
+  "coverage": "All64systems128conditions,eight full12-frame raw forecasts each;all valid atoms.No filtering,projection,relaxation or extra model calls.",
+  "scoring_seconds": 4679.231152725406,
+  "completed_container_pid": 1159380,
+  "definition": "Existing frozen TRAIN radius/exclusion/overlap-allowance table shared with prior complex/protein scoring. All protein,ligand,andcrosscomponent clash categories normalized by total valid complex atom count,not by component-specific atom count. Paired equal-system bootstrap;bond unitsA,severityA2/atom.",
+  "mean_columns": ["B", "hv", "PVB"],
+  "all64_means": {
+    "all_bond_rmse_A": [0.21835798188112676, 0.2807780473958701, 0.053006624279078096],
+    "protein_bond_rmse_A": [0.21692081494256854, 0.2581531305331737, 0.05272137190331705],
+    "ligand_bond_rmse_A": [0.327729822951369, 1.1235514525324106, 0.07377303668181412],
+    "clashes_per_1000_atoms": [84.78849485182108, 76.97129177790518, 2.3013868615240294],
+    "protein.clashes_per_1000_atoms": [82.0669498434332, 71.53186626917824, 2.203634688191192],
+    "ligand.clashes_per_1000_atoms": [1.2698933757760316, 1.969449793320515, 0.0035746251493447784],
+    "cross_component.clashes_per_1000_atoms": [1.451651632611849, 3.4699757154064086, 0.09417754818349236],
+    "affected_atom_fraction": [0.11882009468507493, 0.10710505101128136, 0.004545454447083126],
+    "vdw_severity_A2_per_atom": [0.018653117547964046, 0.014521966343499275, 0.000050671728488521734]
+  },
+  "difference_columns": ["B_minus_reference", "ci95_lower", "ci95_upper"],
+  "all64_vs_hv": {
+    "all_bond_rmse_A": [-0.06242006551474333, -0.0708275478129508, -0.054929797819932],
+    "protein_bond_rmse_A": [-0.04123231559060514, -0.04448580796306487, -0.037944476504344495],
+    "clashes_per_1000_atoms": [7.817203073915916, 1.237010195041366, 14.082372382782049],
+    "protein.clashes_per_1000_atoms": [10.535083574254962, 4.084944240937359, 16.46153635451234],
+    "ligand.clashes_per_1000_atoms": [-0.6995564175444835, -1.12751238282548, -0.17891643277952224],
+    "cross_component.clashes_per_1000_atoms": [-2.0183240827945594, -2.7974505650806556, -1.381172866724724],
+    "affected_atom_fraction": [0.011715043673793564, 0.0045981279265165645, 0.018683242574806046],
+    "vdw_severity_A2_per_atom": [0.004131151204464771, 0.0021830308270701882, 0.00606872234497426]
+  },
+  "all64_vs_PVB_selected": {
+    "all_bond_rmse_A": [0.16535135760204867, 0.16052434904049734, 0.1701461985845526],
+    "clashes_per_1000_atoms": [82.48710799029706, 78.31220149402158, 87.59172045521383],
+    "cross_component.clashes_per_1000_atoms": [1.3574740844283566, 1.0680283402615134, 1.6769636135025703]
+  },
+  "new48_vs_hv_selected": {
+    "clashes_per_1000_atoms": [13.19392583992252, 6.927289668808142, 19.075797771073034],
+    "protein.clashes_per_1000_atoms": [15.858431768650442, 10.295815328465363, 21.204887620724367]
+  },
+  "judgment": "B reduces all/protein/ligand bond errors versus h/v in every stratum and crosscomponent clashes in everystratum.But all64/new48 protein and total clashes,affectedfraction,andseverity worsen;old16 differences on these are unresolved.Ligandclashes improveall/new48,unresolvedold16.All listed chemical metrics remain worse than PVB in everystratum.This directly rules out an unqualified B geometry-and-motion joint improvement overh/v despite favorable ligand-only and motion scores. Do not conflate better bonds with better full geometry.",
+  "next": "Existing controller now scores A71 fullgeometry,container1163385;do not duplicate it.Wait secondseed/staticcomplex comparisons and current paired temporal-order experiment before promotion.No output repair or posthoc sample exclusion.",
+  "limitations": ["Legacy thresholded clash metric is not forcefield energy or thermodynamic fidelity", "No complete chirality/angle/force evaluation", "First seed and reused development64,not family/scaffold-independent sealed confirmation", "Unmatched historical h/v training and PVB nativeH1 versus candidateH4", "Marginal system-bootstrap intervals,no multiplicity correction"],
+  "promotion": false
+}
