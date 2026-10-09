@@ -1,0 +1,14 @@
+{
+  "status": "EDM_actual_CUDA_complete_and_training_started_both_arms_now_training",
+  "source_commit": "1e089f6",
+  "CUDA_output": "runs/coordinate_temporal_order_v1/seed71/edm/CUDA_order_result.json",
+  "training_output": "runs/coordinate_temporal_order_v1/seed71/edm/md",
+  "training_container_pid": 1163105, "lane_container_pid": 1158417, "GPU": 6,
+  "predecessor": "Original flow71 complex64 PID1141082 completed all128conditions1024draws normally;no cancellation or repeated source forecasts",
+  "actual_CUDA": {"TRAIN_system": "3M35", "dt_ps": 80, "H": 4, "Q": 12, "atoms": 1666, "source_shape": [12,1666,3], "NFE": 35, "current_geometry_rebuilds": 420, "observation_unchanged": true, "parameters_inherited_trainable": 6701836, "static_max_difference_A": 0.0000010728836059570312, "gradient_norms": {"spatial": 4.685280718091728, "tokens": 0.1080204278632658, "temporal": 0.939520724816501, "head": 10.234354931904049}, "seconds": 18.673880987800658, "peak_cuda_bytes": 5440397824, "optimizer_updates": 0},
+  "first_observed_actual_training": {"updates": 21, "elapsed_seconds": 123.42558681219816},
+  "initialization": "Same owned2048-update static-only B parent as control;all inherited,no frozen/new modules.Weights-only:optimizer,schedule,RNG,data visits and stage exposure reset.No additional static training.",
+  "budget_unchanged": "2048MD updates perarm then384native100/80 sourceforecasts perarm.Two TRAINdiagnostic draws total nowcomplete.No automatic complex/rollout matrix.",
+  "not_claimed": ["Scientific efficacy from training or this diagnostic", "Full2048 exposure equality before completion", "Actual trainedv2 checkpoint reload before scheduled full-panel evaluation", "Whole-training peak memory from this one-window exercise"],
+  "promotion": false
+}
