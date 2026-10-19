@@ -53,8 +53,30 @@ def main():
         if a.step==512:
             states={key:equal(saved[key],control[key]) for key in ('generator_rng','torch_rng','cuda_rng','python_rng','numpy_rng','mixture','exposure')}
             checks['same_final_random_access_states']=all(states.values())
+    query_updates={}
+    if a.step==512:
+        parent=torch.load(saved['initialization_report']['parent_checkpoint'],map_location='cpu',weights_only=False)
+        targets=('q.weight','k.weight','value_h.weight','value_h.bias','value_v.weight',
+                 'out_h.weight','out_h.bias','out_v.weight')
+        # Weight decay alone also changes nonzero parent tensors; record its
+        # nominal-only reference so a parameter difference is not mislabeled
+        # as proof of useful temporal learning. No model forward is executed.
+        decay=1.
+        for step in range(a.step):
+            warmup=settings['warmup_updates']
+            fraction=max(0.,(step-warmup)/max(1,settings['updates']-warmup-1))
+            factor=(step+1)/warmup if step<warmup else .1+.45*(1+math.cos(math.pi*fraction))
+            decay*=1-settings['learning_rate']*factor*settings['weight_decay']
+        for suffix in targets:
+            parameter_name='temporal.query_attention.'+suffix
+            before=parent['model'][parameter_name].float();after=saved['model'][parameter_name].float()
+            delta=after-before
+            query_updates[suffix]=dict(parent_norm=float(before.norm()),final_norm=float(after.norm()),
+                delta_norm=float(delta.norm()),nominal_weight_decay_only_residual_norm=float((after-before*decay).norm()),
+                changed_elements=int(torch.count_nonzero(delta)),finite=bool(torch.isfinite(after).all()))
+        checks['query_qk_value_out_parameters_updated']=all(r['finite'] and r['delta_norm']>0 for r in query_updates.values())
     result=dict(status='passed' if all(checks.values()) else 'failed',arm=a.arm,step=a.step,checks=checks,shared_state_checks=states,
-        checkpoint=str(a.run/a.arm/name))
+        checkpoint=str(a.run/a.arm/name),query_parameter_updates=query_updates)
     atomic_write_json(a.run/'checks'/f'{a.arm}_{a.step}.json',result)
     print(json.dumps(result),flush=True)
     if not all(checks.values()):raise RuntimeError('Flow matching/save-resume check failed')
