@@ -1,3 +1,14 @@
+# MOLVID FLOW GROUP-QK — 独立有限对照工作区
+
+当前实验工作区：/data4/users/sihao/workspace/MOLVID-FLOW-GROUPQK-20261020。
+
+唯一权威管理文件仍为：
+- /data4/users/sihao/workspace/molvid_recon/AGENTS.md
+- /data4/users/sihao/workspace/molvid_recon/HANDOFF.md
+- /data4/users/sihao/workspace/molvid_recon/TASKS.md
+
+开始/恢复/规则更新时完整重读三文件。最新用户启动授权优先于下文及历史文件的只读/暂停/旧门禁规则。此工作区执行2026-10-20已批准的Flow未来时间group-QK匹配对照，硬上限14325 A100秒，复用旧RF预算余额；EDM独立预算和运行依赖不动。不另建PM状态；唯一任务结果入口tasks/flow-groupqk-20261020/README.md。
+
 # Current repository instructions
 
 The active implementation is the root `molvid/` package. Do not recreate

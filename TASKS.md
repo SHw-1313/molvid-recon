@@ -1,3 +1,7 @@
+# 历史快照：不作为当前 PM 状态
+
+当前唯一权威入口 /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md}。下文保留基点历史，仅作证据。
+
 # Refactor tasks — current layout follow-up (2026-09-18)
 
 ## Active geometry/scaling campaign — 2026-10-05

@@ -11,7 +11,7 @@ import torch
 from torch import nn
 from torch.utils.checkpoint import checkpoint
 
-from ..codec.bridge_history import BridgeHistoryConditioner, physical_features
+from ..codec.bridge_history import BridgeHistoryConditioner, future_query_grouping, physical_features
 from ..codec.collective_feedback import CollectiveFeedback
 from ..codec.heads import EquivariantCoordinateHead
 from ..codec.stable_norm import OverflowSafeLayerNorm
@@ -32,6 +32,7 @@ class CoordinateStateCondition:
     bonds: torch.Tensor
     token_groups: tuple
     task: str
+    query_groups: tuple | None = None
 
 
 class CoordinateStateDenoiser(nn.Module):
@@ -57,7 +58,9 @@ class CoordinateStateDenoiser(nn.Module):
         self.spatial.out_norm = OverflowSafeLayerNorm.from_layer(self.spatial.out_norm)
         self.neighbors = CudaRadiusNeighborList(cutoff_lower=0., cutoff_upper=settings['radius_A'],
             max_num_neighbors=settings['max_neighbors'], loop=True)
-        self.temporal = BridgeHistoryConditioner(width, settings['temporal_heads'])
+        self.query_qk_mode = settings.get('query_qk_mode', 'atom')
+        self.temporal = BridgeHistoryConditioner(width, settings['temporal_heads'],
+            query_qk_mode=self.query_qk_mode)
         self.tokens = CollectiveFeedback(width)
         self.progress = nn.Sequential(nn.Linear(1, width), nn.SiLU(), nn.Linear(width, width))
         self.physical_time = nn.Sequential(nn.Linear(7, width), nn.SiLU(), nn.Linear(width, width))
@@ -77,6 +80,12 @@ class CoordinateStateDenoiser(nn.Module):
                 else 'random_initialization_no_AF3_Protenix_PVB_weights'), frozen_modules=[],
             current_geometry='rebuild_current_radius_neighbors_plus_all_covalent_edges_each_call',
             hierarchy='atom_to_chemical_unit_global_attention_within_sample_then_atom_lift',
+            query_qk_mode=self.query_qk_mode,
+            future_query_routing=('sample_component_block_loss_masked_scalar_mean_before_QK_ligand_edge_mask_atom_fallback'
+                if self.query_qk_mode == 'group' else 'original_atom_QK'),
+            future_query_values='unpooled_per_atom_h_v_with_original_output_maps_and_residuals',
+            future_query_time='one_attention_row_per_requested_physical_time_ps',
+            history_attention='original_atom_QK_and_atom_h_v_unchanged',
             covalent_cutoff='bonded_edges_exempt_from_cutoff_envelope_actual_distance_RBF_retained',
             source='last_observed_reference_plus_iid_coordinate_noise_no_clipping',
             scales=self.settings['scales'], generated_target='coordinates_not_future_hv',
@@ -140,7 +149,8 @@ class CoordinateStateDenoiser(nn.Module):
         times = observed.time_ps[observed.abid].t()
         return CoordinateStateCondition(observed, observed.x[-1],
             torch.stack([x[0] for x in encoded]), torch.stack([x[1] for x in encoded]),
-            times-times[-1:], observed.x-observed.x[-1:], bonds, self.tokens.grouping(observed), task)
+            times-times[-1:], observed.x-observed.x[-1:], bonds, self.tokens.grouping(observed), task,
+            future_query_grouping(observed) if self.query_qk_mode == 'group' and task == 'dynamic' else None)
 
     def forward(self, current_A, *, condition, query_time_ps, progress):
         """A returns u(X,s,C); B returns clean delta D(Z,sigma,C), NOT next Z."""
@@ -178,7 +188,8 @@ class CoordinateStateDenoiser(nn.Module):
         h, v = torch.stack([x[0] for x in prefixes]), torch.stack([x[1] for x in prefixes])
         if condition.task=='dynamic':
             h, v = self.temporal(h, v, condition.history_h, condition.history_v,
-                condition.history_displacement_A/self.sigma_data, lag, condition.history_lag_ps)
+                condition.history_displacement_A/self.sigma_data, lag, condition.history_lag_ps,
+                query_grouping=condition.query_groups)
         outputs = []
         for frame, (_, _, graph) in enumerate(prefixes):
             hf, vf = self.tokens(h[frame], v[frame], current_A[frame], condition.token_groups)

@@ -38,6 +38,8 @@ def load_coordinate_weights(model, path):
     model.load_state_dict(saved['model'], strict=True)
     return dict(kind='coordinate_state_weights_only', parent_checkpoint=str(Path(path).resolve()),
         parent_step=saved['step'], parent_seed=saved['seed'], parent_exposure=saved['exposure'],
+        query_qk_transition=dict(parent=parent.get('query_qk_mode', 'atom'),
+                                 current=model.settings.get('query_qk_mode', 'atom')), 
         parent_source_commit=saved.get('source_commit'),
         parent_GPU_hours=saved['elapsed_seconds']/3600,
         parent_initialization=saved.get('initialization_report', {'kind': parent['initialization']}),
@@ -47,7 +49,10 @@ def load_coordinate_weights(model, path):
         reset=['optimizer', 'schedule', 'RNG', 'data_visits', 'stage_exposure', 'stage_GPU_hours'])
 
 
-def train(settings, output, seed, resume=None, warm_start=None):
+def train(settings, output, seed, resume=None, warm_start=None, stop_after=None):
+    # Operational save/exit preserves the configured optimization schedule.
+    if stop_after is not None and not 0 < stop_after <= settings['updates']:
+        raise ValueError('stop_after must be within the unchanged configured updates')
     if resume is not None and warm_start is not None:
         raise ValueError('Exact resume and weights-only warm start are mutually exclusive')
     if resume is None and (warm_start is not None) != (settings['initialization']=='coordinate_state_weights_only'):
@@ -153,6 +158,13 @@ def train(settings, output, seed, resume=None, warm_start=None):
                     print(json.dumps(row),flush=True)
                 if (step+1)%settings['save_every']==0:
                     save(step+1)
+                if stop_after is not None and step+1 >= stop_after and step+1 < settings['updates']:
+                    save(step+1)
+                    atomic_write_json(output/'requested_stop.json', dict(
+                        step=step+1, configured_updates=settings['updates'],
+                        checkpoint=str(output/'checkpoint_latest.pt'),
+                        reason='requested_save_and_exit_without_schedule_change'))
+                    return
             save(settings['updates'],final=True)
     except Exception as error:
         atomic_write_json(output/'failure.json',dict(error=repr(error),exposure=exposure,

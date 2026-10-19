@@ -1,3 +1,7 @@
+# 历史快照：不作为当前 PM 状态
+
+当前唯一权威入口 /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md}。下文保留基点历史，仅作证据。
+
 # Refactor handoff
 
 ## Active independent coordinate static-balance diagnostic

@@ -13,5 +13,6 @@ if __name__=='__main__':
     initialization=p.add_mutually_exclusive_group()
     initialization.add_argument('--resume',type=Path,help='Exact continuation including optimizer, RNG and data visits')
     initialization.add_argument('--warm-start',type=Path,help='Compatible fixed-final coordinate weights only; new stage and optimizer')
+    p.add_argument('--stop-after',type=int,help='Save and exit without changing recipe or schedule')
     a=p.parse_args()
-    train(json.loads(a.config.read_text()),a.output,a.seed,a.resume,a.warm_start)
+    train(json.loads(a.config.read_text()),a.output,a.seed,a.resume,a.warm_start,a.stop_after)
