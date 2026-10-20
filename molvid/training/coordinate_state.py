@@ -31,6 +31,11 @@ def load_coordinate_weights(model, path):
     semantic_keys = ('schema', 'scheme', 'scales', 'width', 'spatial_layers',
                      'temporal_heads', 'num_rbf', 'radius_A', 'max_neighbors')
     changed = [key for key in semantic_keys if parent[key] != model.settings[key]]
+    capacity_defaults = dict(obs_extra_layers=0, query_pre_extra_layers=0,
+        temporal_extra_layers=0, collective_extra_layers=0,
+        collective_extra_channels=512, query_post_extra_layers=0)
+    changed += [key for key, default in capacity_defaults.items()
+                if parent.get(key, default) != model.settings.get(key, default)]
     if changed:
         raise ValueError(f'Incompatible coordinate warm start: {changed}')
     if saved['step'] != parent['updates']:
@@ -40,6 +45,7 @@ def load_coordinate_weights(model, path):
         parent_step=saved['step'], parent_seed=saved['seed'], parent_exposure=saved['exposure'],
         query_qk_transition=dict(parent=parent.get('query_qk_mode', 'atom'),
                                  current=model.settings.get('query_qk_mode', 'atom')), 
+        capacity=dict(model.capacity),
         parent_source_commit=saved.get('source_commit'),
         parent_GPU_hours=saved['elapsed_seconds']/3600,
         parent_initialization=saved.get('initialization_report', {'kind': parent['initialization']}),
@@ -143,6 +149,16 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
                                  if p.grad is not None)**.5
                         for name,module in [('current_geometry',model.spatial),
                                             ('shared_tokens',model.tokens),('coordinate_head',model.head)]}
+                    metrics['static_capacity_gradient_norms_after_clip'] = {
+                        name: sum(float(p.grad.float().square().sum())
+                                  for p in module.parameters() if p.grad is not None)**.5
+                        for name, module in [('obs_extra', model.obs_extra),
+                            ('query_pre_extra', model.query_pre_extra),
+                            ('collective_extra', model.collective_extra),
+                            ('query_post_extra', model.query_post_extra)] if len(module)}
+                    if any(value == 0 or not math.isfinite(value)
+                           for value in metrics['static_capacity_gradient_norms_after_clip'].values()):
+                        raise RuntimeError('Static supervision did not reach the active capacity path')
                     if any(value==0 or not math.isfinite(value) for value in metrics['static_shared_gradient_norms_after_clip'].values()):
                         raise RuntimeError('Static supervision did not reach every shared geometry path')
                 optimizer.step()

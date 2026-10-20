@@ -5,6 +5,7 @@ and vector features are recomputed work representations, never future targets.
 Physical query times are ps, unrelated to flow progress or diffusion sigma.
 """
 from dataclasses import dataclass
+from copy import deepcopy
 import math
 
 import torch
@@ -69,11 +70,59 @@ class CoordinateStateDenoiser(nn.Module):
         # Small nonzero readout: all trainable pathways can receive gradients
         # on the first update. No existing generative weights are inherited.
         nn.init.normal_(self.head.out.weight, std=.01/math.sqrt(width))
+        self.checkpoint_query_blocks = settings.get('checkpoint_query_blocks', False)
+        if not isinstance(self.checkpoint_query_blocks, bool):
+            raise ValueError('checkpoint_query_blocks must be boolean')
+        self.capacity = {}
+        for name in ('obs_extra_layers', 'query_pre_extra_layers',
+                     'temporal_extra_layers', 'collective_extra_layers',
+                     'query_post_extra_layers'):
+            value = settings.get(name, 0)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f'{name} must be a nonnegative integer')
+            self.capacity[name] = value
+        channels = settings.get('collective_extra_channels', 512)
+        if isinstance(channels, bool) or not isinstance(channels, int) or channels < 4 or channels % 4:
+            raise ValueError('collective_extra_channels must be positive and divisible by four')
+        self.capacity['collective_extra_channels'] = channels
+        # All original modules are constructed first, in their original order.
+        # Only the added modules use the saved CPU RNG scope; never reseed CUDA.
+        self.obs_extra = nn.ModuleList()
+        self.query_pre_extra = nn.ModuleList()
+        self.temporal_extra = nn.ModuleList()
+        self.collective_extra = nn.ModuleList()
+        self.query_post_extra = nn.ModuleList()
+        if any(self.capacity[name] for name in self.capacity if name.endswith('_layers')):
+            with torch.random.fork_rng(devices=[]):
+                for name in ('obs', 'query_pre', 'query_post'):
+                    modules = getattr(self, name+'_extra')
+                    for _ in range(self.capacity[name+'_extra_layers']):
+                        layer = deepcopy(self.spatial.attention_layers[0])
+                        layer.reset_parameters()
+                        # ET has both an o_proj residual and a direct vector
+                        # message. Zero both residual outputs, while retaining
+                        # a nonzero scalar Value so o_proj can learn immediately.
+                        # The two vector Value slices themselves get gradients;
+                        # there is no additional zero gate in series with them.
+                        with torch.no_grad():
+                            layer.o_proj.weight.zero_()
+                            layer.o_proj.bias.zero_()
+                            layer.v_proj.weight.view(
+                                layer.num_heads, 3, layer.head_dim, width)[:, 1:].zero_()
+                            layer.v_proj.bias.view(layer.num_heads, 3, layer.head_dim)[:, 1:].zero_()
+                        modules.append(layer)
+                self.temporal_extra.extend(
+                    BridgeHistoryConditioner(width, settings['temporal_heads'],
+                        query_qk_mode=self.query_qk_mode)
+                    for _ in range(self.capacity['temporal_extra_layers']))
+                self.collective_extra.extend(
+                    CollectiveFeedback(width, channels=channels)
+                    for _ in range(self.capacity['collective_extra_layers']))
         self.forward_calls = 0
         self.geometry_calls = 0
 
     def contract(self):
-        return dict(schema='molvid.coordinate_state.model.v1', scheme=self.scheme,
+        result = dict(schema='molvid.coordinate_state.model.v1', scheme=self.scheme,
             state='XYZ_or_reversible_reference_displacement_Q_N_3_Angstrom', physical_time_unit='ps',
             weights=('owned_coordinate_state_weights_only_no_external_weights'
                 if self.settings.get('initialization')=='coordinate_state_weights_only'
@@ -93,6 +142,19 @@ class CoordinateStateDenoiser(nn.Module):
             sigma_training='log_uniform_between_frozen_TRAIN_based_bounds',
             static='same_current_geometry_temporal_bypass_tokens_and_head_on_corrupted_observation',
             parameters=sum(p.numel() for p in self.parameters()))
+        if any(self.capacity[name] for name in self.capacity if name.endswith('_layers')):
+            result['capacity'] = dict(self.capacity,
+                obs_extra_dynamic='after_observed_spatial_before_normalization',
+                obs_extra_static='same_weights_after_current_query_pre_spatial_before_temporal_bypass',
+                query_pre_extra='after_original_pre_spatial_before_temporal',
+                temporal_extra='after_original_temporal_same_observed_context_static_bypass',
+                collective_extra='after_original_tokens_before_original_last_two_spatial',
+                query_post_extra='after_original_last_two_spatial_before_normalization_and_head',
+                extra_initialization='independent_CPU_fork_rng_identity_residuals_no_added_gate',
+                extra_checkpoint='each_extra_spatial_layer_temporal_module_and_collective_module')
+        if self.checkpoint_query_blocks:
+            result['training_checkpoint'] = 'whole_query_prefix_temporal_suffix_recompute_current_graph'
+        return result
 
     def _graph(self, xyz, batch, bonds):
         self.geometry_calls += 1
@@ -104,6 +166,11 @@ class CoordinateStateDenoiser(nn.Module):
         delta = xyz.float()[edges[0]]-xyz.float()[edges[1]]
         distance = delta.norm(dim=-1)
         direction = delta/distance.clamp_min(1e-8)[:, None]
+        # A self edge has the identically zero direction, including its
+        # derivative. Avoid cancelling artificial +/-1e8 coordinate gradients
+        # from delta/clamp at zero when checkpointing reconstructs the graph.
+        direction = torch.where((edges[0] == edges[1])[:, None],
+                                torch.zeros_like(direction), direction)
         rbf = self.spatial.distance_expansion(distance)
         attributes = torch.cat((rbf, self.spatial.bond_embedding(kind)), -1)
         # This is an attention envelope argument, not substituted geometry.
@@ -120,6 +187,15 @@ class CoordinateStateDenoiser(nn.Module):
             h, v = h+dh, v+dv
         return h, v
 
+    def _extra_layers(self, modules, h, v, graph):
+        for layer in modules:
+            if self.training and torch.is_grad_enabled():
+                dh, dv = checkpoint(layer, h, v, *graph, dim_size=len(h), use_reentrant=False)
+            else:
+                dh, dv = layer(h, v, *graph, dim_size=len(h))
+            h, v = h+dh, v+dv
+        return h, v
+
     def _begin_geometry(self, xyz, batch, bonds):
         graph = self._graph(xyz, batch, bonds)
         h = self.spatial.atom_embedding(batch.atype)+self.spatial.block_embedding(batch.btype)
@@ -127,9 +203,11 @@ class CoordinateStateDenoiser(nn.Module):
         v = h.new_zeros(len(h), 3, h.shape[-1])
         return h, v, graph
 
-    def _observed_frame(self, xyz, observed, bonds):
+    def _observed_frame(self, xyz, observed, bonds, apply_obs_extra=True):
         h, v, graph = self._begin_geometry(xyz, observed, bonds)
         h, v = self._layers(h, v, graph, 0, len(self.spatial.attention_layers))
+        if apply_obs_extra:
+            h, v = self._extra_layers(self.obs_extra, h, v, graph)
         return self.spatial.out_norm(h), v
 
     def prepare_condition(self, observed, *, task='dynamic'):
@@ -143,14 +221,48 @@ class CoordinateStateDenoiser(nn.Module):
         encoded = []
         for xyz in observed.x:
             if self.training and torch.is_grad_enabled():
-                encoded.append(checkpoint(self._observed_frame, xyz, observed, bonds, use_reentrant=False))
+                encoded.append(checkpoint(self._observed_frame, xyz, observed, bonds,
+                    task == 'dynamic', use_reentrant=False))
             else:
-                encoded.append(self._observed_frame(xyz, observed, bonds))
+                encoded.append(self._observed_frame(xyz, observed, bonds, task == 'dynamic'))
         times = observed.time_ps[observed.abid].t()
         return CoordinateStateCondition(observed, observed.x[-1],
             torch.stack([x[0] for x in encoded]), torch.stack([x[1] for x in encoded]),
             times-times[-1:], observed.x-observed.x[-1:], bonds, self.tokens.grouping(observed), task,
             future_query_grouping(observed) if self.query_qk_mode == 'group' and task == 'dynamic' else None)
+
+    def _query_prefix_frame(self, xyz, condition, embedding, physical, scaled_z, *, keep_graph):
+        h, v, graph = self._begin_geometry(xyz, condition.observed, condition.bonds)
+        h = h+embedding+physical
+        v = v+self.displacement(scaled_z[:, :, None])
+        split = len(self.spatial.attention_layers)-2
+        h, v = self._layers(h, v, graph, 0, split)
+        if condition.task == 'static':
+            # Train the observation capacity on current corrupted geometry
+            # during static pretraining, where temporal conditioning is bypassed.
+            h, v = self._extra_layers(self.obs_extra, h, v, graph)
+        h, v = self._extra_layers(self.query_pre_extra, h, v, graph)
+        return (h, v, graph) if keep_graph else (h, v)
+
+    def _query_suffix_frame(self, h, v, xyz, condition, *, graph=None, decode=False):
+        # With whole-query checkpointing, do not retain Q separate graph
+        # attributes/neighbor-embedding autograd graphs between prefix/suffix.
+        if graph is None:
+            graph = self._graph(xyz, condition.observed, condition.bonds)
+        h, v = self.tokens(h, v, xyz, condition.token_groups)
+        for collective in self.collective_extra:
+            if self.training and torch.is_grad_enabled():
+                h, v = checkpoint(collective, h, v, xyz, condition.token_groups, use_reentrant=False)
+            else:
+                h, v = collective(h, v, xyz, condition.token_groups)
+        split = len(self.spatial.attention_layers)-2
+        h, v = self._layers(h, v, graph, split, len(self.spatial.attention_layers))
+        h, v = self._extra_layers(self.query_post_extra, h, v, graph)
+        h = self.spatial.out_norm(h)
+        if decode:
+            # The coordinate head acts independently on each frame and atom.
+            return self.head(h[None], v[None])[0]
+        return h, v
 
     def forward(self, current_A, *, condition, query_time_ps, progress):
         """A returns u(X,s,C); B returns clean delta D(Z,sigma,C), NOT next Z."""
@@ -177,25 +289,46 @@ class CoordinateStateDenoiser(nn.Module):
             raise ValueError('Dynamic queries must follow observed history')
         embedding = self.progress(noise_embedding[:, None])[batch.abid]
         physical = self.physical_time(physical_features(lag)) if condition.task=='dynamic' else 0.
-        prefixes = []
-        split = len(self.spatial.attention_layers)-2
+        whole_query = self.checkpoint_query_blocks and self.training and torch.is_grad_enabled()
+        prefixes, graphs = [], []
         for frame, xyz in enumerate(current_A):
-            h, v, graph = self._begin_geometry(xyz, batch, condition.bonds)
-            h = h+embedding+(physical[frame] if condition.task=='dynamic' else 0.)
-            v = v+self.displacement(scaled_z[frame, :, :, None])
-            h, v = self._layers(h, v, graph, 0, split)
-            prefixes.append((h, v, graph))
+            args = (xyz, condition, embedding,
+                    physical[frame] if condition.task == 'dynamic' else 0., scaled_z[frame])
+            if whole_query:
+                prefixes.append(checkpoint(self._query_prefix_frame, *args,
+                    keep_graph=False, use_reentrant=False))
+            else:
+                hf, vf, graph = self._query_prefix_frame(*args, keep_graph=True)
+                prefixes.append((hf, vf))
+                graphs.append(graph)
         h, v = torch.stack([x[0] for x in prefixes]), torch.stack([x[1] for x in prefixes])
+        del prefixes
         if condition.task=='dynamic':
-            h, v = self.temporal(h, v, condition.history_h, condition.history_v,
-                condition.history_displacement_A/self.sigma_data, lag, condition.history_lag_ps,
-                query_grouping=condition.query_groups)
+            args = (h, v, condition.history_h, condition.history_v,
+                    condition.history_displacement_A/self.sigma_data, lag, condition.history_lag_ps)
+            if whole_query:
+                h, v = checkpoint(self.temporal, *args, query_grouping=condition.query_groups,
+                    use_reentrant=False)
+            else:
+                h, v = self.temporal(*args, query_grouping=condition.query_groups)
+            for temporal in self.temporal_extra:
+                args = (h, v, condition.history_h, condition.history_v,
+                        condition.history_displacement_A/self.sigma_data, lag, condition.history_lag_ps)
+                if self.training and torch.is_grad_enabled():
+                    h, v = checkpoint(temporal, *args, query_grouping=condition.query_groups,
+                        use_reentrant=False)
+                else:
+                    h, v = temporal(*args, query_grouping=condition.query_groups)
         outputs = []
-        for frame, (_, _, graph) in enumerate(prefixes):
-            hf, vf = self.tokens(h[frame], v[frame], current_A[frame], condition.token_groups)
-            hf, vf = self._layers(hf, vf, graph, split, len(self.spatial.attention_layers))
-            outputs.append((self.spatial.out_norm(hf), vf))
-        result = self.head(torch.stack([x[0] for x in outputs]), torch.stack([x[1] for x in outputs]))
+        for frame, xyz in enumerate(current_A):
+            if whole_query:
+                outputs.append(checkpoint(self._query_suffix_frame, h[frame], v[frame], xyz,
+                    condition, decode=True, use_reentrant=False))
+            else:
+                outputs.append(self._query_suffix_frame(h[frame], v[frame], xyz, condition,
+                    graph=graphs[frame]))
+        result = (torch.stack(outputs) if whole_query else
+                  self.head(torch.stack([x[0] for x in outputs]), torch.stack([x[1] for x in outputs])))
         if self.scheme=='flow':
             return self.sigma_data*result
         sigma = progress[batch.abid][None, :, None]

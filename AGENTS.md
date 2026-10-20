@@ -1,71 +1,7 @@
-# MOLVID FLOW GROUP-QK — 独立有限对照工作区
+# Flow capacity positions — 2026-10-20
 
-当前实验工作区：/data4/users/sihao/workspace/MOLVID-FLOW-GROUPQK-20261020。
+唯一权威管理入口为 /data4/users/sihao/workspace/molvid_recon/AGENTS.md、HANDOFF.md、TASKS.md；开始/恢复/更新时重读，旧本地HANDOFF/TASKS仅历史。不新建PM状态或调度/门禁系统。
 
-唯一权威管理文件仍为：
-- /data4/users/sihao/workspace/molvid_recon/AGENTS.md
-- /data4/users/sihao/workspace/molvid_recon/HANDOFF.md
-- /data4/users/sihao/workspace/molvid_recon/TASKS.md
+用户已授权六个容量位置扩增＋一个共享匹配控制，PM总上限96 A100 GPUh（含验证/训练/84条Q50/失败），最多六卡并发，每卡独立臂，不做DDP。一个工作区、七配置run。group-QK/原子V/legacy Collective/固定rho/原RF目标；不混noise、GroupV、pairmsg或新loss。静态及动态训练按同数据/曝光与初始化规则；训练ready全集与原始磁盘全集区分，继承TRAIN/test隔离及MISATO参考片段5Å过滤。无NAS下载/新外部数据/长轨迹授权。
 
-开始/恢复/规则更新时完整重读三文件。最新用户启动授权优先于下文及历史文件的只读/暂停/旧门禁规则。此工作区执行2026-10-20已批准的Flow未来时间group-QK匹配对照，硬上限14325 A100秒，复用旧RF预算余额；EDM独立预算和运行依赖不动。不另建PM状态；唯一任务结果入口tasks/flow-groupqk-20261020/README.md。
-
-# Current repository instructions
-
-The active implementation is the root `molvid/` package. Do not recreate
-`src/`, `molvid/models/`, root-level legacy packages, or an archive directory
-for superseded source. Historical source was intentionally purged from Git.
-
-Read `README.md`, `TASKS.md`, `HANDOFF.md` and `docs/migration.md` before a
-further cutover. Preserve unverified scientific behavior and sealed test data.
-Do not claim production parity for missing real checkpoint/data comparisons.
-
-Run any Python, test, plotting or model command via `enter-container` and
-`conda activate torch-ito`. Do not start long training, upgrade dependencies,
-push, or alter external reference worktrees without explicit authorization.
-
-Historical phase-specific instructions are not part of this branch and do not
-govern it. Use the curated result archive only as evidence of old experiments.
-
-## Maintain readable model code
-
-- Keep the shallow root `molvid/` package. Put geometry representation,
-  history encoding, flow prediction, coordinate decoding, losses and
-  training orchestration in their named modules. Do not recreate legacy
-  source archives or a parallel model framework.
-- Make tensor shapes, physical units, packed-system masks and gradient
-  boundaries explicit at public interfaces. Physical time and flow time
-  are different quantities; use different names.
-- Keep observed conditions separate from training targets. Generation
-  accepts observed context and query times, never hidden future coordinates.
-- Parse configuration once. Keep loss weights in one resolved source;
-  behavior must not depend on hidden defaults or scattered constants.
-- Model forward methods compute model outputs; CLI files only construct
-  and call components. Prefer composition and direct calls over registries,
-  dynamic dispatch, monkeypatches or deep pass-through wrappers.
-- Reuse compatible checkpoint weights with an explicit load report.
-  Distinguish warm start, exact resume and a changed-objective continuation.
-- Repair or implement the requested change before running targeted checks.
-  Test meaningful numerical risks on CUDA; do not add redundant whole-suite
-  gates or silently fall back to CPU model execution.
-- Keep the actual architecture and one training-step dataflow readable in
-  docs and the model inspector. Put transient experiment settings/status
-  under the task directory, not into this instruction file.
-
-## Task authority and review handoff
-
-- Follow the current task's explicit authorization. An older task's pause after
-  tiny/pilot is not a permanent repository requirement when the user has
-  authorized the new task through training and evaluation.
-- For tasks requesting independent review, use a fresh session without the
-  implementation conversation, review a fixed code commit and factual evidence,
-  and preserve its written findings. One session owns code fixes; the reviewer
-  does not edit model code.
-- Keep review findings, fix responses, code/config identities and training
-  artifacts traceable. Do not treat a review of different source as approval
-  for a new run.
-- Repair first, then run checks targeted at the changed numerical or scientific
-  risks. Whole-suite regression is not an automatic prerequisite for CUDA smoke
-  or every experiment.
-- Source-sampled training must expose autograd, target boundaries, physical-time
-  units and RNG streams explicitly. Do not call an inference-only no-grad
-  sampler and label the result end-to-end training.
+所有Python/测试/模型通过enter-container、torch-ito，不安装或升级环境，不改旧工作区/权重，不占外部进程卡。科学源在正式运行前冻结；阶段检查通过后连续完成，不逐阶段请示。工程结果只写tasks/flow-capacity-20261020/README.md及同run证据；PM三文件由PM维护。不push。
