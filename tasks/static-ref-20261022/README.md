@@ -1,6 +1,6 @@
 # 静态0.2Å扰动、MD快照混合与reference融合
 
-2026-10-22用户已授权，独立工作区由CAPACITY科学冻结44b5197建立。当前CPU实现准备，无新GPU启动。旧INPAINT所有训练后生成/评分继续，依赖不改；中央三文件仍唯一管理状态。
+2026-10-22用户已授权，独立工作区由CAPACITY科学冻结44b5197建立。两臂已真实开训，首32保存恢复与数据/RNG配对通过，正按同8192日程继续。旧INPAINT所有训练后生成/评分继续，依赖不改；中央三文件仍唯一管理状态。
 
 两个静态臂共同query_post 10,009,356参数骨架，seed71随机初始化，corruption=0.2Å、source rho=1.1397942064485225Å、sigma_data保持原值，原RF目标与18区间35NFE。control沿旧条件路径；reference_concat复用受损reference的同深度逐原子h/v，与当前h/v通道concat投影，current块初始I/ref块0，向量无XYZ偏置，独立初始化RNG。它补充静态原先未消费的编码reference；旧dynamic本来已有historyattention和reference-relative displacement，不能称旧dynamic不知道初始构象。
 
@@ -11,3 +11,13 @@ PDB/ATLAS快照/MISATO快照=50/25/25，每16更新8/4/4；PDB按source均匀，
 独立总43200 GPU秒=12 A100 GPUh，含必要验证/失败/两臂训练/60Q1，不挪INPAINT额度。实际卡、显存和吞吐在必要小跑后记录。共享卡不作为架构速度比较。
 
 1.14来源：2026-10-08 e8e7f91 的 tasks/coordinate-state-denoising-v1/prepare_static_stage.py 将static_corruption_A直接设为base.scales.sigma_data_A，即动态TRAIN位移分量尺度；原trainer双噪声公式更早由b7810b27定义。10/20capacity沿用。git作者为共享工作区用户身份，不据此断言具体agent或将配置决定归给用户。
+
+## 实际运行与必要验证
+
+当前实际：科学实现冻结c2f0275；4项CUDA通过，17002原子最大Q1一次FB通过，峰值reserved16.83GiB、reference新列梯度非零。control/concat两臂已在GPU5/7受限共享（allocator20GiB）真实开训，宿主首32 PID3114344/3114345；容器有限lane PID1235254/1235255。首32保存及同8192日程恢复均完成，已超过32；CPU配对全部通过（数据/source/全部RNG/32Q1曝光79824atom-frame一致），新增reference列已实际更新。参数10,009,356/10,271,500。两臂各20000秒加aux3200秒，仍独立总43200秒；已完成CUDA/旧probe/profile91.554秒，训练运行中另累计。有限尾部已接4096快照→8192→各24个恢复Q1→共用CPU评分/配对合并，post_run容器PID1235553。唯一入口 /data4/users/sihao/workspace/MOLVID-STATIC-REF-20261022/tasks/static-ref-20261022/README.md。
+
+首32后早期吞吐约control1.18秒/更新、concat1.47秒/更新，粗估完整训练约2.7/3.4GPUh；共享吞吐会变，不作架构速度结论。12h总上限包含训练、失败与60Q1，单臂有限timeout含其24Q1，不会每段重置。数据核实在[data_scope.json](data_scope.json)，复用PDB2569、ATLAS512/165888窗口、MISATO5Å过滤1022/10152窗口；未将NAS/12800原始全集冒称训练ready。
+
+旧static4096的0.2对照已12/12、errors=[]，原生35NFE输出raw主链RMS为ATLAS0.859960/MISATO0.894813Å，高于输入0.338889/0.342243Å；蛋白坏键4.774%/4.800%、角10.106%/10.677%。侧链raw误差1.207142/1.214047Å，MISATO配体1.063230Å。局部键角相对0.2受损输入改善，但构象偏移、soft碰撞和手性仍坏；不能只归因旧1.14输入太强。配体从未进入旧protein-only静态训练，独列。原评分[summary](../../runs/static_ref_20261022/static_probe/scores_old02/summary.json)，CPU32.793秒；新四stage尚未完成，不预报收益。
+
+复现：既有enter-container/torch-ito，PYTHONPATH为本工作区；训练命令由[run_study.py](run_study.py)调用原tools/train_coordinate_state.py，后续[post_run.sh](post_run.sh)仅等待两个有限lane并调用已有Q1评分/合并。原始clean/corrupted/source/full/teacher坐标保留在run/static_probe/generated，不钳输出或事后修几何。
