@@ -39,6 +39,12 @@ for name,cmd in commands:
  if name in required and not required[name].exists():break
  if r.returncode and not a.allow_partial and name not in ('final_pair','static_probe'):break
 state.update(status='completed' if len(state['stages'])==len(commands) and all(r['exit_code']==0 for r in state['stages']) else 'incomplete',wall_seconds=time.monotonic()-started,CPU_seconds=sum(r['CPU_seconds'] for r in state['stages']))
+summary_path=out/'comparison/comparison_summary.json'
+if summary_path.is_file():
+ summary=json.loads(summary_path.read_text())
+ state.update(available_draws=summary['available_draws'],expected_draws=summary['expected_draws'],comparison_errors=summary['errors'],comparison_completion=summary['completion_status'])
+ if summary['completion_status']!='complete' or summary['errors']:state['status']='incomplete'
+else:state['status']='incomplete'
 save()
 if state['status']!='completed':sys.exit(1)
 PY

@@ -60,6 +60,8 @@ def contrasts(specs):
 
 
 def compare(a):
+    from molvid.evaluation.common_panel import load_engine
+    load_engine(Path('/workspace/complexmd_eval_logicmd55_misato89_v0.3.1_20261014/engine'))
     import torch
     from molvid.evaluation.local_geometry import prepare_local_geometry
     out=a.output_root;imports=shared.read(out/'common_input/import_details.json');specs=imports['arm_specs'];arms=tuple(specs)
