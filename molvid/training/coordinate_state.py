@@ -36,6 +36,8 @@ def load_coordinate_weights(model, path):
         collective_extra_channels=512, query_post_extra_layers=0)
     changed += [key for key, default in capacity_defaults.items()
                 if parent.get(key, default) != model.settings.get(key, default)]
+    if parent.get('reference_concat',False)!=model.settings.get('reference_concat',False):
+        changed.append('reference_concat')
     if changed:
         raise ValueError(f'Incompatible coordinate warm start: {changed}')
     if saved['step'] != parent['updates']:

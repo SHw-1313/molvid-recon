@@ -20,6 +20,7 @@ from ..data.batch import ClipBatch
 from ..data.chemistry import NUM_ATOM_TYPE, NUM_BLOCK_TYPE
 from ..geometry.neighbors import CudaRadiusNeighborList
 from ..spatial.torchmd import TorchMDEncoder
+from .reference_concat import ReferenceConcat
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,8 @@ class CoordinateStateCondition:
     token_groups: tuple
     task: str
     query_groups: tuple | None = None
+    reference_prefix_h: torch.Tensor | None = None  # [N,D], unnormalized
+    reference_prefix_v: torch.Tensor | None = None  # [N,3,D]
 
 
 class CoordinateStateDenoiser(nn.Module):
@@ -118,6 +121,14 @@ class CoordinateStateDenoiser(nn.Module):
                 self.collective_extra.extend(
                     CollectiveFeedback(width, channels=channels)
                     for _ in range(self.capacity['collective_extra_layers']))
+        self.reference_concat_enabled = settings.get('reference_concat', False)
+        if not isinstance(self.reference_concat_enabled, bool):
+            raise ValueError('reference_concat must be boolean')
+        self.reference_fusion = None
+        if self.reference_concat_enabled:
+            # No change to shared parameters or CPU/CUDA generator progression.
+            with torch.random.fork_rng(devices=[]):
+                self.reference_fusion = ReferenceConcat(width)
         self.forward_calls = 0
         self.geometry_calls = 0
 
@@ -154,6 +165,17 @@ class CoordinateStateDenoiser(nn.Module):
                 extra_checkpoint='each_extra_spatial_layer_temporal_module_and_collective_module')
         if self.checkpoint_query_blocks:
             result['training_checkpoint'] = 'whole_query_prefix_temporal_suffix_recompute_current_graph'
+        if self.reference_concat_enabled:
+            result['reference_concat'] = dict(
+                source='last_observed_or_corrupted_frame_only_never_clean_target',
+                cache='same_observation_encoder_pass_prefix_before_original_last_two_layers',
+                spatial_layers=len(self.spatial.attention_layers)-2,
+                scalar_normalization='none_on_either_prefix',
+                location='current_spatial_prefix_before_extra_layers_temporal_and_collective',
+                operation='atomwise_channel_concat_linear_scalar_and_XYZ_shared_vector_no_bias',
+                initialization='current_identity_reference_zero_no_gate_CPU_fork_rng',
+                arithmetic='current_plus_(weight_minus_identity)_times_concat_preserves_autocast_identity',
+                tasks=['static', 'dynamic'])
         return result
 
     def _graph(self, xyz, batch, bonds):
@@ -203,11 +225,19 @@ class CoordinateStateDenoiser(nn.Module):
         v = h.new_zeros(len(h), 3, h.shape[-1])
         return h, v, graph
 
-    def _observed_frame(self, xyz, observed, bonds, apply_obs_extra=True):
+    def _observed_frame(self, xyz, observed, bonds, apply_obs_extra=True, cache_reference=False):
         h, v, graph = self._begin_geometry(xyz, observed, bonds)
-        h, v = self._layers(h, v, graph, 0, len(self.spatial.attention_layers))
+        if cache_reference:
+            split = len(self.spatial.attention_layers)-2
+            h, v = self._layers(h, v, graph, 0, split)
+            reference_h, reference_v = h, v
+            h, v = self._layers(h, v, graph, split, len(self.spatial.attention_layers))
+        else:
+            h, v = self._layers(h, v, graph, 0, len(self.spatial.attention_layers))
         if apply_obs_extra:
             h, v = self._extra_layers(self.obs_extra, h, v, graph)
+        if cache_reference:
+            return self.spatial.out_norm(h), v, reference_h, reference_v
         return self.spatial.out_norm(h), v
 
     def prepare_condition(self, observed, *, task='dynamic'):
@@ -219,17 +249,20 @@ class CoordinateStateDenoiser(nn.Module):
         if bonds.numel() and bool((observed.abid[bonds[0]]!=observed.abid[bonds[1]]).any()):
             raise ValueError('Cross-system covalent edge')
         encoded = []
-        for xyz in observed.x:
+        for frame, xyz in enumerate(observed.x):
+            cache_reference = self.reference_concat_enabled and frame == observed.frames-1
             if self.training and torch.is_grad_enabled():
                 encoded.append(checkpoint(self._observed_frame, xyz, observed, bonds,
-                    task == 'dynamic', use_reentrant=False))
+                    task == 'dynamic', cache_reference, use_reentrant=False))
             else:
-                encoded.append(self._observed_frame(xyz, observed, bonds, task == 'dynamic'))
+                encoded.append(self._observed_frame(xyz, observed, bonds, task == 'dynamic', cache_reference))
         times = observed.time_ps[observed.abid].t()
         return CoordinateStateCondition(observed, observed.x[-1],
             torch.stack([x[0] for x in encoded]), torch.stack([x[1] for x in encoded]),
             times-times[-1:], observed.x-observed.x[-1:], bonds, self.tokens.grouping(observed), task,
-            future_query_grouping(observed) if self.query_qk_mode == 'group' and task == 'dynamic' else None)
+            future_query_grouping(observed) if self.query_qk_mode == 'group' and task == 'dynamic' else None,
+            encoded[-1][2] if self.reference_concat_enabled else None,
+            encoded[-1][3] if self.reference_concat_enabled else None)
 
     def _query_prefix_frame(self, xyz, condition, embedding, physical, scaled_z, *, keep_graph):
         h, v, graph = self._begin_geometry(xyz, condition.observed, condition.bonds)
@@ -237,6 +270,9 @@ class CoordinateStateDenoiser(nn.Module):
         v = v+self.displacement(scaled_z[:, :, None])
         split = len(self.spatial.attention_layers)-2
         h, v = self._layers(h, v, graph, 0, split)
+        if self.reference_fusion is not None:
+            h, v = self.reference_fusion(h, v, condition.reference_prefix_h,
+                                       condition.reference_prefix_v)
         if condition.task == 'static':
             # Train the observation capacity on current corrupted geometry
             # during static pretraining, where temporal conditioning is bypassed.

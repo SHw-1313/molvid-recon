@@ -98,9 +98,21 @@ class BridgeMixture:
             self.rng.shuffle(self.pending)
         key = self.pending.pop()
         task, domain = key.split(':')
+        # Explicit MD-snapshot tasks share the existing TRAIN inventories,
+        # but choose windows uniformly within a system, not by dynamic clock
+        # exposure. Keep every old task's selection and RNG consumption intact.
+        snapshot_domain = ({'atlas': 'protein', 'misato': 'complex'}.get(domain)
+                           if task == 'static' else None)
         if key == 'static:protein':
             system, visit = self.next_system(key, self.static)
             store, index = self.static[system]
+            history = 1
+        elif snapshot_domain is not None:
+            systems = self.groups[snapshot_domain]
+            system, visit = self.next_system(key, systems)
+            windows = [item for bucket in sorted(systems[system])
+                       for item in systems[system][bucket]]
+            store, index = self.rng.choice(windows)
             history = 1
         else:
             systems = self.groups[domain]
@@ -114,7 +126,22 @@ class BridgeMixture:
         record = store[index]
         if record['split'] != 'train':
             raise ValueError('Non-TRAIN record reached training')
-        if task == 'static' and record['x'].shape[0] > 1:
+        snapshot_metadata = {}
+        if snapshot_domain is not None:
+            if record.get('source') != domain:
+                raise ValueError(f'{key} received source {record.get("source")!r}')
+            frame_mask = record.get('frame_mask', [True] * record['x'].shape[0])
+            valid_frames = [i for i, valid in enumerate(frame_mask) if valid]
+            if not valid_frames:
+                raise ValueError(f'{key} has no valid snapshot frame')
+            frame_index = self.rng.choice(valid_frames)
+            snapshot_metadata = dict(
+                inventory_domain=snapshot_domain, source_sample_id=record['sample_id'],
+                source_store_index=index, source_time_bucket_id=record['time_bucket_id'],
+                source_frame_index=frame_index, source_time_ps=float(record['time_ps'][frame_index]),
+                system_window_count=len(windows), sampling='system_cycle/window_uniform/valid_frame_uniform')
+            record = trajectory_record_to_static(record, frame_index=frame_index)
+        elif task == 'static' and record['x'].shape[0] > 1:
             record = trajectory_record_to_static(record, frame_index=self.rng.randrange(record['x'].shape[0]))
             history = 1
         batch = collate_clip_records([record])
@@ -123,7 +150,8 @@ class BridgeMixture:
                        range(history, batch.frames), self.settings['query_frames'])))
         self.counts[key] += 1
         return batch, task, history, queries, dict(system=system, visit=visit, domain=domain,
-            clock_sampling=self.clock_sampling, time_bucket_id=record.get('time_bucket_id'))
+            clock_sampling=self.clock_sampling, time_bucket_id=record.get('time_bucket_id'),
+            **snapshot_metadata)
 
     def state_dict(self):
         return dict(rng=self.rng.getstate(), orders=self.orders, visits=dict(self.visits),

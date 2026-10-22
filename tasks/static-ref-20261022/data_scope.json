@@ -1,0 +1,693 @@
+{
+  "schema": "molvid.static_ref.data_scope.v1",
+  "status": "cpu_verified",
+  "evidence": "/workspace/MOLVID-FLOW-CAPACITY-20261020/tasks/flow-capacity-20261020/data_ready.json",
+  "source_paths": {
+    "protein_base": "/workspace/molvid_recon/runs/frame_joint_v1_multitime_data_260921/clip_store/train",
+    "protein_shards": "/workspace/molvid-data-scale-schedule-20261006/runs/data_scale_schedule_20261006/full512_v1/concat/closed_shards_snapshot.json",
+    "complex_train": "/workspace/molvid-misato-contact-filter-v1/runs/contact_filter_20261014/train5A/train",
+    "static_registration": "/workspace/molvid-static-corpus-qualification-20261006/runs/static_corpus_qualification_20261006/full4096_v1/registration"
+  },
+  "expected_systems": {
+    "protein": 512,
+    "complex": 1022,
+    "static_protein": 2569
+  },
+  "sixteen_step_tasks": [
+    "static:protein",
+    "static:protein",
+    "static:protein",
+    "static:protein",
+    "static:protein",
+    "static:protein",
+    "static:protein",
+    "static:protein",
+    "static:atlas",
+    "static:atlas",
+    "static:atlas",
+    "static:atlas",
+    "static:misato",
+    "static:misato",
+    "static:misato",
+    "static:misato"
+  ],
+  "inventory": {
+    "protein": {
+      "systems": 512,
+      "windows": 165888
+    },
+    "complex": {
+      "systems": 1022,
+      "windows": 10152
+    }
+  },
+  "registered_static_sources": 2569,
+  "sampling": {
+    "PDB": "uniform shuffled SOURCE cycles (2569 sources, 2568 sequence groups)",
+    "MD": "uniform shuffled TRAIN system cycles; uniform stored window across retained clock buckets; uniform valid frame",
+    "static_contract": "T=1, H=1, queries=[] consumed by existing static Q1 trainer; no motion trajectory",
+    "rng": "All task/system/window/frame choices use saved mixture.rng; state_dict schema unchanged. Model/source generator belongs to trainer."
+  },
+  "split_checks_inherited": {
+    "official_misato_split_counts": {
+      "train": 13765,
+      "val": 1595,
+      "test": 1612
+    },
+    "complex_official_split_intersections": {
+      "train": 1022,
+      "val": 0,
+      "test": 0
+    },
+    "protein_protected_intersections": {
+      "biokinema_test": [
+        "atlas_6jpt_A",
+        "atlas_6o2v_A",
+        "atlas_6oz1_A",
+        "atlas_6qj0_A",
+        "atlas_6rrv_A",
+        "atlas_6ypi_A",
+        "atlas_7bwf_B",
+        "atlas_7ec1_A"
+      ],
+      "biokinema_val": [
+        "atlas_5ok6_A",
+        "atlas_5w82_E",
+        "atlas_5yrv_I",
+        "atlas_6as3_A",
+        "atlas_6bm5_A",
+        "atlas_6bn0_A",
+        "atlas_6cka_B",
+        "atlas_6dgk_B",
+        "atlas_6f45_D",
+        "atlas_6fc0_B",
+        "atlas_6fub_B",
+        "atlas_6hem_A",
+        "atlas_6hj6_A",
+        "atlas_6idx_A",
+        "atlas_6irx_A"
+      ],
+      "confirmation_reserved": [],
+      "development": [],
+      "excluded_sealed": [],
+      "pvb_test": [
+        "atlas_1h2e_A",
+        "atlas_1huf_A",
+        "atlas_2bjq_A",
+        "atlas_2ov9_C"
+      ]
+    },
+    "static_protein_guard_PDB_intersections": {
+      "biokinema_test": [],
+      "biokinema_val": [],
+      "confirmation_reserved": [],
+      "development": [],
+      "excluded_sealed": [],
+      "pvb_test": []
+    },
+    "static_misato_test_PDB_intersections": [
+      "1B74",
+      "3O5N",
+      "4FYH",
+      "4KYK",
+      "4O1L",
+      "5MTE"
+    ],
+    "static_misato_DEV_PDB_intersections": [],
+    "test_coordinates_read": 0,
+    "dev_six_ids": [
+      "atlas_1whz_A",
+      "atlas_3vnb_A",
+      "atlas_6e5y_A",
+      "4J8T",
+      "2XSB",
+      "5TV1"
+    ],
+    "dynamic_dev_six_intersections": [],
+    "static_dev_six_PDB_intersections": [],
+    "scope": "Project development48/confirmation_reserved/excluded_sealed metadata disjoint; external baseline test independence is NOT claimed. See nonzero external overlaps.",
+    "protein_protection_metadata": "/workspace/molvid-gs-paired-evaluation-20261006/runs/gs_paired_evaluation_20261006/static_public_homology_v2/protected_groups.json",
+    "misato_split_root": "/data1/repo/PVB/download_data/MISATO"
+  },
+  "contact_filter": {
+    "status": "completed",
+    "source": "/workspace/molvid-complex-scale-data-20261007/runs/complex_scale_data_20261007/misato1024_v1/train",
+    "view": "runs/contact_filter_20261014/train5A/train",
+    "threshold_A": 5.0,
+    "selection": "keep iff every stored frame minimum ligand-protein heavy atom distance <= threshold",
+    "scope": "TRAIN only; whole 16-frame window excluded, no frame splicing",
+    "original_data_modified": false,
+    "validation_modified": false,
+    "test_opened": false,
+    "periodicity": "stored joint coordinates; no periodic box available in clip schema; not a physical dissociation classification",
+    "windows_before": 10240,
+    "windows_after": 10152,
+    "windows_removed": 88,
+    "systems_before": 1024,
+    "systems_after": 1022,
+    "systems_removed": [
+      "4E4A",
+      "6R49"
+    ],
+    "buckets_before": {
+      "dt_80ps": 6144,
+      "dt_160ps": 3072,
+      "dt_320ps": 1024
+    },
+    "buckets_after": {
+      "dt_80ps": 6095,
+      "dt_160ps": 3042,
+      "dt_320ps": 1015
+    },
+    "removed_by_system": {
+      "1YW7": 5,
+      "1M2X": 9,
+      "2IT4": 7,
+      "2YBK": 6,
+      "4H71": 3,
+      "4E4A": 10,
+      "4XUC": 2,
+      "4R18": 3,
+      "1W8M": 6,
+      "6MO9": 6,
+      "5MOE": 7,
+      "1WUG": 5,
+      "5NZO": 3,
+      "6R49": 10,
+      "4MLT": 5,
+      "5CST": 1
+    },
+    "seconds": 217.66336536686867,
+    "summary_path": "/workspace/molvid-misato-contact-filter-v1/runs/contact_filter_20261014/train5A/summary.json",
+    "data_bin_resolved": "/data1/sihao/molvid-derived/complex-scale-data-20261007/misato1024_v1/train/data.bin"
+  },
+  "current_inventory_exactly_matches_capacity_ids": true,
+  "external_baseline_test_independence_claimed": false,
+  "static_profile_record": {
+    "store": "/workspace/molvid-static-corpus-expansion-20261006/runs/static_corpus_expansion_20261006/raw4096_v1/diagnostic_store",
+    "index": 2985,
+    "sample_id": "static_mmcif_covalent::8rcz_A",
+    "atoms": 5973
+  },
+  "md_profile_records": [
+    {
+      "label": "protein/max_atoms",
+      "store": "/workspace/molvid-dynamic-corpus-resume-20261006/runs/dynamic_corpus_resume_20261006/recovery_v1/shard_061",
+      "index": 360,
+      "sample_id": "atlas_6sup_A_R1_dt_100ps_w000000",
+      "shape": [
+        16,
+        17002,
+        3
+      ],
+      "dtype": "float32",
+      "coordinate_unit": "angstrom",
+      "split": "train",
+      "source": "atlas",
+      "time_bucket_id": "dt_100ps",
+      "first_time_ps": 0.0,
+      "last_time_ps": 1500.0,
+      "delta_time_ps": [
+        100.0
+      ],
+      "native_delta_time_ps": 10.0,
+      "components": {
+        "0": 17002
+      },
+      "finite": true,
+      "collate_passed": true,
+      "bond_edges": 34846,
+      "supervised_atoms": 17002
+    },
+    {
+      "label": "complex/max_atoms",
+      "store": "/workspace/molvid-misato-contact-filter-v1/runs/contact_filter_20261014/train5A/train",
+      "index": 5988,
+      "sample_id": "misato_6D6U_MD_dt_80ps_w000000",
+      "shape": [
+        16,
+        16999,
+        3
+      ],
+      "dtype": "float32",
+      "coordinate_unit": "angstrom",
+      "split": "train",
+      "source": "misato",
+      "time_bucket_id": "dt_80ps",
+      "first_time_ps": 0.0,
+      "last_time_ps": 1200.0,
+      "delta_time_ps": [
+        80.0
+      ],
+      "native_delta_time_ps": 80.0,
+      "components": {
+        "0": 16977,
+        "1": 22
+      },
+      "finite": true,
+      "collate_passed": true,
+      "bond_edges": 34888,
+      "supervised_atoms": 16999
+    }
+  ],
+  "actual_cycle_checks": [
+    {
+      "key": "static:misato",
+      "atoms": 2265,
+      "metadata": {
+        "system": "5VCV",
+        "visit": 0,
+        "domain": "misato",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "complex",
+        "source_sample_id": "misato_5VCV_MD_dt_160ps_w000000",
+        "source_store_index": 456,
+        "source_time_bucket_id": "dt_160ps",
+        "source_frame_index": 9,
+        "source_time_ps": 1440.0,
+        "system_window_count": 10,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        2265,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        2265,
+        3
+      ]
+    },
+    {
+      "key": "static:misato",
+      "atoms": 8297,
+      "metadata": {
+        "system": "2I2B",
+        "visit": 0,
+        "domain": "misato",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "complex",
+        "source_sample_id": "misato_2I2B_MD_dt_160ps_w000032",
+        "source_store_index": 8438,
+        "source_time_bucket_id": "dt_160ps",
+        "source_frame_index": 15,
+        "source_time_ps": 2400.0,
+        "system_window_count": 10,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        8297,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        8297,
+        3
+      ]
+    },
+    {
+      "key": "static:misato",
+      "atoms": 2779,
+      "metadata": {
+        "system": "5NGE",
+        "visit": 0,
+        "domain": "misato",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "complex",
+        "source_sample_id": "misato_5NGE_MD_dt_80ps_w000032",
+        "source_store_index": 8513,
+        "source_time_bucket_id": "dt_80ps",
+        "source_frame_index": 10,
+        "source_time_ps": 800.0,
+        "system_window_count": 10,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        2779,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        2779,
+        3
+      ]
+    },
+    {
+      "key": "static:protein",
+      "atoms": 3905,
+      "metadata": {
+        "system": "static_mmcif_covalent::5d79_B",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        3905,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:protein",
+      "atoms": 1937,
+      "metadata": {
+        "system": "static_mmcif_covalent::8fzu_A",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        1937,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:atlas",
+      "atoms": 2236,
+      "metadata": {
+        "system": "atlas_3f7w_A",
+        "visit": 0,
+        "domain": "atlas",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "protein",
+        "source_sample_id": "atlas_3f7w_A_R1_dt_100ps_w000034",
+        "source_store_index": 1145,
+        "source_time_bucket_id": "dt_100ps",
+        "source_frame_index": 3,
+        "source_time_ps": 300.0,
+        "system_window_count": 324,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        2236,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        2236,
+        3
+      ]
+    },
+    {
+      "key": "static:misato",
+      "atoms": 2390,
+      "metadata": {
+        "system": "4GM8",
+        "visit": 0,
+        "domain": "misato",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "complex",
+        "source_sample_id": "misato_4GM8_MD_dt_80ps_w000080",
+        "source_store_index": 535,
+        "source_time_bucket_id": "dt_80ps",
+        "source_frame_index": 8,
+        "source_time_ps": 640.0,
+        "system_window_count": 10,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        2390,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        2390,
+        3
+      ]
+    },
+    {
+      "key": "static:protein",
+      "atoms": 248,
+      "metadata": {
+        "system": "static_mmcif_covalent::5inw_C",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        248,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:atlas",
+      "atoms": 2714,
+      "metadata": {
+        "system": "atlas_3ib5_A",
+        "visit": 0,
+        "domain": "atlas",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "protein",
+        "source_sample_id": "atlas_3ib5_A_R1_dt_100ps_w000024",
+        "source_store_index": 21972,
+        "source_time_bucket_id": "dt_100ps",
+        "source_frame_index": 9,
+        "source_time_ps": 900.0,
+        "system_window_count": 324,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        2714,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        2714,
+        3
+      ]
+    },
+    {
+      "key": "static:atlas",
+      "atoms": 2424,
+      "metadata": {
+        "system": "atlas_3q0i_A",
+        "visit": 0,
+        "domain": "atlas",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "protein",
+        "source_sample_id": "atlas_3q0i_A_R1_dt_100ps_w000015",
+        "source_store_index": 30,
+        "source_time_bucket_id": "dt_100ps",
+        "source_frame_index": 7,
+        "source_time_ps": 700.0,
+        "system_window_count": 324,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        2424,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        2424,
+        3
+      ]
+    },
+    {
+      "key": "static:protein",
+      "atoms": 519,
+      "metadata": {
+        "system": "static_mmcif_covalent::8qnj_A",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        519,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:protein",
+      "atoms": 1252,
+      "metadata": {
+        "system": "static_mmcif_covalent::1yz4_A",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        1252,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:protein",
+      "atoms": 5384,
+      "metadata": {
+        "system": "static_mmcif_covalent::9g02_D",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        5384,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:atlas",
+      "atoms": 3807,
+      "metadata": {
+        "system": "atlas_4wyw_A",
+        "visit": 0,
+        "domain": "atlas",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static",
+        "inventory_domain": "protein",
+        "source_sample_id": "atlas_4wyw_A_R1_dt_100ps_w000035",
+        "source_store_index": 1148,
+        "source_time_bucket_id": "dt_100ps",
+        "source_frame_index": 3,
+        "source_time_ps": 300.0,
+        "system_window_count": 324,
+        "sampling": "system_cycle/window_uniform/valid_frame_uniform"
+      },
+      "coordinate_shape": [
+        1,
+        3807,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": [],
+      "source_frame_x_bpos_and_topology_exact": true,
+      "source_coordinate_shape": [
+        16,
+        3807,
+        3
+      ]
+    },
+    {
+      "key": "static:protein",
+      "atoms": 2906,
+      "metadata": {
+        "system": "static_mmcif_covalent::5z68_A",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        2906,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    },
+    {
+      "key": "static:protein",
+      "atoms": 4142,
+      "metadata": {
+        "system": "static_mmcif_covalent::1ult_A",
+        "visit": 0,
+        "domain": "protein",
+        "clock_sampling": "staggered_system_cycles",
+        "time_bucket_id": "static"
+      },
+      "coordinate_shape": [
+        1,
+        4142,
+        3
+      ],
+      "H": 1,
+      "actual_static_Q": 1,
+      "queries_argument": []
+    }
+  ],
+  "resume_check": {
+    "draws": 4,
+    "all_choices_coordinates_bpos_topology_exact": true,
+    "state_exact": true
+  },
+  "fixture_tests": {
+    "command": "python -m pytest -q tests/test_static_mixture.py",
+    "tests": 4,
+    "status": "passed"
+  },
+  "bounded_check_corrections": [
+    "Test fixture must use valid-prefix frame_mask per existing schema.",
+    "Real legacy TRAIN records omit frame_mask; new branch now defaults all valid as existing validate_clip_record does."
+  ],
+  "CPU_execution": {
+    "wall_seconds": 3.563056442886591,
+    "cpu_seconds": 3.558992187,
+    "cuda_visible_devices": "",
+    "model_calls": 0,
+    "GPU_seconds": 0,
+    "payload_scope": "16 cycle draws plus 4 draws replayed; no corpus coordinate scan"
+  }
+}
