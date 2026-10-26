@@ -372,6 +372,49 @@ class CoordinateStateDenoiser(nn.Module):
         c_out = sigma*self.sigma_data/(sigma.square()+self.sigma_data**2).sqrt()
         return c_skip*z+c_out*result
 
+    def _flow_interval(self, state, condition, query_time_ps, index, intervals, *, recompute=False):
+        """One native Heun interval; the final interval uses the native Euler end."""
+        dt = 1. / intervals
+        s = state.new_full((condition.observed.batch_size,), index / intervals)
+        def velocity(current, progress):
+            if recompute:
+                return checkpoint(self, current, condition=condition, query_time_ps=query_time_ps,
+                                  progress=progress, use_reentrant=False, preserve_rng_state=True)
+            return self(current, condition=condition, query_time_ps=query_time_ps, progress=progress)
+        u = velocity(state, s)
+        proposal = state + dt * u
+        if index < intervals - 1:
+            u_next = velocity(proposal, s + dt)
+            return state + .5 * dt * (u + u_next)
+        return proposal
+
+    def sample_truncated(self, observed, query_time_ps, *, tail_intervals, generator):
+        """Native source sample with only the final K integration intervals differentiated.
+
+        The detached prefix state omits its parameter dependence. The observed
+        condition is recomputed with gradients for the suffix; no future target
+        enters either condition. Whole-model-call recomputation bounds activation
+        memory. This is a truncated gradient, not differentiation of all 35 NFE.
+        """
+        intervals = self.settings['sampler_intervals']
+        if self.scheme != 'flow' or not 0 < tail_intervals <= intervals:
+            raise ValueError('Valid flow tail interval count required')
+        # Do not cache no-grad cast weights for the subsequent grad-enabled tail.
+        with torch.no_grad(), torch.autocast(device_type=observed.x.device.type,
+                enabled=torch.is_autocast_enabled(observed.x.device.type),
+                dtype=torch.get_autocast_dtype(observed.x.device.type), cache_enabled=False):
+            condition = self.prepare_condition(observed)
+            shape = (query_time_ps.shape[1], *condition.reference_A.shape)
+            noise = torch.randn(shape, device=condition.reference_A.device, generator=generator)
+            state = condition.reference_A[None] + self.rho_A * noise
+            for index in range(intervals - tail_intervals):
+                state = self._flow_interval(state, condition, query_time_ps, index, intervals)
+        state = state.detach()
+        condition = self.prepare_condition(observed)
+        for index in range(intervals - tail_intervals, intervals):
+            state = self._flow_interval(state, condition, query_time_ps, index, intervals, recompute=True)
+        return state
+
     @torch.no_grad()
     def sample(self, condition, query_time_ps, *, steps=None, generator=None):
         intervals = self.settings['sampler_intervals'] if steps is None else steps

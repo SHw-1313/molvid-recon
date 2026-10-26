@@ -1,7 +1,7 @@
-# Molvid authorized research task
+# Authorized ligand geometry continuation
 
-Read the sole authority /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} after resume/rule updates. In-container aliases are /workspace/molvid_recon. Local inherited HANDOFF/TASKS are historical only.
+Read /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} after resume/rule updates (container /workspace/molvid_recon). Those are the sole management authority. Inherited HANDOFF/TASKS are historical.
 
-2026-10-23 latest user approval supersedes older read-only/no-training restrictions for this scope: P1 old static4096 / new static control8192 / new+static replay; three matched512 MD updates; independent57600 GPU seconds including all failures/training/108 three-protocol draws/probes. No concat or learned source.
+2026-10-26 user authorizes two matched continuations from P1 new_static MD512 full state to total4096, pure RF C and ligand native-source geometry L. Independent cap259200 A100 GPU seconds including checks/failures/calibration/training/96 four-protocol draws/probes. Retain optimizer/data/RNG; no replay/concat/new architecture/source. Preserve other jobs/dependencies. Run Python only via enter-container and existing torch-ito. One task README; no new scheduler/audit/state store.
 
-Use only existing enter-container / conda torch-ito. Preserve all other running task dependencies and external jobs. One task README, no new state store/scheduler/audit platform. Source/units/clock and sealed-data exclusions remain explicit.
+Report separate dataset + actual dt_ps + history interval + Q + generation protocol + reference window. Never average ATLAS100ps with MISATO80ps or stride1/2/4 into a main score. Follow latest central rules for details.

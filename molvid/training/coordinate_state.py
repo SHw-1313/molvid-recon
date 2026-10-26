@@ -16,6 +16,7 @@ import torch
 from ..codec.frame import slice_clip_frames
 from ..data.bridge_mixture import BridgeMixture
 from ..flow.coordinate_state import CoordinateStateDenoiser, coordinate_state_objective
+from ..flow.local_geometry_loss import ligand_geometry_band_loss
 from ..runtime import atomic_write_json
 from .predictive_data import atomic_torch_save
 
@@ -135,6 +136,116 @@ def static_replay_from_settings(settings, seed, device):
     return StaticReplay(config,seed,device)
 
 
+
+class LigandSourceGeometry:
+    """Private native-source RNG and visit counter; shared RF optimizer outside."""
+    def __init__(self, config, seed, device):
+        if config.get('enabled') is not True or config['every_group_visits'] != 8 or config['tail_intervals'] != 4:
+            raise ValueError('Expected fixed ligand native-tail recipe')
+        if not 0 < config['weight'] < float('inf'):
+            raise ValueError('Finite positive calibrated weight required')
+        self.config=copy.deepcopy(config); self.counts={}; self.events=0
+        private_seed=int(seed)+int(config['rng_offset'])
+        self.generator=torch.Generator(device=device).manual_seed(private_seed+1)
+        self.rng=dict(python=random.Random(private_seed).getstate(),
+            numpy=np.random.RandomState(private_seed % 2**32).get_state(),
+            torch_cpu=torch.Generator(device='cpu').manual_seed(private_seed+2).get_state(),
+            cuda=[torch.Generator(device=f'cuda:{i}').manual_seed(private_seed+3+i).get_state()
+                  for i in range(torch.cuda.device_count())])
+
+    @contextmanager
+    def isolated_rng(self):
+        dynamic=_global_rng_state(); _set_global_rng_state(self.rng)
+        try:
+            yield
+        finally:
+            self.rng=_global_rng_state(); _set_global_rng_state(dynamic)
+
+    def due(self, identity, history):
+        if identity['domain'] != 'complex':
+            return False
+        key=f"complex:H{history}"
+        self.counts[key]=self.counts.get(key,0)+1
+        return self.counts[key] % self.config['every_group_visits'] == 0
+
+    def backward(self, model, observed, target, query_times, *, bf16):
+        began=time.monotonic()
+        if not bool((observed.loss_mask & (observed.component_id>0)).any()):
+            return dict(ligand_geometry_applied=False,ligand_geometry_weighted_loss=0.,
+                        ligand_geometry_reason='no_valid_ligand')
+        with self.isolated_rng():
+            with torch.autocast('cuda',dtype=torch.bfloat16,enabled=bf16):
+                endpoint=model.sample_truncated(observed,query_times,
+                    tail_intervals=self.config['tail_intervals'],generator=self.generator)
+                auxiliary,metrics=ligand_geometry_band_loss(endpoint,target,observed,self.config['band'])
+                weighted=self.config['weight']*auxiliary
+            weighted.backward()
+            self.events+=1
+            result=dict(metrics,ligand_geometry_applied=True,
+                ligand_geometry_weight=self.config['weight'],
+                ligand_geometry_weighted_loss=float(weighted.detach()),
+                ligand_geometry_events=self.events,ligand_geometry_counts=dict(self.counts),
+                ligand_geometry_seconds=time.monotonic()-began)
+            del endpoint,auxiliary,weighted
+        return result
+
+    def state_dict(self):
+        return dict(schema='molvid.ligand_source_geometry.v1',config=self.config,
+                    counts=self.counts,events=self.events,generator_rng=self.generator.get_state(),
+                    isolated_rng=self.rng)
+
+    def load_state_dict(self,state):
+        if state['schema']!='molvid.ligand_source_geometry.v1' or state['config']!=self.config:
+            raise ValueError('Ligand geometry state differs on exact resume')
+        if len(state['isolated_rng']['cuda'])!=torch.cuda.device_count():
+            raise ValueError('Exact resume needs same visible CUDA device count')
+        self.counts=copy.deepcopy(state['counts']);self.events=state['events']
+        self.generator.set_state(state['generator_rng']);self.rng=copy.deepcopy(state['isolated_rng'])
+
+
+def continuation_learning_rate(settings, step):
+    """step is zero-based global optimizer update; do not rewrite old512 schedule."""
+    spec=settings.get('continuation')
+    if spec is None:
+        warmup=settings['warmup_updates']
+        fraction=max(0.,(step-warmup)/max(1,settings['updates']-warmup-1))
+        factor=(step+1)/warmup if step<warmup else .1+.45*(1+math.cos(math.pi*fraction))
+        return settings['learning_rate']*factor
+    offset=step-spec['parent_step']; ramp=spec['ramp_updates']
+    if offset<0: raise ValueError('Continuation cannot rewind parent steps')
+    if offset<ramp:
+        return spec['start_lr']+(spec['peak_lr']-spec['start_lr'])*offset/(ramp-1)
+    fraction=(offset-ramp)/max(1,settings['updates']-spec['parent_step']-ramp-1)
+    return spec['end_lr']+.5*(spec['peak_lr']-spec['end_lr'])*(1+math.cos(math.pi*fraction))
+
+
+def validate_continuation(saved, settings, seed):
+    """Explicit full-state extension; only declared objective/schedule may differ."""
+    if saved['schema']!='molvid.coordinate_state.checkpoint.v1' or saved['seed']!=seed:
+        raise ValueError('Wrong parent schema or seed')
+    spec=settings['continuation']
+    if spec != dict(parent_step=512,total_updates=4096,ramp_updates=128,
+                    start_lr=1e-5,peak_lr=1e-4,end_lr=1e-5,kind='full_state_extended_schedule'):
+        raise ValueError('Undeclared continuation schedule')
+    if saved['step']!=512 or saved['settings']['updates']!=512 or settings['updates']!=4096:
+        raise ValueError('Expected completed512 parent and total4096')
+    allowed={'updates','initialization','continuation','ligand_geometry'}
+    before={k:v for k,v in saved['settings'].items() if k not in allowed}
+    after={k:v for k,v in settings.items() if k not in allowed}
+    if before!=after or 'static_replay' in saved or 'ligand_geometry' in saved:
+        raise ValueError('Continuation changes more than declared schedule/ligand loss')
+    if settings['initialization']!='coordinate_state_continuation':
+        raise ValueError('Explicit continuation initialization required')
+    if any(abs(g['lr']-1e-5)>1e-12 for g in saved['optimizer']['param_groups']):
+        raise ValueError('Unexpected parent terminal learning rate')
+    return dict(kind='full_state_changed_objective_continuation',parent_step=512,
+        parent_settings=saved['settings'],parent_source_commit=saved.get('source_commit'),
+        parent_elapsed_seconds=saved['elapsed_seconds'],parent_initialization=saved.get('initialization_report'),
+        retained=['model','optimizer_moments','global_step','data_cursor','exposure','all_RF_RNG'],
+        new=['explicit3584_update_LR_stage','private_ligand_aux_RNG_if_enabled'],
+        schedule=copy.deepcopy(spec))
+
+
 def load_coordinate_weights(model, path):
     """Weights-only stage transition; never restore optimizer, RNG or data visits.
 
@@ -175,13 +286,13 @@ def load_coordinate_weights(model, path):
         reset=['optimizer', 'schedule', 'RNG', 'data_visits', 'stage_exposure', 'stage_GPU_hours'])
 
 
-def train(settings, output, seed, resume=None, warm_start=None, stop_after=None):
+def train(settings, output, seed, resume=None, warm_start=None, stop_after=None, continuation=None):
     # Operational save/exit preserves the configured optimization schedule.
     if stop_after is not None and not 0 < stop_after <= settings['updates']:
         raise ValueError('stop_after must be within the unchanged configured updates')
-    if resume is not None and warm_start is not None:
-        raise ValueError('Exact resume and weights-only warm start are mutually exclusive')
-    if resume is None and (warm_start is not None) != (settings['initialization']=='coordinate_state_weights_only'):
+    if sum(v is not None for v in (resume,warm_start,continuation))>1:
+        raise ValueError('Choose exact resume, weights-only warm start, or full-state extension')
+    if resume is None and continuation is None and (warm_start is not None) != (settings['initialization']=='coordinate_state_weights_only'):
         raise ValueError('Weights-only initialization must be explicit in both recipe and CLI')
     if not torch.cuda.is_available():
         raise RuntimeError('Real CUDA required; no CPU model fallback')
@@ -195,15 +306,22 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
     generator = torch.Generator(device=device).manual_seed(seed+20261008)
     mixture = BridgeMixture(settings['data'], seed)
     replay = static_replay_from_settings(settings, seed, device)
+    ligand_config=settings.get('ligand_geometry')
+    if ligand_config and ligand_config.get('weight_status')!='calibrated':
+        raise ValueError('Freeze the four-TRAIN calibration before formal training')
+    ligand=LigandSourceGeometry(ligand_config,seed,device) if ligand_config else None
     start, prior_seconds = 0, 0.
     exposure = dict(updates=0, dynamic_examples=0, static_examples=0, target_frames=0, atom_query_pairs=0)
     initialization_report = dict(kind=settings['initialization'], inherited_parameters=0,
         frozen_modules=[], newly_initialized_modules=['all'])
     if warm_start is not None:
         initialization_report = load_coordinate_weights(model, warm_start)
-    if resume:
-        saved = torch.load(resume, map_location='cpu', weights_only=False)
-        if saved['schema']!='molvid.coordinate_state.checkpoint.v1' or saved['settings']!=settings or saved['seed']!=seed:
+    if resume or continuation:
+        saved = torch.load(resume or continuation, map_location='cpu', weights_only=False)
+        if continuation:
+            initialization_report=validate_continuation(saved,settings,seed)
+            initialization_report['parent_checkpoint']=str(Path(continuation).resolve())
+        elif saved['schema']!='molvid.coordinate_state.checkpoint.v1' or saved['settings']!=settings or saved['seed']!=seed:
             raise ValueError('Wrong objective, scales, seed or checkpoint schema')
         model.load_state_dict(saved['model'], strict=True); optimizer.load_state_dict(saved['optimizer'])
         mixture.load_state_dict(saved['mixture']); generator.set_state(saved['generator_rng'])
@@ -213,13 +331,20 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
             replay.load_state_dict(saved['static_replay'])
         elif 'static_replay' in saved:
             raise ValueError('Cannot discard replay state on an exact resume')
-        start=saved['step']; exposure=saved['exposure']; prior_seconds=saved['elapsed_seconds']
-        initialization_report=saved.get('initialization_report', initialization_report)
+        if ligand is not None and not continuation:
+            ligand.load_state_dict(saved['ligand_geometry'])
+        elif ligand is None and 'ligand_geometry' in saved:
+            raise ValueError('Cannot discard ligand state on exact resume')
+        start=saved['step']; exposure=saved['exposure']
+        # New task wall-time is independent of inherited optimizer/exposure.
+        prior_seconds=0. if continuation else saved['elapsed_seconds']
+        if not continuation:
+            initialization_report=saved.get('initialization_report', initialization_report)
         del saved
     source_commit=subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
     atomic_write_json(output/'recipe.json', dict(settings=settings, seed=seed, model=model.contract(),
         source_commit=source_commit,
-        CUDA_device=torch.cuda.get_device_name(0), resume=str(resume), initialization=settings['initialization'],
+        CUDA_device=torch.cuda.get_device_name(0), resume=str(resume), continuation=str(continuation), initialization=settings['initialization'],
         initialization_report=initialization_report))
     began=time.monotonic()
 
@@ -233,7 +358,8 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
             mixture=mixture.state_dict(), exposure=exposure, elapsed_seconds=elapsed,
             initialization_report=initialization_report, source_commit=source_commit,
             generator_rng=generator.get_state(), torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all(),
-            python_rng=random.getstate(), numpy_rng=np.random.get_state(), **replay_state))
+            python_rng=random.getstate(), numpy_rng=np.random.get_state(), **replay_state,
+            **({} if ligand is None else dict(ligand_geometry=ligand.state_dict()))))
         atomic_write_json(output/'status.json', dict(status='completed' if final else 'training', step=step,
             checkpoint=str(path), elapsed_seconds=elapsed, GPU_hours=elapsed/3600,
             peak_cuda_bytes=torch.cuda.max_memory_allocated(), exposure=exposure,
@@ -260,10 +386,7 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
                     sigma=settings['static_corruption_A']
                     observed=_static_observation(batch,sigma,generator)
                     target,query_times=batch.x,batch.time_ps
-                warmup=settings['warmup_updates']
-                fraction=max(0.,(step-warmup)/max(1,settings['updates']-warmup-1))
-                factor=(step+1)/warmup if step<warmup else .1+.45*(1+math.cos(math.pi*fraction))
-                optimizer.param_groups[0]['lr']=settings['learning_rate']*factor
+                optimizer.param_groups[0]['lr']=continuation_learning_rate(settings,step)
                 optimizer.zero_grad(set_to_none=True)
                 with torch.autocast('cuda',dtype=torch.bfloat16,enabled=settings['bf16']):
                     condition=model.prepare_condition(observed,task=task)
@@ -275,6 +398,13 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
                     if replay.due(step+1):
                         metrics['replay']=replay.backward(model,bf16=settings['bf16'])
                         logged_loss+=metrics['replay']['weighted_loss']
+                if ligand is not None:
+                    triggered=ligand.due(identity,history)
+                    metrics.update(ligand_geometry_triggered=triggered,
+                                   ligand_geometry_counts=dict(ligand.counts))
+                    if triggered:
+                        metrics.update(ligand.backward(model,observed,target,query_times,bf16=settings['bf16']))
+                        logged_loss+=metrics.get('ligand_geometry_weighted_loss',0.)
                 # One clip and one optimizer update for the sum of dynamic RF
                 # and (on every fourth step) separately normalized .25*Q1 RF.
                 norm=torch.nn.utils.clip_grad_norm_(model.parameters(),settings['clip_grad'],error_if_nonfinite=True)
@@ -303,11 +433,12 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None)
                 exposure['dynamic_examples' if task=='dynamic' else 'static_examples']+=batch.batch_size
                 exposure['target_frames']+=len(target)*batch.batch_size
                 exposure['atom_query_pairs']+=len(target)*int(batch.loss_mask.sum())
-                row=dict(step=step+1,loss=logged_loss,grad_norm=float(norm),task=task,
+                row=dict(step=step+1,loss=logged_loss,RF_loss=float(loss.detach()),
+                    learning_rate=optimizer.param_groups[0]['lr'],grad_norm=float(norm),task=task,
                     sample=batch.sample_id[0],**identity,history=history,queries=queries,
                     elapsed_seconds=prior_seconds+time.monotonic()-began,**metrics)
                 log.write(json.dumps(row)+'\n')
-                if step<4 or (step+1)%64==0:
+                if step<start+4 or (step+1)%64==0:
                     print(json.dumps(row),flush=True)
                 if (step+1)%settings['save_every']==0:
                     save(step+1)
