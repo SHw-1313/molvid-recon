@@ -486,6 +486,9 @@ def coordinate_state_objective(model, condition, target_A, query_time_ps, *, gen
             raise ValueError('Every system needs valid target atoms')
         losses.append(error[:, valid].mean()*weight[sample])
     loss = torch.stack(losses).mean()
-    return loss, dict(progress_mean=float(progress.mean().detach()),
+    diagnostics=({} if 'kernel_training' not in model.settings else
+        dict(source_epsilon_sum=float(noise.double().sum().detach()),
+             source_epsilon_square_sum=float(noise.double().square().sum().detach())))
+    return loss, dict(**diagnostics,progress_mean=float(progress.mean().detach()),
         raw_coordinate_MSE_A2=float(error[:, batch.loss_mask].mean().detach()),
         valid_atoms=int(batch.loss_mask.sum()), query_frames=len(target_A))

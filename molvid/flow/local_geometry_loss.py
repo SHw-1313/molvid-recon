@@ -184,7 +184,7 @@ def local_geometry_band_loss(
     return loss, metrics
 
 
-def ligand_geometry_band_loss(endpoint_A, target_A, batch, settings):
+def ligand_geometry_band_loss(endpoint_A, target_A, batch, settings, *, band_reference_A=None):
     """Only positive-component internal bonds/angles, equal ligands then systems.
 
     Reuse the old S topology and detached TRAIN bands. Compute covalent vectors
@@ -194,6 +194,10 @@ def ligand_geometry_band_loss(endpoint_A, target_A, batch, settings):
     from dataclasses import replace
     if endpoint_A.ndim!=3 or endpoint_A.shape!=target_A.shape or endpoint_A.shape[-1]!=3:
         raise ValueError('Expected equal [Q,N,3] endpoint/target in Angstrom')
+    if band_reference_A is not None:
+        if band_reference_A.ndim!=3 or band_reference_A.shape[1:]!=target_A.shape[1:] or len(band_reference_A)<8:
+            raise ValueError('Explicit TRAIN band support must be multi-frame same-atom Angstrom coordinates')
+    reference_A=target_A if band_reference_A is None else band_reference_A
     valid=batch.loss_mask & (batch.component_id>0)
     internal=(batch.component_id[batch.bond_index[0]]==batch.component_id[batch.bond_index[1]])
     lig=replace(batch,loss_mask=valid,bond_index=batch.bond_index[:,internal])
@@ -208,7 +212,7 @@ def ligand_geometry_band_loss(endpoint_A, target_A, batch, settings):
         return sums/counts.clamp_min(1),counts
     dtype=torch.float64 if endpoint_A.dtype==torch.float64 else torch.float32
     with torch.autocast(device_type=endpoint_A.device.type,enabled=False):
-        predicted=endpoint_A.to(dtype);reference=target_A.detach().to(dtype)
+        predicted=endpoint_A.to(dtype);reference=reference_A.detach().to(dtype)
         if not bool(torch.isfinite(predicted[:,valid]).all() and torch.isfinite(reference[:,valid]).all()):
             raise ValueError('Nonfinite ligand endpoint/target')
         zero=endpoint_A.reshape(-1)[:0].sum().to(dtype)
@@ -247,4 +251,5 @@ def ligand_geometry_band_loss(endpoint_A, target_A, batch, settings):
         local_geometry_ligand_loss=values[0],local_geometry_bonds=bonds.shape[1],
         local_geometry_angles=angle_edges.shape[1],ligand_components=int(present.sum()),
         ligand_systems=int(torch.unique(keys[present,0]).numel()),ligand_atoms=int(valid.sum()),
+        geometry_band_frames=len(reference_A),
         topology_scope='same-positive-component internal true bonds/1-3 angles')

@@ -1,6 +1,6 @@
 """Actual paired coordinate-state training; one shared loop for RF and EDM."""
 from dataclasses import replace
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from collections import Counter
 import copy
 import math
@@ -164,11 +164,11 @@ class LigandSourceGeometry:
     def due(self, identity, history):
         if identity['domain'] != 'complex':
             return False
-        key=f"complex:H{history}"
+        key=(identity.get('kernel_task','')+':' if 'kernel_task' in identity else '')+f"complex:H{history}"
         self.counts[key]=self.counts.get(key,0)+1
         return self.counts[key] % self.config['every_group_visits'] == 0
 
-    def backward(self, model, observed, target, query_times, *, bf16):
+    def backward(self, model, observed, target, query_times, *, bf16, band_reference=None):
         began=time.monotonic()
         if not bool((observed.loss_mask & (observed.component_id>0)).any()):
             return dict(ligand_geometry_applied=False,ligand_geometry_weighted_loss=0.,
@@ -177,7 +177,8 @@ class LigandSourceGeometry:
             with torch.autocast('cuda',dtype=torch.bfloat16,enabled=bf16):
                 endpoint=model.sample_truncated(observed,query_times,
                     tail_intervals=self.config['tail_intervals'],generator=self.generator)
-                auxiliary,metrics=ligand_geometry_band_loss(endpoint,target,observed,self.config['band'])
+                auxiliary,metrics=ligand_geometry_band_loss(endpoint,target,observed,self.config['band'],
+                    band_reference_A=band_reference)
                 weighted=self.config['weight']*auxiliary
             weighted.backward()
             self.events+=1
@@ -305,11 +306,17 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
     optimizer = torch.optim.AdamW(model.parameters(), lr=settings['learning_rate'], weight_decay=settings['weight_decay'])
     generator = torch.Generator(device=device).manual_seed(seed+20261008)
     mixture = BridgeMixture(settings['data'], seed)
+    kernel=None
+    if settings.get('kernel_training') is not None:
+        from .kernel_tasks import KernelTasks
+        kernel=KernelTasks(settings,seed,device,generator)
     replay = static_replay_from_settings(settings, seed, device)
     ligand_config=settings.get('ligand_geometry')
     if ligand_config and ligand_config.get('weight_status')!='calibrated':
         raise ValueError('Freeze the four-TRAIN calibration before formal training')
     ligand=LigandSourceGeometry(ligand_config,seed,device) if ligand_config else None
+    kernel_ligand=(LigandSourceGeometry(ligand_config,seed+20261027,device)
+        if ligand is not None and kernel is not None else None)
     start, prior_seconds = 0, 0.
     exposure = dict(updates=0, dynamic_examples=0, static_examples=0, target_frames=0, atom_query_pairs=0)
     initialization_report = dict(kind=settings['initialization'], inherited_parameters=0,
@@ -325,12 +332,16 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
             raise ValueError('Wrong objective, scales, seed or checkpoint schema')
         model.load_state_dict(saved['model'], strict=True); optimizer.load_state_dict(saved['optimizer'])
         mixture.load_state_dict(saved['mixture']); generator.set_state(saved['generator_rng'])
+        if kernel is not None: kernel.load_state_dict(saved['kernel_tasks'])
+        elif 'kernel_tasks' in saved: raise ValueError('Cannot discard kernel streams on exact resume')
         torch.set_rng_state(saved['torch_rng']); torch.cuda.set_rng_state_all(saved['cuda_rng'])
         random.setstate(saved['python_rng']); np.random.set_state(saved['numpy_rng'])
         if replay is not None:
             replay.load_state_dict(saved['static_replay'])
         elif 'static_replay' in saved:
             raise ValueError('Cannot discard replay state on an exact resume')
+        if kernel_ligand is not None:
+            kernel_ligand.load_state_dict(saved['kernel_ligand_geometry'])
         if ligand is not None and not continuation:
             ligand.load_state_dict(saved['ligand_geometry'])
         elif ligand is None and 'ligand_geometry' in saved:
@@ -359,7 +370,9 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
             initialization_report=initialization_report, source_commit=source_commit,
             generator_rng=generator.get_state(), torch_rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all(),
             python_rng=random.getstate(), numpy_rng=np.random.get_state(), **replay_state,
-            **({} if ligand is None else dict(ligand_geometry=ligand.state_dict()))))
+            **({} if ligand is None else dict(ligand_geometry=ligand.state_dict())),
+            **({} if kernel is None else dict(kernel_tasks=kernel.state_dict())),
+            **({} if kernel_ligand is None else dict(kernel_ligand_geometry=kernel_ligand.state_dict()))))
         atomic_write_json(output/'status.json', dict(status='completed' if final else 'training', step=step,
             checkpoint=str(path), elapsed_seconds=elapsed, GPU_hours=elapsed/3600,
             peak_cuda_bytes=torch.cuda.max_memory_allocated(), exposure=exposure,
@@ -368,78 +381,90 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
     try:
         with (output/'updates.jsonl').open('a', buffering=1) as log:
             for step in range(start, settings['updates']):
-                batch, task, history, queries, identity=mixture.next()
-                if task=='dynamic' and settings.get('history_sampling')=='alternating_optimizer_updates':
+                band_reference=None
+                if kernel is None:
+                    batch, task, history, queries, identity=mixture.next()
+                else:
+                    batch,task,history,queries,identity,band_reference,kind=kernel.next(step,mixture)
+                if kernel is None and task=='dynamic' and settings.get('history_sampling')=='alternating_optimizer_updates':
                     # Identical to the TIME continuation: the optimizer step,
                     # not a newly visited system, selects H4Q12 versus H8Q8.
                     history=(4,8)[step % 2]
                     queries=list(range(history,batch.frames))
-                if not bool(batch.frame_mask.all()):
-                    raise ValueError('Pilot uses complete valid windows; no hidden padding')
-                batch=batch.to(device)
-                if task=='dynamic':
-                    observed=slice_clip_frames(batch,0,history)
-                    target, query_times=batch.x[queries],batch.time_ps[:,queries]
-                else:
-                    # Future static stages use corrupted input only. No clean
-                    # target enters conditions or graph construction directly.
-                    sigma=settings['static_corruption_A']
-                    observed=_static_observation(batch,sigma,generator)
-                    target,query_times=batch.x,batch.time_ps
-                optimizer.param_groups[0]['lr']=continuation_learning_rate(settings,step)
-                optimizer.zero_grad(set_to_none=True)
-                with torch.autocast('cuda',dtype=torch.bfloat16,enabled=settings['bf16']):
-                    condition=model.prepare_condition(observed,task=task)
-                    loss,metrics=coordinate_state_objective(model,condition,target,query_times,generator=generator)
-                loss.backward()
-                logged_loss=float(loss.detach())
-                if replay is not None:
-                    metrics.update(dynamic_RF_loss=logged_loss,replay_applied=replay.due(step+1))
-                    if replay.due(step+1):
-                        metrics['replay']=replay.backward(model,bf16=settings['bf16'])
-                        logged_loss+=metrics['replay']['weighted_loss']
-                if ligand is not None:
-                    triggered=ligand.due(identity,history)
-                    metrics.update(ligand_geometry_triggered=triggered,
-                                   ligand_geometry_counts=dict(ligand.counts))
-                    if triggered:
-                        metrics.update(ligand.backward(model,observed,target,query_times,bf16=settings['bf16']))
-                        logged_loss+=metrics.get('ligand_geometry_weighted_loss',0.)
-                # One clip and one optimizer update for the sum of dynamic RF
-                # and (on every fourth step) separately normalized .25*Q1 RF.
-                norm=torch.nn.utils.clip_grad_norm_(model.parameters(),settings['clip_grad'],error_if_nonfinite=True)
-                # Report real first-update supervision of the static path;
-                # no separate probe model, synthetic optimization or extra run.
-                if step==start and task=='static':
-                    metrics['static_shared_gradient_norms_after_clip']={
-                        name:sum(float(p.grad.float().square().sum()) for p in module.parameters()
-                                 if p.grad is not None)**.5
-                        for name,module in [('current_geometry',model.spatial),
-                                            ('shared_tokens',model.tokens),('coordinate_head',model.head)]}
-                    metrics['static_capacity_gradient_norms_after_clip'] = {
-                        name: sum(float(p.grad.float().square().sum())
-                                  for p in module.parameters() if p.grad is not None)**.5
-                        for name, module in [('obs_extra', model.obs_extra),
-                            ('query_pre_extra', model.query_pre_extra),
-                            ('collective_extra', model.collective_extra),
-                            ('query_post_extra', model.query_post_extra)] if len(module)}
-                    if any(value == 0 or not math.isfinite(value)
-                           for value in metrics['static_capacity_gradient_norms_after_clip'].values()):
-                        raise RuntimeError('Static supervision did not reach the active capacity path')
-                    if any(value==0 or not math.isfinite(value) for value in metrics['static_shared_gradient_norms_after_clip'].values()):
-                        raise RuntimeError('Static supervision did not reach every shared geometry path')
-                optimizer.step()
-                exposure['updates']+=1
-                exposure['dynamic_examples' if task=='dynamic' else 'static_examples']+=batch.batch_size
-                exposure['target_frames']+=len(target)*batch.batch_size
-                exposure['atom_query_pairs']+=len(target)*int(batch.loss_mask.sum())
-                row=dict(step=step+1,loss=logged_loss,RF_loss=float(loss.detach()),
-                    learning_rate=optimizer.param_groups[0]['lr'],grad_norm=float(norm),task=task,
-                    sample=batch.sample_id[0],**identity,history=history,queries=queries,
-                    elapsed_seconds=prior_seconds+time.monotonic()-began,**metrics)
-                log.write(json.dumps(row)+'\n')
-                if step<start+4 or (step+1)%64==0:
-                    print(json.dumps(row),flush=True)
+                context=nullcontext(generator) if kernel is None else kernel.isolated_rng(kind)
+                with context as active_generator:
+                    if not bool(batch.frame_mask.all()):
+                        raise ValueError('Pilot uses complete valid windows; no hidden padding')
+                    batch=batch.to(device)
+                    if band_reference is not None:band_reference=band_reference.to(device)
+                    if task=='dynamic':
+                        observed=slice_clip_frames(batch,0,history)
+                        target, query_times=batch.x[queries],batch.time_ps[:,queries]
+                    else:
+                        # Future static stages use corrupted input only. No clean
+                        # target enters conditions or graph construction directly.
+                        sigma=settings['static_corruption_A']
+                        observed=_static_observation(batch,sigma,active_generator)
+                        target,query_times=batch.x,batch.time_ps
+                    optimizer.param_groups[0]['lr']=continuation_learning_rate(settings,step)
+                    optimizer.zero_grad(set_to_none=True)
+                    with torch.autocast('cuda',dtype=torch.bfloat16,enabled=settings['bf16']):
+                        condition=model.prepare_condition(observed,task=task)
+                        loss,metrics=coordinate_state_objective(model,condition,target,query_times,generator=active_generator)
+                    loss.backward()
+                    logged_loss=float(loss.detach())
+                    if replay is not None:
+                        metrics.update(dynamic_RF_loss=logged_loss,replay_applied=replay.due(step+1))
+                        if replay.due(step+1):
+                            metrics['replay']=replay.backward(model,bf16=settings['bf16'])
+                            logged_loss+=metrics['replay']['weighted_loss']
+                    active_ligand=(kernel_ligand if kernel is not None and kind=='kernel' else ligand)
+                    if active_ligand is not None:
+                        triggered=active_ligand.due(identity,history)
+                        metrics.update(ligand_geometry_triggered=triggered,
+                                       ligand_geometry_counts=dict(active_ligand.counts))
+                        if triggered:
+                            metrics.update(active_ligand.backward(model,observed,target,query_times,bf16=settings['bf16'],
+                                band_reference=band_reference))
+                            logged_loss+=metrics.get('ligand_geometry_weighted_loss',0.)
+                    # One clip/update for the sampled task RF plus any authorized
+                    # auxiliary. Joint and kernel default/source streams are independent.
+                    norm=torch.nn.utils.clip_grad_norm_(model.parameters(),settings['clip_grad'],error_if_nonfinite=True)
+                    # Report real first-update supervision of the static path;
+                    # no separate probe model, synthetic optimization or extra run.
+                    if step==start and task=='static':
+                        metrics['static_shared_gradient_norms_after_clip']={
+                            name:sum(float(p.grad.float().square().sum()) for p in module.parameters()
+                                     if p.grad is not None)**.5
+                            for name,module in [('current_geometry',model.spatial),
+                                                ('shared_tokens',model.tokens),('coordinate_head',model.head)]}
+                        metrics['static_capacity_gradient_norms_after_clip'] = {
+                            name: sum(float(p.grad.float().square().sum())
+                                      for p in module.parameters() if p.grad is not None)**.5
+                            for name, module in [('obs_extra', model.obs_extra),
+                                ('query_pre_extra', model.query_pre_extra),
+                                ('collective_extra', model.collective_extra),
+                                ('query_post_extra', model.query_post_extra)] if len(module)}
+                        if any(value == 0 or not math.isfinite(value)
+                               for value in metrics['static_capacity_gradient_norms_after_clip'].values()):
+                            raise RuntimeError('Static supervision did not reach the active capacity path')
+                        if any(value==0 or not math.isfinite(value) for value in metrics['static_shared_gradient_norms_after_clip'].values()):
+                            raise RuntimeError('Static supervision did not reach every shared geometry path')
+                    optimizer.step()
+                    if kernel is not None:
+                        metrics.update(kernel_counts=dict(kernel.counts),kernel_crossings=dict(kernel.crossings),
+                                       geometry_band_frames=(len(target) if band_reference is None else len(band_reference)))
+                    exposure['updates']+=1
+                    exposure['dynamic_examples' if task=='dynamic' else 'static_examples']+=batch.batch_size
+                    exposure['target_frames']+=len(target)*batch.batch_size
+                    exposure['atom_query_pairs']+=len(target)*int(batch.loss_mask.sum())
+                    row=dict(step=step+1,loss=logged_loss,RF_loss=float(loss.detach()),
+                        learning_rate=optimizer.param_groups[0]['lr'],grad_norm=float(norm),task=task,
+                        sample=batch.sample_id[0],**identity,history=history,queries=queries,
+                        elapsed_seconds=prior_seconds+time.monotonic()-began,**metrics)
+                    log.write(json.dumps(row)+'\n')
+                    if step<start+4 or (step+1)%64==0:
+                        print(json.dumps(row),flush=True)
                 if (step+1)%settings['save_every']==0:
                     save(step+1)
                 if stop_after is not None and step+1 >= stop_after and step+1 < settings['updates']:
@@ -456,5 +481,6 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
         raise
     finally:
         mixture.close()
+        if kernel is not None:kernel.close()
         if replay is not None:
             replay.close()

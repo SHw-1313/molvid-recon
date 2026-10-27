@@ -1,7 +1,7 @@
-# Authorized ligand geometry continuation
+# Authorized lag-conditioned dynamic Q1 / joint experiment
 
-Read /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} after resume/rule updates (container /workspace/molvid_recon). Those are the sole management authority. Inherited HANDOFF/TASKS are historical.
+Read /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} after resume or updates (container /workspace/molvid_recon). They are the only PM authority; inherited local HANDOFF/TASKS are historical.
 
-2026-10-26 user authorizes two matched continuations from P1 new_static MD512 full state to total4096, pure RF C and ligand native-source geometry L. Independent cap259200 A100 GPU seconds including checks/failures/calibration/training/96 four-protocol draws/probes. Retain optimizer/data/RNG; no replay/concat/new architecture/source. Preserve other jobs/dependencies. Run Python only via enter-container and existing torch-ito. One task README; no new scheduler/audit/state store.
+2026-10-27 user authorizes kernel data preparation, implementation, five matched finite 512-update studies and endpoint/free-rollout/joint compatibility evaluation. All start from the completed L4096 default, with new AdamW and declared 512-stage schedule. Independent total cap172800 A100 GPU seconds (48h), including checks/failures/train/generation; no old balance. Use existing workers only. Preserve old jobs/checkpoints/dependencies, sealed TEST, raw replica/time/atom identity. Python/model commands only existing enter-container/torch-ito.
 
-Report separate dataset + actual dt_ps + history interval + Q + generation protocol + reference window. Never average ATLAS100ps with MISATO80ps or stride1/2/4 into a main score. Follow latest central rules for details.
+Actual dynamic Q1 shares the unchanged Flow backbone and physical time/source/loss conventions; it must not use the static temporal bypass. No new causal/time basis/source/bridge loss. One task README under tasks/flow-kernel-20261027. Joint and Q1 independent random streams; record task/domain/history/lag exposure and multi-frame TRAIN support for ligand bands. Follow latest central authorization for exact matrix and budget. Never combine different dataset/dt/history/Q/protocol/reference windows into a main score.
