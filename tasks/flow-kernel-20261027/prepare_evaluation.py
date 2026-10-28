@@ -365,7 +365,11 @@ def import_generated(args):
                     nfe=requested_nfe(entry)
                     if receipt.get('actual_vector_field_evaluations')!=nfe or receipt.get('sampling_info',{}).get('total_NFE')!=nfe:
                         raise ValueError('Actual field count differs from approved protocol')
-                    draw=load_draws(dict(name=arm,cache=str(raw),seeds=[seed],history_frames=entry['history_frames'],coordinate_unit='angstrom',protocol=str(source/'protocol.json')),prepared,run)[0]
+                    # Kernel protocols use a top-level string protocol label; the
+                    # common loader's optional protocol wrapper expects a dict.
+                    # Identity, H/Q, clock, checkpoint and NFE are checked above;
+                    # retain the original receipt path in the exported draw.
+                    draw=load_draws(dict(name=arm,cache=str(raw),seeds=[seed],history_frames=entry['history_frames'],coordinate_unit='angstrom'),prepared,run)[0]
                     if not np.isfinite(draw['coordinates']).all():raise ValueError('Raw nonfinite output retained as failed; not padded or repaired')
                     artifact=None
                     if entry.get('mode') in ('q12','coarse_fine'):

@@ -243,7 +243,8 @@ def trajectories(out):
                         if metrics_path.exists():metrics=read(metrics_path)
                         else:
                             rawdraw=dict(coordinates=data['positions'],time_ps=data['time_ps'],history_frames=entry['history_frames'],seed=seed,
-                                         reference_indices=np.arange(entry['query_frames']),identity_source='validated original cache record')
+                                         reference_indices=np.arange(entry['query_frames']),identity_source='validated original cache record',
+                                         cache=draw.get('raw',draw['npz']))
                             metrics=score_draw(prepared,rawdraw,arm,entry['seeds'].index(seed),score_dir,read(RUN/'eval_inputs/manifest.json')['analysis'])
                         draw['metrics_json']=str(metrics_path)
                     if len(data['positions'])==50:
