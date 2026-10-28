@@ -1,6 +1,6 @@
 # Lag-conditioned dynamic Q1 and joint Flow
 
-2026-10-28: all five arms completed 512 updates with finite final losses/gradients. The final pairing check passed for all arms: mixed-arm joint inputs/source/default RNG/auxiliary state match the C256 joint-dose reference; no differences were reported. The fixed generation list is still running (checked 714/800 jobs, 2588/2760 draws); priorities 1–6 are complete and the remaining high-NFE Q12/Q4/coarse-fine jobs continue within the original 172800 GPU-second total. A separate CPU preview is scoring the completed core trajectories and endpoint/compatibility results without interrupting generation or the final CPU tail. The first preview exposed a task-adapter protocol-string mismatch (132 import errors); that failed output is preserved, two metadata/interface fixes passed real generated joint/endpoint/H1-rollout checks, and the corrected previews imported 132/132 and 888/888 new draws with errors empty. The completed motion preview and first-origin endpoint results are summarized below; trajectory geometry, compatibility and the full-study conclusion remain pending. Results are not inferred from process exit codes. Central molvid_recon/AGENTS.md, HANDOFF.md and TASKS.md remain the sole authority.
+2026-10-28: all five arms completed 512 updates with finite final losses/gradients. The final pairing check passed for all arms: mixed-arm joint inputs/source/default RNG/auxiliary state match the C256 joint-dose reference; no differences were reported. The fixed generation list is still running (checked 717/800 jobs, 2594/2760 draws); priorities 1–6 are complete and the remaining high-NFE Q12/Q4/coarse-fine jobs continue within the original 172800 GPU-second total. Separate CPU previews have completed the selected core trajectories and endpoint/compatibility results without interrupting generation or the final CPU tail. The first preview exposed a task-adapter protocol-string mismatch (132 import errors); that failed output is preserved, two metadata/interface fixes passed real generated joint/endpoint/H1-rollout checks, and the corrected previews imported 132/132 and 888/888 new draws with errors empty. Both independent CPU previews are complete: 132/132 new core trajectories plus 12 reused parent trajectories, and 888/888 endpoint/compatibility/history-cross draws, all with errors empty. The full-study conclusion remains pending the remaining predeclared generation and its final CPU tail. Results are not inferred from process exit codes. Central molvid_recon/AGENTS.md, HANDOFF.md and TASKS.md remain the sole authority.
 
 Five arms start from `/workspace/MOLVID-FLOW-LIGAND-4096-20261026/runs/flow_ligand_4096_20261026/ligand/coordinate_final.pt`: `control`, `h1`, `history_mix`, `dense_history`, `lag1`. All use the same 10,009,356-parameter group-QK/atom-V model, ordinary bidirectional query attention, fixed RF source rho1.1397942064485225 Å and native18interval/35NFE. Static observation corruption0.2 Å is unchanged and is not applied to clean dynamic histories. No bridge training, new loss, time encoding or noise model.
 
@@ -91,4 +91,61 @@ Independent endpoints: 180 complete groups x 4 draws = 720 draws, errors empty, 
 | MISATO / 80 ps | dense_history | 0.59620 | 0.50073 | 0.19166 | 0.30925 | 8.13657 | 12.38282 |
 | MISATO / 80 ps | lag1 | 0.59170 | 0.49808 | 0.22410 | 0.32229 | 8.36806 | 11.42895 |
 
-Actual products: [motion/G preview](../../runs/flow_kernel_20261027/evaluation_preview_trajectories_fixed_20261028/motion_G_preview.json), [first-origin endpoint scores](../../runs/flow_kernel_20261027/evaluation_preview_endpoints_20261028/endpoints/summary.json), and [raw preview player](../../runs/flow_kernel_20261027/evaluation_preview_trajectories_fixed_20261028/preview_viewer/index.html). The player contains original trajectories and MD; its geometry scoring is explicitly not yet complete. Full common/geometry scoring and compatibility are continuing in the two independent CPU previews, while the original GPU list and final CPU tail continue. The latest settled cost is about 21.48 A100 process-hours plus the currently running job, within the unchanged 48-hour ceiling. The remaining high-NFE Q12/Q4/CF jobs are roughly 10–12 hours at observed shared-GPU throughput, not a guaranteed ETA. No new experiment or retry has been started for this preview.
+Actual products: [motion/G preview](../../runs/flow_kernel_20261027/evaluation_preview_trajectories_fixed_20261028/motion_G_preview.json), [first-origin endpoint scores](../../runs/flow_kernel_20261027/evaluation_preview_endpoints_20261028/endpoints/summary.json), and [raw preview player](../../runs/flow_kernel_20261027/evaluation_preview_trajectories_fixed_20261028/preview_viewer/index.html). That raw-only player was exported before geometry completed and therefore does not claim scored geometry; the full scored player is linked below. Both selected CPU chains have since completed, while the original GPU list and final CPU tail continue. The later verified settled cost is about 21.845 A100 process-hours plus the currently running job, within the unchanged 48-hour ceiling. The remaining high-NFE Q12/Q4/CF jobs are roughly 10–12 hours at observed shared-GPU throughput, not a guaranteed ETA. No new experiment or retry has been started for this preview.
+
+
+The priorities1/4 CPU snapshot has now completed all seven stages: 888/888 new draws (720 independent endpoints, 160 compatibility trajectories, 8 crossed-history rollouts), errors empty; 871.601 wall seconds / 890.743 CPU seconds, zero GPU/model calls. It is a complete selected snapshot, not a complete study. The compatibility result uses actual four-draw ensembles and 12 cross-seed pairs, not coordinate-wise paired error. For H4, 6e5y200/400ps composed-vs-direct energy distance changes from C0.35148/0.78822 to Hmix0.11721/-0.04024 A; joint-vs-direct changes from0.83741/0.94715 to0.12288/0.18389 A. Corresponding 4J8T160/320ps values are0.15044/0.49771 to0.02246/0.04338, and0.83560/0.93115 to-0.03251/0.03439. The finite unbiased estimate can be negative; small distance with four draws is not proof of a full Chapman-Kolmogorov identity. See [compatibility JSON](../../runs/flow_kernel_20261027/evaluation_preview_endpoints_20261028/compatibility/summary.json), [completed selected summary](../../runs/flow_kernel_20261027/evaluation_preview_endpoints_20261028/comparison/comparison_summary.json), and [endpoint/compatibility player](../../runs/flow_kernel_20261027/evaluation_preview_endpoints_20261028/viewer/index.html).
+
+
+## Completed core geometry and interpretation
+
+The complete selected trajectory chain finished all seven CPU stages, 132/132 new draws plus12 parent reuse, errors empty, G/D identity maximum9.99e-16. It used1849.895940 wall /1876.402154 CPU seconds and no model/GPU calls. Both selected previews therefore cover1020 new draws; this is not the full2760-draw study. The [formal trajectory summary](../../runs/flow_kernel_20261027/evaluation_preview_trajectories_fixed_20261028/comparison/comparison_summary.json) and [scored original-coordinate player](../../runs/flow_kernel_20261027/evaluation_preview_trajectories_fixed_20261028/viewer/index.html) supersede the motion-only interpretation, while the separate raw preview remains available.
+
+| Dataset / dt | Protocol | Arm | Protein bad bonds (%) | Protein bad angles (%) | Ligand bad bonds (%) | Ligand bad angles (%) | Protein soft clashes /1000 atoms | Ligand soft clashes /1000 atoms |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| ATLAS / 100 ps | joint | parent_L4096 | 0.17709 | 0.22526 | NA | NA | 94.60772 | NA |
+| ATLAS / 100 ps | joint | control256 | 1.71943 | 1.44577 | NA | NA | 108.88852 | NA |
+| ATLAS / 100 ps | joint | control | 0.12999 | 0.20528 | NA | NA | 89.39268 | NA |
+| ATLAS / 100 ps | joint | h1 | 0.55112 | 0.51628 | NA | NA | 94.40290 | NA |
+| ATLAS / 100 ps | joint | history_mix | 0.57730 | 0.58179 | NA | NA | 112.28548 | NA |
+| ATLAS / 100 ps | joint | dense_history | 0.53337 | 0.51681 | NA | NA | 104.83297 | NA |
+| ATLAS / 100 ps | joint | lag1 | 0.54143 | 0.54804 | NA | NA | 111.43449 | NA |
+| ATLAS / 100 ps | rollout_h4_lag1 | control | 57.33444 | 47.59468 | NA | NA | 2068.57013 | NA |
+| ATLAS / 100 ps | rollout_h4_lag1 | history_mix | 1.01459 | 1.23664 | NA | NA | 357.22421 | NA |
+| ATLAS / 100 ps | rollout_h4_lag1 | dense_history | 1.00056 | 1.22533 | NA | NA | 362.45925 | NA |
+| ATLAS / 100 ps | rollout_h4_lag1 | lag1 | 0.97284 | 1.15906 | NA | NA | 382.91724 | NA |
+| ATLAS / 100 ps | rollout_h1_lag1 | h1 | 1.53111 | 2.54689 | NA | NA | 751.32284 | NA |
+| MISATO / 80 ps | joint | parent_L4096 | 0.05412 | 0.08955 | 5.68403 | 9.68052 | 88.37910 | 335.24074 |
+| MISATO / 80 ps | joint | control256 | 0.66315 | 0.55487 | 5.98912 | 8.03556 | 83.42734 | 285.54762 |
+| MISATO / 80 ps | joint | control | 0.03661 | 0.08580 | 5.60139 | 7.33459 | 83.66660 | 291.56614 |
+| MISATO / 80 ps | joint | h1 | 0.12325 | 0.15519 | 8.62917 | 12.46849 | 81.40468 | 387.15873 |
+| MISATO / 80 ps | joint | history_mix | 0.14109 | 0.19816 | 9.61065 | 15.93375 | 93.56156 | 481.77249 |
+| MISATO / 80 ps | joint | dense_history | 0.12335 | 0.17411 | 9.73843 | 15.35091 | 88.63956 | 459.72222 |
+| MISATO / 80 ps | joint | lag1 | 0.11726 | 0.17671 | 9.32801 | 14.82514 | 94.16269 | 458.88624 |
+| MISATO / 80 ps | rollout_h4_lag1 | control | 47.84926 | 41.72970 | 55.45440 | 63.38639 | 2803.77292 | 5052.69841 |
+| MISATO / 80 ps | rollout_h4_lag1 | history_mix | 0.35554 | 0.63367 | 13.29352 | 27.13121 | 358.25419 | 1285.02381 |
+| MISATO / 80 ps | rollout_h4_lag1 | dense_history | 0.34283 | 0.62194 | 14.00301 | 26.74033 | 356.76721 | 1276.04233 |
+| MISATO / 80 ps | rollout_h4_lag1 | lag1 | 0.37324 | 0.66350 | 14.33727 | 26.50073 | 381.39150 | 1294.16931 |
+| MISATO / 80 ps | rollout_h1_lag1 | h1 | 0.72617 | 1.84271 | 15.97546 | 33.56096 | 826.32365 | 2495.26455 |
+
+The trained Q1 kernel substantially reduces the joint-only model's Q1 rollout instability, but it has not reached joint-generation geometry quality. Hmix rollout still has MISATO ligand bad bonds/angles13.2935%/27.1312% and soft clashes1285.0 per1000 ligand atoms. Its joint ligand geometry also worsens against C512, C256 and the old parent; 5TV1 joint bad bonds/angles reach23.2778%/40.6%. Conversely C256 protein geometry is worse than the mixed arms, illustrating why joint-dose and same-update controls must both remain visible. Multiscale/history mixing does not consistently outperform dense-history or lag1 in this first preview. No model is promoted to default from these results.
+
+All comparisons retain physical clocks and inference history. Joint generation uses35 total field evaluations; native Q1 rollout50 uses50x35=1750. C and mixed arms have the same cost within a given protocol, but a joint-versus-rollout comparison is not inference-compute matched. The original final generation runner and CPU tail remain active within172800 total GPU seconds; no new training, sample list, retry or model modification was added for the previews.
+
+
+The matched MD soft-clash counts are22.78/1000 protein atoms at ATLAS100ps and20.88 at MISATO80ps, versus Hmix H4 rollout357.22/358.25. MISATO Hmix ligand self-aligned RMSF and pocket-relative RMSF ratios remain3.34871 and2.91727. Near-unit macro CA amplitude therefore does not imply correct ligand or local motion. Chirality/planarity remain part of the full JSON and are not declared solved by bond/angle improvements.
+
+The predeclared history cross uses the same two seeds, same initial window and actual physical clock; native rows come from the core trajectory summary, cross rows from the endpoint/compatibility trajectory summary. This exposes a sizable inference-history effect without replacing the native comparison.
+
+| Case / dt | Trained arm -> inference history | CA amplitude / MD | CA ACF error | G1 | Protein bad bonds (%) | Protein bad angles (%) |
+|---|---|---:|---:|---:|---:|---:|
+| 6e5y / 100 ps | h1 -> H1 native | 1.199422 | .236396 | .926868 | 1.203881 | 2.185008 |
+| 6e5y / 100 ps | h1 -> H4 cross | 1.929202 | .155962 | .816891 | 9.533465 | 9.248547 |
+| 6e5y / 100 ps | Hmix -> H1 cross | .915542 | .250060 | .936147 | .435039 | 1.091777 |
+| 6e5y / 100 ps | Hmix -> H4 native | .604810 | .146087 | .761725 | .763780 | .939576 |
+| 4J8T / 80 ps | h1 -> H1 native | 2.929257 | .488681 | .930910 | .734694 | 1.908595 |
+| 4J8T / 80 ps | h1 -> H4 cross | 2.601937 | .345089 | .743712 | 3.652134 | 4.422237 |
+| 4J8T / 80 ps | Hmix -> H1 cross | 2.289587 | .494140 | .934438 | .397959 | 1.113915 |
+| 4J8T / 80 ps | Hmix -> H4 native | 1.362542 | .276395 | .683257 | .391466 | .669168 |
+
+Matching MD G1 is .751279 for6e5y and .434993 for4J8T. There is no control H1 rollout in this limited cross; do not infer one. All preview CPU processes have exited successfully with actual coverage/errors checked; original generation PID1281684 and final CPU waiter1282650 were independently confirmed alive. The PM presentation is [KERNEL_RESULTS_PREVIEW_20261028.html](/home/sihao/.codex-pro/Documents/Codex/2026-10-14/data4-users-sihao-workspace-molvid-pm/outputs/KERNEL_RESULTS_PREVIEW_20261028.html), a results attachment rather than another management store.
