@@ -28,19 +28,20 @@ def update_history(observed, coordinates_A, times_ps):
 
 
 @torch.no_grad()
-def sample_transition(model, observed, target_time_ps, *, generator):
+def sample_transition(model, observed, target_time_ps, *, generator, route_task=None):
     if model.scheme!='flow' or observed.frames not in (1,4):
         raise ValueError('Current kernel supports observed H1/H4 and native Flow')
     if target_time_ps.shape!=(observed.batch_size,1):
         raise ValueError('A transition generates exactly one future time')
     if not bool((target_time_ps[:,0]>observed.time_ps[:,-1]).all()):
         raise ValueError('Target time must follow the actual current state')
-    condition=model.prepare_condition(observed,task='dynamic')
+    route_kwargs={} if route_task is None else dict(route_task=route_task)
+    condition=model.prepare_condition(observed,task='dynamic',**route_kwargs)
     return model.sample(condition,target_time_ps,generator=generator)
 
 
 @torch.no_grad()
-def rollout_transitions(model, observed, query_time_ps, *, generator):
+def rollout_transitions(model, observed, query_time_ps, *, generator, route_task=None):
     """Maintain latest H real/generated states; never invent missing fine history."""
     if query_time_ps.ndim!=2 or query_time_ps.shape[0]!=observed.batch_size or query_time_ps.shape[1]<1:
         raise ValueError('Expected nonempty physical query timestamps [B,Q]')
@@ -50,7 +51,7 @@ def rollout_transitions(model, observed, query_time_ps, *, generator):
     for frame in range(query_time_ps.shape[1]):
         times=query_time_ps[:,frame:frame+1]
         history_times.append(current.time_ps.detach().cpu().tolist())
-        endpoint=sample_transition(model,current,times,generator=generator)
+        endpoint=sample_transition(model,current,times,generator=generator,route_task=route_task)
         pieces.append(endpoint)
         current=update_history(observed,torch.cat((current.x,endpoint),0)[-history:],
                                torch.cat((current.time_ps,times),1)[:,-history:])

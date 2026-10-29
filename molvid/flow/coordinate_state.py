@@ -21,6 +21,7 @@ from ..data.chemistry import NUM_ATOM_TYPE, NUM_BLOCK_TYPE
 from ..geometry.neighbors import CudaRadiusNeighborList
 from ..spatial.torchmd import TorchMDEncoder
 from .reference_concat import ReferenceConcat
+from .task_adapter import TaskAdapters
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class CoordinateStateCondition:
     query_groups: tuple | None = None
     reference_prefix_h: torch.Tensor | None = None  # [N,D], unnormalized
     reference_prefix_v: torch.Tensor | None = None  # [N,3,D]
+    route_task: str | None = None  # explicit joint or dynamic q1; not inferred from Q
 
 
 class CoordinateStateDenoiser(nn.Module):
@@ -129,6 +131,18 @@ class CoordinateStateDenoiser(nn.Module):
             # No change to shared parameters or CPU/CUDA generator progression.
             with torch.random.fork_rng(devices=[]):
                 self.reference_fusion = ReferenceConcat(width)
+        adapter = settings.get('task_adapter', {'mode': 'none'})
+        self.task_adapter_mode = adapter['mode']
+        if self.task_adapter_mode not in ('none', 'shared', 'routed'):
+            raise ValueError('task_adapter.mode must be none, shared or routed')
+        self.task_adapters = None
+        if self.task_adapter_mode != 'none':
+            if self.scheme != 'flow':
+                raise ValueError('Task routing is implemented only for the authorized Flow comparison')
+            with torch.random.fork_rng(devices=[]):
+                self.task_adapters = TaskAdapters(width, adapter['bottleneck'], self.task_adapter_mode)
+            for name, parameter in self.named_parameters():
+                parameter.requires_grad_(name.startswith('task_adapters.'))
         self.forward_calls = 0
         self.geometry_calls = 0
 
@@ -176,6 +190,18 @@ class CoordinateStateDenoiser(nn.Module):
                 initialization='current_identity_reference_zero_no_gate_CPU_fork_rng',
                 arithmetic='current_plus_(weight_minus_identity)_times_concat_preserves_autocast_identity',
                 tasks=['static', 'dynamic'])
+        if self.task_adapters is not None:
+            result['frozen_modules'] = [name for name, _ in self.named_children() if name != 'task_adapters']
+            result['task_adapter'] = dict(mode=self.task_adapter_mode,
+                location='post_all_temporal_pre_original_Collective',
+                task_identity='explicit_dynamic_joint_or_q1_never_inferred_from_query_count',
+                branches=2, bottleneck=self.task_adapters.bottleneck,
+                shared_weights=[.5, .5], joint_routed_weights=[.75, .25], q1_routed_weights=[.25, .75],
+                execution='both_branches_every_call_equal_total_and_active_parameters_and_FLOPs',
+                shared_degeneracy='two_task_independent_parallel_adapters_with_uniform_mixture',
+                initialization='zero_up_maps_nonzero_down_and_gate_CPU_fork_rng',
+                trainable_parameters=sum(p.numel() for p in self.parameters() if p.requires_grad),
+                base_training_mode='unchanged_for_checkpointing_no_dropout_or_running_statistics')
         return result
 
     def _graph(self, xyz, batch, bonds):
@@ -240,9 +266,15 @@ class CoordinateStateDenoiser(nn.Module):
             return self.spatial.out_norm(h), v, reference_h, reference_v
         return self.spatial.out_norm(h), v
 
-    def prepare_condition(self, observed, *, task='dynamic'):
+    def prepare_condition(self, observed, *, task='dynamic', route_task=None):
         if task not in ('dynamic', 'static') or (task=='static' and observed.frames!=1):
             raise ValueError('Static is a single corrupted structure, not a zero-motion trajectory')
+        if self.task_adapters is not None:
+            if task != 'dynamic':
+                raise ValueError('Task adapters do not reinterpret a static Q1 as dynamic q1')
+            self.task_adapters.mixing_weights(route_task)
+        elif route_task is not None:
+            raise ValueError('route_task is only meaningful with enabled task adapters')
         if not bool(observed.frame_mask.all()):
             raise ValueError('Initial experiment requires uniform valid H within a packed batch')
         bonds = torch.unique(torch.cat((observed.bond_index, observed.bond_index.flip(0)), 1), dim=1)
@@ -262,7 +294,7 @@ class CoordinateStateDenoiser(nn.Module):
             times-times[-1:], observed.x-observed.x[-1:], bonds, self.tokens.grouping(observed), task,
             future_query_grouping(observed) if self.query_qk_mode == 'group' and task == 'dynamic' else None,
             encoded[-1][2] if self.reference_concat_enabled else None,
-            encoded[-1][3] if self.reference_concat_enabled else None)
+            encoded[-1][3] if self.reference_concat_enabled else None, route_task)
 
     def _query_prefix_frame(self, xyz, condition, embedding, physical, scaled_z, *, keep_graph):
         h, v, graph = self._begin_geometry(xyz, condition.observed, condition.bonds)
@@ -285,6 +317,8 @@ class CoordinateStateDenoiser(nn.Module):
         # attributes/neighbor-embedding autograd graphs between prefix/suffix.
         if graph is None:
             graph = self._graph(xyz, condition.observed, condition.bonds)
+        if self.task_adapters is not None:
+            h, v = self.task_adapters(h, v, condition.route_task)
         h, v = self.tokens(h, v, xyz, condition.token_groups)
         for collective in self.collective_extra:
             if self.training and torch.is_grad_enabled():
@@ -388,7 +422,7 @@ class CoordinateStateDenoiser(nn.Module):
             return state + .5 * dt * (u + u_next)
         return proposal
 
-    def sample_truncated(self, observed, query_time_ps, *, tail_intervals, generator):
+    def sample_truncated(self, observed, query_time_ps, *, tail_intervals, generator, route_task=None):
         """Native source sample with only the final K integration intervals differentiated.
 
         The detached prefix state omits its parameter dependence. The observed
@@ -403,14 +437,14 @@ class CoordinateStateDenoiser(nn.Module):
         with torch.no_grad(), torch.autocast(device_type=observed.x.device.type,
                 enabled=torch.is_autocast_enabled(observed.x.device.type),
                 dtype=torch.get_autocast_dtype(observed.x.device.type), cache_enabled=False):
-            condition = self.prepare_condition(observed)
+            condition = self.prepare_condition(observed, route_task=route_task)
             shape = (query_time_ps.shape[1], *condition.reference_A.shape)
             noise = torch.randn(shape, device=condition.reference_A.device, generator=generator)
             state = condition.reference_A[None] + self.rho_A * noise
             for index in range(intervals - tail_intervals):
                 state = self._flow_interval(state, condition, query_time_ps, index, intervals)
         state = state.detach()
-        condition = self.prepare_condition(observed)
+        condition = self.prepare_condition(observed, route_task=route_task)
         for index in range(intervals - tail_intervals, intervals):
             state = self._flow_interval(state, condition, query_time_ps, index, intervals, recompute=True)
         return state

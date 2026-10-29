@@ -168,7 +168,7 @@ class LigandSourceGeometry:
         self.counts[key]=self.counts.get(key,0)+1
         return self.counts[key] % self.config['every_group_visits'] == 0
 
-    def backward(self, model, observed, target, query_times, *, bf16, band_reference=None):
+    def backward(self, model, observed, target, query_times, *, bf16, band_reference=None, route_task=None):
         began=time.monotonic()
         if not bool((observed.loss_mask & (observed.component_id>0)).any()):
             return dict(ligand_geometry_applied=False,ligand_geometry_weighted_loss=0.,
@@ -176,7 +176,7 @@ class LigandSourceGeometry:
         with self.isolated_rng():
             with torch.autocast('cuda',dtype=torch.bfloat16,enabled=bf16):
                 endpoint=model.sample_truncated(observed,query_times,
-                    tail_intervals=self.config['tail_intervals'],generator=self.generator)
+                    tail_intervals=self.config['tail_intervals'],generator=self.generator,route_task=route_task)
                 auxiliary,metrics=ligand_geometry_band_loss(endpoint,target,observed,self.config['band'],
                     band_reference_A=band_reference)
                 weighted=self.config['weight']*auxiliary
@@ -268,11 +268,22 @@ def load_coordinate_weights(model, path):
                 if parent.get(key, default) != model.settings.get(key, default)]
     if parent.get('reference_concat',False)!=model.settings.get('reference_concat',False):
         changed.append('reference_concat')
+    parent_adapter = parent.get('task_adapter', {'mode': 'none'})
+    current_adapter = model.settings.get('task_adapter', {'mode': 'none'})
+    add_adapter = parent_adapter['mode'] == 'none' and current_adapter['mode'] != 'none'
+    if parent_adapter != current_adapter and not add_adapter:
+        changed.append('task_adapter')
     if changed:
         raise ValueError(f'Incompatible coordinate warm start: {changed}')
     if saved['step'] != parent['updates']:
         raise ValueError('Use a completed fixed-budget parent for a new training stage')
-    model.load_state_dict(saved['model'], strict=True)
+    if add_adapter:
+        missing, unexpected = model.load_state_dict(saved['model'], strict=False)
+        expected = {name for name in model.state_dict() if name.startswith('task_adapters.')}
+        if set(missing) != expected or unexpected:
+            raise ValueError(f'Only declared task adapter additions allowed: missing={missing}, unexpected={unexpected}')
+    else:
+        model.load_state_dict(saved['model'], strict=True)
     return dict(kind='coordinate_state_weights_only', parent_checkpoint=str(Path(path).resolve()),
         parent_step=saved['step'], parent_seed=saved['seed'], parent_exposure=saved['exposure'],
         query_qk_transition=dict(parent=parent.get('query_qk_mode', 'atom'),
@@ -281,9 +292,13 @@ def load_coordinate_weights(model, path):
         parent_source_commit=saved.get('source_commit'),
         parent_GPU_hours=saved['elapsed_seconds']/3600,
         parent_initialization=saved.get('initialization_report', {'kind': parent['initialization']}),
-        inherited_parameters=sum(p.numel() for p in model.parameters()),
+        inherited_parameters=sum(p.numel() for name,p in model.named_parameters()
+                                 if not (add_adapter and name.startswith('task_adapters.'))),
         inherited_modules=['spatial', 'temporal', 'tokens', 'progress', 'physical_time', 'displacement', 'head'],
-        frozen_modules=[], newly_initialized_modules=[],
+        frozen_modules=([name for name,_ in model.named_children() if name!='task_adapters']
+                        if model.task_adapters is not None else []),
+        newly_initialized_modules=['task_adapters'] if add_adapter else [],
+        task_adapter_transition=dict(parent=parent_adapter,current=current_adapter),
         reset=['optimizer', 'schedule', 'RNG', 'data_visits', 'stage_exposure', 'stage_GPU_hours'])
 
 
@@ -295,6 +310,9 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
         raise ValueError('Choose exact resume, weights-only warm start, or full-state extension')
     if resume is None and continuation is None and (warm_start is not None) != (settings['initialization']=='coordinate_state_weights_only'):
         raise ValueError('Weights-only initialization must be explicit in both recipe and CLI')
+    if settings.get('task_adapter', {'mode':'none'})['mode'] != 'none':
+        if settings.get('kernel_training', {}).get('arm') != 'history_mix' or settings.get('static_replay'):
+            raise ValueError('Task adapter comparison uses the frozen history_mix joint/Q1 streams without static replay')
     if not torch.cuda.is_available():
         raise RuntimeError('Real CUDA required; no CPU model fallback')
     output = Path(output)
@@ -303,7 +321,8 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
     random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
     device = torch.device('cuda:0')
     model = CoordinateStateDenoiser(settings).to(device).train()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=settings['learning_rate'], weight_decay=settings['weight_decay'])
+    trainable_parameters = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(trainable_parameters, lr=settings['learning_rate'], weight_decay=settings['weight_decay'])
     generator = torch.Generator(device=device).manual_seed(seed+20261008)
     mixture = BridgeMixture(settings['data'], seed)
     kernel=None
@@ -408,8 +427,10 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
                         target,query_times=batch.x,batch.time_ps
                     optimizer.param_groups[0]['lr']=continuation_learning_rate(settings,step)
                     optimizer.zero_grad(set_to_none=True)
+                    route_task = (('q1' if kind=='kernel' else 'joint')
+                                  if model.task_adapters is not None else None)
                     with torch.autocast('cuda',dtype=torch.bfloat16,enabled=settings['bf16']):
-                        condition=model.prepare_condition(observed,task=task)
+                        condition=model.prepare_condition(observed,task=task,route_task=route_task)
                         loss,metrics=coordinate_state_objective(model,condition,target,query_times,generator=active_generator)
                     loss.backward()
                     logged_loss=float(loss.detach())
@@ -425,11 +446,18 @@ def train(settings, output, seed, resume=None, warm_start=None, stop_after=None,
                                        ligand_geometry_counts=dict(active_ligand.counts))
                         if triggered:
                             metrics.update(active_ligand.backward(model,observed,target,query_times,bf16=settings['bf16'],
-                                band_reference=band_reference))
+                                band_reference=band_reference,route_task=route_task))
                             logged_loss+=metrics.get('ligand_geometry_weighted_loss',0.)
                     # One clip/update for the sampled task RF plus any authorized
                     # auxiliary. Joint and kernel default/source streams are independent.
-                    norm=torch.nn.utils.clip_grad_norm_(model.parameters(),settings['clip_grad'],error_if_nonfinite=True)
+                    norm=torch.nn.utils.clip_grad_norm_(trainable_parameters,settings['clip_grad'],error_if_nonfinite=True)
+                    if model.task_adapters is not None:
+                        metrics['route_task']=route_task
+                        metrics['task_adapter_mixing_weights']=list(model.task_adapters.mixing_weights(route_task))
+                        metrics['task_adapter_gradient_norms_after_clip']={
+                            f'branch{i}':sum(float(p.grad.float().square().sum())
+                                for p in branch.parameters() if p.grad is not None)**.5
+                            for i,branch in enumerate(model.task_adapters.branches)}
                     # Report real first-update supervision of the static path;
                     # no separate probe model, synthetic optimization or extra run.
                     if step==start and task=='static':
