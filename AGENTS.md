@@ -1,3 +1,7 @@
+## 2026-10-30 active isolated Q4 alignment
+
+Central /workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} govern this authorized24h study. Three arms shared_joint_only/shared_q4_q1/routed_q4_q1, frozen L4096 and same adapters. This current scope overrides historical T two-arm instructions below. Do not alter running MEMORY or completed TASK-ROUTE assets.
+
 # Task-route experiment, authorized 2026-10-29
 
 Read /data4/users/sihao/workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} after resume or updates (container /workspace/molvid_recon). These are the only PM authority; inherited local HANDOFF/TASKS are historical.
