@@ -1,3 +1,5 @@
+2026-11-02 current task override: user authorized five H/Q inference and matched adapter-training settings in this isolated worktree. Total115200 A100 GPU seconds (32h), including checks/failures/training/120 new trajectories; no reuse of old t0=3 scores as new t0=11 results. Central AGENTS/HANDOFF/TASKS remain sole authority; prior Q4 24h text below is history. All Python in existing torch-ito.
+
 ## 2026-10-30 active isolated Q4 alignment
 
 Central /workspace/molvid_recon/{AGENTS.md,HANDOFF.md,TASKS.md} govern this authorized24h study. Three arms shared_joint_only/shared_q4_q1/routed_q4_q1, frozen L4096 and same adapters. This current scope overrides historical T two-arm instructions below. Do not alter running MEMORY or completed TASK-ROUTE assets.
