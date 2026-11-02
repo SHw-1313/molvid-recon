@@ -169,7 +169,13 @@ def compare(out,export_viewer,reuse_evaluation=None):
             for missing in model.get('missing_draws',[]):rows.append(dict(identity(entry,model['name'],missing['seed']),status='NA',reason=missing['reason']))
     reused=0;prior_missing=[]
     if reuse_evaluation is not None:
-        reused,prior_errors,prior_missing=reuse_phase1(reuse_evaluation,out,panel,rows,frames,seams,slices,orders,distances);errors.extend(prior_errors)
+        lists=(rows,frames,seams,slices,orders,distances);lengths=[len(v) for v in lists];model_counts=[len(c['models']) for c in panel['cases']]
+        try:
+            reused,prior_errors,prior_missing=reuse_phase1(reuse_evaluation,out,panel,rows,frames,seams,slices,orders,distances);errors.extend(prior_errors)
+        except Exception as exc:
+            for value,n in zip(lists,lengths):del value[n:]
+            for case,n in zip(panel['cases'],model_counts):del case['models'][n:]
+            errors.append(dict(stage='phase1_reuse',status='NA',reason=f'{type(exc).__name__}: {exc}'))
     mdrows={r['case']:r for r in rows if r['arm']=='MD' and r['status']=='ok'}
     for row in rows:
         if row['status']!='ok':continue
